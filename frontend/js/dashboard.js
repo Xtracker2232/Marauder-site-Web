@@ -8,7 +8,10 @@ if (!token) {
 // ============ TOAST NOTIFICATIONS ============
 function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toastContainer');
-    if (!container) return;
+    if (!container) {
+        console.warn('Toast container not found');
+        return;
+    }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `
@@ -56,26 +59,36 @@ function hideSearchLoading() {
 
 // ============ MODAL ============
 function showModal(title, bodyHtml, confirmText, onConfirm) {
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalBody').innerHTML = bodyHtml;
-    document.getElementById('modalOverlay').classList.add('active');
+    const overlay = document.getElementById('modalOverlay');
+    const titleEl = document.getElementById('modalTitle');
+    const bodyEl = document.getElementById('modalBody');
+    
+    if (!overlay || !titleEl || !bodyEl) return;
+    
+    titleEl.textContent = title;
+    bodyEl.innerHTML = bodyHtml;
+    overlay.classList.add('active');
     
     const confirmBtn = document.getElementById('modalConfirm');
-    confirmBtn.textContent = confirmText || 'Confirmer';
+    if (confirmBtn) {
+        confirmBtn.textContent = confirmText || 'Confirmer';
+        const newConfirm = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+        newConfirm.addEventListener('click', function() {
+            if (onConfirm) onConfirm();
+            closeModal();
+        });
+    }
     
-    const newConfirm = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-    
-    newConfirm.addEventListener('click', function() {
-        if (onConfirm) onConfirm();
-        closeModal();
-    });
-    
-    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    const cancelBtn = document.getElementById('modalCancel');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+    }
 }
 
 function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.remove('active');
 }
 
 // ============ SECTIONS DÉPLIABLES ============
@@ -83,8 +96,8 @@ document.querySelectorAll('.section-header').forEach(header => {
     header.addEventListener('click', function() {
         const body = this.nextElementSibling;
         const icon = this.querySelector('.toggle-icon');
-        body.classList.toggle('open');
-        icon.classList.toggle('open');
+        if (body) body.classList.toggle('open');
+        if (icon) icon.classList.toggle('open');
     });
 });
 
@@ -95,7 +108,8 @@ document.querySelectorAll('.search-tab').forEach(tab => {
         this.classList.add('active');
         document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
         const tabId = this.dataset.tab;
-        document.getElementById(`tab-${tabId}`).classList.add('active');
+        const target = document.getElementById(`tab-${tabId}`);
+        if (target) target.classList.add('active');
     });
 });
 
@@ -109,14 +123,17 @@ async function verifyToken() {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';
+            return null;
         }
         const data = await response.json();
-        document.getElementById('usernameDisplay').textContent = data.user.username;
+        const display = document.getElementById('usernameDisplay');
+        if (display) display.textContent = data.user.username;
         return data;
     } catch (error) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
+        return null;
     }
 }
 
@@ -127,7 +144,8 @@ document.querySelectorAll('.sidebar-nav li').forEach(item => {
         this.classList.add('active');
         const page = this.dataset.page;
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(`page-${page}`).classList.add('active');
+        const target = document.getElementById(`page-${page}`);
+        if (target) target.classList.add('active');
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
         if (page === 'fiches') loadFiches();
@@ -147,14 +165,16 @@ document.getElementById('clearBtn').addEventListener('click', () => {
     document.querySelectorAll('#tab-french input, #tab-french select').forEach(el => {
         el.value = '';
     });
-    document.getElementById('searchResults').innerHTML = '';
+    const results = document.getElementById('searchResults');
+    if (results) results.innerHTML = '';
 });
 
 document.getElementById('clearBtnPro').addEventListener('click', () => {
     document.querySelectorAll('#tab-pro input, #tab-pro select').forEach(el => {
         el.value = '';
     });
-    document.getElementById('searchResults').innerHTML = '';
+    const results = document.getElementById('searchResults');
+    if (results) results.innerHTML = '';
 });
 
 // ============ TOUCHE ENTREE POUR RECHERCHER ============
@@ -165,9 +185,11 @@ document.querySelectorAll('.search-input').forEach(input => {
             if (activeTab) {
                 const tabId = activeTab.dataset.tab;
                 if (tabId === 'french') {
-                    document.getElementById('searchBtn').click();
+                    const btn = document.getElementById('searchBtn');
+                    if (btn) btn.click();
                 } else if (tabId === 'pro') {
-                    document.getElementById('searchBtnPro').click();
+                    const btn = document.getElementById('searchBtnPro');
+                    if (btn) btn.click();
                 }
             }
         }
@@ -180,51 +202,51 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         flexible: true,
         per_page: 100,
         page: 1,
-        nom_famille: document.getElementById('searchNom').value || undefined,
-        prenom: document.getElementById('searchPrenom').value || undefined,
-        nom_naissance: document.getElementById('searchNomNaissance').value || undefined,
-        nom_affichage: document.getElementById('searchNomAffichage').value || undefined,
-        email: document.getElementById('searchEmail').value || undefined,
-        telephone: document.getElementById('searchPhone').value || undefined,
-        nom_utilisateur: document.getElementById('searchUsername').value || undefined,
-        adresse_ip: document.getElementById('searchIp').value || undefined,
-        adresse: document.getElementById('searchAdresse').value || undefined,
-        code_postal: document.getElementById('searchCp').value || undefined,
-        ville: document.getElementById('searchVille').value || undefined,
-        ville_naissance: document.getElementById('searchVilleNaissance').value || undefined,
-        steam_id: document.getElementById('searchSteam').value || undefined,
-        fivem_license: document.getElementById('searchFivemLicense').value || undefined,
-        discord_id: document.getElementById('searchDiscord').value || undefined,
-        xbox_live_id: document.getElementById('searchXbox').value || undefined,
-        live_id: document.getElementById('searchLive').value || undefined,
-        fivem_license2: document.getElementById('searchFivemLicense2').value || undefined,
-        nir: document.getElementById('searchNir').value || undefined,
-        iban: document.getElementById('searchIban').value || undefined,
-        bic: document.getElementById('searchBic').value || undefined,
-        vin_plaque: document.getElementById('searchVin').value || undefined
+        nom_famille: document.getElementById('searchNom')?.value || undefined,
+        prenom: document.getElementById('searchPrenom')?.value || undefined,
+        nom_naissance: document.getElementById('searchNomNaissance')?.value || undefined,
+        nom_affichage: document.getElementById('searchNomAffichage')?.value || undefined,
+        email: document.getElementById('searchEmail')?.value || undefined,
+        telephone: document.getElementById('searchPhone')?.value || undefined,
+        nom_utilisateur: document.getElementById('searchUsername')?.value || undefined,
+        adresse_ip: document.getElementById('searchIp')?.value || undefined,
+        adresse: document.getElementById('searchAdresse')?.value || undefined,
+        code_postal: document.getElementById('searchCp')?.value || undefined,
+        ville: document.getElementById('searchVille')?.value || undefined,
+        ville_naissance: document.getElementById('searchVilleNaissance')?.value || undefined,
+        steam_id: document.getElementById('searchSteam')?.value || undefined,
+        fivem_license: document.getElementById('searchFivemLicense')?.value || undefined,
+        discord_id: document.getElementById('searchDiscord')?.value || undefined,
+        xbox_live_id: document.getElementById('searchXbox')?.value || undefined,
+        live_id: document.getElementById('searchLive')?.value || undefined,
+        fivem_license2: document.getElementById('searchFivemLicense2')?.value || undefined,
+        nir: document.getElementById('searchNir')?.value || undefined,
+        iban: document.getElementById('searchIban')?.value || undefined,
+        bic: document.getElementById('searchBic')?.value || undefined,
+        vin_plaque: document.getElementById('searchVin')?.value || undefined
     };
 
-    const dateNaissance = document.getElementById('searchDateNaissance').value;
+    const dateNaissance = document.getElementById('searchDateNaissance')?.value;
     if (dateNaissance) query.date_naissance = dateNaissance;
-    const jour = document.getElementById('searchJour').value;
+    const jour = document.getElementById('searchJour')?.value;
     if (jour) query.jour_naissance = parseInt(jour);
-    const mois = document.getElementById('searchMois').value;
+    const mois = document.getElementById('searchMois')?.value;
     if (mois) query.mois_naissance = parseInt(mois);
-    const annee = document.getElementById('searchAnnee').value;
+    const annee = document.getElementById('searchAnnee')?.value;
     if (annee) query.annee_naissance = annee;
-    const genre = document.getElementById('searchGenre').value;
+    const genre = document.getElementById('searchGenre')?.value;
     if (genre) query.genre = genre;
 
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
         const container = document.getElementById('searchResults');
-        container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
+        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
         return;
     }
 
     const container = document.getElementById('searchResults');
-    container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+    if (container) container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
     showSearchLoading();
 
     try {
@@ -355,17 +377,19 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
         setTimeout(() => {
             hideSearchLoading();
-            if (results.length > 0) {
-                displayResults(container, results);
-            } else {
-                container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+            if (container) {
+                if (results.length > 0) {
+                    displayResults(container, results);
+                } else {
+                    container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+                }
             }
         }, 1500);
 
     } catch (error) {
         setTimeout(() => {
             hideSearchLoading();
-            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
+            if (container) container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
         }, 1500);
     }
 });
@@ -376,33 +400,33 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         flexible: true,
         per_page: 100,
         page: 1,
-        nom_famille: document.getElementById('searchNomPro').value || undefined,
-        prenom: document.getElementById('searchPrenomPro').value || undefined,
-        nom_naissance: document.getElementById('searchNomNaissancePro').value || undefined,
-        email: document.getElementById('searchEmailPro').value || undefined,
-        telephone: document.getElementById('searchPhonePro').value || undefined,
-        adresse_ip: document.getElementById('searchIpPro').value || undefined,
-        societe: document.getElementById('searchSociete').value || undefined,
-        profession: document.getElementById('searchProfession').value || undefined,
-        fonction: document.getElementById('searchFonction').value || undefined,
-        siret: document.getElementById('searchSiret').value || undefined,
-        siren: document.getElementById('searchSiren').value || undefined,
-        nir: document.getElementById('searchNirPro').value || undefined,
-        iban: document.getElementById('searchIbanPro').value || undefined,
-        bic: document.getElementById('searchBicPro').value || undefined,
-        vin_plaque: document.getElementById('searchVinPro').value || undefined
+        nom_famille: document.getElementById('searchNomPro')?.value || undefined,
+        prenom: document.getElementById('searchPrenomPro')?.value || undefined,
+        nom_naissance: document.getElementById('searchNomNaissancePro')?.value || undefined,
+        email: document.getElementById('searchEmailPro')?.value || undefined,
+        telephone: document.getElementById('searchPhonePro')?.value || undefined,
+        adresse_ip: document.getElementById('searchIpPro')?.value || undefined,
+        societe: document.getElementById('searchSociete')?.value || undefined,
+        profession: document.getElementById('searchProfession')?.value || undefined,
+        fonction: document.getElementById('searchFonction')?.value || undefined,
+        siret: document.getElementById('searchSiret')?.value || undefined,
+        siren: document.getElementById('searchSiren')?.value || undefined,
+        nir: document.getElementById('searchNirPro')?.value || undefined,
+        iban: document.getElementById('searchIbanPro')?.value || undefined,
+        bic: document.getElementById('searchBicPro')?.value || undefined,
+        vin_plaque: document.getElementById('searchVinPro')?.value || undefined
     };
 
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
         const container = document.getElementById('searchResults');
-        container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
+        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
         return;
     }
 
     const container = document.getElementById('searchResults');
-    container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+    if (container) container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
     showSearchLoading();
 
     try {
@@ -533,34 +557,36 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
 
         setTimeout(() => {
             hideSearchLoading();
-            if (results.length > 0) {
-                displayResults(container, results);
-            } else {
-                container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+            if (container) {
+                if (results.length > 0) {
+                    displayResults(container, results);
+                } else {
+                    container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+                }
             }
         }, 1500);
 
     } catch (error) {
         setTimeout(() => {
             hideSearchLoading();
-            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
+            if (container) container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
         }, 1500);
     }
 });
 
 // ============ LOOKUP ============
 document.getElementById('lookupBtn').addEventListener('click', async () => {
-    const type = document.getElementById('lookupType').value;
-    const value = document.getElementById('lookupValue').value.trim();
+    const type = document.getElementById('lookupType')?.value || 'email';
+    const value = document.getElementById('lookupValue')?.value?.trim() || '';
 
     if (!value) {
         const container = document.getElementById('lookupResults');
-        container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez entrer une valeur</div>';
+        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez entrer une valeur</div>';
         return;
     }
 
     const container = document.getElementById('lookupResults');
-    container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+    if (container) container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
     showSearchLoading();
 
     try {
@@ -572,17 +598,19 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
 
         setTimeout(() => {
             hideSearchLoading();
-            if (data.data?.results?.length > 0) {
-                displayLookupResults(container, data.data.results);
-            } else {
-                container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+            if (container) {
+                if (data.data?.results?.length > 0) {
+                    displayLookupResults(container, data.data.results);
+                } else {
+                    container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+                }
             }
         }, 1500);
 
     } catch (error) {
         setTimeout(() => {
             hideSearchLoading();
-            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de lookup</div>';
+            if (container) container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de lookup</div>';
         }, 1500);
     }
 });
@@ -882,6 +910,7 @@ function copyLookupCard(index) {
 // ============ HISTORIQUE ============
 async function loadHistory() {
     const container = document.getElementById('historyList');
+    if (!container) return;
     container.innerHTML = '<div class="empty-state">Chargement...</div>';
 
     try {
@@ -1038,11 +1067,15 @@ async function replaySearch(searchId) {
             hideSearchLoading();
             if (data.results && data.results.length > 0) {
                 const container = document.getElementById('searchResults');
-                displayResults(container, data.results);
+                if (container) {
+                    displayResults(container, data.results);
+                }
                 document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-                document.querySelector('[data-page="search"]').classList.add('active');
+                const searchLi = document.querySelector('[data-page="search"]');
+                if (searchLi) searchLi.classList.add('active');
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                document.getElementById('page-search').classList.add('active');
+                const searchPage = document.getElementById('page-search');
+                if (searchPage) searchPage.classList.add('active');
                 showToast('Recherche relancée avec succès !', 'success');
             } else {
                 showToast('Aucun résultat pour cette recherche', 'warning');
@@ -1059,6 +1092,7 @@ let fichesData = [];
 
 async function loadFiches() {
     const container = document.getElementById('fichesList');
+    if (!container) return;
     container.innerHTML = '<div class="empty-state">Chargement...</div>';
 
     try {
@@ -1130,56 +1164,68 @@ async function loadFiches() {
     }
 }
 
-document.getElementById('createFicheBtn').addEventListener('click', () => {
-    showModal('Créer une fiche', `
-        <div class="form-group">
-            <label>Nom de la fiche</label>
-            <input type="text" id="ficheNameInput" placeholder="Ex: Enquête Dupont">
-        </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
-            Maximum 10 personnes par fiche
-        </div>
-    `, 'Créer', async () => {
-        const name = document.getElementById('ficheNameInput').value.trim();
-        if (!name) {
-            showToast('Veuillez donner un nom à la fiche', 'warning');
-            return;
-        }
-        try {
-            const response = await fetch(`${API_URL}/api/fiches`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ name })
-            });
-            if (response.ok) {
-                showToast('Fiche créée avec succès !', 'success');
-                loadFiches();
-            } else {
-                showToast('Erreur lors de la création', 'error');
+// Bouton Créer une fiche
+const createFicheBtn = document.getElementById('createFicheBtn');
+if (createFicheBtn) {
+    createFicheBtn.addEventListener('click', () => {
+        showModal('Créer une fiche', `
+            <div class="form-group">
+                <label>Nom de la fiche</label>
+                <input type="text" id="ficheNameInput" placeholder="Ex: Enquête Dupont">
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+                Maximum 10 personnes par fiche
+            </div>
+        `, 'Créer', async () => {
+            const name = document.getElementById('ficheNameInput')?.value?.trim();
+            if (!name) {
+                showToast('Veuillez donner un nom à la fiche', 'warning');
+                return;
             }
-        } catch (error) {
-            showToast('Erreur réseau', 'error');
-        }
+            try {
+                const response = await fetch(`${API_URL}/api/fiches`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                if (response.ok) {
+                    showToast('Fiche créée avec succès !', 'success');
+                    loadFiches();
+                } else {
+                    showToast('Erreur lors de la création', 'error');
+                }
+            } catch (error) {
+                showToast('Erreur réseau', 'error');
+            }
+        });
     });
-});
+}
 
+// ============ ADD TO FICHE ============
 function addToFiche(index) {
-    const person = window._resultsData[index];
-    if (!person) return;
+    const person = window._resultsData?.[index];
+    if (!person) {
+        showToast('Personne introuvable', 'error');
+        return;
+    }
 
     if (fichesData.length === 0) {
         showToast('Aucune fiche existante. Créez-en une d\'abord !', 'warning');
         return;
     }
 
+    const selectOptions = fichesData.map(f => 
+        `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`
+    ).join('');
+
     showModal('Ajouter à une fiche', `
         <div class="form-group">
             <label>Sélectionner une fiche</label>
             <select id="ficheSelect">
-                ${fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('')}
+                ${selectOptions}
                 <option value="new">+ Créer une nouvelle fiche</option>
             </select>
         </div>
@@ -1194,10 +1240,12 @@ function addToFiche(index) {
         </div>
     `, 'Ajouter', async () => {
         const select = document.getElementById('ficheSelect');
+        if (!select) return;
         const ficheId = select.value;
         
         if (ficheId === 'new') {
-            const name = document.getElementById('newFicheNameInput').value.trim();
+            const nameInput = document.getElementById('newFicheNameInput');
+            const name = nameInput?.value?.trim();
             if (!name) {
                 showToast('Veuillez donner un nom à la fiche', 'warning');
                 return;
@@ -1227,14 +1275,15 @@ function addToFiche(index) {
         }
     });
 
-    document.getElementById('ficheSelect').addEventListener('change', function() {
-        const container = document.getElementById('newFicheNameContainer');
-        if (this.value === 'new') {
-            container.style.display = 'block';
-        } else {
-            container.style.display = 'none';
-        }
-    });
+    const ficheSelect = document.getElementById('ficheSelect');
+    if (ficheSelect) {
+        ficheSelect.addEventListener('change', function() {
+            const container = document.getElementById('newFicheNameContainer');
+            if (container) {
+                container.style.display = this.value === 'new' ? 'block' : 'none';
+            }
+        });
+    }
 }
 
 async function addPersonToFiche(ficheId, person) {
@@ -1288,7 +1337,7 @@ function editFiche(index) {
             <input type="text" id="editFicheName" value="${fiche.name}">
         </div>
     `, 'Sauvegarder', async () => {
-        const name = document.getElementById('editFicheName').value.trim();
+        const name = document.getElementById('editFicheName')?.value?.trim();
         if (!name) {
             showToast('Veuillez donner un nom', 'warning');
             return;
@@ -1371,8 +1420,11 @@ function exportFiche(index) {
 
 // ============ ADD TO GRAPHE ============
 function addToGraphe(index) {
-    const person = window._resultsData[index];
-    if (!person) return;
+    const person = window._resultsData?.[index];
+    if (!person) {
+        showToast('Personne introuvable', 'error');
+        return;
+    }
     
     const name = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
     
@@ -1390,7 +1442,6 @@ function addToGraphe(index) {
     
     grapheNodes.push(newNode);
     
-    // Si on est en mode lien, ajouter une arête
     if (grapheLinkMode && grapheLinkFrom !== null) {
         const edge = {
             id: Date.now() + 1,
@@ -1401,8 +1452,11 @@ function addToGraphe(index) {
         grapheEdges.push(edge);
         grapheLinkMode = false;
         grapheLinkFrom = null;
-        document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.05)';
-        document.getElementById('grapheLier').style.borderColor = 'var(--border-color)';
+        const lierBtn = document.getElementById('grapheLier');
+        if (lierBtn) {
+            lierBtn.style.background = 'rgba(255,255,255,0.05)';
+            lierBtn.style.borderColor = 'var(--border-color)';
+        }
         showToast('Personnes liées !', 'success');
     }
     
@@ -1413,6 +1467,7 @@ function addToGraphe(index) {
 // ============ PROFIL ============
 async function loadProfile() {
     const container = document.getElementById('profileInfo');
+    if (!container) return;
     container.innerHTML = '<div class="empty-state">Chargement...</div>';
 
     try {
@@ -1452,10 +1507,217 @@ async function loadProfile() {
         container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de chargement</div>';
     }
 }
+
 // ============ GRAPHE ============
+let grapheNodes = [];
+let grapheEdges = [];
+let grapheDragData = null;
+let grapheZoom = 1;
+let graphePanX = 0;
+let graphePanY = 0;
+let grapheContextNode = null;
+let grapheLinkMode = false;
+let grapheLinkFrom = null;
 
-// ... (le reste du code)
+function initGraphe() {
+    const canvas = document.getElementById('grapheCanvas');
+    if (!canvas) return;
+    
+    canvas.innerHTML = '';
+    
+    const grid = document.createElement('div');
+    grid.className = 'graphe-grid';
+    canvas.appendChild(grid);
+    
+    grapheNodes.forEach(node => {
+        createGrapheNode(node);
+    });
+    grapheEdges.forEach(edge => {
+        createGrapheEdge(edge);
+    });
+    
+    updateGraphe();
+}
 
+function createGrapheNode(node) {
+    const canvas = document.getElementById('grapheCanvas');
+    if (!canvas) return;
+    
+    const el = document.createElement('div');
+    el.className = 'graphe-node';
+    el.id = `node-${node.id}`;
+    el.style.left = `${node.x}px`;
+    el.style.top = `${node.y}px`;
+    el.style.backgroundColor = node.color || 'var(--bg-secondary)';
+    el.style.borderColor = node.borderColor || 'var(--border-color)';
+    el.textContent = node.label || 'Personne';
+    
+    if (node.role) {
+        el.textContent += ` (${node.role})`;
+    }
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'node-remove';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeGrapheNode(node.id);
+    });
+    el.appendChild(removeBtn);
+    
+    el.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            startGrapheDrag(e, node.id);
+        }
+    });
+    
+    el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        grapheContextNode = node.id;
+        showGrapheContextMenu(e.clientX, e.clientY);
+    });
+    
+    canvas.appendChild(el);
+}
+
+function createGrapheEdge(edge) {
+    const canvas = document.getElementById('grapheCanvas');
+    if (!canvas) return;
+    
+    const el = document.createElement('div');
+    el.className = 'graphe-edge';
+    el.id = `edge-${edge.id}`;
+    el.style.backgroundColor = edge.color || 'var(--border-color)';
+    canvas.appendChild(el);
+}
+
+function startGrapheDrag(e, nodeId) {
+    const node = grapheNodes.find(n => n.id === nodeId);
+    if (!node) return;
+    
+    const canvas = document.getElementById('grapheCanvas');
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    
+    grapheDragData = {
+        nodeId: nodeId,
+        offsetX: e.clientX - rect.left - node.x,
+        offsetY: e.clientY - rect.top - node.y,
+        startX: node.x,
+        startY: node.y
+    };
+    
+    const el = document.getElementById(`node-${nodeId}`);
+    if (el) el.classList.add('dragging');
+    
+    document.addEventListener('mousemove', onGrapheDrag);
+    document.addEventListener('mouseup', endGrapheDrag);
+}
+
+function onGrapheDrag(e) {
+    if (!grapheDragData) return;
+    
+    const canvas = document.getElementById('grapheCanvas');
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    
+    const node = grapheNodes.find(n => n.id === grapheDragData.nodeId);
+    if (!node) return;
+    
+    const x = e.clientX - rect.left - grapheDragData.offsetX;
+    const y = e.clientY - rect.top - grapheDragData.offsetY;
+    
+    node.x = Math.max(0, x);
+    node.y = Math.max(0, y);
+    
+    const el = document.getElementById(`node-${grapheDragData.nodeId}`);
+    if (el) {
+        el.style.left = `${node.x}px`;
+        el.style.top = `${node.y}px`;
+    }
+    
+    updateGrapheEdges();
+}
+
+function endGrapheDrag() {
+    if (grapheDragData) {
+        const el = document.getElementById(`node-${grapheDragData.nodeId}`);
+        if (el) el.classList.remove('dragging');
+    }
+    grapheDragData = null;
+    document.removeEventListener('mousemove', onGrapheDrag);
+    document.removeEventListener('mouseup', endGrapheDrag);
+}
+
+function updateGrapheEdges() {
+    grapheEdges.forEach(edge => {
+        const fromNode = grapheNodes.find(n => n.id === edge.from);
+        const toNode = grapheNodes.find(n => n.id === edge.to);
+        if (!fromNode || !toNode) return;
+        
+        const el = document.getElementById(`edge-${edge.id}`);
+        if (!el) return;
+        
+        const dx = toNode.x - fromNode.x;
+        const dy = toNode.y - fromNode.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        
+        el.style.width = `${length}px`;
+        el.style.transform = `rotate(${angle}rad)`;
+        el.style.left = `${fromNode.x}px`;
+        el.style.top = `${fromNode.y + 15}px`;
+    });
+}
+
+function updateGraphe() {
+    updateGrapheEdges();
+}
+
+function removeGrapheNode(nodeId) {
+    grapheNodes = grapheNodes.filter(n => n.id !== nodeId);
+    grapheEdges = grapheEdges.filter(e => e.from !== nodeId && e.to !== nodeId);
+    
+    const el = document.getElementById(`node-${nodeId}`);
+    if (el) el.remove();
+    
+    // Recréer les edges
+    grapheEdges.forEach(edge => {
+        const edgeEl = document.getElementById(`edge-${edge.id}`);
+        if (edgeEl) edgeEl.remove();
+    });
+    
+    grapheEdges.forEach(edge => {
+        createGrapheEdge(edge);
+    });
+    updateGraphe();
+}
+
+function showGrapheContextMenu(x, y) {
+    const menu = document.getElementById('grapheContextMenu');
+    if (!menu) return;
+    
+    menu.style.display = 'block';
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        menu.style.left = `${window.innerWidth - rect.width - 10}px`;
+    }
+    if (rect.bottom > window.innerHeight) {
+        menu.style.top = `${window.innerHeight - rect.height - 10}px`;
+    }
+}
+
+// Fermer le menu contextuel
+document.addEventListener('click', () => {
+    const menu = document.getElementById('grapheContextMenu');
+    if (menu) menu.style.display = 'none';
+});
+
+// Actions du menu contextuel
 document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
     item.addEventListener('click', function() {
         const action = this.dataset.action;
@@ -1477,8 +1739,8 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                         <input type="text" id="editNodePrenom" value="${node.prenom || ''}">
                     </div>
                 `, 'Sauvegarder', () => {
-                    const label = document.getElementById('editNodeNom').value.trim() || 'Personne';
-                    const prenom = document.getElementById('editNodePrenom').value.trim();
+                    const label = document.getElementById('editNodeNom')?.value?.trim() || 'Personne';
+                    const prenom = document.getElementById('editNodePrenom')?.value?.trim() || '';
                     node.label = label;
                     node.prenom = prenom;
                     const el = document.getElementById(`node-${nodeId}`);
@@ -1494,7 +1756,7 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                         <input type="color" id="editNodeColor" value="${node.color || '#1a1a1a'}">
                     </div>
                 `, 'Appliquer', () => {
-                    const color = document.getElementById('editNodeColor').value;
+                    const color = document.getElementById('editNodeColor')?.value || '#1a1a1a';
                     node.color = color;
                     const el = document.getElementById(`node-${nodeId}`);
                     if (el) el.style.backgroundColor = color;
@@ -1509,7 +1771,7 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                         <input type="text" id="editNodeRole" value="${node.role || ''}" placeholder="Ex: Cible, Témoin, Suspect...">
                     </div>
                 `, 'Appliquer', () => {
-                    const role = document.getElementById('editNodeRole').value.trim();
+                    const role = document.getElementById('editNodeRole')?.value?.trim() || '';
                     node.role = role;
                     const el = document.getElementById(`node-${nodeId}`);
                     if (el && role) {
@@ -1519,16 +1781,17 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 });
                 break;
 
-            // ============ AJOUT DU CAS "link" ============
             case 'link':
                 grapheLinkMode = true;
                 grapheLinkFrom = nodeId;
-                document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.1)';
-                document.getElementById('grapheLier').style.borderColor = '#ffffff';
+                const lierBtn = document.getElementById('grapheLier');
+                if (lierBtn) {
+                    lierBtn.style.background = 'rgba(255,255,255,0.1)';
+                    lierBtn.style.borderColor = '#ffffff';
+                }
                 document.getElementById('grapheContextMenu').style.display = 'none';
                 showToast('Cliquez sur une personne pour la lier', 'info');
                 break;
-            // ============ FIN AJOUT ============
                 
             case 'detach':
                 const edgesToRemove = grapheEdges.filter(e => e.from === nodeId || e.to === nodeId);
@@ -1538,6 +1801,7 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 });
                 grapheEdges = grapheEdges.filter(e => e.from !== nodeId && e.to !== nodeId);
                 document.getElementById('grapheContextMenu').style.display = 'none';
+                showToast('Personne détachée', 'info');
                 break;
                 
             case 'delete':
@@ -1546,6 +1810,7 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 `, 'Supprimer', () => {
                     removeGrapheNode(nodeId);
                     document.getElementById('grapheContextMenu').style.display = 'none';
+                    showToast('Personne supprimée', 'info');
                 });
                 break;
         }
@@ -1554,83 +1819,93 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
 
 // ============ BOUTONS GRAPHE ============
 
-document.getElementById('grapheAddPersonne').addEventListener('click', () => {
-    showModal('Ajouter une personne', `
-        <div class="form-group">
-            <label>Nom</label>
-            <input type="text" id="grapheNewNom" placeholder="Nom">
-        </div>
-        <div class="form-group">
-            <label>Prénom</label>
-            <input type="text" id="grapheNewPrenom" placeholder="Prénom">
-        </div>
-        <div class="form-group">
-            <label>Fonction (optionnel)</label>
-            <input type="text" id="grapheNewRole" placeholder="Ex: Cible, Témoin...">
-        </div>
-    `, 'Ajouter', () => {
-        const nom = document.getElementById('grapheNewNom').value.trim();
-        const prenom = document.getElementById('grapheNewPrenom').value.trim();
-        const role = document.getElementById('grapheNewRole').value.trim();
-        
-        const label = `${prenom} ${nom}`.trim() || 'Personne';
-        
-        const newNode = {
-            id: Date.now(),
-            label: label,
-            prenom: prenom,
-            nom_famille: nom,
-            role: role,
-            x: 100 + Math.random() * 400,
-            y: 100 + Math.random() * 300,
-            color: '#1a1a1a',
-            borderColor: 'var(--border-color)'
-        };
-        
-        grapheNodes.push(newNode);
-        
-        if (grapheLinkMode && grapheLinkFrom !== null) {
-            const edge = {
-                id: Date.now() + 1,
-                from: grapheLinkFrom,
-                to: newNode.id,
-                color: 'var(--border-color)'
+// Ajouter une personne
+const grapheAddBtn = document.getElementById('grapheAddPersonne');
+if (grapheAddBtn) {
+    grapheAddBtn.addEventListener('click', () => {
+        showModal('Ajouter une personne', `
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" id="grapheNewNom" placeholder="Nom">
+            </div>
+            <div class="form-group">
+                <label>Prénom</label>
+                <input type="text" id="grapheNewPrenom" placeholder="Prénom">
+            </div>
+            <div class="form-group">
+                <label>Fonction (optionnel)</label>
+                <input type="text" id="grapheNewRole" placeholder="Ex: Cible, Témoin...">
+            </div>
+        `, 'Ajouter', () => {
+            const nom = document.getElementById('grapheNewNom')?.value?.trim() || '';
+            const prenom = document.getElementById('grapheNewPrenom')?.value?.trim() || '';
+            const role = document.getElementById('grapheNewRole')?.value?.trim() || '';
+            
+            const label = `${prenom} ${nom}`.trim() || 'Personne';
+            
+            const newNode = {
+                id: Date.now(),
+                label: label,
+                prenom: prenom,
+                nom_famille: nom,
+                role: role,
+                x: 100 + Math.random() * 400,
+                y: 100 + Math.random() * 300,
+                color: '#1a1a1a',
+                borderColor: 'var(--border-color)'
             };
-            grapheEdges.push(edge);
-            grapheLinkMode = false;
-            grapheLinkFrom = null;
-            document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.05)';
-            document.getElementById('grapheLier').style.borderColor = 'var(--border-color)';
-            showToast('Personnes liées !', 'success');
-        }
-        
-        initGraphe();
-        showToast(`"${label}" ajouté au graphe !`, 'success');
+            
+            grapheNodes.push(newNode);
+            
+            if (grapheLinkMode && grapheLinkFrom !== null) {
+                const edge = {
+                    id: Date.now() + 1,
+                    from: grapheLinkFrom,
+                    to: newNode.id,
+                    color: 'var(--border-color)'
+                };
+                grapheEdges.push(edge);
+                grapheLinkMode = false;
+                grapheLinkFrom = null;
+                const lierBtn = document.getElementById('grapheLier');
+                if (lierBtn) {
+                    lierBtn.style.background = 'rgba(255,255,255,0.05)';
+                    lierBtn.style.borderColor = 'var(--border-color)';
+                }
+                showToast('Personnes liées !', 'success');
+            }
+            
+            initGraphe();
+            showToast(`"${label}" ajouté au graphe !`, 'success');
+        });
     });
-});
+}
 
 // Bouton LIER
-document.getElementById('grapheLier').addEventListener('click', function() {
-    if (grapheLinkMode) {
-        grapheLinkMode = false;
+const grapheLierBtn = document.getElementById('grapheLier');
+if (grapheLierBtn) {
+    grapheLierBtn.addEventListener('click', function() {
+        if (grapheLinkMode) {
+            grapheLinkMode = false;
+            grapheLinkFrom = null;
+            this.style.background = 'rgba(255,255,255,0.05)';
+            this.style.borderColor = 'var(--border-color)';
+            showToast('Mode lien désactivé', 'info');
+            return;
+        }
+        
+        if (grapheNodes.length < 1) {
+            showToast('Ajoutez au moins 2 personnes au graphe', 'warning');
+            return;
+        }
+        
+        grapheLinkMode = true;
         grapheLinkFrom = null;
-        this.style.background = 'rgba(255,255,255,0.05)';
-        this.style.borderColor = 'var(--border-color)';
-        showToast('Mode lien désactivé', 'info');
-        return;
-    }
-    
-    if (grapheNodes.length < 1) {
-        showToast('Ajoutez au moins 2 personnes au graphe', 'warning');
-        return;
-    }
-    
-    grapheLinkMode = true;
-    grapheLinkFrom = null;
-    this.style.background = 'rgba(255,255,255,0.1)';
-    this.style.borderColor = '#ffffff';
-    showToast('Cliquez sur une personne pour la lier à la suivante', 'info');
-});
+        this.style.background = 'rgba(255,255,255,0.1)';
+        this.style.borderColor = '#ffffff';
+        showToast('Cliquez sur une personne pour la lier à la suivante', 'info');
+    });
+}
 
 // Gestion du clic sur les nœuds pour le mode lien
 document.addEventListener('click', function(e) {
@@ -1661,62 +1936,116 @@ document.addEventListener('click', function(e) {
         
         grapheLinkFrom = null;
         grapheLinkMode = false;
-        document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.05)';
-        document.getElementById('grapheLier').style.borderColor = 'var(--border-color)';
+        const lierBtn = document.getElementById('grapheLier');
+        if (lierBtn) {
+            lierBtn.style.background = 'rgba(255,255,255,0.05)';
+            lierBtn.style.borderColor = 'var(--border-color)';
+        }
         
         initGraphe();
         showToast('Personnes liées !', 'success');
     }
 });
 
-document.getElementById('grapheSauvegarder').addEventListener('click', () => {
-    const data = {
-        nodes: grapheNodes,
-        edges: grapheEdges
-    };
-    localStorage.setItem('marauder_graphe', JSON.stringify(data));
-    showToast('Graphe sauvegardé !', 'success');
-});
-
-document.getElementById('grapheMesGraphes').addEventListener('click', () => {
-    const saved = localStorage.getItem('marauder_graphe');
-    if (!saved) {
-        showToast('Aucun graphe sauvegardé', 'warning');
-        return;
-    }
-    try {
-        const data = JSON.parse(saved);
-        grapheNodes = data.nodes || [];
-        grapheEdges = data.edges || [];
-        initGraphe();
-        showToast('Graphe chargé !', 'success');
-    } catch (e) {
-        showToast('Erreur de chargement', 'error');
-    }
-});
-
-document.getElementById('grapheEffacer').addEventListener('click', () => {
-    showModal('Confirmation', `
-        <p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>
-        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Cette action est irréversible.</p>
-    `, 'Effacer', () => {
-        grapheNodes = [];
-        grapheEdges = [];
-        initGraphe();
-        showToast('Graphe effacé', 'info');
+// Sauvegarder le graphe
+const grapheSaveBtn = document.getElementById('grapheSauvegarder');
+if (grapheSaveBtn) {
+    grapheSaveBtn.addEventListener('click', () => {
+        const data = {
+            name: 'Mon graphe',
+            nodes: grapheNodes,
+            edges: grapheEdges
+        };
+        localStorage.setItem('marauder_graphe', JSON.stringify(data));
+        
+        // Sauvegarde sur le serveur
+        fetch(`${API_URL}/api/graphes`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        }).then(response => {
+            if (response.ok) {
+                showToast('Graphe sauvegardé sur le serveur !', 'success');
+            } else {
+                showToast('Graphe sauvegardé localement seulement', 'warning');
+            }
+        }).catch(() => {
+            showToast('Graphe sauvegardé localement', 'info');
+        });
     });
-});
+}
+
+// Charger un graphe sauvegardé
+const grapheLoadBtn = document.getElementById('grapheMesGraphes');
+if (grapheLoadBtn) {
+    grapheLoadBtn.addEventListener('click', async () => {
+        // Essayer de charger depuis le serveur d'abord
+        try {
+            const response = await fetch(`${API_URL}/api/graphes`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.graphe) {
+                    grapheNodes = data.graphe.nodes || [];
+                    grapheEdges = data.graphe.edges || [];
+                    initGraphe();
+                    showToast('Graphe chargé depuis le serveur !', 'success');
+                    return;
+                }
+            }
+        } catch (e) { /* Silence */ }
+        
+        // Fallback sur le localStorage
+        const saved = localStorage.getItem('marauder_graphe');
+        if (!saved) {
+            showToast('Aucun graphe sauvegardé', 'warning');
+            return;
+        }
+        try {
+            const data = JSON.parse(saved);
+            grapheNodes = data.nodes || [];
+            grapheEdges = data.edges || [];
+            initGraphe();
+            showToast('Graphe chargé localement !', 'success');
+        } catch (e) {
+            showToast('Erreur de chargement', 'error');
+        }
+    });
+}
+
+// Effacer le graphe
+const grapheClearBtn = document.getElementById('grapheEffacer');
+if (grapheClearBtn) {
+    grapheClearBtn.addEventListener('click', () => {
+        showModal('Confirmation', `
+            <p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Cette action est irréversible.</p>
+        `, 'Effacer', () => {
+            grapheNodes = [];
+            grapheEdges = [];
+            initGraphe();
+            showToast('Graphe effacé', 'info');
+        });
+    });
+}
 
 // Zoom avec la molette
-document.getElementById('grapheContainer').addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    grapheZoom = Math.max(0.5, Math.min(2, grapheZoom + delta));
-    document.querySelectorAll('.graphe-node').forEach(el => {
-        el.style.transform = `scale(${grapheZoom})`;
-        el.style.transformOrigin = 'center center';
+const grapheContainer = document.getElementById('grapheContainer');
+if (grapheContainer) {
+    grapheContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.05 : 0.05;
+        grapheZoom = Math.max(0.5, Math.min(2, grapheZoom + delta));
+        document.querySelectorAll('.graphe-node').forEach(el => {
+            el.style.transform = `scale(${grapheZoom})`;
+            el.style.transformOrigin = 'center center';
+        });
     });
-});
+}
 
 // Drag du fond
 let isPanning = false;
@@ -1725,16 +2054,20 @@ let panStartY = 0;
 let panStartPanX = 0;
 let panStartPanY = 0;
 
-document.getElementById('grapheCanvas').addEventListener('mousedown', (e) => {
-    if (e.target === e.currentTarget || e.target.id === 'grapheCanvas' || e.target.classList.contains('graphe-grid')) {
-        isPanning = true;
-        panStartX = e.clientX;
-        panStartY = e.clientY;
-        panStartPanX = graphePanX;
-        panStartPanY = graphePanY;
-        document.getElementById('grapheContainer').style.cursor = 'grabbing';
-    }
-});
+const grapheCanvas = document.getElementById('grapheCanvas');
+if (grapheCanvas) {
+    grapheCanvas.addEventListener('mousedown', (e) => {
+        if (e.target === e.currentTarget || e.target.id === 'grapheCanvas' || e.target.classList.contains('graphe-grid')) {
+            isPanning = true;
+            panStartX = e.clientX;
+            panStartY = e.clientY;
+            panStartPanX = graphePanX;
+            panStartPanY = graphePanY;
+            const container = document.getElementById('grapheContainer');
+            if (container) container.style.cursor = 'grabbing';
+        }
+    });
+}
 
 document.addEventListener('mousemove', (e) => {
     if (isPanning) {
@@ -1755,7 +2088,8 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => {
     if (isPanning) {
         isPanning = false;
-        document.getElementById('grapheContainer').style.cursor = 'grab';
+        const container = document.getElementById('grapheContainer');
+        if (container) container.style.cursor = 'grab';
     }
 });
 
