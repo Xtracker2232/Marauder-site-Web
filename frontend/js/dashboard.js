@@ -6,7 +6,25 @@ if (!token) {
     window.location.href = '/';
 }
 
-// ============ FONCTIONS DES SECTIONS DÉPLIABLES ============
+// ============ ANIMATION DE RECHERCHE ============
+function showSearchLoading() {
+    const overlay = document.getElementById('searchOverlay');
+    overlay.classList.add('active');
+    // Réinitialiser la barre neon
+    const bar = document.querySelector('.neon-bar');
+    if (bar) {
+        bar.style.animation = 'none';
+        bar.offsetHeight; // Trigger reflow
+        bar.style.animation = 'neonSlide 1.8s ease-in-out infinite';
+    }
+}
+
+function hideSearchLoading() {
+    const overlay = document.getElementById('searchOverlay');
+    overlay.classList.remove('active');
+}
+
+// ============ SECTIONS DÉPLIABLES ============
 document.querySelectorAll('.section-header').forEach(header => {
     header.addEventListener('click', function() {
         const body = this.nextElementSibling;
@@ -87,7 +105,7 @@ document.getElementById('clearBtnPro').addEventListener('click', () => {
     document.getElementById('searchResults').innerHTML = '';
 });
 
-// ============ RECHERCHE FRANÇAISE ============
+// ============ RECHERCHE FRANÇAISE AVEC ANIMATION ============
 document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = {
         nom_famille: document.getElementById('searchNom').value || undefined,
@@ -134,7 +152,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
-        // Message sur la page au lieu d'alert
         const container = document.getElementById('searchResults');
         container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
         return;
@@ -142,6 +159,8 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
     const container = document.getElementById('searchResults');
     container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+
+    showSearchLoading();
 
     try {
         const response = await fetch(`${API_URL}/api/brix/search`, {
@@ -155,17 +174,25 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
         const data = await response.json();
 
-        if (data.data?.results?.length > 0) {
-            displayResults(container, data.data.results);
-        } else {
-            container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
-        }
+        setTimeout(() => {
+            hideSearchLoading();
+            
+            if (data.data?.results?.length > 0) {
+                displayResults(container, data.data.results);
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+            }
+        }, 1500);
+
     } catch (error) {
-        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
+        setTimeout(() => {
+            hideSearchLoading();
+            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
+        }, 1500);
     }
 });
 
-// ============ RECHERCHE PRO ============
+// ============ RECHERCHE PRO AVEC ANIMATION ============
 document.getElementById('searchBtnPro').addEventListener('click', async () => {
     const query = {
         nom_famille: document.getElementById('searchNomPro').value || undefined,
@@ -198,6 +225,8 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
     const container = document.getElementById('searchResults');
     container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
 
+    showSearchLoading();
+
     try {
         const response = await fetch(`${API_URL}/api/brix/search`, {
             method: 'POST',
@@ -210,17 +239,25 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
 
         const data = await response.json();
 
-        if (data.data?.results?.length > 0) {
-            displayResults(container, data.data.results);
-        } else {
-            container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
-        }
+        setTimeout(() => {
+            hideSearchLoading();
+            
+            if (data.data?.results?.length > 0) {
+                displayResults(container, data.data.results);
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+            }
+        }, 1500);
+
     } catch (error) {
-        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
+        setTimeout(() => {
+            hideSearchLoading();
+            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
+        }, 1500);
     }
 });
 
-// ============ LOOKUP ============
+// ============ LOOKUP AVEC ANIMATION ============
 document.getElementById('lookupBtn').addEventListener('click', async () => {
     const type = document.getElementById('lookupType').value;
     const value = document.getElementById('lookupValue').value.trim();
@@ -234,6 +271,8 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     const container = document.getElementById('lookupResults');
     container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
 
+    showSearchLoading();
+
     try {
         const response = await fetch(`${API_URL}/api/brix/lookup/${type}/${encodeURIComponent(value)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -241,13 +280,21 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
 
         const data = await response.json();
 
-        if (data.data?.results?.length > 0) {
-            displayLookupResults(container, data.data.results);
-        } else {
-            container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
-        }
+        setTimeout(() => {
+            hideSearchLoading();
+            
+            if (data.data?.results?.length > 0) {
+                displayLookupResults(container, data.data.results);
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+            }
+        }, 1500);
+
     } catch (error) {
-        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de lookup</div>';
+        setTimeout(() => {
+            hideSearchLoading();
+            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de lookup</div>';
+        }, 1500);
     }
 });
 
