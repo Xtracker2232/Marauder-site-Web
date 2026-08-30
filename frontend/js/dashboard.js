@@ -1109,8 +1109,8 @@ async function loadFiches() {
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                     </svg>
-                    <p>Module fiches en développement</p>
-                    <span style="font-size:13px;color:var(--text-muted);">Les fiches seront disponibles prochainement</span>
+                    <p>Aucune fiche créée</p>
+                    <span style="font-size:13px;color:var(--text-muted);">Créez votre première fiche pour organiser vos recherches</span>
                 </div>
             `;
             return;
@@ -1152,6 +1152,7 @@ async function loadFiches() {
             `;
         }
     } catch (error) {
+        console.error('Erreur loadFiches:', error);
         container.innerHTML = `
             <div class="empty-state" style="color:var(--warning);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color:var(--warning);">
@@ -1159,8 +1160,8 @@ async function loadFiches() {
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <p>Module fiches en cours de développement</p>
-                <span style="font-size:13px;color:var(--text-muted);">Cette fonctionnalité sera disponible prochainement</span>
+                <p>Erreur de chargement des fiches</p>
+                <span style="font-size:13px;color:var(--text-muted);">Vérifiez votre connexion</span>
             </div>
         `;
     }
@@ -1197,7 +1198,8 @@ if (createFicheBtn) {
                     showToast('Fiche créée avec succès !', 'success');
                     loadFiches();
                 } else {
-                    showToast('Erreur lors de la création', 'error');
+                    const data = await response.json();
+                    showToast(data.error || 'Erreur lors de la création', 'error');
                 }
             } catch (error) {
                 showToast('Erreur réseau', 'error');
@@ -1214,11 +1216,22 @@ function addToFiche(index) {
         return;
     }
 
+    // Charger les fiches si elles ne sont pas chargées
     if (fichesData.length === 0) {
-        showToast('Aucune fiche existante. Créez-en une d\'abord !', 'warning');
+        loadFiches().then(() => {
+            if (fichesData.length === 0) {
+                showToast('Aucune fiche existante. Créez-en une d\'abord !', 'warning');
+                return;
+            }
+            showFichePicker(person);
+        });
         return;
     }
 
+    showFichePicker(person);
+}
+
+function showFichePicker(person) {
     const selectOptions = fichesData.map(f => 
         `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`
     ).join('');
@@ -1959,6 +1972,10 @@ if (grapheSaveBtn) {
             edges: grapheEdges
         };
         
+        // Sauvegarde locale
+        localStorage.setItem('marauder_graphe', JSON.stringify(data));
+        
+        // Sauvegarde sur le serveur
         fetch(`${API_URL}/api/graphes`, {
             method: 'POST',
             headers: {
@@ -1970,10 +1987,10 @@ if (grapheSaveBtn) {
             if (response.ok) {
                 showToast('Graphe sauvegardé sur le serveur !', 'success');
             } else {
-                showToast('Erreur de sauvegarde', 'error');
+                showToast('Graphe sauvegardé localement', 'info');
             }
         }).catch(() => {
-            showToast('Erreur réseau', 'error');
+            showToast('Graphe sauvegardé localement', 'info');
         });
     });
 }
@@ -1982,6 +1999,7 @@ if (grapheSaveBtn) {
 const grapheLoadBtn = document.getElementById('grapheMesGraphes');
 if (grapheLoadBtn) {
     grapheLoadBtn.addEventListener('click', async () => {
+        // Essayer de charger depuis le serveur d'abord
         try {
             const response = await fetch(`${API_URL}/api/graphes`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -1998,7 +2016,21 @@ if (grapheLoadBtn) {
             }
         } catch (e) { /* Silence */ }
         
-        showToast('Aucun graphe sauvegardé', 'warning');
+        // Fallback sur le localStorage
+        const saved = localStorage.getItem('marauder_graphe');
+        if (!saved) {
+            showToast('Aucun graphe sauvegardé', 'warning');
+            return;
+        }
+        try {
+            const data = JSON.parse(saved);
+            grapheNodes = data.nodes || [];
+            grapheEdges = data.edges || [];
+            initGraphe();
+            showToast('Graphe chargé localement !', 'success');
+        } catch (e) {
+            showToast('Erreur de chargement', 'error');
+        }
     });
 }
 
