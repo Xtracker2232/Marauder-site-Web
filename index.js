@@ -59,7 +59,6 @@ const initDB = async () => {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
         
-        // Vérifier si la table users existe
         const tableCheck = await client.query(`
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
@@ -68,7 +67,6 @@ const initDB = async () => {
         `);
         
         if (!tableCheck.rows[0].exists) {
-            // Créer la table sans email
             await client.query(`
                 CREATE TABLE users (
                     id SERIAL PRIMARY KEY,
@@ -93,7 +91,6 @@ const initDB = async () => {
             `);
             console.log('✅ Tables créées sans email');
         } else {
-            // Vérifier si la colonne email existe et la supprimer
             const columnCheck = await client.query(`
                 SELECT EXISTS (
                     SELECT FROM information_schema.columns 
@@ -103,16 +100,13 @@ const initDB = async () => {
             
             if (columnCheck.rows[0].exists) {
                 console.log('📌 Suppression de la colonne email...');
-                await client.query(`
-                    ALTER TABLE users DROP COLUMN email CASCADE;
-                `);
+                await client.query(`ALTER TABLE users DROP COLUMN email CASCADE;`);
                 console.log('✅ Colonne email supprimée');
             }
             
             console.log('✅ Tables déjà existantes, migration effectuée');
         }
         
-        // Créer le compte admin
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
         
         if (parseInt(result.rows[0].count) === 0) {
@@ -149,7 +143,14 @@ pool.connect(async (err, client, release) => {
 // ============ MIDDLEWARE ============
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
+
+// Servir les fichiers statiques depuis /frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
+
+// ============ FAVICON ============
+app.get('/favicon-32x32.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'favicon-32x32.png'));
+});
 
 // ============ AUTH ============
 const authenticateToken = (req, res, next) => {
@@ -242,7 +243,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Register (sans email)
+// Register
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
     console.log('📝 Inscription:', username);

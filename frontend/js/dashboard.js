@@ -134,7 +134,9 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
-        alert('Veuillez remplir au moins un critère de recherche');
+        // Message sur la page au lieu d'alert
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
         return;
     }
 
@@ -159,7 +161,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
         }
     } catch (error) {
-        container.innerHTML = '<div class="empty-state">Erreur de recherche</div>';
+        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
     }
 });
 
@@ -188,7 +190,8 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
-        alert('Veuillez remplir au moins un critère de recherche');
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère de recherche</div>';
         return;
     }
 
@@ -213,7 +216,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
             container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
         }
     } catch (error) {
-        container.innerHTML = '<div class="empty-state">Erreur de recherche</div>';
+        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de recherche</div>';
     }
 });
 
@@ -223,7 +226,8 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     const value = document.getElementById('lookupValue').value.trim();
 
     if (!value) {
-        alert('Veuillez entrer une valeur');
+        const container = document.getElementById('lookupResults');
+        container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez entrer une valeur</div>';
         return;
     }
 
@@ -243,7 +247,7 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
             container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
         }
     } catch (error) {
-        container.innerHTML = '<div class="empty-state">Erreur de lookup</div>';
+        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de lookup</div>';
     }
 });
 
@@ -254,9 +258,8 @@ function displayResults(container, results) {
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
         const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
         
-        // Générer les détails pour la fiche
         let detailsHtml = '';
-        const detailItems = Object.entries(person)
+        Object.entries(person)
             .filter(([key]) => !key.startsWith('_'))
             .forEach(([key, value]) => {
                 if (!value) return;
@@ -294,7 +297,6 @@ function displayResults(container, results) {
         `;
     }).join('');
     
-    // Stocker les données pour le copier/coller
     window._resultsData = results;
 }
 
@@ -395,7 +397,6 @@ function copyFullCard(index) {
             }, 2000);
         });
     }).catch(() => {
-        // Fallback
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
@@ -433,7 +434,7 @@ async function loadHistory() {
             container.innerHTML = '<div class="empty-state">Aucun historique</div>';
         }
     } catch (error) {
-        container.innerHTML = '<div class="empty-state">Erreur de chargement</div>';
+        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de chargement</div>';
     }
 }
 
@@ -476,7 +477,7 @@ async function loadProfile() {
             `;
         }
     } catch (error) {
-        container.innerHTML = '<div class="empty-state">Erreur de chargement</div>';
+        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de chargement</div>';
     }
 }
 

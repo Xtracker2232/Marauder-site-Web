@@ -45,12 +45,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-// Register (sans email)
+// Register (avec connexion automatique)
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('regUsername').value;
     const password = document.getElementById('regPassword').value;
     const errorDiv = document.getElementById('errorMessage');
+
+    // Cacher les erreurs précédentes
+    errorDiv.style.display = 'none';
 
     if (password.length < 8) {
         errorDiv.textContent = 'Le mot de passe doit faire au moins 8 caractères';
@@ -59,22 +62,43 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/register`, {
+        // 1. Inscription
+        const registerResponse = await fetch(`${API_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
 
-        const data = await response.json();
+        const registerData = await registerResponse.json();
 
-        if (data.success) {
-            errorDiv.style.display = 'none';
-            alert('Compte créé ! Vous pouvez maintenant vous connecter.');
-            document.getElementById('showLogin').click();
-        } else {
-            errorDiv.textContent = data.error || 'Erreur d\'inscription';
+        if (!registerData.success) {
+            errorDiv.textContent = registerData.error || 'Erreur d\'inscription';
             errorDiv.style.display = 'block';
+            return;
         }
+
+        // 2. Connexion automatique
+        const loginResponse = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const loginData = await loginResponse.json();
+
+        if (loginData.success) {
+            localStorage.setItem('token', loginData.token);
+            localStorage.setItem('user', JSON.stringify(loginData.user));
+            window.location.href = '/dashboard.html';
+        } else {
+            // Si la connexion auto échoue, rediriger vers login
+            errorDiv.textContent = 'Compte créé ! Connectez-vous maintenant.';
+            errorDiv.style.display = 'block';
+            document.getElementById('showLogin').click();
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+
     } catch (error) {
         errorDiv.textContent = 'Erreur réseau';
         errorDiv.style.display = 'block';
