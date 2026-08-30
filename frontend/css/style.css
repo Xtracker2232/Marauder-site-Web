@@ -11,7 +11,7 @@
 
 :root {
     --bg-primary: #0a0a0a;
-    --bg-secondary: #121212;
+    --bg-secondary: #111111;
     --bg-card: #1a1a1a;
     --bg-input: #1e1e1e;
     --border-color: #2a2a2a;
@@ -21,6 +21,7 @@
     --accent: #7c3aed;
     --accent-hover: #6d28d9;
     --accent-glow: rgba(124, 58, 237, 0.3);
+    --neon-glow: 0 0 20px rgba(124, 58, 237, 0.5);
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
@@ -37,13 +38,45 @@ body {
 }
 
 /* ============================================
+   BACKGROUND AVEC CADRAGE
+   ============================================ */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ============================================
    LOGIN PAGE
    ============================================ */
 .login-page {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(ellipse at center, #121212 0%, #0a0a0a 100%);
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
 }
 
 .login-container {
@@ -57,7 +90,35 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 40px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow), var(--neon-glow);
+    position: relative;
+    transition: box-shadow 0.3s ease;
+}
+
+.login-box:hover {
+    box-shadow: var(--shadow), 0 0 40px rgba(124, 58, 237, 0.3);
+}
+
+/* Neon border effect */
+.login-box::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: var(--radius);
+    background: linear-gradient(45deg, var(--accent), transparent, var(--accent));
+    background-size: 300% 300%;
+    animation: neonBorder 4s ease-in-out infinite;
+    z-index: -1;
+    opacity: 0.3;
+}
+
+@keyframes neonBorder {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .login-header {
@@ -70,6 +131,7 @@ body {
     height: 48px;
     color: var(--accent);
     margin-bottom: 12px;
+    filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5));
 }
 
 .login-header h1 {
@@ -132,7 +194,7 @@ input, select {
 
 input:focus, select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+    box-shadow: 0 0 0 3px var(--accent-glow), 0 0 20px rgba(124, 58, 237, 0.1);
 }
 
 input::placeholder {
@@ -150,7 +212,7 @@ input::placeholder {
     font-weight: 600;
     font-family: 'Inter', sans-serif;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -159,6 +221,7 @@ input::placeholder {
 
 .btn-primary:hover {
     background: var(--accent-hover);
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
 }
 
 .btn-primary:active {
@@ -186,6 +249,7 @@ input::placeholder {
 
 .register-link a:hover {
     color: var(--accent-hover);
+    text-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
 }
 
 .error-message {
@@ -200,11 +264,13 @@ input::placeholder {
 }
 
 /* ============================================
-   DASHBOARD LAYOUT
+   DASHBOARD
    ============================================ */
 .dashboard-page {
     display: flex;
     min-height: 100vh;
+    position: relative;
+    z-index: 1;
 }
 
 /* Sidebar */
@@ -233,6 +299,7 @@ input::placeholder {
     width: 32px;
     height: 32px;
     color: var(--accent);
+    filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.3));
 }
 
 .sidebar-header span {
@@ -268,6 +335,7 @@ input::placeholder {
 .sidebar-nav li.active {
     background: rgba(124, 58, 237, 0.15);
     color: var(--accent);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.05);
 }
 
 .sidebar-nav li svg {
@@ -349,93 +417,160 @@ input::placeholder {
 }
 
 /* ============================================
-   SEARCH FORM
+   SECTIONS DÉPLIABLES
    ============================================ */
-.search-form {
+.section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
 }
 
+.section:hover {
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.section-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.section-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.section-header .toggle-icon {
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+}
+
+.section-header .toggle-icon.open {
+    transform: rotate(180deg);
+}
+
+.section-body {
+    padding: 0 20px 20px 20px;
+    display: none;
+}
+
+.section-body.open {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   FORMULAIRES DE RECHERCHE
+   ============================================ */
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
 }
 
 .form-grid .form-group {
     margin-bottom: 0;
 }
 
-.form-grid input {
+.form-grid input, .form-grid select {
     padding-left: 14px;
 }
 
-.search-options {
+/* Tabs de recherche */
+.search-tabs {
     display: flex;
-    align-items: center;
-    gap: 24px;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--bg-input);
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.search-tab {
+    flex: 1;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.search-tab:hover {
+    color: var(--text-primary);
+}
+
+.search-tab.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+}
+
+.search-tab-content {
+    display: none;
+}
+
+.search-tab-content.active {
+    display: block;
+}
+
+.search-actions {
+    display: flex;
+    gap: 12px;
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
 }
 
-.search-options label {
+.search-actions .btn-primary {
+    width: auto;
+    padding: 10px 28px;
+}
+
+.btn-secondary {
+    padding: 10px 28px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
-    color: var(--text-secondary);
-    cursor: pointer;
 }
 
-.search-options input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--accent);
-    padding: 0;
-}
-
-.search-options .btn-primary {
-    width: auto;
-    padding: 10px 24px;
-    margin-left: auto;
+.btn-secondary:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 /* ============================================
-   LOOKUP
-   ============================================ */
-.lookup-form {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 24px;
-    display: flex;
-    gap: 16px;
-    align-items: end;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-}
-
-.lookup-form .form-group {
-    flex: 1;
-    min-width: 180px;
-    margin-bottom: 0;
-}
-
-.lookup-form select {
-    padding-left: 14px;
-}
-
-.lookup-form .btn-primary {
-    width: auto;
-    padding: 12px 28px;
-}
-
-/* ============================================
-   RESULTS
+   RÉSULTATS
    ============================================ */
 .results-container {
     display: flex;
@@ -448,11 +583,13 @@ input::placeholder {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 20px 24px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
 }
 
 .result-card:hover {
     border-color: rgba(124, 58, 237, 0.3);
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.05);
 }
 
 .result-header {
@@ -519,6 +656,44 @@ input::placeholder {
     font-size: 12px;
 }
 
+/* ============================================
+   BOUTON COPIER avec "by Marauder"
+   ============================================ */
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 4px 8px;
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    background: rgba(124, 58, 237, 0.2);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+}
+
+.copy-btn .marauder-tag {
+    font-size: 9px;
+    opacity: 0.6;
+    font-weight: 300;
+}
+
+.copy-btn.copied {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: var(--success);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
 .empty-state {
     text-align: center;
     padding: 48px 24px;
@@ -533,7 +708,37 @@ input::placeholder {
 }
 
 /* ============================================
-   PROFILE
+   LOOKUP
+   ============================================ */
+.lookup-form {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.lookup-form .form-group {
+    flex: 1;
+    min-width: 180px;
+    margin-bottom: 0;
+}
+
+.lookup-form select {
+    padding-left: 14px;
+}
+
+.lookup-form .btn-primary {
+    width: auto;
+    padding: 12px 28px;
+}
+
+/* ============================================
+   PROFIL
    ============================================ */
 .profile-card {
     background: var(--bg-secondary);
@@ -578,18 +783,6 @@ input::placeholder {
     
     .form-grid {
         grid-template-columns: 1fr 1fr;
-    }
-    
-    .search-options {
-        flex-wrap: wrap;
-    }
-    
-    .lookup-form {
-        flex-direction: column;
-    }
-    
-    .lookup-form .btn-primary {
-        width: 100%;
     }
 }
 

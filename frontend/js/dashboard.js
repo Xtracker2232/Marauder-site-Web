@@ -6,7 +6,34 @@ if (!token) {
     window.location.href = '/';
 }
 
-// Vérification token à chaque chargement
+// ============ FONCTIONS DES SECTIONS DÉPLIABLES ============
+document.querySelectorAll('.section-header').forEach(header => {
+    header.addEventListener('click', function() {
+        const body = this.nextElementSibling;
+        const icon = this.querySelector('.toggle-icon');
+        
+        body.classList.toggle('open');
+        icon.classList.toggle('open');
+    });
+});
+
+// ============ TABS ============
+document.querySelectorAll('.search-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Remove active from all tabs
+        document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Hide all tab contents
+        document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Show selected tab content
+        const tabId = this.dataset.tab;
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+    });
+});
+
+// ============ VÉRIFICATION TOKEN ============
 async function verifyToken() {
     try {
         const response = await fetch(`${API_URL}/api/verify`, {
@@ -49,20 +76,123 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     window.location.href = '/';
 });
 
-// ============ RECHERCHE ============
+// ============ CLEAR FORM ============
+document.getElementById('clearBtn').addEventListener('click', () => {
+    document.querySelectorAll('#tab-french input, #tab-french select').forEach(el => {
+        el.value = '';
+    });
+    document.getElementById('searchResults').innerHTML = '';
+});
+
+document.getElementById('clearBtnPro').addEventListener('click', () => {
+    document.querySelectorAll('#tab-pro input, #tab-pro select').forEach(el => {
+        el.value = '';
+    });
+    document.getElementById('searchResults').innerHTML = '';
+});
+
+// ============ RECHERCHE FRANÇAISE ============
 document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = {
         nom_famille: document.getElementById('searchNom').value || undefined,
         prenom: document.getElementById('searchPrenom').value || undefined,
+        nom_naissance: document.getElementById('searchNomNaissance').value || undefined,
+        nom_affichage: document.getElementById('searchNomAffichage').value || undefined,
         email: document.getElementById('searchEmail').value || undefined,
         telephone: document.getElementById('searchPhone').value || undefined,
-        ville: document.getElementById('searchVille').value || undefined,
+        nom_utilisateur: document.getElementById('searchUsername').value || undefined,
+        adresse_ip: document.getElementById('searchIp').value || undefined,
+        adresse: document.getElementById('searchAdresse').value || undefined,
         code_postal: document.getElementById('searchCp').value || undefined,
-        flexible: document.getElementById('searchFlexible').checked,
+        ville: document.getElementById('searchVille').value || undefined,
+        ville_naissance: document.getElementById('searchVilleNaissance').value || undefined,
+        steam_id: document.getElementById('searchSteam').value || undefined,
+        fivem_license: document.getElementById('searchFivemLicense').value || undefined,
+        discord_id: document.getElementById('searchDiscord').value || undefined,
+        xbox_live_id: document.getElementById('searchXbox').value || undefined,
+        live_id: document.getElementById('searchLive').value || undefined,
+        fivem_license2: document.getElementById('searchFivemLicense2').value || undefined,
+        nir: document.getElementById('searchNir').value || undefined,
+        iban: document.getElementById('searchIban').value || undefined,
+        bic: document.getElementById('searchBic').value || undefined,
+        vin_plaque: document.getElementById('searchVin').value || undefined,
+        flexible: true,
         per_page: 20
     };
 
+    // Date de naissance
+    const dateNaissance = document.getElementById('searchDateNaissance').value;
+    if (dateNaissance) {
+        query.date_naissance = dateNaissance;
+    }
+    
+    const jour = document.getElementById('searchJour').value;
+    if (jour) query.jour_naissance = parseInt(jour);
+    
+    const mois = document.getElementById('searchMois').value;
+    if (mois) query.mois_naissance = parseInt(mois);
+    
+    const annee = document.getElementById('searchAnnee').value;
+    if (annee) query.annee_naissance = annee;
+    
+    const genre = document.getElementById('searchGenre').value;
+    if (genre) query.genre = genre;
+
     // Remove undefined values
+    Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
+
+    if (Object.keys(query).length <= 1) {
+        alert('Veuillez remplir au moins un critère de recherche');
+        return;
+    }
+
+    const container = document.getElementById('searchResults');
+    container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+
+    try {
+        const response = await fetch(`${API_URL}/api/brix/search`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(query)
+        });
+
+        const data = await response.json();
+
+        if (data.data?.results?.length > 0) {
+            displayResults(container, data.data.results);
+        } else {
+            container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+        }
+    } catch (error) {
+        container.innerHTML = '<div class="empty-state">Erreur de recherche</div>';
+    }
+});
+
+// ============ RECHERCHE PRO ============
+document.getElementById('searchBtnPro').addEventListener('click', async () => {
+    const query = {
+        nom_famille: document.getElementById('searchNomPro').value || undefined,
+        prenom: document.getElementById('searchPrenomPro').value || undefined,
+        nom_naissance: document.getElementById('searchNomNaissancePro').value || undefined,
+        email: document.getElementById('searchEmailPro').value || undefined,
+        telephone: document.getElementById('searchPhonePro').value || undefined,
+        adresse_ip: document.getElementById('searchIpPro').value || undefined,
+        societe: document.getElementById('searchSociete').value || undefined,
+        profession: document.getElementById('searchProfession').value || undefined,
+        fonction: document.getElementById('searchFonction').value || undefined,
+        siret: document.getElementById('searchSiret').value || undefined,
+        siren: document.getElementById('searchSiren').value || undefined,
+        nir: document.getElementById('searchNirPro').value || undefined,
+        iban: document.getElementById('searchIbanPro').value || undefined,
+        bic: document.getElementById('searchBicPro').value || undefined,
+        vin_plaque: document.getElementById('searchVinPro').value || undefined,
+        flexible: true,
+        per_page: 20
+    };
+
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
@@ -125,11 +255,33 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ DISPLAY FUNCTIONS ============
+// ============ DISPLAY FUNCTIONS WITH COPY BUTTON ============
 function displayResults(container, results) {
     container.innerHTML = results.map(person => {
         const confidence = person._confidence || 0;
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
+        
+        // Générer les détails avec bouton copier
+        const details = Object.entries(person)
+            .filter(([key]) => !key.startsWith('_'))
+            .map(([key, value]) => {
+                if (!value) return '';
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return `
+                    <div>
+                        <span class="label">${label}</span> 
+                        ${value} 
+                        <button class="copy-btn" onclick="copyToClipboard('${String(value).replace(/'/g, "\\'")}', this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            Copier
+                            <span class="marauder-tag">by Marauder</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
         
         return `
             <div class="result-card">
@@ -137,14 +289,7 @@ function displayResults(container, results) {
                     <div class="result-name">${person.prenom || ''} ${person.nom_famille || 'Inconnu'}</div>
                     <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
                 </div>
-                <div class="result-details">
-                    ${person.email ? `<div><span class="label">Email</span> ${person.email}</div>` : ''}
-                    ${person.telephone ? `<div><span class="label">Téléphone</span> ${person.telephone}</div>` : ''}
-                    ${person.ville ? `<div><span class="label">Ville</span> ${person.ville}</div>` : ''}
-                    ${person.code_postal ? `<div><span class="label">Code postal</span> ${person.code_postal}</div>` : ''}
-                    ${person.date_naissance ? `<div><span class="label">Date naissance</span> ${person.date_naissance}</div>` : ''}
-                    ${person.societe ? `<div><span class="label">Société</span> ${person.societe}</div>` : ''}
-                </div>
+                <div class="result-details">${details}</div>
                 ${person._sources ? `
                     <div class="result-sources">
                         Sources : ${person._sources.map(s => `<span>${s}</span>`).join('')}
@@ -160,8 +305,22 @@ function displayLookupResults(container, results) {
         const details = Object.entries(row)
             .filter(([key]) => !key.startsWith('_'))
             .map(([key, value]) => {
+                if (!value) return '';
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                return `<div><span class="label">${label}</span> ${value}</div>`;
+                return `
+                    <div>
+                        <span class="label">${label}</span> 
+                        ${value} 
+                        <button class="copy-btn" onclick="copyToClipboard('${String(value).replace(/'/g, "\\'")}', this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            Copier
+                            <span class="marauder-tag">by Marauder</span>
+                        </button>
+                    </div>
+                `;
             }).join('');
         
         return `
@@ -173,6 +332,58 @@ function displayLookupResults(container, results) {
             </div>
         `;
     }).join('');
+}
+
+// ============ COPY TO CLIPBOARD FUNCTION ============
+function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(() => {
+        button.classList.add('copied');
+        button.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Copié !
+            <span class="marauder-tag">by Marauder</span>
+        `;
+        setTimeout(() => {
+            button.classList.remove('copied');
+            button.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copier
+                <span class="marauder-tag">by Marauder</span>
+            `;
+        }, 2000);
+    }).catch(() => {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        button.classList.add('copied');
+        button.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Copié !
+            <span class="marauder-tag">by Marauder</span>
+        `;
+        setTimeout(() => {
+            button.classList.remove('copied');
+            button.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copier
+                <span class="marauder-tag">by Marauder</span>
+            `;
+        }, 2000);
+    });
 }
 
 // ============ HISTORIQUE ============
@@ -227,10 +438,6 @@ async function loadProfile() {
                         <span class="value">${data.user.username}</span>
                     </div>
                     <div class="profile-row">
-                        <span class="label">Email</span>
-                        <span class="value">${data.user.email}</span>
-                    </div>
-                    <div class="profile-row">
                         <span class="label">Rôle</span>
                         <span class="value">${data.user.role}</span>
                     </div>
@@ -256,4 +463,4 @@ async function loadProfile() {
 
 // ============ INIT ============
 verifyToken();
-loadProfile(); // Load profile by default
+loadProfile();
