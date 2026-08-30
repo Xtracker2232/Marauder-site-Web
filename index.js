@@ -10,14 +10,29 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-console.log('🔍 Vérification des variables:');
+// ============ FORCER LE CHARGEMENT DES VARIABLES ============
+// Si les variables ne sont pas chargées, on les définit manuellement
+if (!process.env.DATABASE_URL) {
+    console.log('⚠️ DATABASE_URL manquant, définition manuelle...');
+    process.env.DATABASE_URL = 'postgresql://postgres:gtGztIyjmvGHVYieqyDdPRyAkopTRhev@postgres.railway.internal:5432/railway';
+}
+
+if (!process.env.JWT_SECRET) {
+    console.log('⚠️ JWT_SECRET manquant, définition manuelle...');
+    process.env.JWT_SECRET = 'Marauder2026UltraSecureKey!@#$%^&*()';
+}
+
+if (!process.env.BRIX_API_KEY) {
+    console.log('⚠️ BRIX_API_KEY manquant, définition manuelle...');
+    process.env.BRIX_API_KEY = 'brix_Kvlxh9SqVL8bokxVb_SrD_WltbNCGbn9hMxan85R7TencJAw';
+}
+
+console.log('🔍 Variables après correction:');
 console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
 console.log('- BRIX_API_KEY:', process.env.BRIX_API_KEY ? '✅' : '❌');
-console.log('- PGHOST:', process.env.PGHOST ? '✅' : '❌');
 
 // ============ BASE DE DONNÉES ============
-// Utiliser DATABASE_URL fourni par Railway
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -35,7 +50,6 @@ const initDB = async () => {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
         
-        // Créer les tables
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -62,8 +76,9 @@ const initDB = async () => {
         `);
         console.log('✅ Tables créées/vérifiées');
         
-        // Créer un compte admin par défaut
         const result = await client.query('SELECT COUNT(*) FROM users');
+        console.log(`📊 ${result.rows[0].count} utilisateurs`);
+        
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash('admin123', 12);
             await client.query(
