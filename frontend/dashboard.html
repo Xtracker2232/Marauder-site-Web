@@ -35,6 +35,7 @@
         <div class="loading-text">Analyse en cours</div>
     </div>
 
+    <!-- SIDEBAR -->
     <nav class="sidebar">
         <div class="sidebar-header">
             <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,8 +86,10 @@
         </div>
     </nav>
 
+    <!-- MAIN CONTENT -->
     <main class="main-content">
-        <!-- Page Recherche -->
+
+        <!-- ============ PAGE RECHERCHE ============ -->
         <section id="page-search" class="page active">
             <header class="page-header">
                 <h2>Recherche</h2>
@@ -100,7 +103,7 @@
                 <button class="search-tab" data-tab="pro">Recherche Pro</button>
             </div>
 
-            <!-- Tab Français -->
+            <!-- TAB FRANÇAIS -->
             <div id="tab-french" class="search-tab-content active">
                 <div class="section">
                     <div class="section-header" data-section="identity">
@@ -113,19 +116,19 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Nom</label>
-                                <input type="text" id="searchNom" placeholder="Dupont">
+                                <input type="text" id="searchNom" placeholder="Dupont" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Prénom</label>
-                                <input type="text" id="searchPrenom" placeholder="Jean">
+                                <input type="text" id="searchPrenom" placeholder="Jean" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Nom de naissance</label>
-                                <input type="text" id="searchNomNaissance" placeholder="Martin">
+                                <input type="text" id="searchNomNaissance" placeholder="Martin" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Nom affiché</label>
-                                <input type="text" id="searchNomAffichage" placeholder="Jean Dupont">
+                                <input type="text" id="searchNomAffichage" placeholder="Jean Dupont" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -142,27 +145,27 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Jour</label>
-                                <input type="number" id="searchJour" placeholder="15" min="1" max="31">
+                                <input type="number" id="searchJour" placeholder="15" min="1" max="31" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Mois</label>
-                                <input type="number" id="searchMois" placeholder="6" min="1" max="12">
+                                <input type="number" id="searchMois" placeholder="6" min="1" max="12" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Année</label>
-                                <input type="number" id="searchAnnee" placeholder="1990">
+                                <input type="number" id="searchAnnee" placeholder="1990" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Date exacte</label>
-                                <input type="date" id="searchDateNaissance">
+                                <input type="date" id="searchDateNaissance" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Ville de naissance</label>
-                                <input type="text" id="searchVilleNaissance" placeholder="Paris">
+                                <input type="text" id="searchVilleNaissance" placeholder="Paris" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Genre</label>
-                                <select id="searchGenre">
+                                <select id="searchGenre" class="search-input">
                                     <option value="">Tous</option>
                                     <option value="M">Homme</option>
                                     <option value="F">Femme</option>
@@ -183,19 +186,19 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" id="searchEmail" placeholder="jean@example.com">
+                                <input type="email" id="searchEmail" placeholder="jean@example.com" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Téléphone</label>
-                                <input type="tel" id="searchPhone" placeholder="0612345678">
+                                <input type="tel" id="searchPhone" placeholder="0612345678" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Nom d'utilisateur</label>
-                                <input type="text" id="searchUsername" placeholder="jean_d">
+                                <input type="text" id="searchUsername" placeholder="jean_d" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Adresse IP</label>
-                                <input type="text" id="searchIp" placeholder="192.168.1.1">
+                                <input type="text" id="searchIp" placeholder="192.168.1.1" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -212,15 +215,15 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Adresse</label>
-                                <input type="text" id="searchAdresse" placeholder="10 rue de la Paix">
+                                <input type="text" id="searchAdresse" placeholder="10 rue de la Paix" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Code postal</label>
-                                <input type="text" id="searchCp" placeholder="75001">
+                                <input type="text" id="searchCp" placeholder="75001" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Ville</label>
-                                <input type="text" id="searchVille" placeholder="Paris">
+                                <input type="text" id="searchVille" placeholder="Paris" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -237,27 +240,27 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Steam ID</label>
-                                <input type="text" id="searchSteam" placeholder="steam:110000123456789">
+                                <input type="text" id="searchSteam" placeholder="steam:110000123456789" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>FiveM License</label>
-                                <input type="text" id="searchFivemLicense" placeholder="license:abc123...">
+                                <input type="text" id="searchFivemLicense" placeholder="license:abc123..." class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Discord ID</label>
-                                <input type="text" id="searchDiscord" placeholder="834855528869265459">
+                                <input type="text" id="searchDiscord" placeholder="834855528869265459" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Xbox Live (XBL)</label>
-                                <input type="text" id="searchXbox" placeholder="xbl:2535423154...">
+                                <input type="text" id="searchXbox" placeholder="xbl:2535423154..." class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Live ID</label>
-                                <input type="text" id="searchLive" placeholder="live:844425868261">
+                                <input type="text" id="searchLive" placeholder="live:844425868261" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>FiveM License2</label>
-                                <input type="text" id="searchFivemLicense2" placeholder="license2:def456...">
+                                <input type="text" id="searchFivemLicense2" placeholder="license2:def456..." class="search-input">
                             </div>
                         </div>
                     </div>
@@ -274,19 +277,19 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>NIR (Sécu)</label>
-                                <input type="text" id="searchNir" placeholder="1234567890123">
+                                <input type="text" id="searchNir" placeholder="1234567890123" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>IBAN</label>
-                                <input type="text" id="searchIban" placeholder="FR76...">
+                                <input type="text" id="searchIban" placeholder="FR76..." class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>BIC</label>
-                                <input type="text" id="searchBic" placeholder="BNPAFRPP">
+                                <input type="text" id="searchBic" placeholder="BNPAFRPP" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>VIN / Plaque</label>
-                                <input type="text" id="searchVin" placeholder="AB-123-CD">
+                                <input type="text" id="searchVin" placeholder="AB-123-CD" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -310,7 +313,7 @@
                 </div>
             </div>
 
-            <!-- Tab Pro -->
+            <!-- TAB PRO -->
             <div id="tab-pro" class="search-tab-content">
                 <div class="section">
                     <div class="section-header" data-section="identity">
@@ -323,27 +326,27 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Nom</label>
-                                <input type="text" id="searchNomPro" placeholder="Dupont">
+                                <input type="text" id="searchNomPro" placeholder="Dupont" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Prénom</label>
-                                <input type="text" id="searchPrenomPro" placeholder="Jean">
+                                <input type="text" id="searchPrenomPro" placeholder="Jean" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Nom de naissance</label>
-                                <input type="text" id="searchNomNaissancePro" placeholder="Martin">
+                                <input type="text" id="searchNomNaissancePro" placeholder="Martin" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Société</label>
-                                <input type="text" id="searchSociete" placeholder="Entreprise SAS">
+                                <input type="text" id="searchSociete" placeholder="Entreprise SAS" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Profession</label>
-                                <input type="text" id="searchProfession" placeholder="Développeur">
+                                <input type="text" id="searchProfession" placeholder="Développeur" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Fonction</label>
-                                <input type="text" id="searchFonction" placeholder="CTO">
+                                <input type="text" id="searchFonction" placeholder="CTO" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -360,15 +363,15 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" id="searchEmailPro" placeholder="jean@entreprise.com">
+                                <input type="email" id="searchEmailPro" placeholder="jean@entreprise.com" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Téléphone</label>
-                                <input type="tel" id="searchPhonePro" placeholder="0612345678">
+                                <input type="tel" id="searchPhonePro" placeholder="0612345678" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Adresse IP</label>
-                                <input type="text" id="searchIpPro" placeholder="192.168.1.1">
+                                <input type="text" id="searchIpPro" placeholder="192.168.1.1" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -385,27 +388,27 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>SIRET</label>
-                                <input type="text" id="searchSiret" placeholder="12345678901234">
+                                <input type="text" id="searchSiret" placeholder="12345678901234" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>SIREN</label>
-                                <input type="text" id="searchSiren" placeholder="123456789">
+                                <input type="text" id="searchSiren" placeholder="123456789" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>NIR (Sécu)</label>
-                                <input type="text" id="searchNirPro" placeholder="1234567890123">
+                                <input type="text" id="searchNirPro" placeholder="1234567890123" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>IBAN</label>
-                                <input type="text" id="searchIbanPro" placeholder="FR76...">
+                                <input type="text" id="searchIbanPro" placeholder="FR76..." class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>BIC</label>
-                                <input type="text" id="searchBicPro" placeholder="BNPAFRPP">
+                                <input type="text" id="searchBicPro" placeholder="BNPAFRPP" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>VIN / Plaque</label>
-                                <input type="text" id="searchVinPro" placeholder="AB-123-CD">
+                                <input type="text" id="searchVinPro" placeholder="AB-123-CD" class="search-input">
                             </div>
                         </div>
                     </div>
@@ -432,7 +435,7 @@
             <div id="searchResults" class="results-container" style="margin-top:20px;"></div>
         </section>
 
-        <!-- Page Lookup -->
+        <!-- ============ PAGE LOOKUP ============ -->
         <section id="page-lookup" class="page">
             <header class="page-header">
                 <h2>Lookup</h2>
@@ -460,7 +463,7 @@
             <div id="lookupResults" class="results-container"></div>
         </section>
 
-        <!-- Page Historique -->
+        <!-- ============ PAGE HISTORIQUE ============ -->
         <section id="page-history" class="page">
             <header class="page-header">
                 <h2>Historique</h2>
@@ -468,13 +471,14 @@
             <div id="historyList" class="results-container"></div>
         </section>
 
-        <!-- Page Profil -->
+        <!-- ============ PAGE PROFIL ============ -->
         <section id="page-profile" class="page">
             <header class="page-header">
                 <h2>Profil</h2>
             </header>
             <div id="profileInfo" class="profile-card"></div>
         </section>
+
     </main>
 
     <script src="js/dashboard.js"></script>
