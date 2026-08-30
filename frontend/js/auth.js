@@ -1,6 +1,5 @@
 const API_URL = window.location.origin;
 
-// Toggle login/register
 document.getElementById('showRegister').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('loginForm').style.display = 'none';
@@ -45,14 +44,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-// Register (avec connexion automatique)
+// Register avec connexion automatique
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('regUsername').value;
     const password = document.getElementById('regPassword').value;
     const errorDiv = document.getElementById('errorMessage');
 
-    // Cacher les erreurs précédentes
     errorDiv.style.display = 'none';
 
     if (password.length < 8) {
@@ -62,7 +60,6 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     }
 
     try {
-        // 1. Inscription
         const registerResponse = await fetch(`${API_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -77,7 +74,6 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             return;
         }
 
-        // 2. Connexion automatique
         const loginResponse = await fetch(`${API_URL}/api/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -91,7 +87,6 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             localStorage.setItem('user', JSON.stringify(loginData.user));
             window.location.href = '/dashboard.html';
         } else {
-            // Si la connexion auto échoue, rediriger vers login
             errorDiv.textContent = 'Compte créé ! Connectez-vous maintenant.';
             errorDiv.style.display = 'block';
             document.getElementById('showLogin').click();

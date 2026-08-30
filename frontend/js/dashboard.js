@@ -1,6 +1,5 @@
 const API_URL = window.location.origin;
 
-// Vérification token
 const token = localStorage.getItem('token');
 if (!token) {
     window.location.href = '/';
@@ -10,11 +9,10 @@ if (!token) {
 function showSearchLoading() {
     const overlay = document.getElementById('searchOverlay');
     overlay.classList.add('active');
-    // Réinitialiser la barre neon
     const bar = document.querySelector('.neon-bar');
     if (bar) {
         bar.style.animation = 'none';
-        bar.offsetHeight; // Trigger reflow
+        bar.offsetHeight;
         bar.style.animation = 'neonSlide 1.8s ease-in-out infinite';
     }
 }
@@ -29,7 +27,6 @@ document.querySelectorAll('.section-header').forEach(header => {
     header.addEventListener('click', function() {
         const body = this.nextElementSibling;
         const icon = this.querySelector('.toggle-icon');
-        
         body.classList.toggle('open');
         icon.classList.toggle('open');
     });
@@ -40,7 +37,6 @@ document.querySelectorAll('.search-tab').forEach(tab => {
     tab.addEventListener('click', function() {
         document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
-        
         document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
         const tabId = this.dataset.tab;
         document.getElementById(`tab-${tabId}`).classList.add('active');
@@ -73,11 +69,9 @@ document.querySelectorAll('.sidebar-nav li').forEach(item => {
     item.addEventListener('click', function() {
         document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
         this.classList.add('active');
-        
         const page = this.dataset.page;
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(`page-${page}`).classList.add('active');
-        
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
     });
@@ -105,7 +99,7 @@ document.getElementById('clearBtnPro').addEventListener('click', () => {
     document.getElementById('searchResults').innerHTML = '';
 });
 
-// ============ RECHERCHE FRANÇAISE AVEC ANIMATION ============
+// ============ RECHERCHE FRANÇAISE ============
 document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = {
         nom_famille: document.getElementById('searchNom').value || undefined,
@@ -136,16 +130,12 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
     const dateNaissance = document.getElementById('searchDateNaissance').value;
     if (dateNaissance) query.date_naissance = dateNaissance;
-    
     const jour = document.getElementById('searchJour').value;
     if (jour) query.jour_naissance = parseInt(jour);
-    
     const mois = document.getElementById('searchMois').value;
     if (mois) query.mois_naissance = parseInt(mois);
-    
     const annee = document.getElementById('searchAnnee').value;
     if (annee) query.annee_naissance = annee;
-    
     const genre = document.getElementById('searchGenre').value;
     if (genre) query.genre = genre;
 
@@ -159,7 +149,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
     const container = document.getElementById('searchResults');
     container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
-
     showSearchLoading();
 
     try {
@@ -176,7 +165,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
         setTimeout(() => {
             hideSearchLoading();
-            
             if (data.data?.results?.length > 0) {
                 displayResults(container, data.data.results);
             } else {
@@ -192,7 +180,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ RECHERCHE PRO AVEC ANIMATION ============
+// ============ RECHERCHE PRO ============
 document.getElementById('searchBtnPro').addEventListener('click', async () => {
     const query = {
         nom_famille: document.getElementById('searchNomPro').value || undefined,
@@ -224,7 +212,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
 
     const container = document.getElementById('searchResults');
     container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
-
     showSearchLoading();
 
     try {
@@ -241,7 +228,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
 
         setTimeout(() => {
             hideSearchLoading();
-            
             if (data.data?.results?.length > 0) {
                 displayResults(container, data.data.results);
             } else {
@@ -257,7 +243,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
     }
 });
 
-// ============ LOOKUP AVEC ANIMATION ============
+// ============ LOOKUP ============
 document.getElementById('lookupBtn').addEventListener('click', async () => {
     const type = document.getElementById('lookupType').value;
     const value = document.getElementById('lookupValue').value.trim();
@@ -270,7 +256,6 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
 
     const container = document.getElementById('lookupResults');
     container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
-
     showSearchLoading();
 
     try {
@@ -282,7 +267,6 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
 
         setTimeout(() => {
             hideSearchLoading();
-            
             if (data.data?.results?.length > 0) {
                 displayLookupResults(container, data.data.results);
             } else {
@@ -298,103 +282,198 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ DISPLAY FUNCTIONS ============
+// ============ DISPLAY RESULTS COMPLET ============
 function displayResults(container, results) {
-    container.innerHTML = results.map((person, index) => {
+    const counterHtml = `
+        <div class="results-counter">
+            <div class="count">
+                <strong>${results.length}</strong> résultat${results.length > 1 ? 's' : ''} trouvé${results.length > 1 ? 's' : ''}
+            </div>
+            <div class="badge">${results.length > 1 ? 'Plusieurs correspondances' : 'Correspondance unique'}</div>
+        </div>
+    `;
+
+    const cardsHtml = results.map((person, index) => {
         const confidence = person._confidence || 0;
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
         const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
         
-        let detailsHtml = '';
+        let fieldsHtml = '';
+        const excludedKeys = ['_confidence', '_sources', '_source_db'];
+        
         Object.entries(person)
-            .filter(([key]) => !key.startsWith('_'))
+            .filter(([key]) => !key.startsWith('_') && !excludedKeys.includes(key))
             .forEach(([key, value]) => {
                 if (!value) return;
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                detailsHtml += `
-                    <div>
-                        <span class="label">${label}</span> ${value}
+                const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
+                fieldsHtml += `
+                    <div class="result-field">
+                        <span class="field-label">${label}</span>
+                        <span class="field-value ${isImportant ? 'highlight' : ''}">${value}</span>
                     </div>
                 `;
             });
         
-        return `
-            <div class="result-card" data-index="${index}">
-                <div class="result-header">
-                    <div class="result-name" onclick="toggleDetails(${index})">${fullName}</div>
-                    <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
-                </div>
-                <div class="result-details" id="details-${index}">
-                    ${detailsHtml}
-                    ${person._sources ? `
-                        <div class="result-sources" style="grid-column:1/-1">
-                            Sources : ${person._sources.map(s => `<span>${s}</span>`).join('')}
+        const sourcesHtml = person._sources ? 
+            person._sources.map(s => `<span class="source-tag">${s}</span>`).join('') : '';
+        
+        const email = person.email || '';
+        const phone = person.telephone || '';
+        const adresse = person.adresse || '';
+        const nom = person.nom_famille || '';
+        const prenom = person.prenom || '';
+        
+        const deepHtml = `
+            <div class="deep-panel" id="deep-${index}">
+                <h4>Approfondir</h4>
+                <div class="deep-grid">
+                    ${email ? `
+                        <div class="deep-item">
+                            <div class="deep-label">Email</div>
+                            <div class="deep-value"><a href="/api/brix/lookup/email/${encodeURIComponent(email)}" target="_blank">${email}</a></div>
+                        </div>
+                    ` : ''}
+                    ${phone ? `
+                        <div class="deep-item">
+                            <div class="deep-label">Téléphone</div>
+                            <div class="deep-value"><a href="/api/brix/lookup/phone/${encodeURIComponent(phone)}" target="_blank">${phone}</a></div>
+                        </div>
+                    ` : ''}
+                    ${adresse ? `
+                        <div class="deep-item">
+                            <div class="deep-label">Adresse</div>
+                            <div class="deep-value">${adresse}</div>
                         </div>
                     ` : ''}
                 </div>
-                <button class="copy-btn" onclick="copyFullCard(${index})">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                    Copier la fiche
-                    <span class="marauder-tag">by Marauder</span>
-                </button>
+                ${(nom || prenom) ? `
+                    <div class="family-tree">
+                        <div class="tree-title">Pivot familial</div>
+                        <div class="tree-item">
+                            <span>${prenom || ''} ${nom || 'Inconnu'}</span>
+                            <span class="relation">Proche</span>
+                        </div>
+                        ${nom ? `
+                            <div class="tree-item">
+                                <span>Famille ${nom}</span>
+                                <span class="relation">Nom</span>
+                            </div>
+                        ` : ''}
+                        <div class="tree-item" style="color:var(--text-muted);font-size:12px;margin-top:4px;">
+                            Recherches liées possibles par nom, adresse, téléphone
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        return `
+            <div class="result-card-full" data-index="${index}">
+                <div class="result-header-full">
+                    <div class="result-name-full">${fullName}</div>
+                    <div class="result-meta">
+                        <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
+                        ${person._sources ? `<span class="result-sources-badge">${person._sources.length} source${person._sources.length > 1 ? 's' : ''}</span>` : ''}
+                    </div>
+                </div>
+                
+                <div class="result-fields">${fieldsHtml}</div>
+                
+                ${sourcesHtml ? `
+                    <div class="result-sources-full">
+                        ${sourcesHtml}
+                    </div>
+                ` : ''}
+                
+                <div class="result-actions">
+                    <button class="btn-deep" onclick="toggleDeep(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Approfondir
+                    </button>
+                    <button class="btn-deep" onclick="copyFullCard(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Copier
+                    </button>
+                </div>
+                
+                ${deepHtml}
             </div>
         `;
     }).join('');
-    
+
+    container.innerHTML = counterHtml + cardsHtml;
     window._resultsData = results;
 }
 
+// ============ DISPLAY LOOKUP RESULTS ============
 function displayLookupResults(container, results) {
-    container.innerHTML = results.map((row, index) => {
-        let detailsHtml = '';
+    const counterHtml = `
+        <div class="results-counter">
+            <div class="count">
+                <strong>${results.length}</strong> enregistrement${results.length > 1 ? 's' : ''} trouvé${results.length > 1 ? 's' : ''}
+            </div>
+            <div class="badge">Lookup brut</div>
+        </div>
+    `;
+
+    const cardsHtml = results.map((row, index) => {
+        let fieldsHtml = '';
         Object.entries(row)
             .filter(([key]) => !key.startsWith('_'))
             .forEach(([key, value]) => {
                 if (!value) return;
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                detailsHtml += `
-                    <div>
-                        <span class="label">${label}</span> ${value}
+                const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
+                fieldsHtml += `
+                    <div class="result-field">
+                        <span class="field-label">${label}</span>
+                        <span class="field-value ${isImportant ? 'highlight' : ''}">${value}</span>
                     </div>
                 `;
             });
         
+        const source = row._source_db || 'Source inconnue';
+        
         return `
-            <div class="result-card">
-                <div class="result-header">
-                    <div class="result-name" onclick="toggleDetails(${index})">Fiche ${index + 1}</div>
+            <div class="result-card-full">
+                <div class="result-header-full">
+                    <div class="result-name-full">Enregistrement #${index + 1}</div>
+                    <div class="result-meta">
+                        <span class="result-sources-badge">${source}</span>
+                    </div>
                 </div>
-                <div class="result-details open" id="details-${index}">
-                    ${detailsHtml}
-                    ${row._source_db ? `
-                        <div class="result-sources" style="grid-column:1/-1">
-                            Source : <span>${row._source_db}</span>
-                        </div>
-                    ` : ''}
+                
+                <div class="result-fields">${fieldsHtml}</div>
+                
+                <div class="result-actions">
+                    <button class="btn-deep" onclick="copyLookupCard(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Copier
+                    </button>
                 </div>
-                <button class="copy-btn" onclick="copyFullCard(${index})">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                    Copier la fiche
-                    <span class="marauder-tag">by Marauder</span>
-                </button>
             </div>
         `;
     }).join('');
-    
-    window._resultsData = results;
+
+    container.innerHTML = counterHtml + cardsHtml;
+    window._lookupData = results;
 }
 
-// ============ TOGGLE DETAILS ============
-function toggleDetails(index) {
-    const details = document.getElementById(`details-${index}`);
-    if (details) {
-        details.classList.toggle('open');
+// ============ TOGGLE DEEP PANEL ============
+function toggleDeep(index) {
+    const panel = document.getElementById(`deep-${index}`);
+    if (panel) {
+        panel.classList.toggle('open');
     }
 }
 
@@ -421,27 +500,68 @@ function copyFullCard(index) {
     text += '\n\n--- by Marauder ---';
     
     navigator.clipboard.writeText(text).then(() => {
-        const btns = document.querySelectorAll('.copy-btn');
+        const btns = document.querySelectorAll('.btn-deep');
         btns.forEach(btn => {
-            btn.classList.add('copied');
-            btn.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Copié !
-                <span class="marauder-tag">by Marauder</span>
-            `;
-            setTimeout(() => {
-                btn.classList.remove('copied');
-                btn.innerHTML = `
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                    Copier la fiche
-                    <span class="marauder-tag">by Marauder</span>
-                `;
-            }, 2000);
+            if (btn.textContent.includes('Copier')) {
+                btn.innerHTML = '✅ Copié !';
+                setTimeout(() => {
+                    btn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Copier
+                    `;
+                }, 2000);
+            }
+        });
+    }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+    });
+}
+
+// ============ COPY LOOKUP CARD ============
+function copyLookupCard(index) {
+    const data = window._lookupData;
+    if (!data || !data[index]) return;
+    
+    const row = data[index];
+    let text = '=== Marauder Lookup ===\n\n';
+    
+    Object.entries(row)
+        .filter(([key]) => !key.startsWith('_'))
+        .forEach(([key, value]) => {
+            if (!value) return;
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            text += `${label}: ${value}\n`;
+        });
+    
+    if (row._source_db) {
+        text += `\nSource: ${row._source_db}`;
+    }
+    
+    text += '\n\n--- by Marauder ---';
+    
+    navigator.clipboard.writeText(text).then(() => {
+        const btns = document.querySelectorAll('.btn-deep');
+        btns.forEach(btn => {
+            if (btn.textContent.includes('Copier')) {
+                btn.innerHTML = '✅ Copié !';
+                setTimeout(() => {
+                    btn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Copier
+                    `;
+                }, 2000);
+            }
         });
     }).catch(() => {
         const textarea = document.createElement('textarea');
@@ -467,7 +587,7 @@ async function loadHistory() {
 
         if (data.history?.length > 0) {
             container.innerHTML = data.history.map(item => `
-                <div class="result-card">
+                <div class="result-card-full">
                     <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--text-secondary)">
                         <span>${new Date(item.created_at).toLocaleString()}</span>
                         <span>${item.results_count || 0} résultats</span>
