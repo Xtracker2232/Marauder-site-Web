@@ -28,12 +28,12 @@ if (!process.env.BRIX_API_KEY) {
 
 if (!process.env.ADMIN_USERNAME) {
     console.log('⚠️ ADMIN_USERNAME manquant, définition manuelle...');
-    process.env.ADMIN_USERNAME = 'admin';
+    process.env.ADMIN_USERNAME = 'Admin';
 }
 
 if (!process.env.ADMIN_PASSWORD) {
     console.log('⚠️ ADMIN_PASSWORD manquant, définition manuelle...');
-    process.env.ADMIN_PASSWORD = 'admin123';
+    process.env.ADMIN_PASSWORD = 'Salto06530';
 }
 
 console.log('🔍 Vérification des variables:');
@@ -52,36 +52,65 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000,
 });
 
-// ============ CRÉATION DES TABLES (sans email) ============
+// ============ CRÉATION/MIGRATION DES TABLES ============
 const initDB = async () => {
     let client;
     try {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
         
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP,
-                is_active BOOLEAN DEFAULT true,
-                role VARCHAR(50) DEFAULT 'user'
+        // Vérifier si la table users existe
+        const tableCheck = await client.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'users'
             );
-
-            CREATE TABLE IF NOT EXISTS search_history (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                query JSONB NOT NULL,
-                results_count INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-            CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
         `);
-        console.log('✅ Tables créées/vérifiées');
+        
+        if (!tableCheck.rows[0].exists) {
+            // Créer la table sans email
+            await client.query(`
+                CREATE TABLE users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(100) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP,
+                    is_active BOOLEAN DEFAULT true,
+                    role VARCHAR(50) DEFAULT 'user'
+                );
+
+                CREATE TABLE search_history (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    query JSONB NOT NULL,
+                    results_count INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE INDEX idx_users_username ON users(username);
+                CREATE INDEX idx_search_history_user_id ON search_history(user_id);
+            `);
+            console.log('✅ Tables créées sans email');
+        } else {
+            // Vérifier si la colonne email existe et la supprimer
+            const columnCheck = await client.query(`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'users' AND column_name = 'email'
+                );
+            `);
+            
+            if (columnCheck.rows[0].exists) {
+                console.log('📌 Suppression de la colonne email...');
+                await client.query(`
+                    ALTER TABLE users DROP COLUMN email CASCADE;
+                `);
+                console.log('✅ Colonne email supprimée');
+            }
+            
+            console.log('✅ Tables déjà existantes, migration effectuée');
+        }
         
         // Créer le compte admin
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
