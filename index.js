@@ -8,34 +8,25 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 console.log('🔍 Vérification des variables:');
-console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
 console.log('- BRIX_API_KEY:', process.env.BRIX_API_KEY ? '✅' : '❌');
+console.log('- PGHOST:', process.env.PGHOST ? '✅' : '❌');
 
 // ============ BASE DE DONNÉES ============
-// Utiliser les variables disponibles (PG* ou DB*)
-const dbConfig = {
-    host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432'),
-    user: process.env.PGUSER || process.env.DB_USER || 'postgres',
-    password: process.env.PGPASSWORD || process.env.DB_PASSWORD || '',
-    database: process.env.PGDATABASE || process.env.DB_NAME || 'railway',
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+// Utiliser DATABASE_URL fourni par Railway
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    },
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
-};
-
-console.log('📊 Configuration DB:');
-console.log('- Host:', dbConfig.host);
-console.log('- Port:', dbConfig.port);
-console.log('- User:', dbConfig.user);
-console.log('- Database:', dbConfig.database);
-
-const pool = new Pool(dbConfig);
+});
 
 // ============ CRÉATION DES TABLES ============
 const initDB = async () => {
@@ -44,6 +35,7 @@ const initDB = async () => {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
         
+        // Créer les tables
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -68,17 +60,15 @@ const initDB = async () => {
             CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
             CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
         `);
-        console.log('✅ Tables créées/vérifiées avec succès');
+        console.log('✅ Tables créées/vérifiées');
         
+        // Créer un compte admin par défaut
         const result = await client.query('SELECT COUNT(*) FROM users');
-        console.log(`📊 ${result.rows[0].count} utilisateurs dans la base`);
-        
-        // Créer un admin par défaut
         if (parseInt(result.rows[0].count) === 0) {
-            const defaultPassword = await bcrypt.hash('admin123', 12);
+            const hashedPassword = await bcrypt.hash('admin123', 12);
             await client.query(
                 'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-                ['admin', 'admin@marauder.com', defaultPassword, 'admin']
+                ['admin', 'admin@marauder.com', hashedPassword, 'admin']
             );
             console.log('✅ Compte admin créé (admin/admin123)');
         }
@@ -92,7 +82,6 @@ const initDB = async () => {
     }
 };
 
-// Lancer initDB
 let dbReady = false;
 pool.connect(async (err, client, release) => {
     if (err) {
@@ -105,14 +94,11 @@ pool.connect(async (err, client, release) => {
 });
 
 // ============ MIDDLEWARE ============
-app.use(cors({
-    origin: '*',
-    credentials: true
-}));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// ============ AUTHENTIFICATION ============
+// ============ AUTH ============
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -136,20 +122,20 @@ const authenticateToken = (req, res, next) => {
 app.get('/api/health', async (req, res) => {
     let dbStatus = 'unknown';
     try {
-        await pool.query('SELECT NOW()');
+        await pool.query('SELECT 1');
         dbStatus = 'connected';
     } catch (error) {
         dbStatus = 'disconnected: ' + error.message;
     }
-    res.json({ 
-        status: 'operational', 
+    res.json({
+        status: 'operational',
         timestamp: new Date().toISOString(),
         database: dbStatus,
         db_ready: dbReady,
         env: {
-            node_env: process.env.NODE_ENV || 'development',
             has_jwt: !!process.env.JWT_SECRET,
-            has_brix: !!process.env.BRIX_API_KEY
+            has_brix: !!process.env.BRIX_API_KEY,
+            has_db_url: !!process.env.DATABASE_URL
         }
     });
 });
@@ -157,7 +143,7 @@ app.get('/api/health', async (req, res) => {
 // Login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    console.log('📝 Tentative login:', username);
+    console.log('📝 Login:', username);
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Identifiants requis' });
@@ -191,7 +177,7 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        console.log('✅ Login réussi pour:', username);
+        console.log('✅ Login réussi');
         res.json({
             success: true,
             token,
@@ -204,7 +190,7 @@ app.post('/api/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Erreur login:', error.message);
+        console.error('❌ Login error:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -212,7 +198,7 @@ app.post('/api/login', async (req, res) => {
 // Register
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
-    console.log('📝 Tentative inscription:', username);
+    console.log('📝 Inscription:', username);
 
     if (!username || !email || !password) {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
@@ -224,33 +210,26 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 12);
-        
         const result = await pool.query(
             'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email',
             [username, email, hashedPassword]
         );
 
-        console.log('✅ Inscription réussie pour:', username);
-        res.status(201).json({
-            success: true,
-            user: result.rows[0]
-        });
+        console.log('✅ Inscription réussie');
+        res.status(201).json({ success: true, user: result.rows[0] });
 
     } catch (error) {
         if (error.code === '23505') {
-            return res.status(400).json({ error: 'Nom d\'utilisateur ou email déjà utilisé' });
+            return res.status(400).json({ error: 'Nom ou email déjà utilisé' });
         }
-        console.error('❌ Erreur register:', error.message);
+        console.error('❌ Register error:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
-// Verify token
+// Verify
 app.get('/api/verify', authenticateToken, (req, res) => {
-    res.json({ 
-        valid: true, 
-        user: req.user 
-    });
+    res.json({ valid: true, user: req.user });
 });
 
 // ============ API BRIXHUB ============
@@ -275,18 +254,14 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
                 [req.user.id, req.body, response.data.data?.results?.length || 0]
             );
         } catch (dbError) {
-            console.error('Erreur sauvegarde historique:', dbError.message);
+            console.error('Erreur historique:', dbError.message);
         }
 
         res.json(response.data);
 
     } catch (error) {
-        console.error('Brix search error:', error.message);
-        if (error.response) {
-            res.status(error.response.status).json(error.response.data);
-        } else {
-            res.status(500).json({ error: 'Erreur de recherche' });
-        }
+        console.error('Brix error:', error.message);
+        res.status(500).json({ error: 'Erreur de recherche' });
     }
 });
 
@@ -310,12 +285,8 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         res.json(response.data);
 
     } catch (error) {
-        console.error('Brix lookup error:', error.message);
-        if (error.response) {
-            res.status(error.response.status).json(error.response.data);
-        } else {
-            res.status(500).json({ error: 'Erreur de lookup' });
-        }
+        console.error('Lookup error:', error.message);
+        res.status(500).json({ error: 'Erreur de lookup' });
     }
 });
 
@@ -326,10 +297,7 @@ app.get('/api/history', authenticateToken, async (req, res) => {
 
     try {
         const result = await pool.query(
-            `SELECT * FROM search_history 
-             WHERE user_id = $1 
-             ORDER BY created_at DESC 
-             LIMIT $2 OFFSET $3`,
+            'SELECT * FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
             [req.user.id, limit, offset]
         );
 
@@ -369,9 +337,7 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 
         res.json({
             user: result.rows[0],
-            stats: {
-                total_searches: parseInt(stats.rows[0].total_searches)
-            }
+            stats: { total_searches: parseInt(stats.rows[0].total_searches) }
         });
 
     } catch (error) {
