@@ -143,8 +143,6 @@ pool.connect(async (err, client, release) => {
 // ============ MIDDLEWARE ============
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
-
-// Servir les fichiers statiques depuis /frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============ FAVICON ============
@@ -397,6 +395,10 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 // ============ ROUTES STATIQUES ============
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
 });
 
 app.get('/dashboard.html', (req, res) => {

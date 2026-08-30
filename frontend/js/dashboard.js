@@ -2,7 +2,7 @@ const API_URL = window.location.origin;
 
 const token = localStorage.getItem('token');
 if (!token) {
-    window.location.href = '/';
+    window.location.href = '/login';
 }
 
 // ============ FORMATAGE TÉLÉPHONE ============
@@ -62,7 +62,7 @@ async function verifyToken() {
         if (!response.ok) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/';
+            window.location.href = '/login';
         }
         const data = await response.json();
         document.getElementById('usernameDisplay').textContent = data.user.username;
@@ -70,7 +70,7 @@ async function verifyToken() {
     } catch (error) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/';
+        window.location.href = '/login';
     }
 }
 
@@ -595,7 +595,6 @@ function displayResults(container, results) {
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
         const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
         
-        // Champs (cachés par défaut)
         let fieldsHtml = '';
         const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
         
