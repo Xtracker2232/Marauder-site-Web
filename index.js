@@ -3,25 +3,76 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
-const pool = require('./db');
+const { Pool } = require('pg');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// ============ BASE DE DONNÉES ============
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 5432,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+});
+
+// Initialisation de la DB
+const initDB = async () => {
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                is_active BOOLEAN DEFAULT true,
+                role VARCHAR(50) DEFAULT 'user'
+            );
+
+            CREATE TABLE IF NOT EXISTS search_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                query JSONB NOT NULL,
+                results_count INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+            CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
+        `);
+        console.log('✅ Base de données initialisée');
+    } catch (error) {
+        console.error('❌ Erreur DB:', error.message);
+    } finally {
+        client.release();
+    }
+};
+
+initDB();
+
+// ============ MIDDLEWARE ============
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
         ? ['https://votre-domaine.com'] 
-        : ['http://localhost:5500', 'http://127.0.0.1:5500'],
+        : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
     credentials: true
 }));
 app.use(express.json());
-app.use(express.static('../frontend'));
+
+// Servir les fichiers statiques depuis /frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============ AUTHENTIFICATION ============
-
-// Middleware JWT
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -39,7 +90,9 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Route de login
+// ============ ROUTES ============
+
+// Login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -64,7 +117,6 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Identifiants invalides' });
         }
 
-        // Mise à jour last_login
         await pool.query(
             'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
             [user.id]
@@ -93,7 +145,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Route d'inscription (pour créer ton premier compte)
+// Register
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -127,7 +179,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// Route de vérification du token
+// Verify token
 app.get('/api/verify', authenticateToken, (req, res) => {
     res.json({ 
         valid: true, 
@@ -137,7 +189,6 @@ app.get('/api/verify', authenticateToken, (req, res) => {
 
 // ============ API BRIXHUB ============
 
-// Route de recherche
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
         const response = await axios.post(
@@ -152,7 +203,6 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             }
         );
 
-        // Sauvegarde de la recherche
         await pool.query(
             'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
             [req.user.id, req.body, response.data.data?.results?.length || 0]
@@ -161,7 +211,7 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
         res.json(response.data);
 
     } catch (error) {
-        console.error('Brix search error:', error);
+        console.error('Brix search error:', error.message);
         if (error.response) {
             res.status(error.response.status).json(error.response.data);
         } else {
@@ -170,7 +220,6 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
     }
 });
 
-// Route lookup
 app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => {
     const { type, value } = req.params;
     const validTypes = ['email', 'phone', 'iban'];
@@ -191,7 +240,7 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         res.json(response.data);
 
     } catch (error) {
-        console.error('Brix lookup error:', error);
+        console.error('Brix lookup error:', error.message);
         if (error.response) {
             res.status(error.response.status).json(error.response.data);
         } else {
@@ -230,7 +279,7 @@ app.get('/api/history', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ UTILISATEUR ============
+// ============ PROFIL ============
 
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
@@ -243,7 +292,6 @@ app.get('/api/me', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });
         }
 
-        // Statistiques
         const stats = await pool.query(
             'SELECT COUNT(*) as total_searches FROM search_history WHERE user_id = $1',
             [req.user.id]
@@ -262,6 +310,17 @@ app.get('/api/me', authenticateToken, async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// ============ ROUTE PAR DÉFAUT ============
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
+});
+
+// ============ DÉMARRAGE ============
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Marauder API running on port ${PORT}`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}`);
 });

@@ -1,7 +1,7 @@
 {
-  "name": "marauder-backend",
+  "name": "marauder-site-web",
   "version": "1.0.0",
-  "description": "Marauder API Backend",
+  "description": "Marauder Investigation Dashboard",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
