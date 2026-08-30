@@ -630,6 +630,12 @@ input:-webkit-autofill:active {
     font-size: 20px;
     font-weight: 700;
     color: #ffffff;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.result-name-full:hover {
+    opacity: 0.7;
 }
 
 .result-meta {
@@ -647,10 +653,17 @@ input:-webkit-autofill:active {
 }
 
 .result-fields {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 8px 16px;
     margin-bottom: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.result-fields.open {
+    display: grid;
+    animation: slideDown 0.3s ease;
 }
 
 .result-field {
@@ -749,76 +762,6 @@ input:-webkit-autofill:active {
     margin-bottom: 12px;
 }
 
-.deep-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
-}
-
-.deep-item {
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-}
-
-.deep-item .deep-label {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.deep-item .deep-value {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 2px;
-    word-break: break-all;
-}
-
-.deep-item .deep-value a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.deep-item .deep-value a:hover {
-    color: #ffffff;
-}
-
-.family-tree {
-    margin-top: 12px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.01);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-}
-
-.family-tree .tree-title {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-}
-
-.family-tree .tree-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-.family-tree .tree-item .relation {
-    font-size: 11px;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.03);
-    padding: 0 8px;
-    border-radius: 4px;
-}
-
 .confidence-badge {
     padding: 4px 12px;
     border-radius: 20px;
@@ -843,6 +786,48 @@ input:-webkit-autofill:active {
     background: rgba(239, 68, 68, 0.1);
     color: var(--danger);
     border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ============================================
+   FAMILLE TREE
+   ============================================ */
+.family-tree {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.family-tree .tree-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.family-tree .tree-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.family-tree .tree-item .relation {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 2px 10px;
+    border-radius: 4px;
+}
+
+.family-tree .tree-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-left: 12px;
 }
 
 /* ============================================
@@ -1132,22 +1117,8 @@ input:-webkit-autofill:active {
         grid-template-columns: 1fr;
     }
     
-    .result-fields {
+    .result-fields.open {
         grid-template-columns: 1fr;
-    }
-    
-    .deep-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .result-header-full {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    
-    .result-meta {
-        flex-wrap: wrap;
     }
 
     .loading-logo svg {

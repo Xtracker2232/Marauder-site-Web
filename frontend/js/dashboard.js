@@ -5,6 +5,16 @@ if (!token) {
     window.location.href = '/';
 }
 
+// ============ FORMATAGE TÉLÉPHONE ============
+function formatPhone(phone) {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+    }
+    return phone;
+}
+
 // ============ ANIMATION DE RECHERCHE ============
 function showSearchLoading() {
     const overlay = document.getElementById('searchOverlay');
@@ -99,7 +109,24 @@ document.getElementById('clearBtnPro').addEventListener('click', () => {
     document.getElementById('searchResults').innerHTML = '';
 });
 
-// ============ RECHERCHE AVEC PIVOT FAMILLE (comme Xtracker) ============
+// ============ TOUCHE ENTREE POUR RECHERCHER ============
+document.querySelectorAll('.search-input').forEach(input => {
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const activeTab = document.querySelector('.search-tab.active');
+            if (activeTab) {
+                const tabId = activeTab.dataset.tab;
+                if (tabId === 'french') {
+                    document.getElementById('searchBtn').click();
+                } else if (tabId === 'pro') {
+                    document.getElementById('searchBtnPro').click();
+                }
+            }
+        }
+    });
+});
+
+// ============ RECHERCHE AVEC PIVOT FAMILLE ============
 document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = {
         flexible: true,
@@ -166,12 +193,47 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         const data = await response.json();
         let results = data.data?.results || [];
 
+        // Pagination auto (max 5 pages)
+        const total = data.meta?.total || 0;
+        const perPage = query.per_page || 100;
+        const totalPages = Math.ceil(total / perPage);
+        if (totalPages > 1) {
+            for (let page = 2; page <= Math.min(totalPages, 5); page++) {
+                try {
+                    const pageQuery = { ...query, page: page };
+                    const pageResponse = await fetch(`${API_URL}/api/brix/search`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(pageQuery)
+                    });
+                    const pageData = await pageResponse.json();
+                    if (pageData.data?.results) {
+                        results = results.concat(pageData.data.results);
+                    }
+                } catch (e) { /* Silence */ }
+            }
+        }
+
+        // Déduplication
+        const uniqueResults = [];
+        const seen = new Set();
+        results.forEach(p => {
+            const key = `${p.nom_famille || ''}|${p.prenom || ''}|${p.email || ''}|${p.telephone || ''}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueResults.push(p);
+            }
+        });
+        results = uniqueResults;
+
         // ============ PIVOT FAMILLE (comme Xtracker) ============
         for (let p of results.slice(0, 5)) {
             const famille = [];
             const pivotDone = new Set();
 
-            // Pivot par adresse + code postal
             if (p.adresse && p.code_postal) {
                 const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
                 if (!pivotDone.has(pivotKey)) {
@@ -194,7 +256,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                         const pivotData = await pivotResponse.json();
                         const pivotResults = pivotData.data?.results || [];
                         for (let pr of pivotResults) {
-                            // Exclure la personne elle-même
                             if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
                             const membre = {
                                 prenom: pr.prenom || '',
@@ -205,7 +266,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                                 lien: 'Même adresse',
                                 _sources: pr._sources || []
                             };
-                            // Éviter les doublons
                             if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
                                 famille.push(membre);
                             }
@@ -214,7 +274,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 }
             }
 
-            // Pivot par téléphone (si moins de 5 membres trouvés)
             if (p.telephone && famille.length < 5) {
                 const pivotKey = `tel_${p.telephone}`;
                 if (!pivotDone.has(pivotKey)) {
@@ -276,7 +335,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ RECHERCHE PRO (sans pivot pour l'instant) ============
+// ============ RECHERCHE PRO ============
 document.getElementById('searchBtnPro').addEventListener('click', async () => {
     const query = {
         flexible: true,
@@ -323,9 +382,43 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
 
         const data = await response.json();
-        const results = data.data?.results || [];
+        let results = data.data?.results || [];
 
-        // Pivot famille pour la recherche Pro aussi
+        const total = data.meta?.total || 0;
+        const perPage = query.per_page || 100;
+        const totalPages = Math.ceil(total / perPage);
+        if (totalPages > 1) {
+            for (let page = 2; page <= Math.min(totalPages, 5); page++) {
+                try {
+                    const pageQuery = { ...query, page: page };
+                    const pageResponse = await fetch(`${API_URL}/api/brix/search`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(pageQuery)
+                    });
+                    const pageData = await pageResponse.json();
+                    if (pageData.data?.results) {
+                        results = results.concat(pageData.data.results);
+                    }
+                } catch (e) { /* Silence */ }
+            }
+        }
+
+        const uniqueResults = [];
+        const seen = new Set();
+        results.forEach(p => {
+            const key = `${p.nom_famille || ''}|${p.prenom || ''}|${p.email || ''}|${p.telephone || ''}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueResults.push(p);
+            }
+        });
+        results = uniqueResults;
+
+        // Pivot famille
         for (let p of results.slice(0, 5)) {
             const famille = [];
             const pivotDone = new Set();
@@ -470,7 +563,23 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ DISPLAY RESULTS AVEC FAMILLE ============
+// ============ TOGGLE FICHE (clic sur le nom) ============
+function toggleFiche(index) {
+    const details = document.getElementById(`fiche-${index}`);
+    if (details) {
+        details.classList.toggle('open');
+    }
+}
+
+// ============ TOGGLE APPROFONDIR ============
+function toggleDeep(index) {
+    const panel = document.getElementById(`deep-${index}`);
+    if (panel) {
+        panel.classList.toggle('open');
+    }
+}
+
+// ============ DISPLAY RESULTS ============
 function displayResults(container, results) {
     const counterHtml = `
         <div class="results-counter">
@@ -486,6 +595,7 @@ function displayResults(container, results) {
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
         const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
         
+        // Champs (cachés par défaut)
         let fieldsHtml = '';
         const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
         
@@ -495,10 +605,14 @@ function displayResults(container, results) {
                 if (!value) return;
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
+                let displayValue = value;
+                if (key === 'telephone' || key === 'mobile') {
+                    displayValue = formatPhone(value);
+                }
                 fieldsHtml += `
                     <div class="result-field">
                         <span class="field-label">${label}</span>
-                        <span class="field-value ${isImportant ? 'highlight' : ''}">${value}</span>
+                        <span class="field-value ${isImportant ? 'highlight' : ''}">${displayValue}</span>
                     </div>
                 `;
             });
@@ -506,26 +620,19 @@ function displayResults(container, results) {
         const sourcesHtml = person._sources ? 
             person._sources.map(s => `<span class="source-tag">${s}</span>`).join('') : '';
         
-        // ============ FAMILLE (comme Xtracker) ============
+        // Famille (dans le panel approfondir)
         let familleHtml = '';
         if (person.famille && person.famille.length > 0) {
             familleHtml = `
-                <div class="family-tree" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
-                    <div class="tree-title" style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:8px;">
-                        👨‍👩‍👧‍👦 Famille associée (${person.famille.length})
-                    </div>
+                <div class="family-tree">
+                    <div class="tree-title">Famille associée (${person.famille.length})</div>
                     ${person.famille.map(m => `
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03);">
-                            <span style="color:var(--text-secondary);">
-                                ${m.prenom} ${m.nom_famille}
-                                ${m.date_naissance ? ` · <span style="color:var(--text-muted);font-size:11px;">${m.date_naissance}</span>` : ''}
-                            </span>
-                            <span style="font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.03);padding:2px 10px;border-radius:4px;">
-                                ${m.lien || 'Lié'}
-                            </span>
+                        <div class="tree-item">
+                            <span>${m.prenom} ${m.nom_famille}${m.date_naissance ? ` · ${m.date_naissance}` : ''}</span>
+                            <span class="relation">${m.lien || 'Lié'}</span>
                         </div>
-                        ${m.email ? `<div style="font-size:11px;color:var(--text-muted);padding-left:12px;">📧 ${m.email}</div>` : ''}
-                        ${m.telephone ? `<div style="font-size:11px;color:var(--text-muted);padding-left:12px;">📱 ${m.telephone}</div>` : ''}
+                        ${m.email ? `<div class="tree-sub">📧 ${m.email}</div>` : ''}
+                        ${m.telephone ? `<div class="tree-sub">📱 ${formatPhone(m.telephone)}</div>` : ''}
                     `).join('')}
                 </div>
             `;
@@ -534,24 +641,30 @@ function displayResults(container, results) {
         return `
             <div class="result-card-full" data-index="${index}">
                 <div class="result-header-full">
-                    <div class="result-name-full">${fullName}</div>
+                    <div class="result-name-full" onclick="toggleFiche(${index})">${fullName}</div>
                     <div class="result-meta">
                         <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
                         ${person._sources ? `<span class="result-sources-badge">${person._sources.length} source${person._sources.length > 1 ? 's' : ''}</span>` : ''}
                     </div>
                 </div>
                 
-                <div class="result-fields">${fieldsHtml}</div>
-                
-                ${sourcesHtml ? `
-                    <div class="result-sources-full">
-                        ${sourcesHtml}
-                    </div>
-                ` : ''}
-                
-                ${familleHtml}
+                <div class="result-fields" id="fiche-${index}">
+                    ${fieldsHtml}
+                    ${sourcesHtml ? `
+                        <div class="result-sources-full" style="grid-column:1/-1;">
+                            ${sourcesHtml}
+                        </div>
+                    ` : ''}
+                </div>
                 
                 <div class="result-actions">
+                    <button class="btn-deep" onclick="toggleDeep(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Approfondir
+                    </button>
                     <button class="btn-deep" onclick="copyFullCard(${index})">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -559,6 +672,11 @@ function displayResults(container, results) {
                         </svg>
                         Copier
                     </button>
+                </div>
+                
+                <div class="deep-panel" id="deep-${index}">
+                    <h4>Approfondir</h4>
+                    ${familleHtml || '<div style="color:var(--text-muted);font-size:13px;">Aucun lien familial trouvé</div>'}
                 </div>
             </div>
         `;
@@ -587,10 +705,14 @@ function displayLookupResults(container, results) {
                 if (!value) return;
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
+                let displayValue = value;
+                if (key === 'telephone' || key === 'mobile') {
+                    displayValue = formatPhone(value);
+                }
                 fieldsHtml += `
                     <div class="result-field">
                         <span class="field-label">${label}</span>
-                        <span class="field-value ${isImportant ? 'highlight' : ''}">${value}</span>
+                        <span class="field-value ${isImportant ? 'highlight' : ''}">${displayValue}</span>
                     </div>
                 `;
             });
@@ -606,7 +728,9 @@ function displayLookupResults(container, results) {
                     </div>
                 </div>
                 
-                <div class="result-fields">${fieldsHtml}</div>
+                <div class="result-fields open">
+                    ${fieldsHtml}
+                </div>
                 
                 <div class="result-actions">
                     <button class="btn-deep" onclick="copyLookupCard(${index})">
@@ -638,7 +762,11 @@ function copyFullCard(index) {
         .forEach(([key, value]) => {
             if (!value) return;
             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            text += `${label}: ${value}\n`;
+            let displayValue = value;
+            if (key === 'telephone' || key === 'mobile') {
+                displayValue = formatPhone(value);
+            }
+            text += `${label}: ${displayValue}\n`;
         });
     
     if (person.famille && person.famille.length > 0) {
@@ -647,7 +775,7 @@ function copyFullCard(index) {
             text += `${m.prenom} ${m.nom_famille}`;
             if (m.date_naissance) text += ` (${m.date_naissance})`;
             if (m.email) text += ` - ${m.email}`;
-            if (m.telephone) text += ` - ${m.telephone}`;
+            if (m.telephone) text += ` - ${formatPhone(m.telephone)}`;
             text += ` - ${m.lien || 'Lié'}\n`;
         });
     }
@@ -696,7 +824,11 @@ function copyLookupCard(index) {
         .forEach(([key, value]) => {
             if (!value) return;
             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            text += `${label}: ${value}\n`;
+            let displayValue = value;
+            if (key === 'telephone' || key === 'mobile') {
+                displayValue = formatPhone(value);
+            }
+            text += `${label}: ${displayValue}\n`;
         });
     
     if (row._source_db) {
