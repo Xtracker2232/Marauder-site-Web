@@ -1452,207 +1452,9 @@ async function loadProfile() {
         container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de chargement</div>';
     }
 }
-
 // ============ GRAPHE ============
-let grapheNodes = [];
-let grapheEdges = [];
-let grapheDragData = null;
-let grapheZoom = 1;
-let graphePanX = 0;
-let graphePanY = 0;
-let grapheContextNode = null;
-let grapheLinkMode = false;
-let grapheLinkFrom = null;
 
-function initGraphe() {
-    const canvas = document.getElementById('grapheCanvas');
-    if (!canvas) return;
-    
-    canvas.innerHTML = '';
-    
-    const grid = document.createElement('div');
-    grid.className = 'graphe-grid';
-    canvas.appendChild(grid);
-    
-    grapheNodes.forEach(node => {
-        createGrapheNode(node);
-    });
-    grapheEdges.forEach(edge => {
-        createGrapheEdge(edge);
-    });
-    
-    updateGraphe();
-}
-
-function createGrapheNode(node) {
-    const canvas = document.getElementById('grapheCanvas');
-    const el = document.createElement('div');
-    el.className = 'graphe-node';
-    el.id = `node-${node.id}`;
-    el.style.left = `${node.x}px`;
-    el.style.top = `${node.y}px`;
-    el.style.backgroundColor = node.color || 'var(--bg-secondary)';
-    el.style.borderColor = node.borderColor || 'var(--border-color)';
-    el.textContent = node.label || 'Personne';
-    
-    if (node.role) {
-        el.textContent += ` (${node.role})`;
-    }
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'node-remove';
-    removeBtn.textContent = '×';
-    removeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        removeGrapheNode(node.id);
-    });
-    el.appendChild(removeBtn);
-    
-    el.addEventListener('mousedown', (e) => {
-        if (e.button === 0) {
-            startGrapheDrag(e, node.id);
-        }
-    });
-    
-    el.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        grapheContextNode = node.id;
-        showGrapheContextMenu(e.clientX, e.clientY);
-    });
-    
-    canvas.appendChild(el);
-}
-
-function createGrapheEdge(edge) {
-    const canvas = document.getElementById('grapheCanvas');
-    const el = document.createElement('div');
-    el.className = 'graphe-edge';
-    el.id = `edge-${edge.id}`;
-    el.style.backgroundColor = edge.color || 'var(--border-color)';
-    canvas.appendChild(el);
-}
-
-function startGrapheDrag(e, nodeId) {
-    const node = grapheNodes.find(n => n.id === nodeId);
-    if (!node) return;
-    
-    const canvas = document.getElementById('grapheCanvas');
-    const rect = canvas.getBoundingClientRect();
-    
-    grapheDragData = {
-        nodeId: nodeId,
-        offsetX: e.clientX - rect.left - node.x,
-        offsetY: e.clientY - rect.top - node.y,
-        startX: node.x,
-        startY: node.y
-    };
-    
-    const el = document.getElementById(`node-${nodeId}`);
-    if (el) el.classList.add('dragging');
-    
-    document.addEventListener('mousemove', onGrapheDrag);
-    document.addEventListener('mouseup', endGrapheDrag);
-}
-
-function onGrapheDrag(e) {
-    if (!grapheDragData) return;
-    
-    const canvas = document.getElementById('grapheCanvas');
-    const rect = canvas.getBoundingClientRect();
-    
-    const node = grapheNodes.find(n => n.id === grapheDragData.nodeId);
-    if (!node) return;
-    
-    const x = e.clientX - rect.left - grapheDragData.offsetX;
-    const y = e.clientY - rect.top - grapheDragData.offsetY;
-    
-    node.x = Math.max(0, x);
-    node.y = Math.max(0, y);
-    
-    const el = document.getElementById(`node-${grapheDragData.nodeId}`);
-    if (el) {
-        el.style.left = `${node.x}px`;
-        el.style.top = `${node.y}px`;
-    }
-    
-    updateGrapheEdges();
-}
-
-function endGrapheDrag() {
-    if (grapheDragData) {
-        const el = document.getElementById(`node-${grapheDragData.nodeId}`);
-        if (el) el.classList.remove('dragging');
-    }
-    grapheDragData = null;
-    document.removeEventListener('mousemove', onGrapheDrag);
-    document.removeEventListener('mouseup', endGrapheDrag);
-}
-
-function updateGrapheEdges() {
-    grapheEdges.forEach(edge => {
-        const fromNode = grapheNodes.find(n => n.id === edge.from);
-        const toNode = grapheNodes.find(n => n.id === edge.to);
-        if (!fromNode || !toNode) return;
-        
-        const el = document.getElementById(`edge-${edge.id}`);
-        if (!el) return;
-        
-        const dx = toNode.x - fromNode.x;
-        const dy = toNode.y - fromNode.y;
-        const length = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
-        
-        el.style.width = `${length}px`;
-        el.style.transform = `rotate(${angle}rad)`;
-        el.style.left = `${fromNode.x}px`;
-        el.style.top = `${fromNode.y + 15}px`;
-    });
-}
-
-function updateGraphe() {
-    updateGrapheEdges();
-}
-
-function removeGrapheNode(nodeId) {
-    grapheNodes = grapheNodes.filter(n => n.id !== nodeId);
-    grapheEdges = grapheEdges.filter(e => e.from !== nodeId && e.to !== nodeId);
-    
-    const el = document.getElementById(`node-${nodeId}`);
-    if (el) el.remove();
-    
-    grapheEdges.forEach(edge => {
-        const edgeEl = document.getElementById(`edge-${edge.id}`);
-        if (edgeEl) edgeEl.remove();
-    });
-    
-    grapheEdges.forEach(edge => {
-        createGrapheEdge(edge);
-    });
-    updateGraphe();
-}
-
-function showGrapheContextMenu(x, y) {
-    const menu = document.getElementById('grapheContextMenu');
-    if (!menu) return;
-    
-    menu.style.display = 'block';
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-    
-    const rect = menu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) {
-        menu.style.left = `${window.innerWidth - rect.width - 10}px`;
-    }
-    if (rect.bottom > window.innerHeight) {
-        menu.style.top = `${window.innerHeight - rect.height - 10}px`;
-    }
-}
-
-document.addEventListener('click', () => {
-    const menu = document.getElementById('grapheContextMenu');
-    if (menu) menu.style.display = 'none';
-});
+// ... (le reste du code)
 
 document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
     item.addEventListener('click', function() {
@@ -1716,6 +1518,17 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                     document.getElementById('grapheContextMenu').style.display = 'none';
                 });
                 break;
+
+            // ============ AJOUT DU CAS "link" ============
+            case 'link':
+                grapheLinkMode = true;
+                grapheLinkFrom = nodeId;
+                document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.1)';
+                document.getElementById('grapheLier').style.borderColor = '#ffffff';
+                document.getElementById('grapheContextMenu').style.display = 'none';
+                showToast('Cliquez sur une personne pour la lier', 'info');
+                break;
+            // ============ FIN AJOUT ============
                 
             case 'detach':
                 const edgesToRemove = grapheEdges.filter(e => e.from === nodeId || e.to === nodeId);
