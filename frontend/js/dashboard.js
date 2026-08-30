@@ -282,7 +282,233 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ DISPLAY RESULTS COMPLET ============
+// ============ APPROFONDIR - RECHERCHES EN ARRIÈRE-PLAN ============
+async function approfondir(index) {
+    const data = window._resultsData;
+    if (!data || !data[index]) return;
+    
+    const person = data[index];
+    const panel = document.getElementById(`deep-${index}`);
+    
+    // Afficher le chargement
+    panel.innerHTML = `
+        <h4>Approfondir</h4>
+        <div style="text-align:center;padding:20px;color:var(--text-muted);">
+            <div style="font-size:14px;">Marauder analyse les liens...</div>
+            <div style="font-size:12px;margin-top:8px;color:var(--text-muted);opacity:0.6;">Recherches en arrière-plan</div>
+        </div>
+    `;
+    panel.classList.add('open');
+    
+    // Récupérer les infos
+    const email = person.email || '';
+    const phone = person.telephone || '';
+    const adresse = person.adresse || '';
+    const nom = person.nom_famille || '';
+    const prenom = person.prenom || '';
+    const ville = person.ville || '';
+    const codePostal = person.code_postal || '';
+    
+    let familyResults = [];
+    
+    // ============ RECHERCHES EN ARRIÈRE-PLAN (invisibles) ============
+    
+    // 1. Recherche par email
+    if (email) {
+        try {
+            const response = await fetch(`${API_URL}/api/brix/lookup/email/${encodeURIComponent(email)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.data?.results) {
+                familyResults = familyResults.concat(data.data.results);
+            }
+        } catch (e) { /* Silence */ }
+    }
+    
+    // 2. Recherche par téléphone
+    if (phone) {
+        try {
+            const response = await fetch(`${API_URL}/api/brix/lookup/phone/${encodeURIComponent(phone)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.data?.results) {
+                familyResults = familyResults.concat(data.data.results);
+            }
+        } catch (e) { /* Silence */ }
+    }
+    
+    // 3. Recherche par adresse
+    if (adresse) {
+        try {
+            const response = await fetch(`${API_URL}/api/brix/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    adresse: adresse,
+                    flexible: true,
+                    per_page: 20
+                })
+            });
+            const data = await response.json();
+            if (data.data?.results) {
+                familyResults = familyResults.concat(data.data.results);
+            }
+        } catch (e) { /* Silence */ }
+    }
+    
+    // 4. Recherche par nom + ville
+    if (nom && ville) {
+        try {
+            const response = await fetch(`${API_URL}/api/brix/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    nom_famille: nom,
+                    ville: ville,
+                    flexible: true,
+                    per_page: 20
+                })
+            });
+            const data = await response.json();
+            if (data.data?.results) {
+                familyResults = familyResults.concat(data.data.results);
+            }
+        } catch (e) { /* Silence */ }
+    }
+    
+    // 5. Recherche par nom + code postal
+    if (nom && codePostal) {
+        try {
+            const response = await fetch(`${API_URL}/api/brix/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    nom_famille: nom,
+                    code_postal: codePostal,
+                    flexible: true,
+                    per_page: 20
+                })
+            });
+            const data = await response.json();
+            if (data.data?.results) {
+                familyResults = familyResults.concat(data.data.results);
+            }
+        } catch (e) { /* Silence */ }
+    }
+    
+    // ============ FILTRER ET DÉDOUBLONNER ============
+    const uniqueResults = [];
+    const seen = new Set();
+    familyResults.forEach(p => {
+        const key = `${p.nom_famille || ''}|${p.prenom || ''}|${p.date_naissance || ''}`;
+        if (!seen.has(key) && key !== '|') {
+            seen.add(key);
+            uniqueResults.push(p);
+        }
+    });
+    
+    const personName = `${prenom} ${nom}`.trim().toLowerCase();
+    const filteredResults = uniqueResults.filter(p => {
+        const pName = `${p.prenom || ''} ${p.nom_famille || ''}`.trim().toLowerCase();
+        const samePerson = pName === personName;
+        const sameEmail = p.email && email && p.email.toLowerCase() === email.toLowerCase();
+        const samePhone = p.telephone && phone && p.telephone === phone;
+        return !samePerson && !sameEmail && !samePhone;
+    });
+    
+    // ============ CONSTRUIRE LE RÉSULTAT ============
+    const byAdresse = filteredResults.filter(p => p.adresse && p.adresse === adresse);
+    const byEmail = filteredResults.filter(p => p.email && p.email === email);
+    const byPhone = filteredResults.filter(p => p.telephone && p.telephone === phone);
+    const byNom = filteredResults.filter(p => p.nom_famille === nom);
+    
+    let familyHtml = '';
+    
+    if (filteredResults.length > 0) {
+        familyHtml = `
+            <div style="margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                ${filteredResults.length} membre${filteredResults.length > 1 ? 's' : ''} trouvé${filteredResults.length > 1 ? 's' : ''}
+                ${byAdresse.length > 0 ? ` · ${byAdresse.length} même adresse` : ''}
+                ${byEmail.length > 0 ? ` · ${byEmail.length} même email` : ''}
+                ${byPhone.length > 0 ? ` · ${byPhone.length} même téléphone` : ''}
+            </div>
+            <div style="max-height:300px;overflow-y:auto;">
+                ${filteredResults.map(p => {
+                    const pName = `${p.prenom || ''} ${p.nom_famille || 'Inconnu'}`.trim();
+                    const pEmail = p.email || '';
+                    const pPhone = p.telephone || '';
+                    const pAdresse = p.adresse || '';
+                    const pDate = p.date_naissance || '';
+                    const pSource = p._source_db || p._sources?.[0] || '';
+                    
+                    let relation = '';
+                    if (pAdresse && pAdresse === adresse) relation = 'Même adresse';
+                    else if (pEmail && pEmail === email) relation = 'Même email';
+                    else if (pPhone && pPhone === phone) relation = 'Même téléphone';
+                    else if (p.nom_famille === nom) relation = 'Même nom';
+                    
+                    return `
+                        <div style="padding:8px 0;border-bottom:1px solid var(--border-color);font-size:13px;">
+                            <div style="color:#ffffff;font-weight:500;display:flex;justify-content:space-between;align-items:center;">
+                                <span>${pName}</span>
+                                ${relation ? `<span style="font-size:10px;font-weight:400;color:var(--text-muted);background:rgba(255,255,255,0.03);padding:2px 10px;border-radius:4px;">${relation}</span>` : ''}
+                            </div>
+                            <div style="color:var(--text-muted);font-size:12px;display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;">
+                                ${pEmail ? `<span>📧 ${pEmail}</span>` : ''}
+                                ${pPhone ? `<span>📱 ${pPhone}</span>` : ''}
+                                ${pAdresse ? `<span>📍 ${pAdresse}</span>` : ''}
+                                ${pDate ? `<span>📅 ${pDate}</span>` : ''}
+                                ${pSource ? `<span style="background:rgba(255,255,255,0.03);padding:0 8px;border-radius:4px;font-size:10px;">${pSource}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } else {
+        familyHtml = `
+            <div style="color:var(--text-muted);font-size:13px;padding:12px 0;text-align:center;">
+                Aucun lien familial trouvé
+                <div style="font-size:11px;margin-top:4px;opacity:0.5;">Marauder n'a pas trouvé de liens avec d'autres personnes</div>
+            </div>
+        `;
+    }
+    
+    // Mettre à jour le panel
+    panel.innerHTML = `
+        <h4 style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Approfondir</span>
+            <span style="font-size:11px;font-weight:400;color:var(--text-muted);">
+                ${filteredResults.length} lien${filteredResults.length > 1 ? 's' : ''} trouvé${filteredResults.length > 1 ? 's' : ''}
+            </span>
+        </h4>
+        
+        <div style="margin-bottom:8px;font-size:12px;color:var(--text-muted);">
+            ${email ? `📧 ${email}` : ''}
+            ${phone ? ` · 📱 ${phone}` : ''}
+            ${adresse ? ` · 📍 ${adresse}` : ''}
+        </div>
+        
+        ${familyHtml}
+        
+        <div style="margin-top:12px;font-size:10px;color:var(--text-muted);opacity:0.3;text-align:center;border-top:1px solid var(--border-color);padding-top:8px;">
+            Marauder Investigation · Recherches automatiques en arrière-plan
+        </div>
+    `;
+}
+
+// ============ DISPLAY RESULTS ============
 function displayResults(container, results) {
     const counterHtml = `
         <div class="results-counter">
@@ -327,44 +553,9 @@ function displayResults(container, results) {
         const deepHtml = `
             <div class="deep-panel" id="deep-${index}">
                 <h4>Approfondir</h4>
-                <div class="deep-grid">
-                    ${email ? `
-                        <div class="deep-item">
-                            <div class="deep-label">Email</div>
-                            <div class="deep-value"><a href="/api/brix/lookup/email/${encodeURIComponent(email)}" target="_blank">${email}</a></div>
-                        </div>
-                    ` : ''}
-                    ${phone ? `
-                        <div class="deep-item">
-                            <div class="deep-label">Téléphone</div>
-                            <div class="deep-value"><a href="/api/brix/lookup/phone/${encodeURIComponent(phone)}" target="_blank">${phone}</a></div>
-                        </div>
-                    ` : ''}
-                    ${adresse ? `
-                        <div class="deep-item">
-                            <div class="deep-label">Adresse</div>
-                            <div class="deep-value">${adresse}</div>
-                        </div>
-                    ` : ''}
+                <div style="text-align:center;padding:20px;color:var(--text-muted);">
+                    <div style="font-size:14px;">Cliquez sur "Approfondir" pour analyser les liens</div>
                 </div>
-                ${(nom || prenom) ? `
-                    <div class="family-tree">
-                        <div class="tree-title">Pivot familial</div>
-                        <div class="tree-item">
-                            <span>${prenom || ''} ${nom || 'Inconnu'}</span>
-                            <span class="relation">Proche</span>
-                        </div>
-                        ${nom ? `
-                            <div class="tree-item">
-                                <span>Famille ${nom}</span>
-                                <span class="relation">Nom</span>
-                            </div>
-                        ` : ''}
-                        <div class="tree-item" style="color:var(--text-muted);font-size:12px;margin-top:4px;">
-                            Recherches liées possibles par nom, adresse, téléphone
-                        </div>
-                    </div>
-                ` : ''}
             </div>
         `;
         
@@ -387,7 +578,7 @@ function displayResults(container, results) {
                 ` : ''}
                 
                 <div class="result-actions">
-                    <button class="btn-deep" onclick="toggleDeep(${index})">
+                    <button class="btn-deep" onclick="approfondir(${index})">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8"/>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -467,14 +658,6 @@ function displayLookupResults(container, results) {
 
     container.innerHTML = counterHtml + cardsHtml;
     window._lookupData = results;
-}
-
-// ============ TOGGLE DEEP PANEL ============
-function toggleDeep(index) {
-    const panel = document.getElementById(`deep-${index}`);
-    if (panel) {
-        panel.classList.toggle('open');
-    }
 }
 
 // ============ COPY FULL CARD ============
