@@ -11,21 +11,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 console.log('🔍 Vérification des variables:');
-console.log('- PGHOST:', process.env.PGHOST ? '✅' : '❌');
-console.log('- PGPORT:', process.env.PGPORT ? '✅' : '❌');
-console.log('- PGUSER:', process.env.PGUSER ? '✅' : '❌');
-console.log('- PGPASSWORD:', process.env.PGPASSWORD ? '✅' : '❌');
-console.log('- PGDATABASE:', process.env.PGDATABASE ? '✅' : '❌');
+console.log('- NODE_ENV:', process.env.NODE_ENV);
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
 console.log('- BRIX_API_KEY:', process.env.BRIX_API_KEY ? '✅' : '❌');
 
 // ============ BASE DE DONNÉES ============
+// Utiliser les variables disponibles (PG* ou DB*)
 const dbConfig = {
-    host: process.env.PGHOST || 'localhost',
-    port: parseInt(process.env.PGPORT || '5432'),
-    user: process.env.PGUSER || 'postgres',
-    password: process.env.PGPASSWORD || '',
-    database: process.env.PGDATABASE || 'railway',
+    host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432'),
+    user: process.env.PGUSER || process.env.DB_USER || 'postgres',
+    password: process.env.PGPASSWORD || process.env.DB_PASSWORD || '',
+    database: process.env.PGDATABASE || process.env.DB_NAME || 'railway',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 20,
     idleTimeoutMillis: 30000,
@@ -37,7 +34,6 @@ console.log('- Host:', dbConfig.host);
 console.log('- Port:', dbConfig.port);
 console.log('- User:', dbConfig.user);
 console.log('- Database:', dbConfig.database);
-console.log('- SSL:', dbConfig.ssl ? 'activé' : 'désactivé');
 
 const pool = new Pool(dbConfig);
 
@@ -48,7 +44,6 @@ const initDB = async () => {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
         
-        // Créer les tables
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -75,18 +70,17 @@ const initDB = async () => {
         `);
         console.log('✅ Tables créées/vérifiées avec succès');
         
-        // Vérifier le nombre d'utilisateurs
         const result = await client.query('SELECT COUNT(*) FROM users');
         console.log(`📊 ${result.rows[0].count} utilisateurs dans la base`);
         
-        // Créer un admin par défaut si aucun utilisateur
+        // Créer un admin par défaut
         if (parseInt(result.rows[0].count) === 0) {
             const defaultPassword = await bcrypt.hash('admin123', 12);
             await client.query(
-                'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING',
+                'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
                 ['admin', 'admin@marauder.com', defaultPassword, 'admin']
             );
-            console.log('✅ Compte admin créé par défaut (admin/admin123)');
+            console.log('✅ Compte admin créé (admin/admin123)');
         }
         
         return true;
@@ -98,17 +92,15 @@ const initDB = async () => {
     }
 };
 
-// Lancer initDB au démarrage
+// Lancer initDB
 let dbReady = false;
 pool.connect(async (err, client, release) => {
     if (err) {
         console.error('❌ ÉCHEC connexion DB:', err.message);
-        console.error('📌 Vérifie les variables PGHOST, PGPASSWORD etc.');
     } else {
         console.log('✅ Connexion DB établie');
         release();
         dbReady = await initDB();
-        console.log('📌 DB prête:', dbReady ? '✅' : '❌');
     }
 });
 
@@ -144,7 +136,7 @@ const authenticateToken = (req, res, next) => {
 app.get('/api/health', async (req, res) => {
     let dbStatus = 'unknown';
     try {
-        const result = await pool.query('SELECT NOW()');
+        await pool.query('SELECT NOW()');
         dbStatus = 'connected';
     } catch (error) {
         dbStatus = 'disconnected: ' + error.message;
@@ -161,8 +153,6 @@ app.get('/api/health', async (req, res) => {
         }
     });
 });
-
-// ============ AUTH ROUTES ============
 
 // Login
 app.post('/api/login', async (req, res) => {
