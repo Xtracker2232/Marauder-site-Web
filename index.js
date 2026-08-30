@@ -401,6 +401,10 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
 });
 
+app.get('/cgu.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'cgu.html'));
+});
+
 app.get('/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
 });
