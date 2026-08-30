@@ -409,6 +409,10 @@ app.get('/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
 });
 
+app.get('/cgu.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'cgu.html'));
+});
+
 // ============ DÉMARRAGE ============
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Marauder API running on port ${PORT}`);
