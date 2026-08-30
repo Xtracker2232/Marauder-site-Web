@@ -52,63 +52,73 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000,
 });
 
-// ============ CRÉATION/MIGRATION DES TABLES ============
+// ============ CRÉATION DES TABLES ============
 const initDB = async () => {
     let client;
     try {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
-        
-        const tableCheck = await client.query(`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = 'users'
-            );
+
+        // Table users
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                is_active BOOLEAN DEFAULT true,
+                role VARCHAR(50) DEFAULT 'user'
+            )
         `);
-        
-        if (!tableCheck.rows[0].exists) {
-            await client.query(`
-                CREATE TABLE users (
-                    id SERIAL PRIMARY KEY,
-                    username VARCHAR(100) UNIQUE NOT NULL,
-                    password_hash VARCHAR(255) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_login TIMESTAMP,
-                    is_active BOOLEAN DEFAULT true,
-                    role VARCHAR(50) DEFAULT 'user'
-                );
 
-                CREATE TABLE search_history (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                    query JSONB NOT NULL,
-                    results_count INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
+        // Table search_history
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS search_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                query JSONB NOT NULL,
+                results_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-                CREATE INDEX idx_users_username ON users(username);
-                CREATE INDEX idx_search_history_user_id ON search_history(user_id);
-            `);
-            console.log('✅ Tables créées sans email');
-        } else {
-            const columnCheck = await client.query(`
-                SELECT EXISTS (
-                    SELECT FROM information_schema.columns 
-                    WHERE table_name = 'users' AND column_name = 'email'
-                );
-            `);
-            
-            if (columnCheck.rows[0].exists) {
-                console.log('📌 Suppression de la colonne email...');
-                await client.query(`ALTER TABLE users DROP COLUMN email CASCADE;`);
-                console.log('✅ Colonne email supprimée');
-            }
-            
-            console.log('✅ Tables déjà existantes, migration effectuée');
-        }
-        
+        // Table fiches
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS fiches (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                persons JSONB DEFAULT '[]',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Table graphes
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS graphes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                name VARCHAR(255) DEFAULT 'Mon graphe',
+                nodes JSONB DEFAULT '[]',
+                edges JSONB DEFAULT '[]',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Indexes
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_fiches_user_id ON fiches(user_id)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_graphes_user_id ON graphes(user_id)`);
+
+        console.log('✅ Tables créées/vérifiées avec succès');
+
+        // Créer le compte admin
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
-        
+
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
             await client.query(
@@ -119,7 +129,7 @@ const initDB = async () => {
         } else {
             console.log(`✅ Compte admin déjà existant (${process.env.ADMIN_USERNAME})`);
         }
-        
+
         return true;
     } catch (error) {
         console.error('❌ Erreur init DB:', error.message);
@@ -129,6 +139,7 @@ const initDB = async () => {
     }
 };
 
+// Initialiser la DB
 let dbReady = false;
 pool.connect(async (err, client, release) => {
     if (err) {
@@ -363,6 +374,329 @@ app.get('/api/history', authenticateToken, async (req, res) => {
     }
 });
 
+app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Recherche non trouvée' });
+        }
+
+        let query = result.rows[0].query;
+        if (typeof query === 'string') {
+            query = JSON.parse(query);
+        }
+
+        query.per_page = 100;
+
+        const response = await axios.post(
+            'https://api.brixhub.to/api/v1/search',
+            query,
+            {
+                headers: {
+                    'X-API-Key': process.env.BRIX_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000
+            }
+        );
+
+        res.json({
+            results: response.data.data?.results || [],
+            total: response.data.meta?.total || 0,
+            took_ms: response.data.meta?.took_ms || 0
+        });
+
+    } catch (error) {
+        console.error('Replay error:', error.message);
+        res.status(500).json({ error: 'Erreur replay' });
+    }
+});
+
+// ============ ROUTES FICHES ============
+
+// Récupérer toutes les fiches
+app.get('/api/fiches', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM fiches WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json({ fiches: result.rows });
+    } catch (error) {
+        console.error('❌ Erreur fiches GET:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Créer une fiche
+app.post('/api/fiches', authenticateToken, async (req, res) => {
+    const { name } = req.body;
+
+    if (!name || name.trim() === '') {
+        return res.status(400).json({ error: 'Nom de fiche requis' });
+    }
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO fiches (user_id, name, persons) VALUES ($1, $2, $3) RETURNING *',
+            [req.user.id, name.trim(), JSON.stringify([])]
+        );
+        res.status(201).json({ fiche: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur création fiche:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Modifier une fiche
+app.put('/api/fiches/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name || name.trim() === '') {
+        return res.status(400).json({ error: 'Nom de fiche requis' });
+    }
+
+    try {
+        const result = await pool.query(
+            'UPDATE fiches SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *',
+            [name.trim(), id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Fiche non trouvée' });
+        }
+        res.json({ fiche: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur modification fiche:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Ajouter une personne à une fiche
+app.post('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { person } = req.body;
+
+    if (!person) {
+        return res.status(400).json({ error: 'Personne requise' });
+    }
+
+    try {
+        const ficheResult = await pool.query(
+            'SELECT * FROM fiches WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+
+        if (ficheResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Fiche non trouvée' });
+        }
+
+        const fiche = ficheResult.rows[0];
+        let persons = fiche.persons || [];
+
+        if (persons.length >= 10) {
+            return res.status(400).json({ error: 'Maximum 10 personnes par fiche' });
+        }
+
+        const exists = persons.some(p =>
+            p.nom_famille === person.nom_famille &&
+            p.prenom === person.prenom &&
+            p.email === person.email
+        );
+
+        if (exists) {
+            return res.status(400).json({ error: 'Cette personne est déjà dans la fiche' });
+        }
+
+        persons.push(person);
+
+        const result = await pool.query(
+            'UPDATE fiches SET persons = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *',
+            [JSON.stringify(persons), id, req.user.id]
+        );
+
+        res.json({ fiche: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur ajout personne:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Supprimer une personne d'une fiche
+app.delete('/api/fiches/:id/persons/:personId', authenticateToken, async (req, res) => {
+    const { id, personId } = req.params;
+
+    try {
+        const ficheResult = await pool.query(
+            'SELECT * FROM fiches WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+
+        if (ficheResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Fiche non trouvée' });
+        }
+
+        const fiche = ficheResult.rows[0];
+        let persons = fiche.persons || [];
+
+        // Supprimer la personne par index (personId est l'index dans le tableau)
+        const idx = parseInt(personId);
+        if (idx >= 0 && idx < persons.length) {
+            persons.splice(idx, 1);
+        } else {
+            return res.status(400).json({ error: 'Personne non trouvée' });
+        }
+
+        const result = await pool.query(
+            'UPDATE fiches SET persons = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *',
+            [JSON.stringify(persons), id, req.user.id]
+        );
+
+        res.json({ fiche: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur suppression personne:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Supprimer une fiche
+app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            'DELETE FROM fiches WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Fiche non trouvée' });
+        }
+        res.json({ message: 'Fiche supprimée' });
+    } catch (error) {
+        console.error('❌ Erreur suppression fiche:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer les personnes d'une fiche
+app.get('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            'SELECT persons FROM fiches WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Fiche non trouvée' });
+        }
+
+        const persons = result.rows[0].persons || [];
+        res.json(persons);
+    } catch (error) {
+        console.error('❌ Erreur récupération personnes:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ ROUTES GRAPHES ============
+
+// Sauvegarder un graphe
+app.post('/api/graphes', authenticateToken, async (req, res) => {
+    const { name, nodes, edges } = req.body;
+
+    try {
+        // Supprimer l'ancien graphe de l'utilisateur
+        await pool.query(
+            'DELETE FROM graphes WHERE user_id = $1',
+            [req.user.id]
+        );
+
+        const result = await pool.query(
+            'INSERT INTO graphes (user_id, name, nodes, edges) VALUES ($1, $2, $3, $4) RETURNING *',
+            [req.user.id, name || 'Mon graphe', JSON.stringify(nodes || []), JSON.stringify(edges || [])]
+        );
+        res.status(201).json({ graphe: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur sauvegarde graphe:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer le graphe d'un utilisateur
+app.get('/api/graphes', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
+            [req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.json({ graphe: null });
+        }
+        res.json({ graphe: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur récupération graphe:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer TOUS les graphes sauvegardés
+app.get('/api/graphes/all', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json({ graphes: result.rows });
+    } catch (error) {
+        console.error('❌ Erreur récupération graphes:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Charger un graphe spécifique
+app.get('/api/graphes/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT * FROM graphes WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Graphe non trouvé' });
+        }
+        res.json({ graphe: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Erreur chargement graphe:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Supprimer un graphe
+app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'DELETE FROM graphes WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Graphe non trouvé' });
+        }
+        res.json({ message: 'Graphe supprimé' });
+    } catch (error) {
+        console.error('❌ Erreur suppression graphe:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // ============ PROFIL ============
 
 app.get('/api/me', authenticateToken, async (req, res) => {
@@ -383,7 +717,9 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 
         res.json({
             user: result.rows[0],
-            stats: { total_searches: parseInt(stats.rows[0].total_searches) }
+            stats: {
+                total_searches: parseInt(stats.rows[0].total_searches)
+            }
         });
 
     } catch (error) {
@@ -407,10 +743,6 @@ app.get('/cgu.html', (req, res) => {
 
 app.get('/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
-});
-
-app.get('/cgu.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'cgu.html'));
 });
 
 // ============ DÉMARRAGE ============
