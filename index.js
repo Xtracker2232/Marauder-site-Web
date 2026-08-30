@@ -10,6 +10,32 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// ============ CHARGEMENT FORCÉ DES VARIABLES ============
+if (!process.env.DATABASE_URL) {
+    console.log('⚠️ DATABASE_URL manquant, définition manuelle...');
+    process.env.DATABASE_URL = 'postgresql://postgres:gtGztIyjmvGHVYieqyDdPRyAkopTRhev@postgres.railway.internal:5432/railway';
+}
+
+if (!process.env.JWT_SECRET) {
+    console.log('⚠️ JWT_SECRET manquant, définition manuelle...');
+    process.env.JWT_SECRET = 'Marauder2026UltraSecureKey!@#$%^&*()';
+}
+
+if (!process.env.BRIX_API_KEY) {
+    console.log('⚠️ BRIX_API_KEY manquant, définition manuelle...');
+    process.env.BRIX_API_KEY = 'brix_Kvlxh9SqVL8bokxVb_SrD_WltbNCGbn9hMxan85R7TencJAw';
+}
+
+if (!process.env.ADMIN_USERNAME) {
+    console.log('⚠️ ADMIN_USERNAME manquant, définition manuelle...');
+    process.env.ADMIN_USERNAME = 'admin';
+}
+
+if (!process.env.ADMIN_PASSWORD) {
+    console.log('⚠️ ADMIN_PASSWORD manquant, définition manuelle...');
+    process.env.ADMIN_PASSWORD = 'admin123';
+}
+
 console.log('🔍 Vérification des variables:');
 console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
@@ -17,30 +43,16 @@ console.log('- BRIX_API_KEY:', process.env.BRIX_API_KEY ? '✅' : '❌');
 console.log('- ADMIN_USERNAME:', process.env.ADMIN_USERNAME ? '✅' : '❌');
 console.log('- ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? '✅' : '❌');
 
-// ============ VÉRIFICATION DES VARIABLES CRITIQUES ============
-const requiredEnv = ['DATABASE_URL', 'JWT_SECRET', 'BRIX_API_KEY', 'ADMIN_USERNAME', 'ADMIN_PASSWORD'];
-const missingEnv = requiredEnv.filter(key => !process.env[key]);
-
-if (missingEnv.length > 0) {
-    console.error('❌ Variables manquantes:', missingEnv.join(', '));
-    if (process.env.NODE_ENV === 'production') {
-        console.error('🚨 Arrêt du serveur pour cause de configuration incomplète');
-        process.exit(1);
-    }
-}
-
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    },
+    ssl: { rejectUnauthorized: false },
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
 });
 
-// ============ CRÉATION DES TABLES ============
+// ============ CRÉATION DES TABLES (sans email) ============
 const initDB = async () => {
     let client;
     try {
@@ -51,7 +63,6 @@ const initDB = async () => {
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(100) UNIQUE NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_login TIMESTAMP,
@@ -68,19 +79,18 @@ const initDB = async () => {
             );
 
             CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
             CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
         `);
         console.log('✅ Tables créées/vérifiées');
         
-        // Créer le compte admin depuis les variables d'environnement
+        // Créer le compte admin
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
         
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
             await client.query(
-                'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-                [process.env.ADMIN_USERNAME, 'admin@marauder.com', hashedPassword, 'admin']
+                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+                [process.env.ADMIN_USERNAME, hashedPassword, 'admin']
             );
             console.log(`✅ Compte admin créé (${process.env.ADMIN_USERNAME})`);
         } else {
@@ -160,7 +170,7 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT * FROM users WHERE username = $1 OR email = $1',
+            'SELECT * FROM users WHERE username = $1',
             [username]
         );
 
@@ -181,7 +191,7 @@ app.post('/api/login', async (req, res) => {
         );
 
         const token = jwt.sign(
-            { id: user.id, username: user.username, email: user.email, role: user.role },
+            { id: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -193,7 +203,6 @@ app.post('/api/login', async (req, res) => {
             user: {
                 id: user.id,
                 username: user.username,
-                email: user.email,
                 role: user.role
             }
         });
@@ -204,12 +213,12 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Register
+// Register (sans email)
 app.post('/api/register', async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
     console.log('📝 Inscription:', username);
 
-    if (!username || !email || !password) {
+    if (!username || !password) {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
 
@@ -220,8 +229,8 @@ app.post('/api/register', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 12);
         const result = await pool.query(
-            'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email',
-            [username, email, hashedPassword]
+            'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username',
+            [username, hashedPassword]
         );
 
         console.log('✅ Inscription réussie');
@@ -229,7 +238,7 @@ app.post('/api/register', async (req, res) => {
 
     } catch (error) {
         if (error.code === '23505') {
-            return res.status(400).json({ error: 'Nom ou email déjà utilisé' });
+            return res.status(400).json({ error: 'Nom d\'utilisateur déjà utilisé' });
         }
         console.error('❌ Register error:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -331,7 +340,7 @@ app.get('/api/history', authenticateToken, async (req, res) => {
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT id, username, email, role, created_at, last_login FROM users WHERE id = $1',
+            'SELECT id, username, role, created_at, last_login FROM users WHERE id = $1',
             [req.user.id]
         );
 

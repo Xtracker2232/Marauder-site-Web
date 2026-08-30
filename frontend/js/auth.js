@@ -45,19 +45,24 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-// Register
+// Register (sans email)
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('regUsername').value;
-    const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const errorDiv = document.getElementById('errorMessage');
+
+    if (password.length < 8) {
+        errorDiv.textContent = 'Le mot de passe doit faire au moins 8 caractères';
+        errorDiv.style.display = 'block';
+        return;
+    }
 
     try {
         const response = await fetch(`${API_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();
