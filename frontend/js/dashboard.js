@@ -20,14 +20,10 @@ document.querySelectorAll('.section-header').forEach(header => {
 // ============ TABS ============
 document.querySelectorAll('.search-tab').forEach(tab => {
     tab.addEventListener('click', function() {
-        // Remove active from all tabs
         document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         
-        // Hide all tab contents
         document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
-        
-        // Show selected tab content
         const tabId = this.dataset.tab;
         document.getElementById(`tab-${tabId}`).classList.add('active');
     });
@@ -120,11 +116,8 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         per_page: 20
     };
 
-    // Date de naissance
     const dateNaissance = document.getElementById('searchDateNaissance').value;
-    if (dateNaissance) {
-        query.date_naissance = dateNaissance;
-    }
+    if (dateNaissance) query.date_naissance = dateNaissance;
     
     const jour = document.getElementById('searchJour').value;
     if (jour) query.jour_naissance = parseInt(jour);
@@ -138,7 +131,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     const genre = document.getElementById('searchGenre').value;
     if (genre) query.genre = genre;
 
-    // Remove undefined values
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
     if (Object.keys(query).length <= 1) {
@@ -255,107 +247,153 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ DISPLAY FUNCTIONS WITH COPY BUTTON ============
+// ============ DISPLAY FUNCTIONS ============
 function displayResults(container, results) {
-    container.innerHTML = results.map(person => {
+    container.innerHTML = results.map((person, index) => {
         const confidence = person._confidence || 0;
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
+        const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
         
-        // Générer les détails avec bouton copier
-        const details = Object.entries(person)
+        // Générer les détails pour la fiche
+        let detailsHtml = '';
+        const detailItems = Object.entries(person)
             .filter(([key]) => !key.startsWith('_'))
-            .map(([key, value]) => {
-                if (!value) return '';
+            .forEach(([key, value]) => {
+                if (!value) return;
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                return `
+                detailsHtml += `
                     <div>
-                        <span class="label">${label}</span> 
-                        ${value} 
-                        <button class="copy-btn" onclick="copyToClipboard('${String(value).replace(/'/g, "\\'")}', this)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                            </svg>
-                            Copier
-                            <span class="marauder-tag">by Marauder</span>
-                        </button>
+                        <span class="label">${label}</span> ${value}
                     </div>
                 `;
-            }).join('');
+            });
+        
+        return `
+            <div class="result-card" data-index="${index}">
+                <div class="result-header">
+                    <div class="result-name" onclick="toggleDetails(${index})">${fullName}</div>
+                    <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
+                </div>
+                <div class="result-details" id="details-${index}">
+                    ${detailsHtml}
+                    ${person._sources ? `
+                        <div class="result-sources" style="grid-column:1/-1">
+                            Sources : ${person._sources.map(s => `<span>${s}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="copy-btn" onclick="copyFullCard(${index})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copier la fiche
+                    <span class="marauder-tag">by Marauder</span>
+                </button>
+            </div>
+        `;
+    }).join('');
+    
+    // Stocker les données pour le copier/coller
+    window._resultsData = results;
+}
+
+function displayLookupResults(container, results) {
+    container.innerHTML = results.map((row, index) => {
+        let detailsHtml = '';
+        Object.entries(row)
+            .filter(([key]) => !key.startsWith('_'))
+            .forEach(([key, value]) => {
+                if (!value) return;
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                detailsHtml += `
+                    <div>
+                        <span class="label">${label}</span> ${value}
+                    </div>
+                `;
+            });
         
         return `
             <div class="result-card">
                 <div class="result-header">
-                    <div class="result-name">${person.prenom || ''} ${person.nom_famille || 'Inconnu'}</div>
-                    <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
+                    <div class="result-name" onclick="toggleDetails(${index})">Fiche ${index + 1}</div>
                 </div>
-                <div class="result-details">${details}</div>
-                ${person._sources ? `
-                    <div class="result-sources">
-                        Sources : ${person._sources.map(s => `<span>${s}</span>`).join('')}
-                    </div>
-                ` : ''}
+                <div class="result-details open" id="details-${index}">
+                    ${detailsHtml}
+                    ${row._source_db ? `
+                        <div class="result-sources" style="grid-column:1/-1">
+                            Source : <span>${row._source_db}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="copy-btn" onclick="copyFullCard(${index})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copier la fiche
+                    <span class="marauder-tag">by Marauder</span>
+                </button>
             </div>
         `;
     }).join('');
+    
+    window._resultsData = results;
 }
 
-function displayLookupResults(container, results) {
-    container.innerHTML = results.map(row => {
-        const details = Object.entries(row)
-            .filter(([key]) => !key.startsWith('_'))
-            .map(([key, value]) => {
-                if (!value) return '';
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                return `
-                    <div>
-                        <span class="label">${label}</span> 
-                        ${value} 
-                        <button class="copy-btn" onclick="copyToClipboard('${String(value).replace(/'/g, "\\'")}', this)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                            </svg>
-                            Copier
-                            <span class="marauder-tag">by Marauder</span>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        
-        return `
-            <div class="result-card">
-                <div class="result-details">${details}</div>
-                ${row._source_db ? `
-                    <div class="result-sources">Source : <span>${row._source_db}</span></div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
+// ============ TOGGLE DETAILS ============
+function toggleDetails(index) {
+    const details = document.getElementById(`details-${index}`);
+    if (details) {
+        details.classList.toggle('open');
+    }
 }
 
-// ============ COPY TO CLIPBOARD FUNCTION ============
-function copyToClipboard(text, button) {
+// ============ COPY FULL CARD ============
+function copyFullCard(index) {
+    const data = window._resultsData;
+    if (!data || !data[index]) return;
+    
+    const person = data[index];
+    let text = '=== Marauder Investigation ===\n\n';
+    
+    Object.entries(person)
+        .filter(([key]) => !key.startsWith('_'))
+        .forEach(([key, value]) => {
+            if (!value) return;
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            text += `${label}: ${value}\n`;
+        });
+    
+    if (person._sources) {
+        text += `\nSources: ${person._sources.join(', ')}`;
+    }
+    
+    text += '\n\n--- by Marauder ---';
+    
     navigator.clipboard.writeText(text).then(() => {
-        button.classList.add('copied');
-        button.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            Copié !
-            <span class="marauder-tag">by Marauder</span>
-        `;
-        setTimeout(() => {
-            button.classList.remove('copied');
-            button.innerHTML = `
+        const btns = document.querySelectorAll('.copy-btn');
+        btns.forEach(btn => {
+            btn.classList.add('copied');
+            btn.innerHTML = `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Copier
+                Copié !
                 <span class="marauder-tag">by Marauder</span>
             `;
-        }, 2000);
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copier la fiche
+                    <span class="marauder-tag">by Marauder</span>
+                `;
+            }, 2000);
+        });
     }).catch(() => {
         // Fallback
         const textarea = document.createElement('textarea');
@@ -364,25 +402,6 @@ function copyToClipboard(text, button) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        button.classList.add('copied');
-        button.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            Copié !
-            <span class="marauder-tag">by Marauder</span>
-        `;
-        setTimeout(() => {
-            button.classList.remove('copied');
-            button.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                Copier
-                <span class="marauder-tag">by Marauder</span>
-            `;
-        }, 2000);
     });
 }
 
