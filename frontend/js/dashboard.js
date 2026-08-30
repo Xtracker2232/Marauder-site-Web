@@ -5,6 +5,28 @@ if (!token) {
     window.location.href = '/login';
 }
 
+// ============ TOAST NOTIFICATIONS ============
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        ${message}
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(toast);
+    
+    if (duration > 0) {
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(40px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+}
+
 // ============ FORMATAGE TÉLÉPHONE ============
 function formatPhone(phone) {
     if (!phone) return '';
@@ -18,7 +40,7 @@ function formatPhone(phone) {
 // ============ ANIMATION DE RECHERCHE ============
 function showSearchLoading() {
     const overlay = document.getElementById('searchOverlay');
-    overlay.classList.add('active');
+    if (overlay) overlay.classList.add('active');
     const bar = document.querySelector('.neon-bar');
     if (bar) {
         bar.style.animation = 'none';
@@ -29,7 +51,7 @@ function showSearchLoading() {
 
 function hideSearchLoading() {
     const overlay = document.getElementById('searchOverlay');
-    overlay.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
 }
 
 // ============ MODAL ============
@@ -41,7 +63,6 @@ function showModal(title, bodyHtml, confirmText, onConfirm) {
     const confirmBtn = document.getElementById('modalConfirm');
     confirmBtn.textContent = confirmText || 'Confirmer';
     
-    // Retirer les anciens écouteurs
     const newConfirm = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
     
@@ -153,13 +174,12 @@ document.querySelectorAll('.search-input').forEach(input => {
     });
 });
 
-// ============ RECHERCHE AVEC PIVOT FAMILLE ============
+// ============ RECHERCHE FRANÇAISE ============
 document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = {
         flexible: true,
         per_page: 100,
         page: 1,
-        
         nom_famille: document.getElementById('searchNom').value || undefined,
         prenom: document.getElementById('searchPrenom').value || undefined,
         nom_naissance: document.getElementById('searchNomNaissance').value || undefined,
@@ -220,7 +240,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         const data = await response.json();
         let results = data.data?.results || [];
 
-        // Pagination auto (max 5 pages)
         const total = data.meta?.total || 0;
         const perPage = query.per_page || 100;
         const totalPages = Math.ceil(total / perPage);
@@ -244,7 +263,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             }
         }
 
-        // Déduplication
         const uniqueResults = [];
         const seen = new Set();
         results.forEach(p => {
@@ -256,7 +274,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // Pivot famille
         for (let p of results.slice(0, 5)) {
             const famille = [];
             const pivotDone = new Set();
@@ -266,12 +283,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 if (!pivotDone.has(pivotKey)) {
                     pivotDone.add(pivotKey);
                     try {
-                        const pivotPayload = {
-                            adresse: p.adresse,
-                            code_postal: p.code_postal,
-                            flexible: false,
-                            per_page: 10
-                        };
+                        const pivotPayload = { adresse: p.adresse, code_postal: p.code_postal, flexible: false, per_page: 10 };
                         const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
                             method: 'POST',
                             headers: {
@@ -306,11 +318,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 if (!pivotDone.has(pivotKey)) {
                     pivotDone.add(pivotKey);
                     try {
-                        const pivotPayload = {
-                            telephone: p.telephone,
-                            flexible: false,
-                            per_page: 5
-                        };
+                        const pivotPayload = { telephone: p.telephone, flexible: false, per_page: 5 };
                         const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
                             method: 'POST',
                             headers: {
@@ -368,7 +376,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         flexible: true,
         per_page: 100,
         page: 1,
-        
         nom_famille: document.getElementById('searchNomPro').value || undefined,
         prenom: document.getElementById('searchPrenomPro').value || undefined,
         nom_naissance: document.getElementById('searchNomNaissancePro').value || undefined,
@@ -445,7 +452,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // Pivot famille
         for (let p of results.slice(0, 5)) {
             const famille = [];
             const pivotDone = new Set();
@@ -455,12 +461,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
                 if (!pivotDone.has(pivotKey)) {
                     pivotDone.add(pivotKey);
                     try {
-                        const pivotPayload = {
-                            adresse: p.adresse,
-                            code_postal: p.code_postal,
-                            flexible: false,
-                            per_page: 10
-                        };
+                        const pivotPayload = { adresse: p.adresse, code_postal: p.code_postal, flexible: false, per_page: 10 };
                         const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
                             method: 'POST',
                             headers: {
@@ -495,11 +496,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
                 if (!pivotDone.has(pivotKey)) {
                     pivotDone.add(pivotKey);
                     try {
-                        const pivotPayload = {
-                            telephone: p.telephone,
-                            flexible: false,
-                            per_page: 5
-                        };
+                        const pivotPayload = { telephone: p.telephone, flexible: false, per_page: 5 };
                         const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
                             method: 'POST',
                             headers: {
@@ -590,7 +587,7 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ TOGGLE FICHE ============
+// ============ TOGGLE FUNCTIONS ============
 function toggleFiche(index) {
     const details = document.getElementById(`fiche-${index}`);
     if (details) {
@@ -598,7 +595,6 @@ function toggleFiche(index) {
     }
 }
 
-// ============ TOGGLE APPROFONDIR ============
 function toggleDeep(index) {
     const panel = document.getElementById(`deep-${index}`);
     if (panel) {
@@ -646,7 +642,6 @@ function displayResults(container, results) {
         const sourcesHtml = person._sources ? 
             person._sources.map(s => `<span class="source-tag">${s}</span>`).join('') : '';
         
-        // Famille
         let familleHtml = '';
         if (person.famille && person.famille.length > 0) {
             familleHtml = `
@@ -657,14 +652,13 @@ function displayResults(container, results) {
                             <span>${m.prenom} ${m.nom_famille}${m.date_naissance ? ` · ${m.date_naissance}` : ''}</span>
                             <span class="relation">${m.lien || 'Lié'}</span>
                         </div>
-                        ${m.email ? `<div class="tree-sub">📧 ${m.email}</div>` : ''}
-                        ${m.telephone ? `<div class="tree-sub">📱 ${formatPhone(m.telephone)}</div>` : ''}
+                        ${m.email ? `<div class="tree-sub">${m.email}</div>` : ''}
+                        ${m.telephone ? `<div class="tree-sub">${formatPhone(m.telephone)}</div>` : ''}
                     `).join('')}
                 </div>
             `;
         }
         
-        // Bouton Ajouter à la fiche
         const ficheBtn = `
             <button class="btn-deep" onclick="addToFiche(${index})">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -709,6 +703,16 @@ function displayResults(container, results) {
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                         </svg>
                         Copier
+                    </button>
+                    <button class="btn-deep" onclick="addToGraphe(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <circle cx="12" cy="12" r="3"/>
+                            <line x1="3" x2="9" y1="12" y2="12"/>
+                            <line x1="15" x2="21" y1="12" y2="12"/>
+                            <line x1="12" x2="12" y1="3" y2="9"/>
+                            <line x1="12" x2="12" y1="15" y2="21"/>
+                        </svg>
+                        Graphe
                     </button>
                 </div>
                 
@@ -825,21 +829,7 @@ function copyFullCard(index) {
     text += '\n\n--- by Marauder ---';
     
     navigator.clipboard.writeText(text).then(() => {
-        const btns = document.querySelectorAll('.btn-deep');
-        btns.forEach(btn => {
-            if (btn.textContent.includes('Copier')) {
-                btn.innerHTML = '✅ Copié !';
-                setTimeout(() => {
-                    btn.innerHTML = `
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        Copier
-                    `;
-                }, 2000);
-            }
-        });
+        showToast('Fiche copiée dans le presse-papiers !', 'success');
     }).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = text;
@@ -847,6 +837,7 @@ function copyFullCard(index) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
+        showToast('Fiche copiée !', 'success');
     });
 }
 
@@ -876,21 +867,7 @@ function copyLookupCard(index) {
     text += '\n\n--- by Marauder ---';
     
     navigator.clipboard.writeText(text).then(() => {
-        const btns = document.querySelectorAll('.btn-deep');
-        btns.forEach(btn => {
-            if (btn.textContent.includes('Copier')) {
-                btn.innerHTML = '✅ Copié !';
-                setTimeout(() => {
-                    btn.innerHTML = `
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        Copier
-                    `;
-                }, 2000);
-            }
-        });
+        showToast('Lookup copié !', 'success');
     }).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = text;
@@ -898,6 +875,7 @@ function copyLookupCard(index) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
+        showToast('Lookup copié !', 'success');
     });
 }
 
@@ -935,6 +913,10 @@ async function loadHistory() {
                         query = { raw: query };
                     }
                 }
+
+                const nom = query.nom_famille || '';
+                const prenom = query.prenom || '';
+                const displayName = `${prenom} ${nom}`.trim() || 'Recherche';
 
                 const criteriaLabels = {
                     nom_famille: 'Nom',
@@ -1002,8 +984,9 @@ async function loadHistory() {
                                 <span>${dateStr}</span>
                                 <span class="history-time">${timeStr}</span>
                             </div>
-                            <div class="history-result-count ${resultCount === 0 ? 'empty' : ''}">
-                                ${resultText}
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <span style="font-size:13px;color:var(--text-secondary);font-weight:500;">${displayName}</span>
+                                <span class="history-result-count ${resultCount === 0 ? 'empty' : ''}">${resultText}</span>
                             </div>
                         </div>
                         <div class="history-body">
@@ -1056,18 +1039,18 @@ async function replaySearch(searchId) {
             if (data.results && data.results.length > 0) {
                 const container = document.getElementById('searchResults');
                 displayResults(container, data.results);
-                // Changer d'onglet vers recherche
                 document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
                 document.querySelector('[data-page="search"]').classList.add('active');
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById('page-search').classList.add('active');
+                showToast('Recherche relancée avec succès !', 'success');
             } else {
-                alert('Aucun résultat pour cette recherche replay');
+                showToast('Aucun résultat pour cette recherche', 'warning');
             }
         }, 1500);
     } catch (error) {
         hideSearchLoading();
-        alert('Erreur lors du replay de la recherche');
+        showToast('Erreur lors du replay', 'error');
     }
 }
 
@@ -1082,6 +1065,21 @@ async function loadFiches() {
         const response = await fetch(`${API_URL}/api/fiches`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!response.ok) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <p>Module fiches en développement</p>
+                    <span style="font-size:13px;color:var(--text-muted);">Les fiches seront disponibles prochainement</span>
+                </div>
+            `;
+            return;
+        }
+        
         const data = await response.json();
         fichesData = data.fiches || [];
 
@@ -1118,7 +1116,17 @@ async function loadFiches() {
             `;
         }
     } catch (error) {
-        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de chargement des fiches</div>';
+        container.innerHTML = `
+            <div class="empty-state" style="color:var(--warning);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color:var(--warning);">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p>Module fiches en cours de développement</p>
+                <span style="font-size:13px;color:var(--text-muted);">Cette fonctionnalité sera disponible prochainement</span>
+            </div>
+        `;
     }
 }
 
@@ -1134,7 +1142,7 @@ document.getElementById('createFicheBtn').addEventListener('click', () => {
     `, 'Créer', async () => {
         const name = document.getElementById('ficheNameInput').value.trim();
         if (!name) {
-            alert('Veuillez donner un nom à la fiche');
+            showToast('Veuillez donner un nom à la fiche', 'warning');
             return;
         }
         try {
@@ -1147,12 +1155,13 @@ document.getElementById('createFicheBtn').addEventListener('click', () => {
                 body: JSON.stringify({ name })
             });
             if (response.ok) {
+                showToast('Fiche créée avec succès !', 'success');
                 loadFiches();
             } else {
-                alert('Erreur lors de la création');
+                showToast('Erreur lors de la création', 'error');
             }
         } catch (error) {
-            alert('Erreur réseau');
+            showToast('Erreur réseau', 'error');
         }
     });
 });
@@ -1160,6 +1169,11 @@ document.getElementById('createFicheBtn').addEventListener('click', () => {
 function addToFiche(index) {
     const person = window._resultsData[index];
     if (!person) return;
+
+    if (fichesData.length === 0) {
+        showToast('Aucune fiche existante. Créez-en une d\'abord !', 'warning');
+        return;
+    }
 
     showModal('Ajouter à une fiche', `
         <div class="form-group">
@@ -1185,10 +1199,9 @@ function addToFiche(index) {
         if (ficheId === 'new') {
             const name = document.getElementById('newFicheNameInput').value.trim();
             if (!name) {
-                alert('Veuillez donner un nom à la fiche');
+                showToast('Veuillez donner un nom à la fiche', 'warning');
                 return;
             }
-            // Créer la fiche puis ajouter la personne
             try {
                 const createResponse = await fetch(`${API_URL}/api/fiches`, {
                     method: 'POST',
@@ -1202,17 +1215,18 @@ function addToFiche(index) {
                 if (createData.fiche) {
                     await addPersonToFiche(createData.fiche.id, person);
                     loadFiches();
+                    showToast('Personne ajoutée à la fiche !', 'success');
                 }
             } catch (error) {
-                alert('Erreur');
+                showToast('Erreur', 'error');
             }
         } else {
             await addPersonToFiche(parseInt(ficheId), person);
             loadFiches();
+            showToast('Personne ajoutée à la fiche !', 'success');
         }
     });
 
-    // Gérer l'affichage du champ nouveau nom
     document.getElementById('ficheSelect').addEventListener('change', function() {
         const container = document.getElementById('newFicheNameContainer');
         if (this.value === 'new') {
@@ -1235,10 +1249,10 @@ async function addPersonToFiche(ficheId, person) {
         });
         if (!response.ok) {
             const data = await response.json();
-            alert(data.error || 'Erreur');
+            showToast(data.error || 'Erreur', 'error');
         }
     } catch (error) {
-        alert('Erreur réseau');
+        showToast('Erreur réseau', 'error');
     }
 }
 
@@ -1276,7 +1290,7 @@ function editFiche(index) {
     `, 'Sauvegarder', async () => {
         const name = document.getElementById('editFicheName').value.trim();
         if (!name) {
-            alert('Veuillez donner un nom');
+            showToast('Veuillez donner un nom', 'warning');
             return;
         }
         try {
@@ -1289,10 +1303,11 @@ function editFiche(index) {
                 body: JSON.stringify({ name })
             });
             if (response.ok) {
+                showToast('Fiche modifiée !', 'success');
                 loadFiches();
             }
         } catch (error) {
-            alert('Erreur');
+            showToast('Erreur', 'error');
         }
     });
 }
@@ -1301,15 +1316,22 @@ function deleteFiche(index) {
     const fiche = fichesData[index];
     if (!fiche) return;
     
-    if (!confirm(`Supprimer la fiche "${fiche.name}" ?`)) return;
-    
-    fetch(`${API_URL}/api/fiches/${fiche.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-    }).then(() => {
-        loadFiches();
-    }).catch(() => {
-        alert('Erreur');
+    showModal('Confirmation', `
+        <p style="color:var(--text-secondary);">Supprimer la fiche "<strong style="color:#ffffff;">${fiche.name}</strong>" ?</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Cette action est irréversible.</p>
+    `, 'Supprimer', async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/fiches/${fiche.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                showToast('Fiche supprimée !', 'success');
+                loadFiches();
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
     });
 }
 
@@ -1335,7 +1357,7 @@ function exportFiche(index) {
     text += '\n--- by Marauder ---';
     
     navigator.clipboard.writeText(text).then(() => {
-        alert('Fiche copiée dans le presse-papiers !');
+        showToast('Fiche exportée dans le presse-papiers !', 'success');
     }).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = text;
@@ -1343,8 +1365,49 @@ function exportFiche(index) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        alert('Fiche copiée !');
+        showToast('Fiche exportée !', 'success');
     });
+}
+
+// ============ ADD TO GRAPHE ============
+function addToGraphe(index) {
+    const person = window._resultsData[index];
+    if (!person) return;
+    
+    const name = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
+    
+    const newNode = {
+        id: Date.now(),
+        label: name,
+        prenom: person.prenom || '',
+        nom_famille: person.nom_famille || '',
+        role: '',
+        x: 100 + Math.random() * 400,
+        y: 100 + Math.random() * 300,
+        color: '#1a1a1a',
+        borderColor: 'var(--border-color)'
+    };
+    
+    grapheNodes.push(newNode);
+    
+    // Si on est en mode lien, ajouter une arête
+    if (grapheLinkMode && grapheLinkFrom !== null) {
+        const edge = {
+            id: Date.now() + 1,
+            from: grapheLinkFrom,
+            to: newNode.id,
+            color: 'var(--border-color)'
+        };
+        grapheEdges.push(edge);
+        grapheLinkMode = false;
+        grapheLinkFrom = null;
+        document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.05)';
+        document.getElementById('grapheLier').style.borderColor = 'var(--border-color)';
+        showToast('Personnes liées !', 'success');
+    }
+    
+    initGraphe();
+    showToast(`"${name}" ajouté au graphe !`, 'success');
 }
 
 // ============ PROFIL ============
@@ -1397,17 +1460,20 @@ let grapheDragData = null;
 let grapheZoom = 1;
 let graphePanX = 0;
 let graphePanY = 0;
-let grapheSelectedNode = null;
 let grapheContextNode = null;
+let grapheLinkMode = false;
+let grapheLinkFrom = null;
 
 function initGraphe() {
     const canvas = document.getElementById('grapheCanvas');
     if (!canvas) return;
     
-    // Nettoyer
     canvas.innerHTML = '';
     
-    // Ajouter les nœuds et arêtes existants
+    const grid = document.createElement('div');
+    grid.className = 'graphe-grid';
+    canvas.appendChild(grid);
+    
     grapheNodes.forEach(node => {
         createGrapheNode(node);
     });
@@ -1415,7 +1481,6 @@ function initGraphe() {
         createGrapheEdge(edge);
     });
     
-    // Mettre à jour les positions
     updateGraphe();
 }
 
@@ -1430,7 +1495,10 @@ function createGrapheNode(node) {
     el.style.borderColor = node.borderColor || 'var(--border-color)';
     el.textContent = node.label || 'Personne';
     
-    // Bouton supprimer
+    if (node.role) {
+        el.textContent += ` (${node.role})`;
+    }
+    
     const removeBtn = document.createElement('button');
     removeBtn.className = 'node-remove';
     removeBtn.textContent = '×';
@@ -1440,14 +1508,12 @@ function createGrapheNode(node) {
     });
     el.appendChild(removeBtn);
     
-    // Drag
     el.addEventListener('mousedown', (e) => {
         if (e.button === 0) {
             startGrapheDrag(e, node.id);
         }
     });
     
-    // Clic droit pour menu contextuel
     el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1482,7 +1548,8 @@ function startGrapheDrag(e, nodeId) {
         startY: node.y
     };
     
-    document.getElementById(`node-${nodeId}`).classList.add('dragging');
+    const el = document.getElementById(`node-${nodeId}`);
+    if (el) el.classList.add('dragging');
     
     document.addEventListener('mousemove', onGrapheDrag);
     document.addEventListener('mouseup', endGrapheDrag);
@@ -1559,7 +1626,6 @@ function removeGrapheNode(nodeId) {
         if (edgeEl) edgeEl.remove();
     });
     
-    // Recréer les edges
     grapheEdges.forEach(edge => {
         createGrapheEdge(edge);
     });
@@ -1574,7 +1640,6 @@ function showGrapheContextMenu(x, y) {
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
     
-    // Positionner dans la fenêtre
     const rect = menu.getBoundingClientRect();
     if (rect.right > window.innerWidth) {
         menu.style.left = `${window.innerWidth - rect.width - 10}px`;
@@ -1584,13 +1649,11 @@ function showGrapheContextMenu(x, y) {
     }
 }
 
-// Fermer le menu contextuel au clic ailleurs
 document.addEventListener('click', () => {
     const menu = document.getElementById('grapheContextMenu');
     if (menu) menu.style.display = 'none';
 });
 
-// Actions du menu contextuel
 document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
     item.addEventListener('click', function() {
         const action = this.dataset.action;
@@ -1655,7 +1718,6 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 break;
                 
             case 'detach':
-                // Supprimer les edges liés
                 const edgesToRemove = grapheEdges.filter(e => e.from === nodeId || e.to === nodeId);
                 edgesToRemove.forEach(e => {
                     const edgeEl = document.getElementById(`edge-${e.id}`);
@@ -1666,16 +1728,19 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 break;
                 
             case 'delete':
-                if (confirm('Supprimer cette personne du graphe ?')) {
+                showModal('Confirmation', `
+                    <p style="color:var(--text-secondary);">Supprimer cette personne du graphe ?</p>
+                `, 'Supprimer', () => {
                     removeGrapheNode(nodeId);
-                }
-                document.getElementById('grapheContextMenu').style.display = 'none';
+                    document.getElementById('grapheContextMenu').style.display = 'none';
+                });
                 break;
         }
     });
 });
 
-// Ajouter une personne au graphe
+// ============ BOUTONS GRAPHE ============
+
 document.getElementById('grapheAddPersonne').addEventListener('click', () => {
     showModal('Ajouter une personne', `
         <div class="form-group">
@@ -1710,26 +1775,100 @@ document.getElementById('grapheAddPersonne').addEventListener('click', () => {
         };
         
         grapheNodes.push(newNode);
-        createGrapheNode(newNode);
-        updateGraphe();
+        
+        if (grapheLinkMode && grapheLinkFrom !== null) {
+            const edge = {
+                id: Date.now() + 1,
+                from: grapheLinkFrom,
+                to: newNode.id,
+                color: 'var(--border-color)'
+            };
+            grapheEdges.push(edge);
+            grapheLinkMode = false;
+            grapheLinkFrom = null;
+            document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.05)';
+            document.getElementById('grapheLier').style.borderColor = 'var(--border-color)';
+            showToast('Personnes liées !', 'success');
+        }
+        
+        initGraphe();
+        showToast(`"${label}" ajouté au graphe !`, 'success');
     });
 });
 
-// Sauvegarder le graphe
+// Bouton LIER
+document.getElementById('grapheLier').addEventListener('click', function() {
+    if (grapheLinkMode) {
+        grapheLinkMode = false;
+        grapheLinkFrom = null;
+        this.style.background = 'rgba(255,255,255,0.05)';
+        this.style.borderColor = 'var(--border-color)';
+        showToast('Mode lien désactivé', 'info');
+        return;
+    }
+    
+    if (grapheNodes.length < 1) {
+        showToast('Ajoutez au moins 2 personnes au graphe', 'warning');
+        return;
+    }
+    
+    grapheLinkMode = true;
+    grapheLinkFrom = null;
+    this.style.background = 'rgba(255,255,255,0.1)';
+    this.style.borderColor = '#ffffff';
+    showToast('Cliquez sur une personne pour la lier à la suivante', 'info');
+});
+
+// Gestion du clic sur les nœuds pour le mode lien
+document.addEventListener('click', function(e) {
+    if (!grapheLinkMode) return;
+    
+    const target = e.target.closest('.graphe-node');
+    if (!target) return;
+    
+    const nodeId = parseInt(target.id.replace('node-', ''));
+    const node = grapheNodes.find(n => n.id === nodeId);
+    if (!node) return;
+    
+    if (grapheLinkFrom === null) {
+        grapheLinkFrom = nodeId;
+        target.style.borderColor = '#ffffff';
+        showToast('Sélectionnez la personne de destination', 'info');
+    } else if (grapheLinkFrom !== nodeId) {
+        const edge = {
+            id: Date.now(),
+            from: grapheLinkFrom,
+            to: nodeId,
+            color: 'var(--border-color)'
+        };
+        grapheEdges.push(edge);
+        
+        const fromEl = document.getElementById(`node-${grapheLinkFrom}`);
+        if (fromEl) fromEl.style.borderColor = 'var(--border-color)';
+        
+        grapheLinkFrom = null;
+        grapheLinkMode = false;
+        document.getElementById('grapheLier').style.background = 'rgba(255,255,255,0.05)';
+        document.getElementById('grapheLier').style.borderColor = 'var(--border-color)';
+        
+        initGraphe();
+        showToast('Personnes liées !', 'success');
+    }
+});
+
 document.getElementById('grapheSauvegarder').addEventListener('click', () => {
     const data = {
         nodes: grapheNodes,
         edges: grapheEdges
     };
     localStorage.setItem('marauder_graphe', JSON.stringify(data));
-    alert('Graphe sauvegardé !');
+    showToast('Graphe sauvegardé !', 'success');
 });
 
-// Charger un graphe sauvegardé
 document.getElementById('grapheMesGraphes').addEventListener('click', () => {
     const saved = localStorage.getItem('marauder_graphe');
     if (!saved) {
-        alert('Aucun graphe sauvegardé');
+        showToast('Aucun graphe sauvegardé', 'warning');
         return;
     }
     try {
@@ -1737,18 +1876,22 @@ document.getElementById('grapheMesGraphes').addEventListener('click', () => {
         grapheNodes = data.nodes || [];
         grapheEdges = data.edges || [];
         initGraphe();
-        alert('Graphe chargé !');
+        showToast('Graphe chargé !', 'success');
     } catch (e) {
-        alert('Erreur de chargement');
+        showToast('Erreur de chargement', 'error');
     }
 });
 
-// Effacer le graphe
 document.getElementById('grapheEffacer').addEventListener('click', () => {
-    if (!confirm('Effacer tout le graphe ?')) return;
-    grapheNodes = [];
-    grapheEdges = [];
-    initGraphe();
+    showModal('Confirmation', `
+        <p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Cette action est irréversible.</p>
+    `, 'Effacer', () => {
+        grapheNodes = [];
+        grapheEdges = [];
+        initGraphe();
+        showToast('Graphe effacé', 'info');
+    });
 });
 
 // Zoom avec la molette
@@ -1756,14 +1899,13 @@ document.getElementById('grapheContainer').addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
     grapheZoom = Math.max(0.5, Math.min(2, grapheZoom + delta));
-    // Appliquer le zoom sur tous les nodes
     document.querySelectorAll('.graphe-node').forEach(el => {
         el.style.transform = `scale(${grapheZoom})`;
         el.style.transformOrigin = 'center center';
     });
 });
 
-// Drag du fond pour déplacer la vue
+// Drag du fond
 let isPanning = false;
 let panStartX = 0;
 let panStartY = 0;
@@ -1771,7 +1913,7 @@ let panStartPanX = 0;
 let panStartPanY = 0;
 
 document.getElementById('grapheCanvas').addEventListener('mousedown', (e) => {
-    if (e.target === e.currentTarget || e.target.id === 'grapheCanvas') {
+    if (e.target === e.currentTarget || e.target.id === 'grapheCanvas' || e.target.classList.contains('graphe-grid')) {
         isPanning = true;
         panStartX = e.clientX;
         panStartY = e.clientY;
