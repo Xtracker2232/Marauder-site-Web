@@ -10,22 +10,45 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============ BASE DE DONNÉES (CORRIGÉE) ============
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+console.log('🔍 Vérification des variables:');
+console.log('- PGHOST:', process.env.PGHOST ? '✅' : '❌');
+console.log('- PGPORT:', process.env.PGPORT ? '✅' : '❌');
+console.log('- PGUSER:', process.env.PGUSER ? '✅' : '❌');
+console.log('- PGPASSWORD:', process.env.PGPASSWORD ? '✅' : '❌');
+console.log('- PGDATABASE:', process.env.PGDATABASE ? '✅' : '❌');
+console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
+console.log('- BRIX_API_KEY:', process.env.BRIX_API_KEY ? '✅' : '❌');
+
+// ============ BASE DE DONNÉES ============
+const dbConfig = {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || '',
+    database: process.env.PGDATABASE || 'railway',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-});
+    connectionTimeoutMillis: 10000,
+};
 
-// Initialisation de la DB avec meilleure gestion d'erreur
+console.log('📊 Configuration DB:');
+console.log('- Host:', dbConfig.host);
+console.log('- Port:', dbConfig.port);
+console.log('- User:', dbConfig.user);
+console.log('- Database:', dbConfig.database);
+console.log('- SSL:', dbConfig.ssl ? 'activé' : 'désactivé');
+
+const pool = new Pool(dbConfig);
+
+// ============ CRÉATION DES TABLES ============
 const initDB = async () => {
     let client;
     try {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
         
+        // Créer les tables
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -51,28 +74,50 @@ const initDB = async () => {
             CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
         `);
         console.log('✅ Tables créées/vérifiées avec succès');
+        
+        // Vérifier le nombre d'utilisateurs
+        const result = await client.query('SELECT COUNT(*) FROM users');
+        console.log(`📊 ${result.rows[0].count} utilisateurs dans la base`);
+        
+        // Créer un admin par défaut si aucun utilisateur
+        if (parseInt(result.rows[0].count) === 0) {
+            const defaultPassword = await bcrypt.hash('admin123', 12);
+            await client.query(
+                'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING',
+                ['admin', 'admin@marauder.com', defaultPassword, 'admin']
+            );
+            console.log('✅ Compte admin créé par défaut (admin/admin123)');
+        }
+        
+        return true;
     } catch (error) {
-        console.error('❌ Erreur DB:', error.message);
-        console.error('📌 Vérifie que DATABASE_URL est configuré dans Railway');
-        // Ne pas crash en production
+        console.error('❌ Erreur init DB:', error.message);
+        return false;
     } finally {
         if (client) client.release();
     }
 };
 
-// Lancer l'init DB (non bloquant)
-initDB();
+// Lancer initDB au démarrage
+let dbReady = false;
+pool.connect(async (err, client, release) => {
+    if (err) {
+        console.error('❌ ÉCHEC connexion DB:', err.message);
+        console.error('📌 Vérifie les variables PGHOST, PGPASSWORD etc.');
+    } else {
+        console.log('✅ Connexion DB établie');
+        release();
+        dbReady = await initDB();
+        console.log('📌 DB prête:', dbReady ? '✅' : '❌');
+    }
+});
 
 // ============ MIDDLEWARE ============
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? ['https://marauder-site-web-production.up.railway.app'] 
-        : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
+    origin: '*',
     credentials: true
 }));
 app.use(express.json());
-
-// Servir les fichiers statiques depuis /frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============ AUTHENTIFICATION ============
@@ -95,14 +140,34 @@ const authenticateToken = (req, res, next) => {
 
 // ============ ROUTES ============
 
-// Health check (public)
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'operational', timestamp: new Date().toISOString() });
+// Health check
+app.get('/api/health', async (req, res) => {
+    let dbStatus = 'unknown';
+    try {
+        const result = await pool.query('SELECT NOW()');
+        dbStatus = 'connected';
+    } catch (error) {
+        dbStatus = 'disconnected: ' + error.message;
+    }
+    res.json({ 
+        status: 'operational', 
+        timestamp: new Date().toISOString(),
+        database: dbStatus,
+        db_ready: dbReady,
+        env: {
+            node_env: process.env.NODE_ENV || 'development',
+            has_jwt: !!process.env.JWT_SECRET,
+            has_brix: !!process.env.BRIX_API_KEY
+        }
+    });
 });
+
+// ============ AUTH ROUTES ============
 
 // Login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
+    console.log('📝 Tentative login:', username);
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Identifiants requis' });
@@ -136,6 +201,7 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        console.log('✅ Login réussi pour:', username);
         res.json({
             success: true,
             token,
@@ -148,7 +214,7 @@ app.post('/api/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ Erreur login:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -156,6 +222,7 @@ app.post('/api/login', async (req, res) => {
 // Register
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
+    console.log('📝 Tentative inscription:', username);
 
     if (!username || !email || !password) {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
@@ -173,6 +240,7 @@ app.post('/api/register', async (req, res) => {
             [username, email, hashedPassword]
         );
 
+        console.log('✅ Inscription réussie pour:', username);
         res.status(201).json({
             success: true,
             user: result.rows[0]
@@ -182,7 +250,7 @@ app.post('/api/register', async (req, res) => {
         if (error.code === '23505') {
             return res.status(400).json({ error: 'Nom d\'utilisateur ou email déjà utilisé' });
         }
-        console.error('Register error:', error);
+        console.error('❌ Erreur register:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -211,7 +279,6 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             }
         );
 
-        // Sauvegarde dans l'historique (si DB disponible)
         try {
             await pool.query(
                 'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
@@ -323,7 +390,7 @@ app.get('/api/me', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ ROUTE PAR DÉFAUT ============
+// ============ ROUTES STATIQUES ============
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
@@ -336,4 +403,5 @@ app.get('/dashboard.html', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Marauder API running on port ${PORT}`);
     console.log(`📊 Dashboard: http://localhost:${PORT}`);
+    console.log(`🔍 Health check: http://localhost:${PORT}/api/health`);
 });
