@@ -10,27 +10,24 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ============ FORCER LE CHARGEMENT DES VARIABLES ============
-// Si les variables ne sont pas chargées, on les définit manuellement
-if (!process.env.DATABASE_URL) {
-    console.log('⚠️ DATABASE_URL manquant, définition manuelle...');
-    process.env.DATABASE_URL = 'postgresql://postgres:gtGztIyjmvGHVYieqyDdPRyAkopTRhev@postgres.railway.internal:5432/railway';
-}
-
-if (!process.env.JWT_SECRET) {
-    console.log('⚠️ JWT_SECRET manquant, définition manuelle...');
-    process.env.JWT_SECRET = 'Marauder2026UltraSecureKey!@#$%^&*()';
-}
-
-if (!process.env.BRIX_API_KEY) {
-    console.log('⚠️ BRIX_API_KEY manquant, définition manuelle...');
-    process.env.BRIX_API_KEY = 'brix_Kvlxh9SqVL8bokxVb_SrD_WltbNCGbn9hMxan85R7TencJAw';
-}
-
-console.log('🔍 Variables après correction:');
+console.log('🔍 Vérification des variables:');
 console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
 console.log('- BRIX_API_KEY:', process.env.BRIX_API_KEY ? '✅' : '❌');
+console.log('- ADMIN_USERNAME:', process.env.ADMIN_USERNAME ? '✅' : '❌');
+console.log('- ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? '✅' : '❌');
+
+// ============ VÉRIFICATION DES VARIABLES CRITIQUES ============
+const requiredEnv = ['DATABASE_URL', 'JWT_SECRET', 'BRIX_API_KEY', 'ADMIN_USERNAME', 'ADMIN_PASSWORD'];
+const missingEnv = requiredEnv.filter(key => !process.env[key]);
+
+if (missingEnv.length > 0) {
+    console.error('❌ Variables manquantes:', missingEnv.join(', '));
+    if (process.env.NODE_ENV === 'production') {
+        console.error('🚨 Arrêt du serveur pour cause de configuration incomplète');
+        process.exit(1);
+    }
+}
 
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
@@ -76,16 +73,18 @@ const initDB = async () => {
         `);
         console.log('✅ Tables créées/vérifiées');
         
-        const result = await client.query('SELECT COUNT(*) FROM users');
-        console.log(`📊 ${result.rows[0].count} utilisateurs`);
+        // Créer le compte admin depuis les variables d'environnement
+        const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
         
         if (parseInt(result.rows[0].count) === 0) {
-            const hashedPassword = await bcrypt.hash('admin123', 12);
+            const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
             await client.query(
                 'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-                ['admin', 'admin@marauder.com', hashedPassword, 'admin']
+                [process.env.ADMIN_USERNAME, 'admin@marauder.com', hashedPassword, 'admin']
             );
-            console.log('✅ Compte admin créé (admin/admin123)');
+            console.log(`✅ Compte admin créé (${process.env.ADMIN_USERNAME})`);
+        } else {
+            console.log(`✅ Compte admin déjà existant (${process.env.ADMIN_USERNAME})`);
         }
         
         return true;
@@ -146,12 +145,7 @@ app.get('/api/health', async (req, res) => {
         status: 'operational',
         timestamp: new Date().toISOString(),
         database: dbStatus,
-        db_ready: dbReady,
-        env: {
-            has_jwt: !!process.env.JWT_SECRET,
-            has_brix: !!process.env.BRIX_API_KEY,
-            has_db_url: !!process.env.DATABASE_URL
-        }
+        db_ready: dbReady
     });
 });
 
