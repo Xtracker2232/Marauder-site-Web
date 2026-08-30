@@ -10,22 +10,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============ BASE DE DONNÉES ============
+// ============ BASE DE DONNÉES (CORRIGÉE) ============
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 5432,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 20,
     idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
 });
 
-// Initialisation de la DB
+// Initialisation de la DB avec meilleure gestion d'erreur
 const initDB = async () => {
-    const client = await pool.connect();
+    let client;
     try {
+        client = await pool.connect();
+        console.log('✅ Connexion DB établie');
+        
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -50,20 +50,23 @@ const initDB = async () => {
             CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
             CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
         `);
-        console.log('✅ Base de données initialisée');
+        console.log('✅ Tables créées/vérifiées avec succès');
     } catch (error) {
         console.error('❌ Erreur DB:', error.message);
+        console.error('📌 Vérifie que DATABASE_URL est configuré dans Railway');
+        // Ne pas crash en production
     } finally {
-        client.release();
+        if (client) client.release();
     }
 };
 
+// Lancer l'init DB (non bloquant)
 initDB();
 
 // ============ MIDDLEWARE ============
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://votre-domaine.com'] 
+        ? ['https://marauder-site-web-production.up.railway.app'] 
         : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
     credentials: true
 }));
@@ -91,6 +94,11 @@ const authenticateToken = (req, res, next) => {
 };
 
 // ============ ROUTES ============
+
+// Health check (public)
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'operational', timestamp: new Date().toISOString() });
+});
 
 // Login
 app.post('/api/login', async (req, res) => {
@@ -203,10 +211,15 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             }
         );
 
-        await pool.query(
-            'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
-            [req.user.id, req.body, response.data.data?.results?.length || 0]
-        );
+        // Sauvegarde dans l'historique (si DB disponible)
+        try {
+            await pool.query(
+                'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
+                [req.user.id, req.body, response.data.data?.results?.length || 0]
+            );
+        } catch (dbError) {
+            console.error('Erreur sauvegarde historique:', dbError.message);
+        }
 
         res.json(response.data);
 
