@@ -3,93 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marauder - Login</title>
+    <title>Marauder - Plateforme d'investigation</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="login-page">
-    <div class="login-container">
-        <div class="login-box">
-            <div class="login-header">
-                <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<body class="home-page">
+
+    <!-- ============ NAVIGATION ============ -->
+    <nav class="home-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                     <path d="M2 17l10 5 10-5"/>
                     <path d="M2 12l10 5 10-5"/>
                 </svg>
-                <h1>Marauder</h1>
-                <p>Plateforme d'investigation avancée</p>
+                <span>Marauder</span>
             </div>
-            
-            <!-- Formulaire de connexion -->
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Nom d'utilisateur</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <input type="text" id="username" placeholder="Nom d'utilisateur" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Mot de passe</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                        <input type="password" id="password" placeholder="••••••••" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn-primary">
+            <div class="nav-links">
+                <a href="#features">Fonctionnalités</a>
+                <a href="#how-it-works">Comment ça marche</a>
+                <a href="#search-criteria">Critères</a>
+                <a href="/dashboard.html" class="nav-btn">Se connecter</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============ HERO SECTION ============ -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="hero-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <h1 class="hero-title">Marauder</h1>
+            <div class="hero-subtitle">
+                <span id="typed-text"></span>
+                <span class="cursor">|</span>
+            </div>
+            <div class="hero-buttons">
+                <a href="/dashboard.html" class="btn-hero-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                         <polyline points="10 17 15 12 10 7"/>
                         <line x1="15" y1="12" x2="3" y2="12"/>
                     </svg>
-                    Se connecter
-                </button>
-                <p class="register-link">Pas de compte ? <a href="#" id="showRegister">S'inscrire</a></p>
-            </form>
-
-            <!-- Formulaire d'inscription -->
-            <form id="registerForm" style="display:none;">
-                <div class="form-group">
-                    <label>Nom d'utilisateur</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <input type="text" id="regUsername" placeholder="Choisissez un nom" required>
-                    </div>
+                    Commencer gratuitement
+                </a>
+                <a href="#" id="discordBtn" class="btn-hero-secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    Discord
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">11+</span>
+                    <span class="stat-label">Milliards d'infos indexées</span>
                 </div>
-                <div class="form-group">
-                    <label>Mot de passe</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">&lt;30</span>
+                    <span class="stat-label">ms de réponse</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">20+</span>
+                    <span class="stat-label">Critères de recherche</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ CRITÈRES DE RECHERCHE ============ -->
+    <section id="search-criteria" class="criteria-section">
+        <div class="criteria-container">
+            <h2 class="section-title">Que pouvez-vous rechercher ?</h2>
+            <p class="section-subtitle">Plus de 20 critères disponibles, combinables à volonté.</p>
+            <div class="criteria-grid">
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Nom</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Prénom</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Email</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Téléphone</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Adresse</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Code postal</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Ville</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Département</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>NIR</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>IBAN</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>IP</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Discord ID</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Date de naissance</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Employeur</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Profession</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Nationalité</span>
+                </div>
+                <div class="criteria-item">
+                    <span class="criteria-icon">▸</span>
+                    <span>Plaque d'immatriculation</span>
+                </div>
+                <div class="criteria-item highlight">
+                    <span class="criteria-icon">+</span>
+                    <span>Bien plus encore...</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ COMMENT ÇA MARCHE ============ -->
+    <section id="how-it-works" class="how-section">
+        <div class="how-container">
+            <h2 class="section-title">Comment ça marche</h2>
+            <p class="section-subtitle">De l'inscription à votre première recherche en moins de 2 minutes.</p>
+            <div class="how-grid">
+                <div class="how-card">
+                    <div class="how-number">1</div>
+                    <h3>Rejoignez le Discord</h3>
+                    <p>Rejoignez notre serveur Discord pour accéder à la plateforme. Inscription instantanée et sécurisée via OAuth2.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-number">2</div>
+                    <h3>Authentifiez-vous</h3>
+                    <p>Connectez-vous via Discord OAuth2 ou avec votre identifiant. Un code de vérification unique est envoyé en MP.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-number">3</div>
+                    <h3>Lancez vos recherches</h3>
+                    <p>Utilisez l'interface web ou la commande /breach sur Discord. Plus de 20 critères, résultats instantanés.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ FONCTIONNALITÉS ============ -->
+    <section id="features" class="features-section">
+        <div class="features-container">
+            <h2 class="section-title">Fonctionnalités clés</h2>
+            <p class="section-subtitle">Tout ce dont vous avez besoin pour vos recherches OSINT.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                    </div>
+                    <h3>Recherche multi-critères</h3>
+                    <p>Plus de 20 critères : nom, email, téléphone, adresse, NIR, IBAN, IP, Discord ID et bien plus.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <h3>Corrélation d'identités</h3>
+                    <p>Croisez automatiquement les données entre plusieurs sources pour établir des liens entre identités.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                    </div>
+                    <h3>Résultats instantanés</h3>
+                    <p>Infrastructure optimisée — temps de réponse sous 30 ms sur des milliards de données.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
-                        <input type="password" id="regPassword" placeholder="Minimum 8 caractères" required>
                     </div>
+                    <h3>Confidentialité totale</h3>
+                    <p>Recherches chiffrées, jamais partagées. Accessible via Tor pour un anonymat complet.</p>
                 </div>
-                <button type="submit" class="btn-primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="8.5" cy="7" r="4"/>
-                        <line x1="20" y1="8" x2="20" y2="14"/>
-                        <line x1="23" y1="11" x2="17" y2="11"/>
-                    </svg>
-                    Créer un compte
-                </button>
-                <p class="register-link"><a href="#" id="showLogin">← Retour à la connexion</a></p>
-            </form>
-            
-            <div id="errorMessage" class="error-message"></div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3>Arbre familial</h3>
+                    <p>Reconstitution automatique des liens familiaux par foyer à partir des données croisées.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                            <line x1="9" y1="9" x2="9.01" y2="9"/>
+                            <line x1="15" y1="9" x2="15.01" y2="9"/>
+                        </svg>
+                    </div>
+                    <h3>Bot Discord intégré</h3>
+                    <p>Recherchez directement depuis Discord avec /breach. Résultats en Components V2 avec export en MP.</p>
+                </div>
+            </div>
         </div>
-    </div>
-    <script src="js/auth.js"></script>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="home-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <span>Marauder</span>
+            </div>
+            <p class="footer-text">Plateforme d'investigation avancée · OSINT · CSINT</p>
+            <p class="footer-copy">© 2026 Marauder. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="js/home.js"></script>
 </body>
 </html>
