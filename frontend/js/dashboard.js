@@ -99,9 +99,13 @@ document.getElementById('clearBtnPro').addEventListener('click', () => {
     document.getElementById('searchResults').innerHTML = '';
 });
 
-// ============ RECHERCHE FRANÇAISE ============
+// ============ RECHERCHE AVEC PIVOT FAMILLE (comme Xtracker) ============
 document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = {
+        flexible: true,
+        per_page: 100,
+        page: 1,
+        
         nom_famille: document.getElementById('searchNom').value || undefined,
         prenom: document.getElementById('searchPrenom').value || undefined,
         nom_naissance: document.getElementById('searchNomNaissance').value || undefined,
@@ -123,9 +127,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         nir: document.getElementById('searchNir').value || undefined,
         iban: document.getElementById('searchIban').value || undefined,
         bic: document.getElementById('searchBic').value || undefined,
-        vin_plaque: document.getElementById('searchVin').value || undefined,
-        flexible: true,
-        per_page: 20
+        vin_plaque: document.getElementById('searchVin').value || undefined
     };
 
     const dateNaissance = document.getElementById('searchDateNaissance').value;
@@ -162,11 +164,105 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         });
 
         const data = await response.json();
+        let results = data.data?.results || [];
+
+        // ============ PIVOT FAMILLE (comme Xtracker) ============
+        for (let p of results.slice(0, 5)) {
+            const famille = [];
+            const pivotDone = new Set();
+
+            // Pivot par adresse + code postal
+            if (p.adresse && p.code_postal) {
+                const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
+                if (!pivotDone.has(pivotKey)) {
+                    pivotDone.add(pivotKey);
+                    try {
+                        const pivotPayload = {
+                            adresse: p.adresse,
+                            code_postal: p.code_postal,
+                            flexible: false,
+                            per_page: 10
+                        };
+                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(pivotPayload)
+                        });
+                        const pivotData = await pivotResponse.json();
+                        const pivotResults = pivotData.data?.results || [];
+                        for (let pr of pivotResults) {
+                            // Exclure la personne elle-même
+                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                            const membre = {
+                                prenom: pr.prenom || '',
+                                nom_famille: pr.nom_famille || '',
+                                date_naissance: pr.date_naissance || '',
+                                email: pr.email || '',
+                                telephone: pr.telephone || '',
+                                lien: 'Même adresse',
+                                _sources: pr._sources || []
+                            };
+                            // Éviter les doublons
+                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                famille.push(membre);
+                            }
+                        }
+                    } catch (e) { /* Silence */ }
+                }
+            }
+
+            // Pivot par téléphone (si moins de 5 membres trouvés)
+            if (p.telephone && famille.length < 5) {
+                const pivotKey = `tel_${p.telephone}`;
+                if (!pivotDone.has(pivotKey)) {
+                    pivotDone.add(pivotKey);
+                    try {
+                        const pivotPayload = {
+                            telephone: p.telephone,
+                            flexible: false,
+                            per_page: 5
+                        };
+                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(pivotPayload)
+                        });
+                        const pivotData = await pivotResponse.json();
+                        const pivotResults = pivotData.data?.results || [];
+                        for (let pr of pivotResults) {
+                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                            const membre = {
+                                prenom: pr.prenom || '',
+                                nom_famille: pr.nom_famille || '',
+                                date_naissance: pr.date_naissance || '',
+                                email: pr.email || '',
+                                telephone: pr.telephone || '',
+                                lien: 'Téléphone partagé',
+                                _sources: pr._sources || []
+                            };
+                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                famille.push(membre);
+                            }
+                        }
+                    } catch (e) { /* Silence */ }
+                }
+            }
+
+            if (famille.length > 0) {
+                p.famille = famille;
+            }
+        }
 
         setTimeout(() => {
             hideSearchLoading();
-            if (data.data?.results?.length > 0) {
-                displayResults(container, data.data.results);
+            if (results.length > 0) {
+                displayResults(container, results);
             } else {
                 container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
             }
@@ -180,9 +276,13 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ RECHERCHE PRO ============
+// ============ RECHERCHE PRO (sans pivot pour l'instant) ============
 document.getElementById('searchBtnPro').addEventListener('click', async () => {
     const query = {
+        flexible: true,
+        per_page: 100,
+        page: 1,
+        
         nom_famille: document.getElementById('searchNomPro').value || undefined,
         prenom: document.getElementById('searchPrenomPro').value || undefined,
         nom_naissance: document.getElementById('searchNomNaissancePro').value || undefined,
@@ -197,9 +297,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         nir: document.getElementById('searchNirPro').value || undefined,
         iban: document.getElementById('searchIbanPro').value || undefined,
         bic: document.getElementById('searchBicPro').value || undefined,
-        vin_plaque: document.getElementById('searchVinPro').value || undefined,
-        flexible: true,
-        per_page: 20
+        vin_plaque: document.getElementById('searchVinPro').value || undefined
     };
 
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
@@ -225,11 +323,101 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
 
         const data = await response.json();
+        const results = data.data?.results || [];
+
+        // Pivot famille pour la recherche Pro aussi
+        for (let p of results.slice(0, 5)) {
+            const famille = [];
+            const pivotDone = new Set();
+
+            if (p.adresse && p.code_postal) {
+                const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
+                if (!pivotDone.has(pivotKey)) {
+                    pivotDone.add(pivotKey);
+                    try {
+                        const pivotPayload = {
+                            adresse: p.adresse,
+                            code_postal: p.code_postal,
+                            flexible: false,
+                            per_page: 10
+                        };
+                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(pivotPayload)
+                        });
+                        const pivotData = await pivotResponse.json();
+                        const pivotResults = pivotData.data?.results || [];
+                        for (let pr of pivotResults) {
+                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                            const membre = {
+                                prenom: pr.prenom || '',
+                                nom_famille: pr.nom_famille || '',
+                                date_naissance: pr.date_naissance || '',
+                                email: pr.email || '',
+                                telephone: pr.telephone || '',
+                                lien: 'Même adresse',
+                                _sources: pr._sources || []
+                            };
+                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                famille.push(membre);
+                            }
+                        }
+                    } catch (e) { /* Silence */ }
+                }
+            }
+
+            if (p.telephone && famille.length < 5) {
+                const pivotKey = `tel_${p.telephone}`;
+                if (!pivotDone.has(pivotKey)) {
+                    pivotDone.add(pivotKey);
+                    try {
+                        const pivotPayload = {
+                            telephone: p.telephone,
+                            flexible: false,
+                            per_page: 5
+                        };
+                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(pivotPayload)
+                        });
+                        const pivotData = await pivotResponse.json();
+                        const pivotResults = pivotData.data?.results || [];
+                        for (let pr of pivotResults) {
+                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                            const membre = {
+                                prenom: pr.prenom || '',
+                                nom_famille: pr.nom_famille || '',
+                                date_naissance: pr.date_naissance || '',
+                                email: pr.email || '',
+                                telephone: pr.telephone || '',
+                                lien: 'Téléphone partagé',
+                                _sources: pr._sources || []
+                            };
+                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                famille.push(membre);
+                            }
+                        }
+                    } catch (e) { /* Silence */ }
+                }
+            }
+
+            if (famille.length > 0) {
+                p.famille = famille;
+            }
+        }
 
         setTimeout(() => {
             hideSearchLoading();
-            if (data.data?.results?.length > 0) {
-                displayResults(container, data.data.results);
+            if (results.length > 0) {
+                displayResults(container, results);
             } else {
                 container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
             }
@@ -282,233 +470,7 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ APPROFONDIR - RECHERCHES EN ARRIÈRE-PLAN ============
-async function approfondir(index) {
-    const data = window._resultsData;
-    if (!data || !data[index]) return;
-    
-    const person = data[index];
-    const panel = document.getElementById(`deep-${index}`);
-    
-    // Afficher le chargement
-    panel.innerHTML = `
-        <h4>Approfondir</h4>
-        <div style="text-align:center;padding:20px;color:var(--text-muted);">
-            <div style="font-size:14px;">Marauder analyse les liens...</div>
-            <div style="font-size:12px;margin-top:8px;color:var(--text-muted);opacity:0.6;">Recherches en arrière-plan</div>
-        </div>
-    `;
-    panel.classList.add('open');
-    
-    // Récupérer les infos
-    const email = person.email || '';
-    const phone = person.telephone || '';
-    const adresse = person.adresse || '';
-    const nom = person.nom_famille || '';
-    const prenom = person.prenom || '';
-    const ville = person.ville || '';
-    const codePostal = person.code_postal || '';
-    
-    let familyResults = [];
-    
-    // ============ RECHERCHES EN ARRIÈRE-PLAN (invisibles) ============
-    
-    // 1. Recherche par email
-    if (email) {
-        try {
-            const response = await fetch(`${API_URL}/api/brix/lookup/email/${encodeURIComponent(email)}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.data?.results) {
-                familyResults = familyResults.concat(data.data.results);
-            }
-        } catch (e) { /* Silence */ }
-    }
-    
-    // 2. Recherche par téléphone
-    if (phone) {
-        try {
-            const response = await fetch(`${API_URL}/api/brix/lookup/phone/${encodeURIComponent(phone)}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.data?.results) {
-                familyResults = familyResults.concat(data.data.results);
-            }
-        } catch (e) { /* Silence */ }
-    }
-    
-    // 3. Recherche par adresse
-    if (adresse) {
-        try {
-            const response = await fetch(`${API_URL}/api/brix/search`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    adresse: adresse,
-                    flexible: true,
-                    per_page: 20
-                })
-            });
-            const data = await response.json();
-            if (data.data?.results) {
-                familyResults = familyResults.concat(data.data.results);
-            }
-        } catch (e) { /* Silence */ }
-    }
-    
-    // 4. Recherche par nom + ville
-    if (nom && ville) {
-        try {
-            const response = await fetch(`${API_URL}/api/brix/search`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    nom_famille: nom,
-                    ville: ville,
-                    flexible: true,
-                    per_page: 20
-                })
-            });
-            const data = await response.json();
-            if (data.data?.results) {
-                familyResults = familyResults.concat(data.data.results);
-            }
-        } catch (e) { /* Silence */ }
-    }
-    
-    // 5. Recherche par nom + code postal
-    if (nom && codePostal) {
-        try {
-            const response = await fetch(`${API_URL}/api/brix/search`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    nom_famille: nom,
-                    code_postal: codePostal,
-                    flexible: true,
-                    per_page: 20
-                })
-            });
-            const data = await response.json();
-            if (data.data?.results) {
-                familyResults = familyResults.concat(data.data.results);
-            }
-        } catch (e) { /* Silence */ }
-    }
-    
-    // ============ FILTRER ET DÉDOUBLONNER ============
-    const uniqueResults = [];
-    const seen = new Set();
-    familyResults.forEach(p => {
-        const key = `${p.nom_famille || ''}|${p.prenom || ''}|${p.date_naissance || ''}`;
-        if (!seen.has(key) && key !== '|') {
-            seen.add(key);
-            uniqueResults.push(p);
-        }
-    });
-    
-    const personName = `${prenom} ${nom}`.trim().toLowerCase();
-    const filteredResults = uniqueResults.filter(p => {
-        const pName = `${p.prenom || ''} ${p.nom_famille || ''}`.trim().toLowerCase();
-        const samePerson = pName === personName;
-        const sameEmail = p.email && email && p.email.toLowerCase() === email.toLowerCase();
-        const samePhone = p.telephone && phone && p.telephone === phone;
-        return !samePerson && !sameEmail && !samePhone;
-    });
-    
-    // ============ CONSTRUIRE LE RÉSULTAT ============
-    const byAdresse = filteredResults.filter(p => p.adresse && p.adresse === adresse);
-    const byEmail = filteredResults.filter(p => p.email && p.email === email);
-    const byPhone = filteredResults.filter(p => p.telephone && p.telephone === phone);
-    const byNom = filteredResults.filter(p => p.nom_famille === nom);
-    
-    let familyHtml = '';
-    
-    if (filteredResults.length > 0) {
-        familyHtml = `
-            <div style="margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                ${filteredResults.length} membre${filteredResults.length > 1 ? 's' : ''} trouvé${filteredResults.length > 1 ? 's' : ''}
-                ${byAdresse.length > 0 ? ` · ${byAdresse.length} même adresse` : ''}
-                ${byEmail.length > 0 ? ` · ${byEmail.length} même email` : ''}
-                ${byPhone.length > 0 ? ` · ${byPhone.length} même téléphone` : ''}
-            </div>
-            <div style="max-height:300px;overflow-y:auto;">
-                ${filteredResults.map(p => {
-                    const pName = `${p.prenom || ''} ${p.nom_famille || 'Inconnu'}`.trim();
-                    const pEmail = p.email || '';
-                    const pPhone = p.telephone || '';
-                    const pAdresse = p.adresse || '';
-                    const pDate = p.date_naissance || '';
-                    const pSource = p._source_db || p._sources?.[0] || '';
-                    
-                    let relation = '';
-                    if (pAdresse && pAdresse === adresse) relation = 'Même adresse';
-                    else if (pEmail && pEmail === email) relation = 'Même email';
-                    else if (pPhone && pPhone === phone) relation = 'Même téléphone';
-                    else if (p.nom_famille === nom) relation = 'Même nom';
-                    
-                    return `
-                        <div style="padding:8px 0;border-bottom:1px solid var(--border-color);font-size:13px;">
-                            <div style="color:#ffffff;font-weight:500;display:flex;justify-content:space-between;align-items:center;">
-                                <span>${pName}</span>
-                                ${relation ? `<span style="font-size:10px;font-weight:400;color:var(--text-muted);background:rgba(255,255,255,0.03);padding:2px 10px;border-radius:4px;">${relation}</span>` : ''}
-                            </div>
-                            <div style="color:var(--text-muted);font-size:12px;display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;">
-                                ${pEmail ? `<span>📧 ${pEmail}</span>` : ''}
-                                ${pPhone ? `<span>📱 ${pPhone}</span>` : ''}
-                                ${pAdresse ? `<span>📍 ${pAdresse}</span>` : ''}
-                                ${pDate ? `<span>📅 ${pDate}</span>` : ''}
-                                ${pSource ? `<span style="background:rgba(255,255,255,0.03);padding:0 8px;border-radius:4px;font-size:10px;">${pSource}</span>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-    } else {
-        familyHtml = `
-            <div style="color:var(--text-muted);font-size:13px;padding:12px 0;text-align:center;">
-                Aucun lien familial trouvé
-                <div style="font-size:11px;margin-top:4px;opacity:0.5;">Marauder n'a pas trouvé de liens avec d'autres personnes</div>
-            </div>
-        `;
-    }
-    
-    // Mettre à jour le panel
-    panel.innerHTML = `
-        <h4 style="display:flex;justify-content:space-between;align-items:center;">
-            <span>Approfondir</span>
-            <span style="font-size:11px;font-weight:400;color:var(--text-muted);">
-                ${filteredResults.length} lien${filteredResults.length > 1 ? 's' : ''} trouvé${filteredResults.length > 1 ? 's' : ''}
-            </span>
-        </h4>
-        
-        <div style="margin-bottom:8px;font-size:12px;color:var(--text-muted);">
-            ${email ? `📧 ${email}` : ''}
-            ${phone ? ` · 📱 ${phone}` : ''}
-            ${adresse ? ` · 📍 ${adresse}` : ''}
-        </div>
-        
-        ${familyHtml}
-        
-        <div style="margin-top:12px;font-size:10px;color:var(--text-muted);opacity:0.3;text-align:center;border-top:1px solid var(--border-color);padding-top:8px;">
-            Marauder Investigation · Recherches automatiques en arrière-plan
-        </div>
-    `;
-}
-
-// ============ DISPLAY RESULTS ============
+// ============ DISPLAY RESULTS AVEC FAMILLE ============
 function displayResults(container, results) {
     const counterHtml = `
         <div class="results-counter">
@@ -525,7 +487,7 @@ function displayResults(container, results) {
         const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
         
         let fieldsHtml = '';
-        const excludedKeys = ['_confidence', '_sources', '_source_db'];
+        const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
         
         Object.entries(person)
             .filter(([key]) => !key.startsWith('_') && !excludedKeys.includes(key))
@@ -544,20 +506,30 @@ function displayResults(container, results) {
         const sourcesHtml = person._sources ? 
             person._sources.map(s => `<span class="source-tag">${s}</span>`).join('') : '';
         
-        const email = person.email || '';
-        const phone = person.telephone || '';
-        const adresse = person.adresse || '';
-        const nom = person.nom_famille || '';
-        const prenom = person.prenom || '';
-        
-        const deepHtml = `
-            <div class="deep-panel" id="deep-${index}">
-                <h4>Approfondir</h4>
-                <div style="text-align:center;padding:20px;color:var(--text-muted);">
-                    <div style="font-size:14px;">Cliquez sur "Approfondir" pour analyser les liens</div>
+        // ============ FAMILLE (comme Xtracker) ============
+        let familleHtml = '';
+        if (person.famille && person.famille.length > 0) {
+            familleHtml = `
+                <div class="family-tree" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
+                    <div class="tree-title" style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:8px;">
+                        👨‍👩‍👧‍👦 Famille associée (${person.famille.length})
+                    </div>
+                    ${person.famille.map(m => `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03);">
+                            <span style="color:var(--text-secondary);">
+                                ${m.prenom} ${m.nom_famille}
+                                ${m.date_naissance ? ` · <span style="color:var(--text-muted);font-size:11px;">${m.date_naissance}</span>` : ''}
+                            </span>
+                            <span style="font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.03);padding:2px 10px;border-radius:4px;">
+                                ${m.lien || 'Lié'}
+                            </span>
+                        </div>
+                        ${m.email ? `<div style="font-size:11px;color:var(--text-muted);padding-left:12px;">📧 ${m.email}</div>` : ''}
+                        ${m.telephone ? `<div style="font-size:11px;color:var(--text-muted);padding-left:12px;">📱 ${m.telephone}</div>` : ''}
+                    `).join('')}
                 </div>
-            </div>
-        `;
+            `;
+        }
         
         return `
             <div class="result-card-full" data-index="${index}">
@@ -577,14 +549,9 @@ function displayResults(container, results) {
                     </div>
                 ` : ''}
                 
+                ${familleHtml}
+                
                 <div class="result-actions">
-                    <button class="btn-deep" onclick="approfondir(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        Approfondir
-                    </button>
                     <button class="btn-deep" onclick="copyFullCard(${index})">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -593,8 +560,6 @@ function displayResults(container, results) {
                         Copier
                     </button>
                 </div>
-                
-                ${deepHtml}
             </div>
         `;
     }).join('');
@@ -660,7 +625,7 @@ function displayLookupResults(container, results) {
     window._lookupData = results;
 }
 
-// ============ COPY FULL CARD ============
+// ============ COPY FUNCTIONS ============
 function copyFullCard(index) {
     const data = window._resultsData;
     if (!data || !data[index]) return;
@@ -669,12 +634,23 @@ function copyFullCard(index) {
     let text = '=== Marauder Investigation ===\n\n';
     
     Object.entries(person)
-        .filter(([key]) => !key.startsWith('_'))
+        .filter(([key]) => !key.startsWith('_') && key !== 'famille')
         .forEach(([key, value]) => {
             if (!value) return;
             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
             text += `${label}: ${value}\n`;
         });
+    
+    if (person.famille && person.famille.length > 0) {
+        text += '\n=== Famille associée ===\n';
+        person.famille.forEach(m => {
+            text += `${m.prenom} ${m.nom_famille}`;
+            if (m.date_naissance) text += ` (${m.date_naissance})`;
+            if (m.email) text += ` - ${m.email}`;
+            if (m.telephone) text += ` - ${m.telephone}`;
+            text += ` - ${m.lien || 'Lié'}\n`;
+        });
+    }
     
     if (person._sources) {
         text += `\nSources: ${person._sources.join(', ')}`;
@@ -708,7 +684,6 @@ function copyFullCard(index) {
     });
 }
 
-// ============ COPY LOOKUP CARD ============
 function copyLookupCard(index) {
     const data = window._lookupData;
     if (!data || !data[index]) return;
