@@ -8,10 +8,7 @@ if (!token) {
 // ============ TOAST NOTIFICATIONS ============
 function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toastContainer');
-    if (!container) {
-        console.warn('Toast container not found');
-        return;
-    }
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `
@@ -1098,25 +1095,25 @@ async function loadFiches() {
     container.innerHTML = '<div class="empty-state">Chargement...</div>';
 
     try {
+        console.log('🔄 Chargement des fiches...');
         const response = await fetch(`${API_URL}/api/fiches`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        console.log('📡 Statut:', response.status);
+        
         if (!response.ok) {
+            console.error('❌ Erreur HTTP:', response.status);
             container.innerHTML = `
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    <p>Aucune fiche créée</p>
-                    <span style="font-size:13px;color:var(--text-muted);">Créez votre première fiche pour organiser vos recherches</span>
+                <div class="empty-state" style="color:var(--warning);">
+                    <p>Erreur ${response.status} - Vérifiez la console</p>
                 </div>
             `;
             return;
         }
         
         const data = await response.json();
+        console.log('📦 Données reçues:', data);
         fichesData = data.fiches || [];
 
         if (fichesData.length > 0) {
@@ -1152,16 +1149,11 @@ async function loadFiches() {
             `;
         }
     } catch (error) {
-        console.error('Erreur loadFiches:', error);
+        console.error('❌ Erreur loadFiches:', error);
         container.innerHTML = `
-            <div class="empty-state" style="color:var(--warning);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color:var(--warning);">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <p>Erreur de chargement des fiches</p>
-                <span style="font-size:13px;color:var(--text-muted);">Vérifiez votre connexion</span>
+            <div class="empty-state" style="color:var(--danger);">
+                <p>Erreur de chargement</p>
+                <span style="font-size:13px;color:var(--text-muted);">${error.message}</span>
             </div>
         `;
     }
@@ -1216,22 +1208,11 @@ function addToFiche(index) {
         return;
     }
 
-    // Charger les fiches si elles ne sont pas chargées
     if (fichesData.length === 0) {
-        loadFiches().then(() => {
-            if (fichesData.length === 0) {
-                showToast('Aucune fiche existante. Créez-en une d\'abord !', 'warning');
-                return;
-            }
-            showFichePicker(person);
-        });
+        showToast('Aucune fiche existante. Créez-en une d\'abord !', 'warning');
         return;
     }
 
-    showFichePicker(person);
-}
-
-function showFichePicker(person) {
     const selectOptions = fichesData.map(f => 
         `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`
     ).join('');
@@ -1467,10 +1448,11 @@ function addToGraphe(index) {
         grapheEdges.push(edge);
         grapheLinkMode = false;
         grapheLinkFrom = null;
-        const lierBtn = document.getElementById('grapheLier');
-        if (lierBtn) {
-            lierBtn.style.background = 'rgba(255,255,255,0.05)';
-            lierBtn.style.borderColor = 'var(--border-color)';
+        const attacherBtn = document.getElementById('grapheAttacher');
+        if (attacherBtn) {
+            attacherBtn.style.background = 'rgba(255,255,255,0.05)';
+            attacherBtn.style.borderColor = 'var(--border-color)';
+            attacherBtn.style.color = 'var(--text-secondary)';
         }
         showToast('Personnes liées !', 'success');
     }
@@ -1799,13 +1781,14 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
             case 'link':
                 grapheLinkMode = true;
                 grapheLinkFrom = nodeId;
-                const lierBtn = document.getElementById('grapheLier');
-                if (lierBtn) {
-                    lierBtn.style.background = 'rgba(255,255,255,0.1)';
-                    lierBtn.style.borderColor = '#ffffff';
+                const attacherBtn = document.getElementById('grapheAttacher');
+                if (attacherBtn) {
+                    attacherBtn.style.background = 'rgba(255,255,255,0.15)';
+                    attacherBtn.style.borderColor = '#ffffff';
+                    attacherBtn.style.color = '#ffffff';
                 }
                 document.getElementById('grapheContextMenu').style.display = 'none';
-                showToast('Cliquez sur une personne pour la lier', 'info');
+                showToast('Cliquez sur une personne pour l\'attacher', 'info');
                 break;
                 
             case 'detach':
@@ -1882,10 +1865,11 @@ if (grapheAddBtn) {
                 grapheEdges.push(edge);
                 grapheLinkMode = false;
                 grapheLinkFrom = null;
-                const lierBtn = document.getElementById('grapheLier');
-                if (lierBtn) {
-                    lierBtn.style.background = 'rgba(255,255,255,0.05)';
-                    lierBtn.style.borderColor = 'var(--border-color)';
+                const attacherBtn = document.getElementById('grapheAttacher');
+                if (attacherBtn) {
+                    attacherBtn.style.background = 'rgba(255,255,255,0.05)';
+                    attacherBtn.style.borderColor = 'var(--border-color)';
+                    attacherBtn.style.color = 'var(--text-secondary)';
                 }
                 showToast('Personnes liées !', 'success');
             }
@@ -1896,16 +1880,17 @@ if (grapheAddBtn) {
     });
 }
 
-// ============ BOUTON LIER (dans la barre d'outils) ============
-const grapheLierBtn = document.getElementById('grapheLier');
-if (grapheLierBtn) {
-    grapheLierBtn.addEventListener('click', function() {
+// ============ BOUTON ATTACHER ============
+const grapheAttacherBtn = document.getElementById('grapheAttacher');
+if (grapheAttacherBtn) {
+    grapheAttacherBtn.addEventListener('click', function() {
         if (grapheLinkMode) {
             grapheLinkMode = false;
             grapheLinkFrom = null;
             this.style.background = 'rgba(255,255,255,0.05)';
             this.style.borderColor = 'var(--border-color)';
-            showToast('Mode lien désactivé', 'info');
+            this.style.color = 'var(--text-secondary)';
+            showToast('Mode attacher désactivé', 'info');
             return;
         }
         
@@ -1916,13 +1901,14 @@ if (grapheLierBtn) {
         
         grapheLinkMode = true;
         grapheLinkFrom = null;
-        this.style.background = 'rgba(255,255,255,0.1)';
+        this.style.background = 'rgba(255,255,255,0.15)';
         this.style.borderColor = '#ffffff';
-        showToast('Cliquez sur une personne pour la lier à la suivante', 'info');
+        this.style.color = '#ffffff';
+        showToast('Cliquez sur une personne pour l\'attacher à la suivante', 'info');
     });
 }
 
-// Gestion du clic sur les nœuds pour le mode lien
+// Gestion du clic sur les nœuds pour le mode attacher
 document.addEventListener('click', function(e) {
     if (!grapheLinkMode) return;
     
@@ -1951,18 +1937,19 @@ document.addEventListener('click', function(e) {
         
         grapheLinkFrom = null;
         grapheLinkMode = false;
-        const lierBtn = document.getElementById('grapheLier');
-        if (lierBtn) {
-            lierBtn.style.background = 'rgba(255,255,255,0.05)';
-            lierBtn.style.borderColor = 'var(--border-color)';
+        const attacherBtn = document.getElementById('grapheAttacher');
+        if (attacherBtn) {
+            attacherBtn.style.background = 'rgba(255,255,255,0.05)';
+            attacherBtn.style.borderColor = 'var(--border-color)';
+            attacherBtn.style.color = 'var(--text-secondary)';
         }
         
         initGraphe();
-        showToast('Personnes liées !', 'success');
+        showToast('Personnes attachées !', 'success');
     }
 });
 
-// Sauvegarder le graphe
+// ============ SAUVEGARDER LE GRAPHE ============
 const grapheSaveBtn = document.getElementById('grapheSauvegarder');
 if (grapheSaveBtn) {
     grapheSaveBtn.addEventListener('click', () => {
@@ -1995,46 +1982,140 @@ if (grapheSaveBtn) {
     });
 }
 
-// Charger un graphe sauvegardé
+// ============ MES GRAPHES ============
 const grapheLoadBtn = document.getElementById('grapheMesGraphes');
 if (grapheLoadBtn) {
     grapheLoadBtn.addEventListener('click', async () => {
-        // Essayer de charger depuis le serveur d'abord
-        try {
-            const response = await fetch(`${API_URL}/api/graphes`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.graphe) {
-                    grapheNodes = data.graphe.nodes || [];
-                    grapheEdges = data.graphe.edges || [];
-                    initGraphe();
-                    showToast('Graphe chargé depuis le serveur !', 'success');
-                    return;
-                }
-            }
-        } catch (e) { /* Silence */ }
-        
-        // Fallback sur le localStorage
-        const saved = localStorage.getItem('marauder_graphe');
-        if (!saved) {
-            showToast('Aucun graphe sauvegardé', 'warning');
-            return;
-        }
-        try {
-            const data = JSON.parse(saved);
-            grapheNodes = data.nodes || [];
-            grapheEdges = data.edges || [];
-            initGraphe();
-            showToast('Graphe chargé localement !', 'success');
-        } catch (e) {
-            showToast('Erreur de chargement', 'error');
-        }
+        showGraphesModal();
     });
 }
 
-// Effacer le graphe
+async function showGraphesModal() {
+    const modal = document.getElementById('graphesModal');
+    const list = document.getElementById('graphesList');
+    
+    if (!modal || !list) return;
+    
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Chargement...</div>';
+    modal.classList.add('active');
+    
+    try {
+        const response = await fetch(`${API_URL}/api/graphes/all`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        let graphes = [];
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.graphes && data.graphes.length > 0) {
+                graphes = data.graphes;
+            }
+        }
+        
+        if (graphes.length === 0) {
+            const saved = localStorage.getItem('marauder_graphe');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    graphes.push({
+                        id: 'local',
+                        name: 'Graphe local',
+                        nodes: data.nodes || [],
+                        edges: data.edges || [],
+                        created_at: new Date().toLocaleDateString(),
+                        isLocal: true
+                    });
+                } catch (e) {}
+            }
+        }
+        
+        if (graphes.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegardé</div>';
+            return;
+        }
+        
+        list.innerHTML = graphes.map((g, index) => `
+            <div class="graphe-item">
+                <div>
+                    <div class="graphe-name">${g.name || 'Sans nom'} ${g.isLocal ? '(local)' : ''}</div>
+                    <div class="graphe-meta">${g.nodes?.length || 0} personnes · ${g.created_at ? new Date(g.created_at).toLocaleDateString() : 'Date inconnue'}</div>
+                </div>
+                <div class="graphe-actions">
+                    <button onclick="loadGrapheFromList(${index}, ${!!g.id && !g.isLocal})">Charger</button>
+                    ${!g.isLocal ? `<button class="danger" onclick="deleteGrapheFromList(${g.id})">Supprimer</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Erreur de chargement</div>';
+    }
+}
+
+// Fermer la modal des graphes
+document.getElementById('closeGraphesModal')?.addEventListener('click', () => {
+    document.getElementById('graphesModal').classList.remove('active');
+});
+
+// Charger un graphe depuis la liste
+async function loadGrapheFromList(index, fromServer) {
+    try {
+        let graphe;
+        
+        if (fromServer) {
+            const response = await fetch(`${API_URL}/api/graphes/all`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.graphes && data.graphes[index]) {
+                graphe = data.graphes[index];
+            }
+        } else {
+            const saved = localStorage.getItem('marauder_graphe');
+            if (saved) {
+                const data = JSON.parse(saved);
+                graphe = {
+                    nodes: data.nodes || [],
+                    edges: data.edges || []
+                };
+            }
+        }
+        
+        if (graphe) {
+            grapheNodes = graphe.nodes || [];
+            grapheEdges = graphe.edges || [];
+            initGraphe();
+            document.getElementById('graphesModal').classList.remove('active');
+            showToast('Graphe chargé !', 'success');
+        }
+    } catch (error) {
+        showToast('Erreur de chargement', 'error');
+    }
+}
+
+// Supprimer un graphe depuis la liste
+async function deleteGrapheFromList(grapheId) {
+    if (!confirm('Supprimer ce graphe ?')) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            showToast('Graphe supprimé !', 'success');
+            showGraphesModal();
+        } else {
+            showToast('Erreur de suppression', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur réseau', 'error');
+    }
+}
+
+// ============ EFFACER LE GRAPHE ============
 const grapheClearBtn = document.getElementById('grapheEffacer');
 if (grapheClearBtn) {
     grapheClearBtn.addEventListener('click', () => {
