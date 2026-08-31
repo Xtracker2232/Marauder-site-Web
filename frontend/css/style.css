@@ -3035,3 +3035,75 @@ input::placeholder, textarea::placeholder {
 #page-search .section-header {
     background: var(--bg-secondary) !important;
 }
+
+/* ============================================
+   SUPPRESSION TOTALE CADRILLAGE SUR DASHBOARD
+   ============================================ */
+
+/* 1. Supprimer le cadrillage et le glow sur le dashboard */
+.dashboard-page::before,
+.dashboard-page::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* 2. Forcer un fond propre sur le dashboard */
+.dashboard-page {
+    background: var(--bg-primary) !important;
+}
+
+/* 3. Supprimer TOUS les fonds qui pourraient être noirs sur la recherche */
+#page-search,
+#page-search .page,
+#page-search .page.active,
+#page-search .section,
+#page-search .section-body,
+#page-search .section-header,
+#page-search .form-grid,
+#page-search .search-tabs,
+#page-search .search-tab-content,
+#page-search .search-tab-content.active,
+#page-search .search-actions,
+#page-search .results-container,
+#page-search .results-counter,
+#tab-french,
+#tab-pro,
+#tab-french.active,
+#tab-pro.active {
+    background: transparent !important;
+}
+
+/* 4. Mais garder un fond pour les sections */
+#page-search .section {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* 5. Forcer le fond du main-content */
+.main-content {
+    background: transparent !important;
+}
+
+/* 6. Si le cadrillage s'affiche via un autre élément */
+.dashboard-page .main-content::before,
+.dashboard-page .main-content::after,
+.dashboard-page .main-content *::before,
+.dashboard-page .main-content *::after {
+    display: none !important;
+}
+
+/* 7. Suppression du fond noir sur les inputs */
+#page-search input,
+#page-search select,
+#page-search textarea {
+    background: var(--bg-input) !important;
+}
+
+/* 8. S'assurer que le body n'a pas de cadrillage sur dashboard */
+body.dashboard-page::before,
+body.dashboard-page::after {
+    display: none !important;
+}
