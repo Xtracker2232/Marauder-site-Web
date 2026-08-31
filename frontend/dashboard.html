@@ -9,7 +9,7 @@
 </head>
 <body class="dashboard-page">
 
-    <!-- OVERLAY DE RECHERCHE -->
+    <!-- ============ OVERLAY DE RECHERCHE ============ -->
     <div id="searchOverlay" class="search-loading">
         <div class="loading-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -35,29 +35,33 @@
         <div class="loading-text">Analyse en cours</div>
     </div>
 
-    <!-- MODAL -->
+    <!-- ============ TOAST NOTIFICATIONS ============ -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ============ MODAL GÉNÉRIQUE ============ -->
     <div id="modalOverlay" class="modal-overlay">
-        <div class="modal" id="modalContent">
+        <div class="modal">
             <h3 id="modalTitle">Titre</h3>
             <div id="modalBody"></div>
-            <div class="modal-actions" id="modalActions">
+            <div class="modal-actions">
                 <button class="btn-primary" id="modalConfirm">Confirmer</button>
                 <button class="btn-secondary" id="modalCancel">Annuler</button>
             </div>
         </div>
     </div>
 
-    <!-- CONTEXT MENU GRAPHE -->
-    <div id="grapheContextMenu" class="graphe-context-menu">
-        <div class="menu-item" data-action="edit">✏️ Modifier</div>
-        <div class="menu-item" data-action="color">🎨 Changer couleur</div>
-        <div class="menu-item" data-action="role">👤 Changer fonction</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="detach">🔗 Détacher</div>
-        <div class="menu-item danger" data-action="delete">🗑️ Supprimer</div>
+    <!-- ============ MODAL MES GRAPHES ============ -->
+    <div id="graphesModal" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <h3>Mes graphes sauvegardés</h3>
+            <div id="graphesList" style="margin-top:16px;max-height:400px;overflow-y:auto;"></div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="closeGraphesModal">Fermer</button>
+            </div>
+        </div>
     </div>
 
-    <!-- SIDEBAR -->
+    <!-- ============ SIDEBAR ============ -->
     <nav class="sidebar">
         <div class="sidebar-header">
             <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -125,10 +129,10 @@
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
+    <!-- ============ CONTENU PRINCIPAL ============ -->
     <main class="main-content">
 
-        <!-- ============ PAGE RECHERCHE ============ -->
+        <!-- ===== PAGE RECHERCHE ===== -->
         <section id="page-search" class="page active">
             <header class="page-header">
                 <h2>Recherche</h2>
@@ -142,7 +146,6 @@
                 <button class="search-tab" data-tab="pro">Recherche Pro</button>
             </div>
 
-            <!-- TAB FRANÇAIS -->
             <div id="tab-french" class="search-tab-content active">
                 <div class="section">
                     <div class="section-header" data-section="identity">
@@ -184,11 +187,11 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Jour</label>
-                                <input type="number" id="searchJour" placeholder="15" min="1" max="31" class="search-input">
+                                <input type="number" id="searchJour" placeholder="15" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Mois</label>
-                                <input type="number" id="searchMois" placeholder="6" min="1" max="12" class="search-input">
+                                <input type="number" id="searchMois" placeholder="6" class="search-input">
                             </div>
                             <div class="form-group">
                                 <label>Année</label>
@@ -352,7 +355,6 @@
                 </div>
             </div>
 
-            <!-- TAB PRO -->
             <div id="tab-pro" class="search-tab-content">
                 <div class="section">
                     <div class="section-header" data-section="identity">
@@ -474,14 +476,14 @@
             <div id="searchResults" class="results-container" style="margin-top:20px;"></div>
         </section>
 
-        <!-- ============ PAGE LOOKUP ============ -->
+        <!-- ===== PAGE LOOKUP ===== -->
         <section id="page-lookup" class="page">
             <header class="page-header">
                 <h2>Lookup</h2>
             </header>
             <div class="lookup-form">
                 <div class="form-group">
-                    <label>Type d'identifiant</label>
+                    <label>Type</label>
                     <select id="lookupType">
                         <option value="email">Email</option>
                         <option value="phone">Téléphone</option>
@@ -502,7 +504,7 @@
             <div id="lookupResults" class="results-container"></div>
         </section>
 
-        <!-- ============ PAGE HISTORIQUE ============ -->
+        <!-- ===== PAGE HISTORIQUE ===== -->
         <section id="page-history" class="page">
             <header class="page-header">
                 <h2>Historique</h2>
@@ -510,12 +512,11 @@
             <div id="historyList" class="results-container"></div>
         </section>
 
-        <!-- ============ PAGE FICHES ============ -->
+        <!-- ===== PAGE FICHES ===== -->
         <section id="page-fiches" class="page">
             <header class="page-header">
                 <h2>Fiches</h2>
             </header>
-            
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
                 <button id="createFicheBtn" class="btn-primary" style="width:auto;padding:10px 24px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
@@ -525,11 +526,10 @@
                     Créer une fiche
                 </button>
             </div>
-
             <div id="fichesList" class="results-container"></div>
         </section>
 
-        <!-- ============ PAGE GRAPHE ============ -->
+        <!-- ===== PAGE GRAPHE ===== -->
         <section id="page-graphe" class="page">
             <header class="page-header">
                 <h2>Graphe de connexions</h2>
@@ -544,6 +544,13 @@
                         <line x1="7" y1="7" x2="17" y2="7"/>
                     </svg>
                     + Personne
+                </button>
+                <button id="grapheAttacher" class="btn-primary" style="width:auto;padding:10px 24px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-secondary);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                    Attacher
                 </button>
                 <button id="grapheSauvegarder" class="btn-secondary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -570,14 +577,28 @@
             </div>
 
             <div id="grapheContainer" style="width:100%;height:600px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius);overflow:hidden;position:relative;cursor:grab;">
-                <div id="grapheCanvas" style="width:100%;height:100%;position:relative;overflow:hidden;"></div>
-                <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--text-muted);opacity:0.5;background:rgba(0,0,0,0.8);padding:6px 16px;border-radius:20px;pointer-events:none;user-select:none;white-space:nowrap;">
+                <div id="grapheCanvas" style="width:100%;height:100%;position:relative;overflow:hidden;">
+                    <div class="graphe-grid"></div>
+                </div>
+                <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--text-muted);opacity:0.5;background:rgba(0,0,0,0.8);padding:6px 16px;border-radius:20px;pointer-events:none;user-select:none;white-space:nowrap;z-index:20;">
                     Clic gauche = déplacer · Clic droit = menu · Scroll = zoom · Drag fond = déplacer la vue
                 </div>
             </div>
+
+            <!-- CONTEXT MENU GRAPHE -->
+            <div id="grapheContextMenu" class="graphe-context-menu">
+                <div class="menu-item" data-action="edit">✏️ Modifier</div>
+                <div class="menu-item" data-action="color">🎨 Changer couleur</div>
+                <div class="menu-item" data-action="role">👤 Changer fonction</div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" data-action="link">🔗 Attacher/Lier</div>
+                <div class="menu-item" data-action="detach">🔓 Détacher</div>
+                <div class="menu-divider"></div>
+                <div class="menu-item danger" data-action="delete">🗑️ Supprimer</div>
+            </div>
         </section>
 
-        <!-- ============ PAGE PROFIL ============ -->
+        <!-- ===== PAGE PROFIL ===== -->
         <section id="page-profile" class="page">
             <header class="page-header">
                 <h2>Profil</h2>
@@ -587,7 +608,7 @@
 
     </main>
 
-    <!-- FOOTER DASHBOARD -->
+    <!-- ============ FOOTER ============ -->
     <div style="border-top:1px solid var(--border-color);padding:16px 40px;margin-top:40px;text-align:center;background:var(--bg-secondary);position:relative;z-index:1;margin-left:260px;">
         <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);">
             <a href="/cgu.html" style="color:var(--text-muted);text-decoration:none;transition:color 0.2s;">CGU</a>
