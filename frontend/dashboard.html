@@ -405,6 +405,37 @@
             font-size: 14px;
             color: #a0a0a0;
         }
+        .result-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a2a;
+            flex-wrap: wrap;
+        }
+        .btn-deep {
+            padding: 6px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #a0a0a0;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-deep:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            color: #ffffff;
+        }
+        .btn-deep svg {
+            width: 14px;
+            height: 14px;
+        }
 
         /* FICHES */
         .fiche-item {
@@ -464,6 +495,10 @@
         .fiche-btn:hover {
             background: rgba(255,255,255,0.03);
             color: #ffffff;
+        }
+        .fiche-btn.danger:hover {
+            border-color: rgba(239,68,68,0.3);
+            color: #ef4444;
         }
 
         /* HISTORIQUE */
@@ -539,6 +574,66 @@
         .ticket-item .ticket-meta {
             font-size: 12px;
             color: #6b6b6b;
+        }
+        .ticket-detail {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a2a;
+        }
+        .ticket-detail.open {
+            display: block;
+        }
+        .ticket-message {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            font-size: 13px;
+            color: #a0a0a0;
+        }
+        .ticket-message.admin {
+            background: rgba(255,255,255,0.05);
+            border-left: 2px solid #3b82f6;
+        }
+        .ticket-message .msg-meta {
+            font-size: 11px;
+            color: #6b6b6b;
+            margin-bottom: 4px;
+        }
+        .ticket-reply {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .ticket-reply input {
+            flex: 1;
+            padding: 8px 14px;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+            outline: none;
+        }
+        .ticket-reply input:focus {
+            border-color: #ffffff;
+        }
+        .ticket-reply button {
+            padding: 8px 20px;
+            background: #ffffff;
+            border: none;
+            border-radius: 6px;
+            color: #000000;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ticket-reply button:hover {
+            background: #cccccc;
         }
 
         /* PROFIL */
@@ -701,6 +796,9 @@
             .result-fields.open { grid-template-columns: 1fr; }
             .search-tabs { flex-wrap: nowrap; overflow-x: auto; }
             .search-tab { flex: 0 0 auto; white-space: nowrap; font-size: 12px; padding: 8px 14px; }
+            .fiche-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .history-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .ticket-item .ticket-header { flex-direction: column; align-items: flex-start; gap: 6px; }
         }
     </style>
 </head>
@@ -1011,7 +1109,66 @@
 
     <!-- ============ SCRIPTS ============ -->
     <script>
-        console.log('Script chargé');
+        const API_URL = window.location.origin;
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        console.log('Dashboard chargé');
+
+        // ============ TOAST ============
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) {
+                alert(message);
+                return;
+            }
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = message + ' <button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(40px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        // ============ MODAL ============
+        function showModal(title, bodyHtml, confirmText, onConfirm) {
+            const overlay = document.getElementById('modalOverlay');
+            const titleEl = document.getElementById('modalTitle');
+            const bodyEl = document.getElementById('modalBody');
+            if (!overlay || !titleEl || !bodyEl) return;
+            titleEl.textContent = title;
+            bodyEl.innerHTML = bodyHtml;
+            overlay.classList.add('active');
+            const confirmBtn = document.getElementById('modalConfirm');
+            const cancelBtn = document.getElementById('modalCancel');
+            
+            if (confirmBtn) {
+                const newConfirm = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+                newConfirm.addEventListener('click', function() {
+                    if (onConfirm) onConfirm();
+                    closeModal();
+                });
+            }
+            if (cancelBtn) {
+                const newCancel = cancelBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                newCancel.addEventListener('click', closeModal);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
 
         // ============ SECTIONS TOGGLE ============
         document.querySelectorAll('.section-header').forEach(header => {
@@ -1029,122 +1186,32 @@
                 document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
-                const tabId = this.dataset.tab;
-                document.getElementById('tab-' + tabId).classList.add('active');
+                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
             });
         });
 
-        // ============ TOAST ============
-        function showToast(msg, type = 'info') {
-            console.log('TOAST:', msg);
-            const container = document.getElementById('toastContainer');
-            if (!container) {
-                alert(msg);
-                return;
-            }
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            toast.innerHTML = msg + ' <button class="toast-close" onclick="this.parentElement.remove()">×</button>';
-            container.appendChild(toast);
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(40px)';
-                    toast.style.transition = 'all 0.3s ease';
-                    setTimeout(() => toast.remove(), 300);
+        // ============ VERIFY TOKEN ============
+        async function verifyToken() {
+            try {
+                const response = await fetch(API_URL + '/api/verify', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!response.ok) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                    return;
                 }
-            }, 3000);
-        }
-
-        // ============ BOUTON RECHERCHE ============
-        document.getElementById('searchBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Recherche cliqué');
-            showToast('Recherche en cours...', 'info');
-        });
-
-        // ============ BOUTON RECHERCHE PRO ============
-        document.getElementById('searchBtnPro').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Recherche Pro cliqué');
-            showToast('Recherche Pro en cours...', 'info');
-        });
-
-        // ============ BOUTON EFFACER ============
-        document.getElementById('clearBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Effacer cliqué');
-            document.querySelectorAll('#tab-french input, #tab-french select').forEach(el => el.value = '');
-            document.getElementById('searchResults').innerHTML = '';
-            showToast('Formulaire efface');
-        });
-
-        // ============ BOUTON EFFACER PRO ============
-        document.getElementById('clearBtnPro').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Effacer Pro cliqué');
-            document.querySelectorAll('#tab-pro input, #tab-pro select').forEach(el => el.value = '');
-            document.getElementById('searchResults').innerHTML = '';
-            showToast('Formulaire Pro efface');
-        });
-
-        // ============ BOUTON LOOKUP ============
-        document.getElementById('lookupBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Lookup cliqué');
-            const value = document.getElementById('lookupValue').value.trim();
-            if (!value) {
-                showToast('Veuillez entrer une valeur', 'warning');
-                return;
+                const data = await response.json();
+                document.getElementById('usernameDisplay').textContent = data.user.username;
+            } catch (error) {
+                console.error('Erreur verify:', error);
             }
-            showToast('Lookup en cours pour : ' + value, 'info');
-        });
-
-        // ============ BOUTON CREER FICHE ============
-        document.getElementById('createFicheBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Créer fiche cliqué');
-            showToast('Création d\'une nouvelle fiche', 'info');
-        });
-
-        // ============ BOUTON NOUVEAU TICKET ============
-        document.getElementById('openTicketBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Nouveau ticket cliqué');
-            showToast('Ouverture d\'un nouveau ticket', 'info');
-        });
-
-        // ============ BOUTONS GRAPHE ============
-        document.getElementById('grapheAddPersonne').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Ajouter personne cliqué');
-            showToast('Ajout d\'une personne au graphe', 'info');
-        });
-        document.getElementById('grapheAttacher').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Attacher cliqué');
-            showToast('Attacher des personnes', 'info');
-        });
-        document.getElementById('grapheSauvegarder').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Sauvegarder graphe cliqué');
-            showToast('Sauvegarde du graphe', 'info');
-        });
-        document.getElementById('grapheMesGraphes').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Mes graphes cliqué');
-            showToast('Chargement des graphes', 'info');
-        });
-        document.getElementById('grapheEffacer').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Effacer graphe cliqué');
-            showToast('Graphe efface', 'info');
-        });
+        }
+        verifyToken();
 
         // ============ LOGOUT ============
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Déconnexion cliqué');
+        document.getElementById('logoutBtn').addEventListener('click', function() {
             if (confirm('Se déconnecter ?')) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -1156,12 +1223,638 @@
         document.querySelectorAll('.sidebar-nav li').forEach(item => {
             item.addEventListener('click', function() {
                 const page = this.dataset.page;
-                console.log('Navigation vers:', page);
                 document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
                 this.classList.add('active');
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById('page-' + page).classList.add('active');
+                if (page === 'profile') loadProfile();
+                if (page === 'history') loadHistory();
+                if (page === 'fiches') loadFiches();
+                if (page === 'tickets') loadTickets();
             });
+        });
+
+        // ============ FORMAT PHONE ============
+        function formatPhone(phone) {
+            if (!phone) return '';
+            const cleaned = phone.replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            }
+            return phone;
+        }
+
+        // ============ DISPLAY RESULTS ============
+        function displayResults(container, results) {
+            if (!results || results.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                return;
+            }
+
+            const cardsHtml = results.map((person, index) => {
+                const confidence = person._confidence || 0;
+                const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
+                const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
+                
+                let fieldsHtml = '';
+                Object.entries(person)
+                    .filter(([key]) => !key.startsWith('_'))
+                    .forEach(([key, value]) => {
+                        if (!value) return;
+                        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        let displayValue = value;
+                        if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                        fieldsHtml += `
+                            <div class="result-field">
+                                <span class="field-label">${label}</span>
+                                <span class="field-value">${displayValue}</span>
+                            </div>
+                        `;
+                    });
+                
+                return `
+                    <div class="result-card-full">
+                        <div class="result-header-full">
+                            <div class="result-name-full">${fullName}</div>
+                            <div class="result-meta">
+                                <span style="font-size:12px;color:${confidence >= 70 ? '#10b981' : confidence >= 40 ? '#f59e0b' : '#ef4444'};">${confidence}%</span>
+                            </div>
+                        </div>
+                        <div class="result-fields open">${fieldsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="results-counter">
+                    <div class="count"><strong>${results.length}</strong> resultat${results.length > 1 ? 's' : ''}</div>
+                    <div class="badge">${results.length > 1 ? 'Plusieurs correspondances' : 'Correspondance unique'}</div>
+                </div>
+                ${cardsHtml}
+            `;
+        }
+
+        // ============ SEARCH ============
+        document.getElementById('searchBtn').addEventListener('click', async function() {
+            const query = {
+                flexible: true,
+                per_page: 100,
+                page: 1,
+                nom_famille: document.getElementById('searchNom').value || undefined,
+                prenom: document.getElementById('searchPrenom').value || undefined,
+                nom_naissance: document.getElementById('searchNomNaissance').value || undefined,
+                nom_affichage: document.getElementById('searchNomAffichage').value || undefined,
+                email: document.getElementById('searchEmail').value || undefined,
+                telephone: document.getElementById('searchPhone').value || undefined,
+                nom_utilisateur: document.getElementById('searchUsername').value || undefined,
+                adresse_ip: document.getElementById('searchIp').value || undefined,
+                adresse: document.getElementById('searchAdresse').value || undefined,
+                code_postal: document.getElementById('searchCp').value || undefined,
+                ville: document.getElementById('searchVille').value || undefined,
+                ville_naissance: document.getElementById('searchVilleNaissance').value || undefined,
+                steam_id: document.getElementById('searchSteam').value || undefined,
+                fivem_license: document.getElementById('searchFivemLicense').value || undefined,
+                discord_id: document.getElementById('searchDiscord').value || undefined,
+                nir: document.getElementById('searchNir').value || undefined,
+                iban: document.getElementById('searchIban').value || undefined,
+                vin_plaque: document.getElementById('searchVin').value || undefined
+            };
+
+            Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
+
+            if (Object.keys(query).length === 0) {
+                showToast('Veuillez remplir au moins un critere', 'warning');
+                return;
+            }
+
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/brix/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(query)
+                });
+
+                const data = await response.json();
+                const results = data.data?.results || [];
+                displayResults(container, results);
+
+                if (results.length > 0) {
+                    showToast(results.length + ' resultat(s) trouvé(s)', 'success');
+                } else {
+                    showToast('Aucun resultat', 'info');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de recherche</div>';
+                showToast('Erreur de recherche', 'error');
+            }
+        });
+
+        // ============ SEARCH PRO ============
+        document.getElementById('searchBtnPro').addEventListener('click', async function() {
+            const query = {
+                flexible: true,
+                per_page: 100,
+                page: 1,
+                nom_famille: document.getElementById('searchNomPro').value || undefined,
+                prenom: document.getElementById('searchPrenomPro').value || undefined,
+                nom_naissance: document.getElementById('searchNomNaissancePro').value || undefined,
+                email: document.getElementById('searchEmailPro').value || undefined,
+                telephone: document.getElementById('searchPhonePro').value || undefined,
+                adresse_ip: document.getElementById('searchIpPro').value || undefined,
+                societe: document.getElementById('searchSociete').value || undefined,
+                profession: document.getElementById('searchProfession').value || undefined,
+                fonction: document.getElementById('searchFonction').value || undefined,
+                siret: document.getElementById('searchSiret').value || undefined,
+                siren: document.getElementById('searchSiren').value || undefined,
+                nir: document.getElementById('searchNirPro').value || undefined,
+                iban: document.getElementById('searchIbanPro').value || undefined,
+                vin_plaque: document.getElementById('searchVinPro').value || undefined
+            };
+
+            Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
+
+            if (Object.keys(query).length === 0) {
+                showToast('Veuillez remplir au moins un critere', 'warning');
+                return;
+            }
+
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/brix/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(query)
+                });
+
+                const data = await response.json();
+                const results = data.data?.results || [];
+                displayResults(container, results);
+
+                if (results.length > 0) {
+                    showToast(results.length + ' resultat(s) trouvé(s)', 'success');
+                } else {
+                    showToast('Aucun resultat', 'info');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de recherche</div>';
+                showToast('Erreur de recherche', 'error');
+            }
+        });
+
+        // ============ CLEAR ============
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            document.querySelectorAll('#tab-french input, #tab-french select').forEach(el => el.value = '');
+            document.getElementById('searchResults').innerHTML = '';
+            showToast('Formulaire efface');
+        });
+
+        document.getElementById('clearBtnPro').addEventListener('click', function() {
+            document.querySelectorAll('#tab-pro input, #tab-pro select').forEach(el => el.value = '');
+            document.getElementById('searchResults').innerHTML = '';
+            showToast('Formulaire Pro efface');
+        });
+
+        // ============ LOOKUP ============
+        document.getElementById('lookupBtn').addEventListener('click', async function() {
+            const type = document.getElementById('lookupType').value;
+            const value = document.getElementById('lookupValue').value.trim();
+
+            if (!value) {
+                showToast('Veuillez entrer une valeur', 'warning');
+                return;
+            }
+
+            const container = document.getElementById('lookupResults');
+            container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/brix/lookup/' + type + '/' + encodeURIComponent(value), {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+                const results = data.data?.results || [];
+
+                if (results.length > 0) {
+                    displayResults(container, results);
+                    showToast(results.length + ' enregistrement(s) trouvé(s)', 'success');
+                } else {
+                    container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                    showToast('Aucun resultat', 'info');
+                }
+            } catch (error) {
+                console.error('Lookup error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de lookup</div>';
+                showToast('Erreur de lookup', 'error');
+            }
+        });
+
+        // ============ HISTORY ============
+        async function loadHistory() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/history', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const history = data.history || [];
+
+                if (history.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucune recherche dans l\'historique</div>';
+                    return;
+                }
+
+                container.innerHTML = history.map(item => {
+                    const date = new Date(item.created_at);
+                    const resultCount = item.results_count || 0;
+                    return `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <div class="history-date">${date.toLocaleString()}</div>
+                                <span class="history-result-count ${resultCount === 0 ? 'empty' : ''}">${resultCount} resultat${resultCount > 1 ? 's' : ''}</span>
+                            </div>
+                            <div class="history-footer">
+                                <button class="history-replay" onclick="replaySearch(${item.id})">Relancer</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('History error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        async function replaySearch(id) {
+            try {
+                showToast('Relance de la recherche...', 'info');
+                const response = await fetch(API_URL + '/api/history/' + id + '/replay', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const results = data.results || [];
+                
+                document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+                document.querySelector('[data-page="search"]').classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-search').classList.add('active');
+                
+                const container = document.getElementById('searchResults');
+                displayResults(container, results);
+                showToast(results.length + ' resultat(s) trouvé(s)', 'success');
+            } catch (error) {
+                console.error('Replay error:', error);
+                showToast('Erreur de relance', 'error');
+            }
+        }
+
+        // ============ FICHES ============
+        let fichesData = [];
+
+        async function loadFiches() {
+            const container = document.getElementById('fichesList');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/fiches', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                fichesData = data.fiches || [];
+
+                if (fichesData.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucune fiche creee</div>';
+                    return;
+                }
+
+                container.innerHTML = fichesData.map((fiche, index) => `
+                    <div class="fiche-item">
+                        <div class="fiche-header">
+                            <span class="fiche-name">${fiche.name}</span>
+                            <span class="fiche-count">${fiche.persons?.length || 0} personne${fiche.persons?.length > 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="fiche-persons">
+                            ${fiche.persons?.map(p => `<span class="fiche-person">${p.prenom || ''} ${p.nom_famille || 'Inconnu'}</span>`).join('') || 'Aucune personne'}
+                        </div>
+                        <div class="fiche-actions">
+                            <button class="fiche-btn" onclick="viewFiche(${index})">Voir</button>
+                            <button class="fiche-btn" onclick="editFiche(${index})">Modifier</button>
+                            <button class="fiche-btn danger" onclick="deleteFiche(${index})">Supprimer</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Fiches error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        document.getElementById('createFicheBtn').addEventListener('click', function() {
+            showModal('Creer une fiche', `
+                <div class="form-group">
+                    <label>Nom de la fiche</label>
+                    <input type="text" id="ficheNameInput" placeholder="Ex: Enquete Dupont" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;">
+                </div>
+                <div style="font-size:12px;color:#6b6b6b;">Maximum 10 personnes par fiche</div>
+            `, 'Creer', async function() {
+                const name = document.getElementById('ficheNameInput').value.trim();
+                if (!name) {
+                    showToast('Veuillez donner un nom', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/fiches', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name })
+                    });
+                    if (response.ok) {
+                        showToast('Fiche creee !', 'success');
+                        loadFiches();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        });
+
+        function viewFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            const personsHtml = fiche.persons?.map(p => `
+                <div style="padding:4px 0;border-bottom:1px solid #2a2a2a;font-size:13px;color:#a0a0a0;">
+                    ${p.prenom || ''} ${p.nom_famille || 'Inconnu'}
+                </div>
+            `).join('') || 'Aucune personne';
+            showModal('Fiche: ' + fiche.name, `
+                <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">${fiche.persons?.length || 0} / 10 personnes</div>
+                <div style="max-height:300px;overflow-y:auto;">${personsHtml}</div>
+            `, 'Fermer', closeModal);
+        }
+
+        function editFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            showModal('Modifier la fiche', `
+                <div class="form-group">
+                    <label>Nom de la fiche</label>
+                    <input type="text" id="editFicheName" value="${fiche.name}" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;">
+                </div>
+            `, 'Sauvegarder', async function() {
+                const name = document.getElementById('editFicheName').value.trim();
+                if (!name) {
+                    showToast('Veuillez donner un nom', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/fiches/' + fiche.id, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name })
+                    });
+                    if (response.ok) {
+                        showToast('Fiche modifiee !', 'success');
+                        loadFiches();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        }
+
+        function deleteFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            showModal('Confirmation', `
+                <p style="color:#a0a0a0;">Supprimer la fiche "<strong style="color:#ffffff;">${fiche.name}</strong>" ?</p>
+                <p style="font-size:13px;color:#6b6b6b;">Cette action est irreversible.</p>
+            `, 'Supprimer', async function() {
+                try {
+                    const response = await fetch(API_URL + '/api/fiches/' + fiche.id, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (response.ok) {
+                        showToast('Fiche supprimee !', 'success');
+                        loadFiches();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        }
+
+        // ============ TICKETS ============
+        async function loadTickets() {
+            const container = document.getElementById('ticketsList');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/tickets', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const tickets = data.tickets || [];
+
+                if (tickets.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
+                    return;
+                }
+
+                container.innerHTML = tickets.map(ticket => `
+                    <div class="ticket-item" onclick="viewTicket(${ticket.id})">
+                        <div class="ticket-header">
+                            <span class="ticket-subject">${ticket.subject}</span>
+                            <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
+                        </div>
+                        <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${ticket.message?.substring(0, 100) || ''}${ticket.message?.length > 100 ? '...' : ''}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Tickets error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        document.getElementById('openTicketBtn').addEventListener('click', function() {
+            showModal('Nouveau ticket', `
+                <div class="form-group">
+                    <label>Sujet</label>
+                    <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+                </div>
+            `, 'Envoyer', async function() {
+                const subject = document.getElementById('ticketSubject').value.trim();
+                const message = document.getElementById('ticketMessage').value.trim();
+                if (!subject || !message) {
+                    showToast('Veuillez remplir tous les champs', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/tickets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ subject, message })
+                    });
+                    if (response.ok) {
+                        showToast('Ticket cree !', 'success');
+                        loadTickets();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        });
+
+        async function viewTicket(ticketId) {
+            try {
+                const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const ticket = data.ticket;
+                const messages = data.messages || [];
+
+                let messagesHtml = messages.map(m => `
+                    <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
+                        <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">
+                            ${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}
+                        </div>
+                        <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
+                    </div>
+                `).join('');
+
+                if (messages.length === 0) {
+                    messagesHtml = '<div style="color:#6b6b6b;font-size:13px;">Aucun message</div>';
+                }
+
+                showModal(ticket.subject, `
+                    <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">
+                        Statut: ${ticket.status} · Cree le ${new Date(ticket.created_at).toLocaleString()}
+                    </div>
+                    <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">
+                        ${messagesHtml}
+                    </div>
+                    ${ticket.status !== 'closed' ? `
+                        <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
+                            <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;font-family:Arial;outline:none;">
+                            <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
+                        </div>
+                    ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
+                `, 'Fermer', closeModal);
+
+            } catch (error) {
+                console.error('View ticket error:', error);
+                showToast('Erreur de chargement', 'error');
+            }
+        }
+
+        async function replyTicket(ticketId) {
+            const input = document.getElementById('ticketReplyInput');
+            if (!input) return;
+            const message = input.value.trim();
+            if (!message) {
+                showToast('Veuillez entrer un message', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ message })
+                });
+                if (response.ok) {
+                    showToast('Message envoye !', 'success');
+                    viewTicket(ticketId);
+                    loadTickets();
+                }
+            } catch (error) {
+                showToast('Erreur', 'error');
+            }
+        }
+
+        // ============ PROFIL ============
+        async function loadProfile() {
+            const container = document.getElementById('profileInfo');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.user) {
+                    container.innerHTML = `
+                        <div class="profile-card">
+                            <div class="profile-row"><span class="label">Nom d'utilisateur</span><span class="value">${data.user.username}</span></div>
+                            <div class="profile-row"><span class="label">Role</span><span class="value">${data.user.role}</span></div>
+                            <div class="profile-row"><span class="label">Membre depuis</span><span class="value">${new Date(data.user.created_at).toLocaleDateString()}</span></div>
+                            <div class="profile-row"><span class="label">Derniere connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
+                            <div class="profile-row"><span class="label">Total recherches</span><span class="value">${data.stats?.total_searches || 0}</span></div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Profile error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        // ============ GRAPHE BOUTONS ============
+        document.getElementById('grapheAddPersonne').addEventListener('click', function() {
+            showToast('Ajout d\'une personne au graphe', 'info');
+        });
+
+        document.getElementById('grapheAttacher').addEventListener('click', function() {
+            showToast('Attacher des personnes', 'info');
+        });
+
+        document.getElementById('grapheSauvegarder').addEventListener('click', function() {
+            showToast('Sauvegarde du graphe', 'info');
+        });
+
+        document.getElementById('grapheMesGraphes').addEventListener('click', function() {
+            showToast('Chargement des graphes', 'info');
+        });
+
+        document.getElementById('grapheEffacer').addEventListener('click', function() {
+            showToast('Graphe efface', 'info');
         });
 
         // ============ MOBILE MENU ============
@@ -1169,36 +1862,15 @@
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarBackdrop').classList.toggle('active');
         });
+
         document.getElementById('sidebarBackdrop').addEventListener('click', function() {
             document.getElementById('sidebar').classList.remove('open');
             this.classList.remove('active');
         });
 
-        // ============ PROFIL ============
-        async function loadProfile() {
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/me', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.user) {
-                        document.getElementById('profileInfo').innerHTML = `
-                            <div class="profile-row"><span class="label">Nom</span><span class="value">${data.user.username}</span></div>
-                            <div class="profile-row"><span class="label">Role</span><span class="value">${data.user.role}</span></div>
-                            <div class="profile-row"><span class="label">Membre depuis</span><span class="value">${new Date(data.user.created_at).toLocaleDateString()}</span></div>
-                            <div class="profile-row"><span class="label">Derniere connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
-                        `;
-                    }
-                }
-            } catch (e) {
-                console.error('Profil error:', e);
-            }
-        }
+        // ============ INIT ============
         loadProfile();
-
-        console.log('✅ Dashboard chargé avec succès');
+        console.log('✅ Dashboard charge avec succes');
     </script>
 
 </body>
