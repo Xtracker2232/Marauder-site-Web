@@ -6,12 +6,11 @@
     <title>Marauder - Dashboard</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="stylesheet" href="css/style.css">
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="dashboard-page">
 
-    <!-- ============ OVERLAY DE RECHERCHE ============ -->
+    <!-- OVERLAY RECHERCHE -->
     <div id="searchOverlay" class="search-loading">
         <div class="loading-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -27,20 +26,16 @@
                 <path d="M12 6v6l4 2"/>
             </svg>
             Marauder reflechit
-            <span class="dot">.</span>
-            <span class="dot">.</span>
-            <span class="dot">.</span>
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
         </div>
-        <div class="neon-bar-container">
-            <div class="neon-bar"></div>
-        </div>
+        <div class="neon-bar-container"><div class="neon-bar"></div></div>
         <div class="loading-text">Analyse en cours</div>
     </div>
 
-    <!-- ============ TOAST NOTIFICATIONS ============ -->
+    <!-- TOAST -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ============ MODAL GENERIQUE ============ -->
+    <!-- MODAL -->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal">
             <h3 id="modalTitle">Titre</h3>
@@ -52,7 +47,7 @@
         </div>
     </div>
 
-    <!-- ============ MODAL GRAPHES ============ -->
+    <!-- MODAL GRAPHES -->
     <div id="graphesModal" class="modal-overlay">
         <div class="modal" style="max-width:600px;">
             <h3>Mes graphes sauvegardes</h3>
@@ -63,7 +58,7 @@
         </div>
     </div>
 
-    <!-- ============ VUE INVESTIGATION ============ -->
+    <!-- INVESTIGATION -->
     <div id="investigationOverlay" class="investigation-overlay">
         <div class="investigation-container">
             <div class="investigation-header">
@@ -82,7 +77,6 @@
                 </div>
                 <div style="width:80px;"></div>
             </div>
-
             <div class="investigation-body">
                 <div class="investigation-map-col">
                     <div class="investigation-map-wrapper">
@@ -92,15 +86,12 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="investigation-info-col">
                     <div class="investigation-info-header">
                         <h3>Informations completes</h3>
                         <span class="investigation-confidence" id="investigationConfidence">95%</span>
                     </div>
-                    <div class="investigation-info-grid" id="investigationInfoGrid">
-                        <!-- Rempli par JS -->
-                    </div>
+                    <div class="investigation-info-grid" id="investigationInfoGrid"></div>
                     <div class="investigation-actions">
                         <button class="btn-primary" id="investigationAddFiche" style="width:auto;padding:10px 24px;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
@@ -139,7 +130,7 @@
         </div>
     </div>
 
-    <!-- ============ SIDEBAR ============ -->
+    <!-- SIDEBAR -->
     <nav class="sidebar">
         <div class="sidebar-header">
             <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -151,140 +142,80 @@
         </div>
         <ul class="sidebar-nav">
             <li class="active" data-page="search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <span>Recherche</span>
             </li>
             <li data-page="lookup">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <span>Lookup</span>
             </li>
             <li data-page="history">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>Historique</span>
             </li>
             <li data-page="fiches">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <span>Fiches</span>
             </li>
             <li data-page="graphe">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <line x1="3" x2="9" y1="12" y2="12"/>
-                    <line x1="15" x2="21" y1="12" y2="12"/>
-                    <line x1="12" x2="12" y1="3" y2="9"/>
-                    <line x1="12" x2="12" y1="15" y2="21"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/><line x1="12" x2="12" y1="3" y2="9"/><line x1="12" x2="12" y1="15" y2="21"/></svg>
                 <span>Graphe</span>
             </li>
             <li data-page="profile">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span>Profil</span>
             </li>
         </ul>
         <div class="sidebar-footer">
             <button id="logoutBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 <span>Deconnexion</span>
             </button>
         </div>
     </nav>
 
-    <!-- ============ MAIN CONTENT ============ -->
+    <!-- MAIN CONTENT -->
     <main class="main-content">
 
-        <!-- ===== PAGE RECHERCHE ===== -->
+        <!-- PAGE RECHERCHE -->
         <section id="page-search" class="page active">
             <header class="page-header">
                 <h2>Recherche</h2>
-                <div class="user-info">
-                    <span id="usernameDisplay"></span>
-                </div>
+                <div class="user-info"><span id="usernameDisplay"></span></div>
             </header>
-
             <div class="search-tabs">
                 <button class="search-tab active" data-tab="french">Recherche francaise</button>
                 <button class="search-tab" data-tab="pro">Recherche Pro</button>
             </div>
-
             <div id="tab-french" class="search-tab-content active">
+                <!-- Contenu identique à avant -->
                 <div class="section">
                     <div class="section-header" data-section="identity">
                         <h3>Identite</h3>
-                        <svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body open">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Nom</label>
-                                <input type="text" id="searchNom" placeholder="Dupont" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Prenom</label>
-                                <input type="text" id="searchPrenom" placeholder="Jean" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Nom de naissance</label>
-                                <input type="text" id="searchNomNaissance" placeholder="Martin" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Nom affiche</label>
-                                <input type="text" id="searchNomAffichage" placeholder="Jean Dupont" class="search-input">
-                            </div>
+                            <div class="form-group"><label>Nom</label><input type="text" id="searchNom" placeholder="Dupont" class="search-input"></div>
+                            <div class="form-group"><label>Prenom</label><input type="text" id="searchPrenom" placeholder="Jean" class="search-input"></div>
+                            <div class="form-group"><label>Nom de naissance</label><input type="text" id="searchNomNaissance" placeholder="Martin" class="search-input"></div>
+                            <div class="form-group"><label>Nom affiche</label><input type="text" id="searchNomAffichage" placeholder="Jean Dupont" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="birth">
                         <h3>Naissance</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Jour</label>
-                                <input type="number" id="searchJour" placeholder="15" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Mois</label>
-                                <input type="number" id="searchMois" placeholder="6" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Annee</label>
-                                <input type="number" id="searchAnnee" placeholder="1990" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Date exacte</label>
-                                <input type="date" id="searchDateNaissance" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Ville de naissance</label>
-                                <input type="text" id="searchVilleNaissance" placeholder="Paris" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Genre</label>
+                            <div class="form-group"><label>Jour</label><input type="number" id="searchJour" placeholder="15" class="search-input"></div>
+                            <div class="form-group"><label>Mois</label><input type="number" id="searchMois" placeholder="6" class="search-input"></div>
+                            <div class="form-group"><label>Annee</label><input type="number" id="searchAnnee" placeholder="1990" class="search-input"></div>
+                            <div class="form-group"><label>Date exacte</label><input type="date" id="searchDateNaissance" class="search-input"></div>
+                            <div class="form-group"><label>Ville de naissance</label><input type="text" id="searchVilleNaissance" placeholder="Paris" class="search-input"></div>
+                            <div class="form-group"><label>Genre</label>
                                 <select id="searchGenre" class="search-input">
                                     <option value="">Tous</option>
                                     <option value="M">Homme</option>
@@ -294,271 +225,137 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="contact">
                         <h3>Contact</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="searchEmail" placeholder="jean@example.com" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Telephone</label>
-                                <input type="tel" id="searchPhone" placeholder="0612345678" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Nom d'utilisateur</label>
-                                <input type="text" id="searchUsername" placeholder="jean_d" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Adresse IP</label>
-                                <input type="text" id="searchIp" placeholder="192.168.1.1" class="search-input">
-                            </div>
+                            <div class="form-group"><label>Email</label><input type="email" id="searchEmail" placeholder="jean@example.com" class="search-input"></div>
+                            <div class="form-group"><label>Telephone</label><input type="tel" id="searchPhone" placeholder="0612345678" class="search-input"></div>
+                            <div class="form-group"><label>Nom d'utilisateur</label><input type="text" id="searchUsername" placeholder="jean_d" class="search-input"></div>
+                            <div class="form-group"><label>Adresse IP</label><input type="text" id="searchIp" placeholder="192.168.1.1" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="location">
                         <h3>Localisation</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Adresse</label>
-                                <input type="text" id="searchAdresse" placeholder="10 rue de la Paix" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Code postal</label>
-                                <input type="text" id="searchCp" placeholder="75001" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Ville</label>
-                                <input type="text" id="searchVille" placeholder="Paris" class="search-input">
-                            </div>
+                            <div class="form-group"><label>Adresse</label><input type="text" id="searchAdresse" placeholder="10 rue de la Paix" class="search-input"></div>
+                            <div class="form-group"><label>Code postal</label><input type="text" id="searchCp" placeholder="75001" class="search-input"></div>
+                            <div class="form-group"><label>Ville</label><input type="text" id="searchVille" placeholder="Paris" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="fivem">
                         <h3>FiveM / GTA RP</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Steam ID</label>
-                                <input type="text" id="searchSteam" placeholder="steam:110000123456789" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>FiveM License</label>
-                                <input type="text" id="searchFivemLicense" placeholder="license:abc123..." class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Discord ID</label>
-                                <input type="text" id="searchDiscord" placeholder="834855528869265459" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Xbox Live</label>
-                                <input type="text" id="searchXbox" placeholder="xbl:2535423154..." class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Live ID</label>
-                                <input type="text" id="searchLive" placeholder="live:844425868261" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>FiveM License2</label>
-                                <input type="text" id="searchFivemLicense2" placeholder="license2:def456..." class="search-input">
-                            </div>
+                            <div class="form-group"><label>Steam ID</label><input type="text" id="searchSteam" placeholder="steam:110000123456789" class="search-input"></div>
+                            <div class="form-group"><label>FiveM License</label><input type="text" id="searchFivemLicense" placeholder="license:abc123..." class="search-input"></div>
+                            <div class="form-group"><label>Discord ID</label><input type="text" id="searchDiscord" placeholder="834855528869265459" class="search-input"></div>
+                            <div class="form-group"><label>Xbox Live</label><input type="text" id="searchXbox" placeholder="xbl:2535423154..." class="search-input"></div>
+                            <div class="form-group"><label>Live ID</label><input type="text" id="searchLive" placeholder="live:844425868261" class="search-input"></div>
+                            <div class="form-group"><label>FiveM License2</label><input type="text" id="searchFivemLicense2" placeholder="license2:def456..." class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="advanced">
                         <h3>Champs avances</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>NIR (Secu)</label>
-                                <input type="text" id="searchNir" placeholder="1234567890123" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>IBAN</label>
-                                <input type="text" id="searchIban" placeholder="FR76..." class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>BIC</label>
-                                <input type="text" id="searchBic" placeholder="BNPAFRPP" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>VIN / Plaque</label>
-                                <input type="text" id="searchVin" placeholder="AB-123-CD" class="search-input">
-                            </div>
+                            <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNir" placeholder="1234567890123" class="search-input"></div>
+                            <div class="form-group"><label>IBAN</label><input type="text" id="searchIban" placeholder="FR76..." class="search-input"></div>
+                            <div class="form-group"><label>BIC</label><input type="text" id="searchBic" placeholder="BNPAFRPP" class="search-input"></div>
+                            <div class="form-group"><label>VIN / Plaque</label><input type="text" id="searchVin" placeholder="AB-123-CD" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="search-actions">
                     <button id="searchBtn" class="btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         Rechercher
                     </button>
                     <button id="clearBtn" class="btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         Effacer
                     </button>
                 </div>
             </div>
-
             <div id="tab-pro" class="search-tab-content">
                 <div class="section">
                     <div class="section-header" data-section="identity">
                         <h3>Identite</h3>
-                        <svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body open">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Nom</label>
-                                <input type="text" id="searchNomPro" placeholder="Dupont" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Prenom</label>
-                                <input type="text" id="searchPrenomPro" placeholder="Jean" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Nom de naissance</label>
-                                <input type="text" id="searchNomNaissancePro" placeholder="Martin" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Societe</label>
-                                <input type="text" id="searchSociete" placeholder="Entreprise SAS" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Profession</label>
-                                <input type="text" id="searchProfession" placeholder="Developpeur" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Fonction</label>
-                                <input type="text" id="searchFonction" placeholder="CTO" class="search-input">
-                            </div>
+                            <div class="form-group"><label>Nom</label><input type="text" id="searchNomPro" placeholder="Dupont" class="search-input"></div>
+                            <div class="form-group"><label>Prenom</label><input type="text" id="searchPrenomPro" placeholder="Jean" class="search-input"></div>
+                            <div class="form-group"><label>Nom de naissance</label><input type="text" id="searchNomNaissancePro" placeholder="Martin" class="search-input"></div>
+                            <div class="form-group"><label>Societe</label><input type="text" id="searchSociete" placeholder="Entreprise SAS" class="search-input"></div>
+                            <div class="form-group"><label>Profession</label><input type="text" id="searchProfession" placeholder="Developpeur" class="search-input"></div>
+                            <div class="form-group"><label>Fonction</label><input type="text" id="searchFonction" placeholder="CTO" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="contact">
                         <h3>Contact</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="searchEmailPro" placeholder="jean@entreprise.com" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Telephone</label>
-                                <input type="tel" id="searchPhonePro" placeholder="0612345678" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>Adresse IP</label>
-                                <input type="text" id="searchIpPro" placeholder="192.168.1.1" class="search-input">
-                            </div>
+                            <div class="form-group"><label>Email</label><input type="email" id="searchEmailPro" placeholder="jean@entreprise.com" class="search-input"></div>
+                            <div class="form-group"><label>Telephone</label><input type="tel" id="searchPhonePro" placeholder="0612345678" class="search-input"></div>
+                            <div class="form-group"><label>Adresse IP</label><input type="text" id="searchIpPro" placeholder="192.168.1.1" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="section">
                     <div class="section-header" data-section="pro-identifiants">
                         <h3>Identifiants uniques</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
+                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>SIRET</label>
-                                <input type="text" id="searchSiret" placeholder="12345678901234" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>SIREN</label>
-                                <input type="text" id="searchSiren" placeholder="123456789" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>NIR (Secu)</label>
-                                <input type="text" id="searchNirPro" placeholder="1234567890123" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>IBAN</label>
-                                <input type="text" id="searchIbanPro" placeholder="FR76..." class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>BIC</label>
-                                <input type="text" id="searchBicPro" placeholder="BNPAFRPP" class="search-input">
-                            </div>
-                            <div class="form-group">
-                                <label>VIN / Plaque</label>
-                                <input type="text" id="searchVinPro" placeholder="AB-123-CD" class="search-input">
-                            </div>
+                            <div class="form-group"><label>SIRET</label><input type="text" id="searchSiret" placeholder="12345678901234" class="search-input"></div>
+                            <div class="form-group"><label>SIREN</label><input type="text" id="searchSiren" placeholder="123456789" class="search-input"></div>
+                            <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNirPro" placeholder="1234567890123" class="search-input"></div>
+                            <div class="form-group"><label>IBAN</label><input type="text" id="searchIbanPro" placeholder="FR76..." class="search-input"></div>
+                            <div class="form-group"><label>BIC</label><input type="text" id="searchBicPro" placeholder="BNPAFRPP" class="search-input"></div>
+                            <div class="form-group"><label>VIN / Plaque</label><input type="text" id="searchVinPro" placeholder="AB-123-CD" class="search-input"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="search-actions">
                     <button id="searchBtnPro" class="btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         Rechercher
                     </button>
                     <button id="clearBtnPro" class="btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         Effacer
                     </button>
                 </div>
             </div>
-
             <div id="searchResults" class="results-container" style="margin-top:20px;"></div>
         </section>
 
-        <!-- ===== PAGE LOOKUP ===== -->
+        <!-- PAGE LOOKUP -->
         <section id="page-lookup" class="page">
-            <header class="page-header">
-                <h2>Lookup</h2>
-            </header>
+            <header class="page-header"><h2>Lookup</h2></header>
             <div class="lookup-form">
                 <div class="form-group">
                     <label>Type</label>
@@ -573,95 +370,62 @@
                     <input type="text" id="lookupValue" placeholder="jean.dupont@gmail.com">
                 </div>
                 <button id="lookupBtn" class="btn-primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     Lookup
                 </button>
             </div>
             <div id="lookupResults" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE HISTORIQUE ===== -->
+        <!-- PAGE HISTORIQUE -->
         <section id="page-history" class="page">
-            <header class="page-header">
-                <h2>Historique</h2>
-            </header>
+            <header class="page-header"><h2>Historique</h2></header>
             <div id="historyList" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE FICHES ===== -->
+        <!-- PAGE FICHES -->
         <section id="page-fiches" class="page">
-            <header class="page-header">
-                <h2>Fiches</h2>
-            </header>
+            <header class="page-header"><h2>Fiches</h2></header>
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
                 <button id="createFicheBtn" class="btn-primary" style="width:auto;padding:10px 24px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Creer une fiche
                 </button>
             </div>
             <div id="fichesList" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE GRAPHE ===== -->
+        <!-- PAGE GRAPHE -->
         <section id="page-graphe" class="page">
-            <header class="page-header">
-                <h2>Graphe de connexions</h2>
-            </header>
-
+            <header class="page-header"><h2>Graphe de connexions</h2></header>
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
                 <button id="grapheAddPersonne" class="btn-primary" style="width:auto;padding:10px 24px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                        <line x1="12" y1="2" x2="12" y2="12"/>
-                        <line x1="7" y1="7" x2="17" y2="7"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="2" x2="12" y2="12"/><line x1="7" y1="7" x2="17" y2="7"/></svg>
                     Personne
                 </button>
                 <button id="grapheAttacher" class="btn-primary" style="width:auto;padding:10px 24px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-secondary);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                     Attacher
                 </button>
                 <button id="grapheSauvegarder" class="btn-secondary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                        <polyline points="17 21 17 13 7 13 7 21"/>
-                        <polyline points="7 3 7 8 15 8"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Sauvegarder
                 </button>
                 <button id="grapheMesGraphes" class="btn-secondary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                        <path d="M4 4v16h16"/>
-                        <polyline points="4 20 10 14 14 18 20 12"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 4v16h16"/><polyline points="4 20 10 14 14 18 20 12"/></svg>
                     Mes graphes
                 </button>
                 <button id="grapheEffacer" class="btn-secondary" style="color:var(--danger);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     Effacer
                 </button>
             </div>
-
             <div id="grapheContainer" style="width:100%;height:600px;background:#111;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;position:relative;cursor:grab;">
                 <canvas id="grapheCanvas" style="width:100%;height:100%;display:block;"></canvas>
                 <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#6b6b6b;opacity:0.5;background:rgba(0,0,0,0.8);padding:6px 16px;border-radius:20px;pointer-events:none;user-select:none;white-space:nowrap;z-index:20;">
                     Clic gauche = deplacer · Clic droit = menu · Scroll = zoom · Drag fond = deplacer la vue
                 </div>
             </div>
-
-            <!-- CONTEXT MENU -->
             <div id="grapheContextMenu" class="graphe-context-menu" style="display:none;position:fixed;background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:6px;min-width:200px;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
                 <div class="menu-item" data-action="edit" style="padding:8px 14px;color:#a0a0a0;font-size:13px;cursor:pointer;border-radius:6px;">Modifier</div>
                 <div class="menu-item" data-action="color" style="padding:8px 14px;color:#a0a0a0;font-size:13px;cursor:pointer;border-radius:6px;">Couleur</div>
@@ -676,17 +440,15 @@
             </div>
         </section>
 
-        <!-- ===== PAGE PROFIL ===== -->
+        <!-- PAGE PROFIL -->
         <section id="page-profile" class="page">
-            <header class="page-header">
-                <h2>Profil</h2>
-            </header>
+            <header class="page-header"><h2>Profil</h2></header>
             <div id="profileInfo" class="profile-card"></div>
         </section>
 
     </main>
 
-    <!-- ============ FOOTER ============ -->
+    <!-- FOOTER -->
     <div style="border-top:1px solid var(--border-color);padding:16px 40px;margin-top:40px;text-align:center;background:var(--bg-secondary);position:relative;z-index:1;margin-left:260px;">
         <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);">
             <a href="/cgu.html" style="color:var(--text-muted);text-decoration:none;">CGU</a>
@@ -695,10 +457,10 @@
         </div>
     </div>
 
-    <!-- ============ SCRIPTS ============ -->
-    <!-- Leaflet JS -->
+    <!-- SCRIPTS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/graphe.js"></script>
+
 </body>
 </html>
