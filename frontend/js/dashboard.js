@@ -1419,6 +1419,7 @@ function addToGraphe(index) {
     
     const name = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
     
+    // Position aléatoire au centre de la vue
     const rect = document.getElementById('grapheContainer')?.getBoundingClientRect();
     const cx = rect ? rect.width / 2 : 400;
     const cy = rect ? rect.height / 2 : 300;
@@ -1429,13 +1430,27 @@ function addToGraphe(index) {
         prenom: person.prenom || '',
         nom_famille: person.nom_famille || '',
         role: '',
-        x: cx + (Math.random() - 0.5) * 200,
-        y: cy + (Math.random() - 0.5) * 200,
+        x: cx + (Math.random() - 0.5) * 150,
+        y: cy + (Math.random() - 0.5) * 150,
         radius: 24,
         color: '#ffffff'
     };
     
     grapheNodes.push(newNode);
+    
+    // ⚠️ AJOUTER CET APPEL POUR RÉAFFICHER LE GRAPHE
+    // Si le graphe est actif, le mettre à jour
+    if (document.getElementById('page-graphe').classList.contains('active')) {
+        // Réinitialiser le canvas et redessiner
+        if (grapheCanvas) {
+            // Forcer le rendu
+            renderGrapheLoop();
+        } else {
+            // Si le canvas n'est pas initialisé, l'initialiser
+            initGraphe();
+        }
+    }
+    
     showToast(`"${name}" ajouté au graphe !`, 'success');
 }
 
