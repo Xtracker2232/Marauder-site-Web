@@ -13,43 +13,35 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
     
-    <!-- CSS désactivé pour tester -->
-    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    <link rel="stylesheet" href="css/style.css">
     
-<style>
-    /* ============================================
-       CORRECTION UNIQUE - BLOC NOIR
-       ============================================ */
-    
-    /* 1. Supprimer le cadrillage sur le dashboard */
-    body.dashboard-page::before,
-    body.dashboard-page::after,
-    .dashboard-page::before,
-    .dashboard-page::after {
-        display: none !important;
-        content: none !important;
-        background: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        z-index: -9999 !important;
-    }
-    
-    /* 2. Supprimer TOUS les pseudo-elements partout */
-    *::before,
-    *::after {
-        display: none !important;
-        content: none !important;
-        background: none !important;
-    }
-    
-    /* 3. Fond propre */
-    body.dashboard-page {
-        background: #0a0a0a !important;
-    }
-</style>
+    <style>
+        /* ============================================
+           CORRECTION UNIQUE - BLOC NOIR
+           ============================================ */
+        
+        body.dashboard-page::before,
+        body.dashboard-page::after,
+        .dashboard-page::before,
+        .dashboard-page::after {
+            display: none !important;
+            content: none !important;
+            background: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        *::before,
+        *::after {
+            display: none !important;
+            content: none !important;
+            background: none !important;
+        }
+        
+        body.dashboard-page {
+            background: #0a0a0a !important;
+        }
+    </style>
 </head>
 <body class="dashboard-page">
 
