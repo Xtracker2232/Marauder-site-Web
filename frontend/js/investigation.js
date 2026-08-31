@@ -1,10 +1,12 @@
-// ============ INVESTIGATION MODULE ============
+// ============================================
+// INVESTIGATION MODULE - TOUT EST ICI
+// ============================================
 console.log('🔍 Investigation module chargé');
 
-// Variables du module
+// ============ DONNEES ============
 let investigationData = null;
 
-// Coordonnées des villes sur la carte
+// ============ COORDONNEES DES VILLES ============
 const CITY_COORDS = {
     'paris': { cx: 300, cy: 190 },
     'lyon': { cx: 320, cy: 310 },
@@ -50,11 +52,13 @@ function formatPhoneInvestigation(phone) {
     return phone;
 }
 
-// ============ OUVERTURE INVESTIGATION ============
+// ============ OUVRIR INVESTIGATION ============
 function openInvestigation(index) {
     const data = window._resultsData;
     if (!data || !data[index]) {
-        showToast('Personne introuvable', 'error');
+        if (typeof showToast === 'function') {
+            showToast('Personne introuvable', 'error');
+        }
         return;
     }
 
@@ -65,13 +69,15 @@ function openInvestigation(index) {
 
     // Nom
     const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
-    document.getElementById('investigationName').textContent = 'Investigation - ' + fullName;
+    const nameEl = document.getElementById('investigationName');
+    if (nameEl) nameEl.textContent = 'Investigation - ' + fullName;
 
     // Ville
     const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
-    document.getElementById('investigationCityLabel').textContent = ville;
+    const cityLabel = document.getElementById('investigationCityLabel');
+    if (cityLabel) cityLabel.textContent = ville;
 
-    // Déplacer le point sur la carte
+    // Point sur la carte
     const pin = document.getElementById('investigationMapPin');
     if (pin) {
         const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -93,53 +99,70 @@ function openInvestigation(index) {
     // Confiance
     const confidence = person._confidence || 0;
     const confEl = document.getElementById('investigationConfidence');
-    confEl.textContent = confidence + '%';
-    confEl.className = 'investigation-confidence ' + (confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low');
+    if (confEl) {
+        confEl.textContent = confidence + '%';
+        confEl.className = 'investigation-confidence ' + (confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low');
+    }
 
     // Grille d'informations
     const grid = document.getElementById('investigationInfoGrid');
-    let html = '';
-    const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
-    
-    Object.entries(person)
-        .filter(([key]) => !key.startsWith('_') && key !== 'famille')
-        .forEach(([key, value]) => {
-            if (!value) return;
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            const isImportant = importantKeys.includes(key);
-            let displayValue = value;
-            if (key === 'telephone' || key === 'mobile') displayValue = formatPhoneInvestigation(value);
+    if (grid) {
+        let html = '';
+        const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
+        
+        Object.entries(person)
+            .filter(([key]) => !key.startsWith('_') && key !== 'famille')
+            .forEach(([key, value]) => {
+                if (!value) return;
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const isImportant = importantKeys.includes(key);
+                let displayValue = value;
+                if (key === 'telephone' || key === 'mobile') displayValue = formatPhoneInvestigation(value);
+                html += `
+                    <div class="investigation-info-item ${isImportant ? 'important' : ''}">
+                        <span class="investigation-info-label">${label}</span>
+                        <span class="investigation-info-value">${displayValue}</span>
+                    </div>
+                `;
+            });
+
+        if (person.famille && person.famille.length > 0) {
             html += `
-                <div class="investigation-info-item ${isImportant ? 'important' : ''}">
-                    <span class="investigation-info-label">${label}</span>
-                    <span class="investigation-info-value">${displayValue}</span>
+                <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
+                    <span class="investigation-info-label" style="color:#6b6b6b;font-weight:600;">Famille (${person.famille.length})</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+                        ${person.famille.map(m => `
+                            <span style="background:rgba(255,255,255,0.04);border:1px solid #2a2a2a;border-radius:6px;padding:4px 12px;font-size:13px;color:#a0a0a0;">
+                                ${m.prenom || ''} ${m.nom_famille || ''} ${m.lien ? ' · ' + m.lien : ''}
+                            </span>
+                        `).join('')}
+                    </div>
                 </div>
             `;
-        });
+        }
 
-    if (person.famille && person.famille.length > 0) {
-        html += `
-            <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
-                <span class="investigation-info-label" style="color:#6b6b6b;font-weight:600;">Famille (${person.famille.length})</span>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
-                    ${person.famille.map(m => `
-                        <span style="background:rgba(255,255,255,0.04);border:1px solid #2a2a2a;border-radius:6px;padding:4px 12px;font-size:13px;color:#a0a0a0;">
-                            ${m.prenom || ''} ${m.nom_famille || ''} ${m.lien ? ' · ' + m.lien : ''}
-                        </span>
-                    `).join('')}
+        if (person._sources && person._sources.length > 0) {
+            html += `
+                <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
+                    <span class="investigation-info-label" style="color:#6b6b6b;font-weight:600;">Sources</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+                        ${person._sources.map(s => `
+                            <span style="font-size:11px;color:#6b6b6b;background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;padding:2px 10px;border-radius:12px;">${s}</span>
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
-        `;
-    }
+            `;
+        }
 
-    grid.innerHTML = html;
+        grid.innerHTML = html;
+    }
 
     // Afficher l'overlay
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-// ============ FERMETURE INVESTIGATION ============
+// ============ FERMER INVESTIGATION ============
 function closeInvestigation() {
     const overlay = document.getElementById('investigationOverlay');
     if (overlay) {
@@ -151,7 +174,7 @@ function closeInvestigation() {
 // ============ COPIER LES DONNEES ============
 function copyInvestigationData() {
     if (!investigationData) {
-        showToast('Aucune donnee', 'error');
+        if (typeof showToast === 'function') showToast('Aucune donnee', 'error');
         return;
     }
     const person = investigationData;
@@ -179,69 +202,78 @@ function copyInvestigationData() {
     if (person._sources) text += '\nSources: ' + person._sources.join(', ');
     text += '\n\n--- by Marauder ---';
     
-    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
+    navigator.clipboard.writeText(text).then(() => {
+        if (typeof showToast === 'function') showToast('Copie !', 'success');
+    });
 }
 
 // ============ AJOUTER A UNE FICHE ============
 function addInvestigationToFiche() {
     if (!investigationData) {
-        showToast('Aucune donnee', 'error');
+        if (typeof showToast === 'function') showToast('Aucune donnee', 'error');
         return;
     }
     if (typeof fichesData !== 'undefined' && fichesData.length === 0) {
-        showToast('Aucune fiche existante', 'warning');
+        if (typeof showToast === 'function') showToast('Aucune fiche existante', 'warning');
         return;
     }
     
     const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
     
-    showModal('Ajouter a une fiche', `
-        <div class="form-group"><label>Selectionner une fiche</label>
-        <select id="ficheSelectInvestigation">${selectOptions}<option value="new">+ Creer une nouvelle fiche</option></select></div>
-        <div id="newFicheNameContainerInvestigation" style="display:none;">
-            <div class="form-group"><label>Nom de la nouvelle fiche</label><input type="text" id="newFicheNameInvestigation" placeholder="Nom de la fiche" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
-        </div>
-        <div style="font-size:12px;color:#6b6b6b;">Personne: ${investigationData.prenom || ''} ${investigationData.nom_famille || 'Inconnu'}</div>
-    `, 'Ajouter', async function() {
-        const select = document.getElementById('ficheSelectInvestigation');
-        const ficheId = select.value;
-        if (ficheId === 'new') {
-            const nameInput = document.getElementById('newFicheNameInvestigation');
-            const name = nameInput?.value?.trim();
-            if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
-            try {
-                const createResponse = await fetch(API_URL + '/api/fiches', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ name })
-                });
-                const createData = await createResponse.json();
-                if (createData.fiche) {
-                    await addPersonToFiche(createData.fiche.id, investigationData);
-                    loadFiches();
-                    showToast('Personne ajoutee !', 'success');
+    if (typeof showModal === 'function') {
+        showModal('Ajouter a une fiche', `
+            <div class="form-group"><label>Selectionner une fiche</label>
+            <select id="ficheSelectInvestigation">${selectOptions}<option value="new">+ Creer une nouvelle fiche</option></select></div>
+            <div id="newFicheNameContainerInvestigation" style="display:none;">
+                <div class="form-group"><label>Nom de la nouvelle fiche</label><input type="text" id="newFicheNameInvestigation" placeholder="Nom de la fiche" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
+            </div>
+            <div style="font-size:12px;color:#6b6b6b;">Personne: ${investigationData.prenom || ''} ${investigationData.nom_famille || 'Inconnu'}</div>
+        `, 'Ajouter', async function() {
+            const select = document.getElementById('ficheSelectInvestigation');
+            const ficheId = select.value;
+            if (ficheId === 'new') {
+                const nameInput = document.getElementById('newFicheNameInvestigation');
+                const name = nameInput?.value?.trim();
+                if (!name) {
+                    if (typeof showToast === 'function') showToast('Veuillez donner un nom', 'warning');
+                    return;
                 }
-            } catch (error) { showToast('Erreur', 'error'); }
-        } else {
-            await addPersonToFiche(parseInt(ficheId), investigationData);
-            loadFiches();
-            showToast('Personne ajoutee !', 'success');
-        }
-    });
-    
-    document.getElementById('ficheSelectInvestigation')?.addEventListener('change', function() {
-        const container = document.getElementById('newFicheNameContainerInvestigation');
-        if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
-    });
+                try {
+                    const createResponse = await fetch(API_URL + '/api/fiches', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name })
+                    });
+                    const createData = await createResponse.json();
+                    if (createData.fiche) {
+                        await addPersonToFiche(createData.fiche.id, investigationData);
+                        if (typeof loadFiches === 'function') loadFiches();
+                        if (typeof showToast === 'function') showToast('Personne ajoutee !', 'success');
+                    }
+                } catch (error) {
+                    if (typeof showToast === 'function') showToast('Erreur', 'error');
+                }
+            } else {
+                await addPersonToFiche(parseInt(ficheId), investigationData);
+                if (typeof loadFiches === 'function') loadFiches();
+                if (typeof showToast === 'function') showToast('Personne ajoutee !', 'success');
+            }
+        });
+        
+        document.getElementById('ficheSelectInvestigation')?.addEventListener('change', function() {
+            const container = document.getElementById('newFicheNameContainerInvestigation');
+            if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
+        });
+    }
 }
 
 // ============ AJOUTER AU GRAPHE ============
 function addInvestigationToGraphe() {
     if (!investigationData) {
-        showToast('Aucune donnee', 'error');
+        if (typeof showToast === 'function') showToast('Aucune donnee', 'error');
         return;
     }
     if (typeof window.addPersonToGrapheWithFamily === 'function') {
@@ -249,15 +281,21 @@ function addInvestigationToGraphe() {
         closeInvestigation();
         document.querySelector('[data-page="graphe"]')?.click();
     } else {
-        showToast('Graphe en developpement', 'info');
+        if (typeof showToast === 'function') showToast('Graphe en developpement', 'info');
     }
 }
 
 // ============ BOUTONS ============
-document.getElementById('investigationBack')?.addEventListener('click', closeInvestigation);
-document.getElementById('investigationClose')?.addEventListener('click', closeInvestigation);
-document.getElementById('investigationCopy')?.addEventListener('click', copyInvestigationData);
-document.getElementById('investigationGraphe')?.addEventListener('click', addInvestigationToGraphe);
-document.getElementById('investigationAddFiche')?.addEventListener('click', addInvestigationToFiche);
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('investigationBack')?.addEventListener('click', closeInvestigation);
+    document.getElementById('investigationClose')?.addEventListener('click', closeInvestigation);
+    document.getElementById('investigationCopy')?.addEventListener('click', copyInvestigationData);
+    document.getElementById('investigationGraphe')?.addEventListener('click', addInvestigationToGraphe);
+    document.getElementById('investigationAddFiche')?.addEventListener('click', addInvestigationToFiche);
+});
 
-console.log('✅ Investigation module prêt');
+// ============ EXPOSER LA FONCTION GLOBALEMENT ============
+window.openInvestigation = openInvestigation;
+window.closeInvestigation = closeInvestigation;
+
+console.log('✅ Investigation module pret - Utilisez openInvestigation(index)');
