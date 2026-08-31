@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const fetch = require('node-fetch');
@@ -9,21 +8,6 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// ============================================
-// FONCTIONS HASH (crypto natif - PAS DE DEPENDANCE)
-// ============================================
-function hashPassword(password) {
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-    return `${salt}:${hash}`;
-}
-
-function verifyPassword(password, stored) {
-    const [salt, hash] = stored.split(':');
-    const verifyHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-    return hash === verifyHash;
-}
 
 // ============================================
 // MIDDLEWARE
@@ -97,7 +81,7 @@ async function initDatabase() {
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
+                password TEXT NOT NULL,
                 role TEXT DEFAULT 'user',
                 created_at TIMESTAMP DEFAULT NOW(),
                 last_login TIMESTAMP
@@ -135,10 +119,9 @@ async function initDatabase() {
         
         const adminCheck = await client.query('SELECT * FROM users WHERE username = $1', ['Admin']);
         if (adminCheck.rows.length === 0) {
-            const hashedPassword = hashPassword('Salto06530');
             await client.query(
-                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-                ['Admin', hashedPassword, 'admin']
+                'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
+                ['Admin', 'Salto06530', 'admin']
             );
             console.log('✅ Compte admin créé');
         }
@@ -453,10 +436,9 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Nom d\'utilisateur déjà pris' });
         }
         
-        const hashedPassword = hashPassword(password);
         const result = await pool.query(
-            'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role',
-            [username, hashedPassword]
+            'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, role',
+            [username, password]
         );
         
         const user = result.rows[0];
@@ -491,8 +473,9 @@ app.post('/api/login', async (req, res) => {
         }
         
         const user = result.rows[0];
-        const valid = verifyPassword(password, user.password_hash);
-        if (!valid) {
+        
+        // Comparaison directe (PAS DE HASH)
+        if (user.password !== password) {
             return res.status(401).json({ success: false, error: 'Identifiants incorrects' });
         }
         
