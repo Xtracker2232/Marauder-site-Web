@@ -23,9 +23,20 @@
         .sidebar-nav li:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
         .sidebar-nav li.active { background: rgba(255,255,255,0.05); color: #ffffff; }
         .sidebar-nav li svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
+        
+        .support-toggle { display: flex !important; align-items: center !important; gap: 12px !important; padding: 10px 12px !important; border-radius: 6px !important; cursor: pointer !important; color: #a0a0a0 !important; font-size: 13px !important; font-weight: 500 !important; transition: all 0.2s !important; margin-top: 4px !important; }
+        .support-toggle:hover { background: rgba(255,255,255,0.03) !important; color: #ffffff !important; }
+        .support-toggle svg { width: 18px !important; height: 18px !important; flex-shrink: 0 !important; }
+        .support-arrow { margin-left: auto !important; transition: transform 0.3s ease !important; }
+        .support-submenu { padding-left: 36px !important; list-style: none !important; margin-top: 4px !important; }
+        .support-submenu li { display: flex !important; align-items: center !important; gap: 12px !important; padding: 8px 12px !important; border-radius: 6px !important; cursor: pointer !important; color: #a0a0a0 !important; font-size: 13px !important; font-weight: 500 !important; transition: all 0.2s !important; }
+        .support-submenu li:hover { background: rgba(255,255,255,0.03) !important; color: #ffffff !important; }
+        .support-submenu li svg { width: 18px !important; height: 18px !important; flex-shrink: 0 !important; }
+
         .sidebar-footer { padding-top: 12px; border-top: 1px solid #2a2a2a; margin-top: 12px; }
-        .sidebar-footer button { width: 100%; padding: 10px 12px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 13px; font-family: Arial, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+        .sidebar-footer button { width: 100%; padding: 8px 12px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 12px; font-family: Arial, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
         .sidebar-footer button:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+        .sidebar-footer button svg { width: 16px; height: 16px; flex-shrink: 0; }
 
         .main-content { margin-left: 220px; padding: 32px 40px; min-height: 100vh; }
         .page { display: none; }
@@ -188,9 +199,36 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* GRAPHE */
-        #grapheContainer { width: 100%; height: 500px; background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; position: relative; cursor: grab; user-select: none; }
-        #grapheContainer:active { cursor: grabbing; }
-        #grapheCanvas { width: 100%; height: 100%; display: block; }
+        #grapheContainer { width: 100%; height: 500px; background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; position: relative; cursor: default; user-select: none; }
+        #grapheCanvas { width: 100%; height: 100%; display: block; cursor: default; }
+
+        /* INVESTIGATION OVERLAY */
+        .investigation-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0a0a; z-index: 9999; display: none; overflow-y: auto; }
+        .investigation-overlay.active { display: block; animation: fadeIn 0.3s ease; }
+        .investigation-container { max-width: 1400px; margin: 0 auto; padding: 24px 32px 40px; min-height: 100vh; }
+        .investigation-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #2a2a2a; margin-bottom: 28px; }
+        .investigation-back { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: transparent; border: 1px solid #2a2a2a; border-radius: 8px; color: #a0a0a0; font-size: 14px; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; }
+        .investigation-back:hover { border-color: rgba(255,255,255,0.2); color: #ffffff; }
+        .investigation-title { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: #ffffff; }
+        .investigation-body { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        .investigation-map-wrapper { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; }
+        .investigation-city-label { text-align: center; font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 16px; letter-spacing: 0.5px; }
+        .investigation-map-container { width: 100%; aspect-ratio: 600/700; position: relative; background: #151515; border-radius: 8px; overflow: hidden; }
+        .investigation-map-container .france-map { width: 100%; height: 100%; display: block; }
+        .investigation-info-col { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; max-height: 700px; }
+        .investigation-info-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #2a2a2a; margin-bottom: 16px; }
+        .investigation-info-header h3 { font-size: 16px; font-weight: 600; color: #ffffff; }
+        .investigation-confidence { font-size: 14px; font-weight: 700; padding: 4px 14px; border-radius: 20px; border: 1px solid #2a2a2a; }
+        .investigation-confidence.high { color: #10b981; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+        .investigation-confidence.medium { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+        .investigation-confidence.low { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+        .investigation-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; flex: 1; overflow-y: auto; padding-right: 4px; }
+        .investigation-info-item { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .investigation-info-item.important { background: rgba(255,255,255,0.02); border-radius: 4px; padding: 6px 10px; margin: 0 -6px; }
+        .investigation-info-label { font-size: 10px; font-weight: 500; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .investigation-info-value { font-size: 14px; color: #a0a0a0; word-break: break-all; }
+        .investigation-info-item.important .investigation-info-value { color: #ffffff; font-weight: 500; }
+        .investigation-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #2a2a2a; flex-wrap: wrap; }
 
         /* MOBILE */
         .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; background: #111111; border: 1px solid #2a2a2a; border-radius: 10px; color: #ffffff; padding: 8px 10px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; }
@@ -218,6 +256,10 @@
             .history-header { flex-direction: column; align-items: flex-start; gap: 6px; }
             .ticket-item .ticket-header { flex-direction: column; align-items: flex-start; gap: 6px; }
             #grapheContainer { height: 350px; }
+            .investigation-body { grid-template-columns: 1fr; }
+            .investigation-info-grid { grid-template-columns: 1fr; }
+            .investigation-actions { flex-direction: column; }
+            .investigation-actions .btn-primary, .investigation-actions .btn-secondary { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -276,19 +318,31 @@
     </div>
 
     <!-- ============ VUE INVESTIGATION ============ -->
-    <div id="investigationOverlay" class="investigation-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0a0a0a;z-index:9999;overflow-y:auto;">
-        <div class="investigation-container" style="max-width:1400px;margin:0 auto;padding:24px 32px 40px;min-height:100vh;">
-            <div class="investigation-header" style="display:flex;justify-content:space-between;align-items:center;padding-bottom:20px;border-bottom:1px solid #2a2a2a;margin-bottom:28px;">
-                <button id="investigationBack" class="investigation-back" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:transparent;border:1px solid #2a2a2a;border-radius:8px;color:#a0a0a0;font-size:14px;cursor:pointer;">← Retour</button>
-                <div class="investigation-title" style="display:flex;align-items:center;gap:12px;font-size:20px;font-weight:700;color:#ffffff;"><span id="investigationName">Investigation</span></div>
+    <div id="investigationOverlay" class="investigation-overlay">
+        <div class="investigation-container">
+            <div class="investigation-header">
+                <button id="investigationBack" class="investigation-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Retour
+                </button>
+                <div class="investigation-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span id="investigationName">Investigation</span>
+                </div>
                 <div style="width:80px;"></div>
             </div>
-            <div class="investigation-body" style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+
+            <div class="investigation-body">
                 <div class="investigation-map-col">
-                    <div class="investigation-map-wrapper" style="background:#111111;border:1px solid #2a2a2a;border-radius:12px;padding:20px;">
-                        <div class="investigation-city-label" id="investigationCityLabel" style="text-align:center;font-size:22px;font-weight:700;color:#ffffff;margin-bottom:16px;">Paris</div>
-                        <div class="investigation-map-container" id="investigationMapContainer" style="width:100%;aspect-ratio:600/700;background:#151515;border-radius:8px;overflow:hidden;">
-                            <svg class="france-map" viewBox="0 0 600 700" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+                    <div class="investigation-map-wrapper">
+                        <div class="investigation-city-label" id="investigationCityLabel">Paris</div>
+                        <div class="investigation-map-container" id="investigationMapContainer">
+                            <svg class="france-map" viewBox="0 0 600 700" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="600" height="700" fill="#151515" rx="12" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
                                 <g stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none">
                                     <path d="M100,80 L130,70 L160,85 L190,75 L220,90 L250,80 L280,95 L300,85 L320,100 L340,90 L360,105 L370,125 L350,145 L330,135 L310,150 L290,140 L270,155 L250,145 L230,160 L210,150 L190,165 L170,155 L150,170 L130,160 L110,175 L90,165 L70,180 L55,165 L45,145 L55,125 L70,135 L85,120 L70,100 L85,90 Z"/>
@@ -315,14 +369,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="investigation-info-col" style="background:#111111;border:1px solid #2a2a2a;border-radius:12px;padding:24px;display:flex;flex-direction:column;max-height:700px;">
-                    <div class="investigation-info-header" style="display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid #2a2a2a;margin-bottom:16px;">
-                        <h3 style="font-size:16px;font-weight:600;color:#ffffff;">Informations completes</h3>
-                        <span class="investigation-confidence" id="investigationConfidence" style="font-size:14px;font-weight:700;padding:4px 14px;border-radius:20px;border:1px solid #2a2a2a;color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.05);">95%</span>
+
+                <div class="investigation-info-col">
+                    <div class="investigation-info-header">
+                        <h3>Informations completes</h3>
+                        <span class="investigation-confidence" id="investigationConfidence">95%</span>
                     </div>
-                    <div class="investigation-info-grid" id="investigationInfoGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;flex:1;overflow-y:auto;padding-right:4px;"></div>
-                    <div class="investigation-actions" style="display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #2a2a2a;flex-wrap:wrap;">
-                        <button class="btn-primary" id="investigationAddFiche" style="width:auto;padding:10px 24px;">+ Ajouter a une fiche</button>
+                    <div class="investigation-info-grid" id="investigationInfoGrid"></div>
+                    <div class="investigation-actions">
+                        <button class="btn-primary" id="investigationAddFiche" style="width:auto;padding:10px 24px;">Ajouter a une fiche</button>
                         <button class="btn-secondary" id="investigationCopy" style="width:auto;padding:10px 24px;">Copier</button>
                         <button class="btn-secondary" id="investigationGraphe" style="width:auto;padding:10px 24px;">Graphe</button>
                         <button class="btn-secondary" id="investigationClose" style="width:auto;padding:10px 24px;">Fermer</button>
@@ -381,10 +436,38 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span>Profil</span>
             </li>
+            <li class="support-toggle" id="supportToggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span>Support</span>
+                <svg class="support-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-left:auto;transition:transform 0.3s;">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </li>
+            <ul class="support-submenu" id="supportSubmenu" style="display:none;list-style:none;padding-left:36px;margin-top:4px;">
+                <li data-page="discord" style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:6px;cursor:pointer;color:#a0a0a0;font-size:13px;font-weight:500;transition:all 0.2s;">
+                    <svg viewBox="0 0 71 55" fill="currentColor" stroke="none" width="18" height="18">
+                        <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
+                    </svg>
+                    <span>Discord</span>
+                </li>
+                <li data-page="tickets" style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:6px;cursor:pointer;color:#a0a0a0;font-size:13px;font-weight:500;transition:all 0.2s;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="M22 7L12 13L2 7"/>
+                    </svg>
+                    <span>Tickets</span>
+                </li>
+            </ul>
         </ul>
         <div class="sidebar-footer">
             <button id="logoutBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
                 <span>Deconnexion</span>
             </button>
         </div>
@@ -745,10 +828,14 @@
         verifyToken();
 
         // ============ NAVIGATION ============
-        document.querySelectorAll('.sidebar-nav li').forEach(item => {
+        document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
             item.addEventListener('click', function() {
                 const page = this.dataset.page;
-                document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+                if (page === 'discord') {
+                    window.open('https://discord.gg/ton-invite', '_blank');
+                    return;
+                }
+                document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
                 this.classList.add('active');
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 const target = document.getElementById('page-' + page);
@@ -758,6 +845,18 @@
                 if (page === 'fiches') loadFiches();
                 if (page === 'tickets') loadTickets();
             });
+        });
+
+        // ============ SUPPORT TOGGLE ============
+        document.getElementById('supportToggle').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const submenu = document.getElementById('supportSubmenu');
+            const arrow = this.querySelector('.support-arrow');
+            if (submenu) {
+                const isOpen = submenu.style.display === 'block';
+                submenu.style.display = isOpen ? 'none' : 'block';
+                if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            }
         });
 
         // ============ SECTIONS TOGGLE ============
@@ -946,7 +1045,6 @@
                 const data = await response.json();
                 let results = data.data?.results || [];
 
-                // Pagination auto (max 5 pages)
                 const total = data.meta?.total || 0;
                 const perPage = query.per_page || 100;
                 const totalPages = Math.ceil(total / perPage);
@@ -970,7 +1068,6 @@
                     }
                 }
 
-                // Déduplication
                 const uniqueResults = [];
                 const seen = new Set();
                 results.forEach(p => {
@@ -982,7 +1079,6 @@
                 });
                 results = uniqueResults;
 
-                // ============ PIVOT FAMILLE ============
                 const pivotDone = new Set();
                 for (let p of results.slice(0, 5)) {
                     const famille = [];
@@ -1197,7 +1293,6 @@
                 });
                 results = uniqueResults;
 
-                // Pivot famille (simplifié)
                 const pivotDone = new Set();
                 for (let p of results.slice(0, 5)) {
                     const famille = [];
@@ -1379,7 +1474,7 @@
                 setTimeout(() => {
                     hideSearchLoading();
                     if (results.length > 0) {
-                        document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+                        document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
                         document.querySelector('[data-page="search"]').classList.add('active');
                         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                         document.getElementById('page-search').classList.add('active');
@@ -1695,15 +1790,67 @@
             const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
             document.getElementById('investigationName').textContent = 'Investigation - ' + fullName;
 
-            const ville = person.ville || person.ville_naissance || 'Localisation inconnue';
+            const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
             document.getElementById('investigationCityLabel').textContent = ville;
+
+            // Déplacer le point sur la carte
+            const pin = document.getElementById('investigationMapPin');
+            if (pin) {
+                const cities = {
+                    'paris': { cx: 300, cy: 190 },
+                    'lyon': { cx: 320, cy: 310 },
+                    'marseille': { cx: 340, cy: 420 },
+                    'toulouse': { cx: 260, cy: 380 },
+                    'bordeaux': { cx: 190, cy: 360 },
+                    'lille': { cx: 240, cy: 120 },
+                    'nice': { cx: 390, cy: 390 },
+                    'nantes': { cx: 170, cy: 280 },
+                    'strasbourg': { cx: 400, cy: 180 },
+                    'montpellier': { cx: 300, cy: 380 },
+                    'rennes': { cx: 160, cy: 230 },
+                    'grenoble': { cx: 350, cy: 330 },
+                    'toulon': { cx: 360, cy: 410 },
+                    'angers': { cx: 190, cy: 260 },
+                    'dijon': { cx: 350, cy: 240 },
+                    'le havre': { cx: 210, cy: 170 },
+                    'reims': { cx: 320, cy: 160 },
+                    'saint-etienne': { cx: 310, cy: 320 },
+                    'limoges': { cx: 220, cy: 310 },
+                    'clermont-ferrand': { cx: 270, cy: 290 },
+                    'amiens': { cx: 260, cy: 140 },
+                    'perpignan': { cx: 290, cy: 430 },
+                    'caen': { cx: 190, cy: 190 },
+                    'orleans': { cx: 270, cy: 230 },
+                    'metz': { cx: 370, cy: 170 },
+                    'besancon': { cx: 380, cy: 220 },
+                    'mulhouse': { cx: 410, cy: 210 },
+                    'valence': { cx: 330, cy: 340 },
+                    'nimes': { cx: 290, cy: 370 },
+                    'avignon': { cx: 310, cy: 400 },
+                    'poitiers': { cx: 210, cy: 290 },
+                    'la rochelle': { cx: 160, cy: 300 }
+                };
+                const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                let found = false;
+                for (const [key, pos] of Object.entries(cities)) {
+                    if (cityKey.includes(key) || key.includes(cityKey)) {
+                        pin.setAttribute('cx', pos.cx);
+                        pin.setAttribute('cy', pos.cy);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    pin.setAttribute('cx', 300);
+                    pin.setAttribute('cy', 300);
+                }
+            }
 
             const confidence = person._confidence || 0;
             const confEl = document.getElementById('investigationConfidence');
             confEl.textContent = confidence + '%';
             confEl.className = 'investigation-confidence ' + (confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low');
 
-            // Info grid
             const grid = document.getElementById('investigationInfoGrid');
             let html = '';
             const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
@@ -1734,16 +1881,16 @@
             }
             grid.innerHTML = html;
 
-            overlay.style.display = 'block';
+            overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
         document.getElementById('investigationBack')?.addEventListener('click', function() {
-            document.getElementById('investigationOverlay').style.display = 'none';
+            document.getElementById('investigationOverlay').classList.remove('active');
             document.body.style.overflow = '';
         });
         document.getElementById('investigationClose')?.addEventListener('click', function() {
-            document.getElementById('investigationOverlay').style.display = 'none';
+            document.getElementById('investigationOverlay').classList.remove('active');
             document.body.style.overflow = '';
         });
 
@@ -1777,7 +1924,7 @@
             if (!investigationData) { showToast('Aucune donnee', 'error'); return; }
             if (typeof window.addPersonToGrapheWithFamily === 'function') {
                 window.addPersonToGrapheWithFamily(investigationData);
-                document.getElementById('investigationOverlay').style.display = 'none';
+                document.getElementById('investigationOverlay').classList.remove('active');
                 document.body.style.overflow = '';
                 document.querySelector('[data-page="graphe"]')?.click();
             } else {
@@ -1979,9 +2126,16 @@
         }
 
         // ============ GRAPHE ============
-        // Module graphe simplifié - on utilise window pour partager avec graphe.js
         window.grapheNodes = [];
         window.grapheEdges = [];
+        let grapheOffsetX = 0;
+        let grapheOffsetY = 0;
+        let grapheIsPanning = false;
+        let graphePanStartX = 0;
+        let graphePanStartY = 0;
+        let grapheDraggingNode = null;
+        let grapheDragOffsetX = 0;
+        let grapheDragOffsetY = 0;
 
         function renderGraphe() {
             const canvas = document.getElementById('grapheCanvas');
@@ -2001,13 +2155,14 @@
             ctx.fillStyle = '#111111';
             ctx.fillRect(0, 0, W, H);
 
-            // Grille
             ctx.strokeStyle = 'rgba(255,255,255,0.03)';
             ctx.lineWidth = 1;
             for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
             for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
-            // Edges
+            ctx.save();
+            ctx.translate(grapheOffsetX, grapheOffsetY);
+
             window.grapheEdges.forEach(edge => {
                 const from = window.grapheNodes.find(n => n.id === edge.from);
                 const to = window.grapheNodes.find(n => n.id === edge.to);
@@ -2015,12 +2170,11 @@
                 ctx.beginPath();
                 ctx.moveTo(from.x, from.y);
                 ctx.lineTo(to.x, to.y);
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.strokeStyle = 'rgba(255,255,255,0.25)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
             });
 
-            // Nodes
             window.grapheNodes.forEach(node => {
                 const r = 24;
                 ctx.beginPath();
@@ -2034,8 +2188,16 @@
                 ctx.font = '12px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(node.label || 'Personne', node.x, node.y);
+                const label = node.label || 'Personne';
+                ctx.fillText(label.length > 15 ? label.slice(0, 13) + '...' : label, node.x, node.y);
+                if (node.role) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(node.role, node.x, node.y + r + 14);
+                }
             });
+
+            ctx.restore();
 
             if (window.grapheNodes.length === 0) {
                 ctx.fillStyle = '#6b6b6b';
@@ -2048,6 +2210,129 @@
                 ctx.fillText('Cliquez sur "Personne" pour commencer', W/2, H/2 + 20);
             }
         }
+
+        // Evenements souris
+        const grapheCanvas = document.getElementById('grapheCanvas');
+        const grapheContainer = document.getElementById('grapheContainer');
+
+        grapheCanvas.addEventListener('mousedown', function(e) {
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const wx = x - grapheOffsetX;
+            const wy = y - grapheOffsetY;
+            for (let i = window.grapheNodes.length - 1; i >= 0; i--) {
+                const node = window.grapheNodes[i];
+                const dx = wx - node.x;
+                const dy = wy - node.y;
+                if (dx * dx + dy * dy < 24 * 24) {
+                    grapheDraggingNode = node;
+                    grapheDragOffsetX = wx - node.x;
+                    grapheDragOffsetY = wy - node.y;
+                    grapheCanvas.style.cursor = 'grabbing';
+                    return;
+                }
+            }
+            grapheIsPanning = true;
+            graphePanStartX = x;
+            graphePanStartY = y;
+            grapheCanvas.style.cursor = 'grabbing';
+        });
+
+        grapheCanvas.addEventListener('mousemove', function(e) {
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (grapheDraggingNode) {
+                const wx = x - grapheOffsetX;
+                const wy = y - grapheOffsetY;
+                grapheDraggingNode.x = wx - grapheDragOffsetX;
+                grapheDraggingNode.y = wy - grapheDragOffsetY;
+                renderGraphe();
+                return;
+            }
+            if (grapheIsPanning) {
+                grapheOffsetX += x - graphePanStartX;
+                grapheOffsetY += y - graphePanStartY;
+                graphePanStartX = x;
+                graphePanStartY = y;
+                renderGraphe();
+                return;
+            }
+            const wx = x - grapheOffsetX;
+            const wy = y - grapheOffsetY;
+            let hover = false;
+            for (let node of window.grapheNodes) {
+                const dx = wx - node.x;
+                const dy = wy - node.y;
+                if (dx * dx + dy * dy < 24 * 24) { hover = true; break; }
+            }
+            grapheCanvas.style.cursor = hover ? 'grab' : 'default';
+        });
+
+        grapheCanvas.addEventListener('mouseup', function() {
+            grapheDraggingNode = null;
+            grapheIsPanning = false;
+            grapheCanvas.style.cursor = 'default';
+        });
+
+        grapheCanvas.addEventListener('mouseleave', function() {
+            grapheDraggingNode = null;
+            grapheIsPanning = false;
+        });
+
+        // Touch
+        grapheCanvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            const wx = x - grapheOffsetX;
+            const wy = y - grapheOffsetY;
+            for (let i = window.grapheNodes.length - 1; i >= 0; i--) {
+                const node = window.grapheNodes[i];
+                const dx = wx - node.x;
+                const dy = wy - node.y;
+                if (dx * dx + dy * dy < 24 * 24) {
+                    grapheDraggingNode = node;
+                    grapheDragOffsetX = wx - node.x;
+                    grapheDragOffsetY = wy - node.y;
+                    return;
+                }
+            }
+            grapheIsPanning = true;
+            graphePanStartX = x;
+            graphePanStartY = y;
+        }, { passive: false });
+
+        grapheCanvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            if (grapheDraggingNode) {
+                const wx = x - grapheOffsetX;
+                const wy = y - grapheOffsetY;
+                grapheDraggingNode.x = wx - grapheDragOffsetX;
+                grapheDraggingNode.y = wy - grapheDragOffsetY;
+                renderGraphe();
+                return;
+            }
+            if (grapheIsPanning) {
+                grapheOffsetX += x - graphePanStartX;
+                grapheOffsetY += y - graphePanStartY;
+                graphePanStartX = x;
+                graphePanStartY = y;
+                renderGraphe();
+            }
+        }, { passive: false });
+
+        grapheCanvas.addEventListener('touchend', function() {
+            grapheDraggingNode = null;
+            grapheIsPanning = false;
+        });
 
         // Boutons graphe
         document.getElementById('grapheAddPersonne').addEventListener('click', function() {
@@ -2139,7 +2424,6 @@
             showToast('Personne et famille ajoutees au graphe !', 'success');
         };
 
-        // Redimensionnement
         window.addEventListener('resize', renderGraphe);
         setTimeout(renderGraphe, 300);
 
