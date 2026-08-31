@@ -155,6 +155,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============ RATE LIMITING ============
