@@ -1,166 +1,133 @@
-/* ============================================
-   INVESTIGATION OVERLAY
-   ============================================ */
+/* INVESTIGATION */
 .investigation-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--bg-primary);
+    background: #0a0a0a;
     z-index: 9999;
     display: none;
     overflow-y: auto;
 }
-
-.investigation-overlay.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
-}
-
+.investigation-overlay.active { display: block; }
 .investigation-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 24px 32px 40px;
     min-height: 100vh;
 }
-
 .investigation-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #2a2a2a;
     margin-bottom: 28px;
 }
-
 .investigation-back {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid #2a2a2a;
     border-radius: 8px;
-    color: var(--text-secondary);
+    color: #a0a0a0;
     font-size: 14px;
     font-family: 'Inter', sans-serif;
     cursor: pointer;
     transition: all 0.2s;
 }
-
-.investigation-back:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-}
-
+.investigation-back:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
 .investigation-title {
     display: flex;
     align-items: center;
     gap: 12px;
     font-size: 20px;
     font-weight: 700;
-    color: #ffffff;
+    color: #fff;
 }
-
-.investigation-title svg {
-    color: var(--text-secondary);
-}
-
+.investigation-title svg { color: #a0a0a0; }
 .investigation-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 32px;
 }
-
-.investigation-map-col {
-    display: flex;
-    flex-direction: column;
-}
-
 .investigation-map-wrapper {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
     padding: 20px;
-    position: relative;
-    flex: 1;
 }
-
 .investigation-city-label {
     text-align: center;
     font-size: 22px;
     font-weight: 700;
-    color: #ffffff;
+    color: #fff;
     margin-bottom: 16px;
-    letter-spacing: 0.5px;
 }
-
 .investigation-map-container {
     width: 100%;
     aspect-ratio: 600/700;
-    position: relative;
     background: #151515;
     border-radius: 8px;
     overflow: hidden;
 }
+#investigationLeafletMap { width: 100% !important; height: 100% !important; min-height: 450px; }
 
-#investigationLeafletMap {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 450px;
+.leaflet-container { background: #151515 !important; }
+.leaflet-tile-pane { filter: grayscale(100%) brightness(70%) contrast(1.2) !important; }
+.leaflet-control-zoom {
+    border: 1px solid #2a2a2a !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    background: #111 !important;
+    box-shadow: none !important;
+}
+.leaflet-control-zoom a {
+    background: #111 !important;
+    color: #a0a0a0 !important;
+    border-color: #2a2a2a !important;
+    font-size: 16px !important;
+    line-height: 28px !important;
+}
+.leaflet-control-zoom a:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
+.investigation-marker { background: transparent !important; border: none !important; }
+
+@keyframes pulseMarker {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
 }
 
 .investigation-info-col {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
     padding: 24px;
     display: flex;
     flex-direction: column;
     max-height: 700px;
 }
-
 .investigation-info-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #2a2a2a;
     margin-bottom: 16px;
 }
-
-.investigation-info-header h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #ffffff;
-}
-
+.investigation-info-header h3 { font-size: 16px; font-weight: 600; color: #fff; }
 .investigation-confidence {
     font-size: 14px;
     font-weight: 700;
     padding: 4px 14px;
     border-radius: 20px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #2a2a2a;
 }
-
-.investigation-confidence.high {
-    color: var(--success);
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.05);
-}
-
-.investigation-confidence.medium {
-    color: var(--warning);
-    border-color: rgba(245, 158, 11, 0.3);
-    background: rgba(245, 158, 11, 0.05);
-}
-
-.investigation-confidence.low {
-    color: var(--danger);
-    border-color: rgba(239, 68, 68, 0.3);
-    background: rgba(239, 68, 68, 0.05);
-}
+.investigation-confidence.high { color: #10b981; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+.investigation-confidence.medium { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+.investigation-confidence.low { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
 
 .investigation-info-grid {
     display: grid;
@@ -170,165 +137,51 @@
     overflow-y: auto;
     padding-right: 4px;
 }
-
-.investigation-info-grid::-webkit-scrollbar {
-    width: 4px;
-}
-
-.investigation-info-grid::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.investigation-info-grid::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
-}
-
+.investigation-info-grid::-webkit-scrollbar { width: 4px; }
+.investigation-info-grid::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 .investigation-info-item {
     display: flex;
     flex-direction: column;
     padding: 6px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
 }
-
 .investigation-info-item.important {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255,255,255,0.02);
     border-radius: 4px;
     padding: 6px 10px;
     margin: 0 -6px;
 }
-
 .investigation-info-label {
     font-size: 10px;
     font-weight: 500;
-    color: var(--text-muted);
+    color: #6b6b6b;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .investigation-info-value {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: #a0a0a0;
     word-break: break-all;
 }
-
-.investigation-info-item.important .investigation-info-value {
-    color: #ffffff;
-    font-weight: 500;
-}
+.investigation-info-item.important .investigation-info-value { color: #fff; font-weight: 500; }
 
 .investigation-actions {
     display: flex;
     gap: 10px;
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid #2a2a2a;
     flex-wrap: wrap;
 }
 
-/* ============================================
-   LEAFLET OVERRIDE - Style gris
-   ============================================ */
-.leaflet-container {
-    background: #151515 !important;
-}
-
-.leaflet-tile-pane {
-    filter: grayscale(100%) brightness(70%) contrast(1.2) !important;
-}
-
-.leaflet-control-zoom {
-    border: 1px solid var(--border-color) !important;
-    border-radius: 8px !important;
-    overflow: hidden;
-    background: var(--bg-secondary) !important;
-    box-shadow: none !important;
-}
-
-.leaflet-control-zoom a {
-    background: var(--bg-secondary) !important;
-    color: var(--text-secondary) !important;
-    border-color: var(--border-color) !important;
-    font-size: 16px !important;
-    line-height: 28px !important;
-}
-
-.leaflet-control-zoom a:hover {
-    background: rgba(255,255,255,0.05) !important;
-    color: #ffffff !important;
-}
-
-.leaflet-control-zoom a.leaflet-disabled {
-    color: var(--text-muted) !important;
-    opacity: 0.5 !important;
-}
-
-.investigation-marker {
-    background: transparent !important;
-    border: none !important;
-}
-
-@keyframes pulseMarker {
-    0% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(1.5); opacity: 0; }
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 @media (max-width: 1024px) {
-    .investigation-body {
-        grid-template-columns: 1fr;
-    }
-    .investigation-info-col {
-        max-height: none;
-    }
-    .investigation-info-grid {
-        grid-template-columns: 1fr 1fr;
-    }
+    .investigation-body { grid-template-columns: 1fr; }
+    .investigation-info-col { max-height: none; }
 }
-
 @media (max-width: 768px) {
-    .investigation-container {
-        padding: 16px;
-    }
-    .investigation-header {
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .investigation-title {
-        font-size: 16px;
-    }
-    .investigation-info-grid {
-        grid-template-columns: 1fr;
-    }
-    .investigation-actions {
-        flex-direction: column;
-    }
+    .investigation-container { padding: 16px; }
+    .investigation-info-grid { grid-template-columns: 1fr; }
+    .investigation-actions { flex-direction: column; }
     .investigation-actions .btn-primary,
-    .investigation-actions .btn-secondary {
-        width: 100%;
-        justify-content: center;
-    }
-    .investigation-city-label {
-        font-size: 18px;
-    }
-}
-
-@media (max-width: 480px) {
-    .investigation-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .investigation-back {
-        order: 2;
-    }
-    .investigation-title {
-        order: 1;
-        width: 100%;
-        justify-content: center;
-    }
-    .investigation-container {
-        padding: 12px;
-    }
+    .investigation-actions .btn-secondary { width: 100%; justify-content: center; }
 }
