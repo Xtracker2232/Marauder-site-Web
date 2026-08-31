@@ -1884,13 +1884,13 @@ initTicketCreation();
 console.log('Dashboard charge');
 
 // ============================================
-// TICKETS - FIX SIMPLE
+// TICKETS - FIX COMPLET
 // ============================================
 
 console.log('🔵 Chargement des tickets...');
 
 // Fonction pour charger les tickets
-window.loadTickets = async function() {
+async function loadTickets() {
     console.log('🔵 loadTickets appelee');
     const container = document.getElementById('ticketsList');
     if (!container) {
@@ -1906,6 +1906,11 @@ window.loadTickets = async function() {
         });
         
         console.log('🔵 Reponse tickets:', response.status);
+        
+        if (!response.ok) {
+            throw new Error('Erreur ' + response.status);
+        }
+        
         const data = await response.json();
         console.log('🔵 Donnees tickets:', data);
         
@@ -1929,10 +1934,10 @@ window.loadTickets = async function() {
         console.error('❌ Erreur tickets:', error);
         container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
     }
-};
+}
 
 // Fonction pour voir un ticket
-window.viewTicket = async function(ticketId) {
+async function viewTicket(ticketId) {
     console.log('🔵 viewTicket:', ticketId);
     try {
         const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
@@ -1965,10 +1970,10 @@ window.viewTicket = async function(ticketId) {
         console.error('❌ View ticket error:', error);
         showToast('Erreur de chargement', 'error');
     }
-};
+}
 
 // Fonction pour repondre
-window.replyTicket = async function(ticketId) {
+async function replyTicket(ticketId) {
     const input = document.getElementById('ticketReplyInput');
     if (!input) return;
     const message = input.value.trim();
@@ -1988,8 +1993,8 @@ window.replyTicket = async function(ticketId) {
         });
         if (response.ok) {
             showToast('Message envoye !', 'success');
-            window.viewTicket(ticketId);
-            window.loadTickets();
+            viewTicket(ticketId);
+            loadTickets();
         } else {
             const data = await response.json();
             showToast(data.error || 'Erreur', 'error');
@@ -1998,7 +2003,7 @@ window.replyTicket = async function(ticketId) {
         console.error('Reply error:', error);
         showToast('Erreur reseau', 'error');
     }
-};
+}
 
 // BOUTON CREER TICKET
 document.addEventListener('DOMContentLoaded', function() {
@@ -2048,7 +2053,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (response.ok && data.success) {
                         showToast('Ticket cree !', 'success');
-                        window.loadTickets();
+                        loadTickets();
                         closeModal();
                     } else {
                         showToast(data.error || 'Erreur lors de la creation', 'error');
@@ -2068,7 +2073,7 @@ document.addEventListener('DOMContentLoaded', function() {
 setTimeout(function() {
     if (document.getElementById('page-tickets')) {
         console.log('🔵 Page tickets trouvee, chargement...');
-        window.loadTickets();
+        loadTickets();
     }
 }, 1000);
 
