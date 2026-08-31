@@ -39,6 +39,13 @@ const initDB = async () => {
                 last_login TIMESTAMP,
                 role VARCHAR(50) DEFAULT 'user'
             );
+            CREATE TABLE IF NOT EXISTS search_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                query JSONB NOT NULL,
+                results_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
             CREATE TABLE IF NOT EXISTS fiches (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -52,13 +59,6 @@ const initDB = async () => {
                 name VARCHAR(255) DEFAULT 'Mon graphe',
                 nodes JSONB DEFAULT '[]',
                 edges JSONB DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            CREATE TABLE IF NOT EXISTS search_history (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                query JSONB NOT NULL,
-                results_count INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -143,6 +143,107 @@ app.get('/api/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
+// ============ HISTORIQUE ============
+app.get('/api/history', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            [req.user.id]
+        );
+        res.json({ history: result.rows });
+    } catch (error) {
+        console.error('History error:', error);
+        res.status(500).json({ error: 'Erreur' });
+    }
+});
+
+app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Recherche non trouvée' });
+        }
+        let query = result.rows[0].query;
+        if (typeof query === 'string') {
+            query = JSON.parse(query);
+        }
+        query.per_page = 100;
+        const response = await axios.post(
+            'https://api.brixhub.to/api/v1/search',
+            query,
+            {
+                headers: {
+                    'X-API-Key': process.env.BRIX_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000
+            }
+        );
+        res.json({
+            results: response.data.data?.results || [],
+            total: response.data.meta?.total || 0,
+            took_ms: response.data.meta?.took_ms || 0
+        });
+    } catch (error) {
+        console.error('Replay error:', error.message);
+        res.status(500).json({ error: 'Erreur replay' });
+    }
+});
+
+// ============ API BRIXHUB ============
+app.post('/api/brix/search', authenticateToken, async (req, res) => {
+    try {
+        const response = await axios.post(
+            'https://api.brixhub.to/api/v1/search',
+            req.body,
+            {
+                headers: {
+                    'X-API-Key': process.env.BRIX_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000
+            }
+        );
+        try {
+            await pool.query(
+                'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
+                [req.user.id, req.body, response.data.data?.results?.length || 0]
+            );
+        } catch (dbError) {
+            console.error('Erreur historique:', dbError.message);
+        }
+        res.json(response.data);
+    } catch (error) {
+        console.error('Brix error:', error.message);
+        res.status(500).json({ error: 'Erreur de recherche' });
+    }
+});
+
+app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => {
+    const { type, value } = req.params;
+    const validTypes = ['email', 'phone', 'iban'];
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: 'Type invalide' });
+    }
+    try {
+        const response = await axios.get(
+            `https://api.brixhub.to/api/v1/lookup/${type}/${encodeURIComponent(value)}`,
+            {
+                headers: { 'X-API-Key': process.env.BRIX_API_KEY },
+                timeout: 10000
+            }
+        );
+        res.json(response.data);
+    } catch (error) {
+        console.error('Lookup error:', error.message);
+        res.status(500).json({ error: 'Erreur de lookup' });
+    }
+});
+
 // ============ FICHES ============
 app.get('/api/fiches', authenticateToken, async (req, res) => {
     try {
@@ -214,6 +315,17 @@ app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT persons FROM fiches WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Fiche non trouvée' });
+        res.json(result.rows[0].persons || []);
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur' });
+    }
+});
+
 // ============ GRAPHES ============
 app.post('/api/graphes', authenticateToken, async (req, res) => {
     const { name, nodes, edges } = req.body;
@@ -225,6 +337,17 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
         );
         res.status(201).json({ graphe: result.rows[0] });
     } catch (error) {
+        console.error('❌ Erreur sauvegarde graphe:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.get('/api/graphes', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.user.id]);
+        if (result.rows.length === 0) return res.json({ graphe: null });
+        res.json({ graphe: result.rows[0] });
+    } catch (error) {
         res.status(500).json({ error: 'Erreur' });
     }
 });
@@ -234,6 +357,18 @@ app.get('/api/graphes/all', authenticateToken, async (req, res) => {
         const result = await pool.query('SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
         res.json({ graphes: result.rows });
     } catch (error) {
+        console.error('❌ Erreur récupération graphes:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.get('/api/graphes/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM graphes WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Graphe non trouvé' });
+        res.json({ graphe: result.rows[0] });
+    } catch (error) {
         res.status(500).json({ error: 'Erreur' });
     }
 });
@@ -241,7 +376,8 @@ app.get('/api/graphes/all', authenticateToken, async (req, res) => {
 app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
-        await pool.query('DELETE FROM graphes WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        const result = await pool.query('DELETE FROM graphes WHERE id = $1 AND user_id = $2 RETURNING *', [id, req.user.id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Graphe non trouvé' });
         res.json({ message: 'Supprimé' });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
