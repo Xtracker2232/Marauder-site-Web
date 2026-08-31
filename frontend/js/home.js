@@ -70,3 +70,22 @@ document.querySelectorAll('.feature-card, .how-card, .criteria-item').forEach(el
     el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
     observer.observe(el);
 });
+
+// ============ MENU MOBILE HOME ============
+const homeMenuBtn = document.getElementById('homeMobileMenuBtn');
+const homeNavLinks = document.getElementById('homeNavLinks');
+
+if (homeMenuBtn && homeNavLinks) {
+    homeMenuBtn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+    
+    homeMenuBtn.addEventListener('click', function() {
+        homeNavLinks.classList.toggle('open');
+    });
+    
+    window.addEventListener('resize', function() {
+        homeMenuBtn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+        if (window.innerWidth > 768) {
+            homeNavLinks.classList.remove('open');
+        }
+    });
+}
