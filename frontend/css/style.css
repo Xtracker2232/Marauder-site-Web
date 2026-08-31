@@ -2823,3 +2823,133 @@ input::placeholder, textarea::placeholder {
         height: 16px !important;
     }
 }
+
+/* ============================================
+   FIX DASHBOARD - SUPPRESSION CADRILLAGE
+   ============================================ */
+
+/* Supprimer le cadrillage de fond sur le dashboard */
+.dashboard-page::before,
+.dashboard-page::after {
+    display: none !important;
+}
+
+.dashboard-page {
+    background: var(--bg-primary) !important;
+}
+
+/* ============================================
+   FIX SIDEBAR - ICONES A GAUCHE + REDUCTION
+   ============================================ */
+
+.sidebar {
+    width: 220px !important;
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+    padding: 0 !important;
+}
+
+.sidebar-header {
+    padding: 16px 16px !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+}
+
+.sidebar-header .logo {
+    width: 28px !important;
+    height: 28px !important;
+}
+
+.sidebar-header span {
+    font-size: 18px !important;
+}
+
+.sidebar-nav {
+    padding: 8px 8px !important;
+}
+
+.sidebar-nav li {
+    padding: 10px 12px !important;
+    gap: 12px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    justify-content: flex-start !important;
+}
+
+.sidebar-nav li svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar-nav li span {
+    font-size: 13px !important;
+}
+
+.sidebar-footer {
+    padding: 12px 8px !important;
+}
+
+.sidebar-footer button {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    gap: 12px !important;
+    justify-content: flex-start !important;
+}
+
+.sidebar-footer button svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Support toggle dans sidebar */
+.support-toggle {
+    padding: 10px 12px !important;
+    gap: 12px !important;
+    font-size: 13px !important;
+}
+
+.support-toggle svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+}
+
+.support-arrow {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.support-submenu {
+    padding-left: 32px !important;
+}
+
+.support-submenu li {
+    padding: 8px 12px !important;
+    gap: 12px !important;
+    font-size: 13px !important;
+}
+
+.support-submenu li svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+}
+
+/* ============================================
+   MOBILE SIDEBAR
+   ============================================ */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 260px !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+    
+    .mobile-menu-btn {
+        display: flex !important;
+    }
+}
