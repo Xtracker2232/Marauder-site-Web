@@ -328,7 +328,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // PIVOT FAMILLE
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
@@ -1914,9 +1913,7 @@ async function replyTicket(ticketId) {
     }
 }
 
-// 5. ATTACHER LE BOUTON - METHODE DIRECTE
-console.log('🔵 Attachement direct du bouton...');
-
+// 5. ATTACHER LE BOUTON
 function attachButton() {
     const btn = document.getElementById('openTicketBtn');
     console.log('🔵 openTicketBtn:', btn);
@@ -1937,7 +1934,6 @@ function attachButton() {
     return false;
 }
 
-// Essayer immediatement
 if (!attachButton()) {
     document.addEventListener('DOMContentLoaded', function() {
         attachButton();
