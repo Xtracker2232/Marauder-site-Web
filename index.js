@@ -174,15 +174,31 @@ const loginLimiter = rateLimit({
 app.use('/api/', limiter);
 
 // ============ AUTH ============
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Token manquant' });
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Token invalide' });
-        req.user = user;
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const result = await pool.query('SELECT banned FROM users WHERE id = $1', [decoded.id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: 'Utilisateur introuvable' });
+        }
+        
+        if (result.rows[0].banned) {
+            return res.status(403).json({ error: 'Ce compte a été banni' });
+        }
+        
+        req.user = decoded;
         next();
-    });
+    } catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(403).json({ error: 'Token invalide' });
+        }
+        return res.status(500).json({ error: 'Erreur serveur' });
+    }
 };
 
 const requireAdmin = async (req, res, next) => {
@@ -617,6 +633,11 @@ app.post('/api/admin/users/:id/ban', authenticateToken, requireAdmin, async (req
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être banni' });
         }
         await pool.query('UPDATE users SET banned = $1 WHERE id = $2', [banned, id]);
+        
+        // Si l'utilisateur est banni, on pourrait aussi supprimer son token
+        // mais on ne peut pas le faire directement.
+        // Il sera déconnecté à sa prochaine requête.
+        
         res.json({ success: true, banned });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
