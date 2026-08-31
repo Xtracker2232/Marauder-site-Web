@@ -12,57 +12,142 @@
     <meta property="og:url" content="https://marauder-site-web-production.up.railway.app/dashboard.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
-    <link rel="stylesheet" href="css/style.css">
     
-    <!-- STYLES FORCÉS POUR SUPPRIMER TOUT BLOC NOIR -->
+    <!-- CSS désactivé pour tester -->
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    
     <style>
         /* ============================================
-           SUPPRESSION TOTALE DE TOUT FOND NOIR
+           STYLES DE BASE POUR LE TEST
            ============================================ */
         
-        /* 1. Supprimer le cadrillage de fond */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body.dashboard-page {
+            background: #0a0a0a !important;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        /* Supprimer le cadrillage */
         body.dashboard-page::before,
-        body.dashboard-page::after,
-        .dashboard-page::before,
-        .dashboard-page::after {
+        body.dashboard-page::after {
             display: none !important;
             content: none !important;
-            background: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
         }
         
-        /* 2. Supprimer TOUS les pseudo-elements */
-        *::before,
-        *::after {
-            display: none !important;
-            content: none !important;
-            background: none !important;
+        /* Sidebar */
+        .sidebar {
+            width: 220px !important;
+            background: #111111 !important;
+            border-right: 1px solid #2a2a2a !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            z-index: 100 !important;
+            padding: 16px 12px !important;
         }
         
-        /* 3. Fond de la page */
-        body.dashboard-page,
-        .dashboard-page {
+        .sidebar-header {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            margin-bottom: 16px !important;
+            padding-bottom: 16px !important;
+            border-bottom: 1px solid #2a2a2a !important;
+        }
+        
+        .sidebar-header .logo {
+            width: 28px !important;
+            height: 28px !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-header span {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-nav {
+            list-style: none !important;
+        }
+        
+        .sidebar-nav li {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 12px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            color: #a0a0a0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+        
+        .sidebar-nav li:hover {
+            background: rgba(255,255,255,0.03) !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-nav li.active {
+            background: rgba(255,255,255,0.05) !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-nav li svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .sidebar-footer {
+            padding-top: 12px !important;
+            border-top: 1px solid #2a2a2a !important;
+            margin-top: 12px !important;
+        }
+        
+        .sidebar-footer button {
+            width: 100% !important;
+            padding: 10px 12px !important;
+            background: transparent !important;
+            border: 1px solid #2a2a2a !important;
+            border-radius: 6px !important;
+            color: #a0a0a0 !important;
+            font-size: 13px !important;
+            font-family: 'Inter', sans-serif !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+        
+        .sidebar-footer button:hover {
+            background: rgba(239,68,68,0.1) !important;
+            color: #ef4444 !important;
+        }
+        
+        /* Main content */
+        .main-content {
+            margin-left: 220px !important;
+            padding: 32px 40px !important;
+            background: #0a0a0a !important;
+            min-height: 100vh !important;
+        }
+        
+        /* Page recherche */
+        #page-search {
             background: #0a0a0a !important;
         }
         
-        /* 4. Main content transparent */
-        .main-content {
-            background: transparent !important;
-            margin-left: 220px !important;
-            padding: 32px 40px !important;
-        }
-        
-        /* 5. Page recherche transparente */
-        #page-search {
-            background: transparent !important;
-        }
-        
-        #page-search * {
-            background: transparent !important;
-        }
-        
-        /* 6. Sections avec fond */
         #page-search .section {
             background: #111111 !important;
             border: 1px solid #2a2a2a !important;
@@ -92,52 +177,11 @@
             padding: 0 20px 20px 20px !important;
         }
         
-        #page-search .section-body.open {
-            display: block !important;
-        }
-        
-        /* 7. Onglets */
-        .search-tabs {
-            background: #1e1e1e !important;
-            border-radius: 10px !important;
-            padding: 4px !important;
-            display: flex !important;
-            gap: 4px !important;
-            margin-bottom: 20px !important;
-        }
-        
-        .search-tab {
-            background: transparent !important;
-            color: #a0a0a0 !important;
-            border: none !important;
-            padding: 10px 16px !important;
-            border-radius: 8px !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-            transition: all 0.2s !important;
-            font-family: 'Inter', sans-serif !important;
-            flex: 1 !important;
-        }
-        
-        .search-tab.active {
-            background: #ffffff !important;
-            color: #000000 !important;
-        }
-        
-        .search-tab:hover {
-            color: #ffffff !important;
-        }
-        
-        /* 8. Formulaire */
+        /* Formulaire */
         .form-grid {
             display: grid !important;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
             gap: 12px !important;
-        }
-        
-        .form-group {
-            margin-bottom: 0 !important;
         }
         
         .form-group label {
@@ -159,28 +203,47 @@
             font-size: 14px !important;
             font-family: 'Inter', sans-serif !important;
             outline: none !important;
-            box-sizing: border-box !important;
         }
         
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #ffffff !important;
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.05) !important;
+        /* Onglets */
+        .search-tabs {
+            background: #1e1e1e !important;
+            border-radius: 10px !important;
+            padding: 4px !important;
+            display: flex !important;
+            gap: 4px !important;
+            margin-bottom: 20px !important;
         }
         
-        /* 9. Boutons */
+        .search-tab {
+            background: transparent !important;
+            color: #a0a0a0 !important;
+            border: none !important;
+            padding: 10px 16px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            font-family: 'Inter', sans-serif !important;
+            flex: 1 !important;
+        }
+        
+        .search-tab.active {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        /* Boutons */
         .search-actions {
             display: flex !important;
             gap: 12px !important;
             margin-top: 20px !important;
             padding-top: 20px !important;
             border-top: 1px solid #2a2a2a !important;
-            background: transparent !important;
         }
         
         #searchBtn,
-        #searchBtnPro,
-        .search-actions .btn-primary {
+        #searchBtnPro {
             background: #ffffff !important;
             color: #000000 !important;
             border: none !important;
@@ -190,23 +253,10 @@
             font-weight: 600 !important;
             font-family: 'Inter', sans-serif !important;
             cursor: pointer !important;
-            transition: background 0.2s !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            width: auto !important;
-        }
-        
-        #searchBtn:hover,
-        #searchBtnPro:hover,
-        .search-actions .btn-primary:hover {
-            background: #cccccc !important;
-            color: #000000 !important;
         }
         
         #clearBtn,
-        #clearBtnPro,
-        .search-actions .btn-secondary {
+        #clearBtnPro {
             background: transparent !important;
             color: #a0a0a0 !important;
             border: 1px solid #2a2a2a !important;
@@ -216,124 +266,22 @@
             font-weight: 500 !important;
             font-family: 'Inter', sans-serif !important;
             cursor: pointer !important;
-            transition: all 0.2s !important;
+        }
+        
+        .page-header {
             display: flex !important;
+            justify-content: space-between !important;
             align-items: center !important;
-            gap: 8px !important;
-            width: auto !important;
+            margin-bottom: 32px !important;
         }
         
-        #clearBtn:hover,
-        #clearBtnPro:hover,
-        .search-actions .btn-secondary:hover {
-            background: rgba(255,255,255,0.05) !important;
+        .page-header h2 {
+            font-size: 28px !important;
+            font-weight: 700 !important;
             color: #ffffff !important;
         }
         
-        /* 10. Sidebar */
-        .sidebar {
-            width: 220px !important;
-            background: #111111 !important;
-            border-right: 1px solid #2a2a2a !important;
-            display: flex !important;
-            flex-direction: column !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            bottom: 0 !important;
-            z-index: 100 !important;
-        }
-        
-        .sidebar-header {
-            padding: 16px 16px !important;
-            border-bottom: 1px solid #2a2a2a !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-        }
-        
-        .sidebar-header .logo {
-            width: 28px !important;
-            height: 28px !important;
-            color: #ffffff !important;
-            opacity: 0.8 !important;
-        }
-        
-        .sidebar-header span {
-            font-size: 18px !important;
-            font-weight: 800 !important;
-            color: #ffffff !important;
-        }
-        
-        .sidebar-nav {
-            list-style: none !important;
-            padding: 8px 8px !important;
-            flex: 1 !important;
-        }
-        
-        .sidebar-nav li {
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-            padding: 10px 12px !important;
-            border-radius: 6px !important;
-            cursor: pointer !important;
-            color: #a0a0a0 !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            transition: background 0.2s, color 0.2s !important;
-        }
-        
-        .sidebar-nav li:hover {
-            background: rgba(255,255,255,0.03) !important;
-            color: #ffffff !important;
-        }
-        
-        .sidebar-nav li.active {
-            background: rgba(255,255,255,0.05) !important;
-            color: #ffffff !important;
-        }
-        
-        .sidebar-nav li svg {
-            width: 18px !important;
-            height: 18px !important;
-            flex-shrink: 0 !important;
-        }
-        
-        .sidebar-footer {
-            padding: 12px 8px !important;
-            border-top: 1px solid #2a2a2a !important;
-        }
-        
-        .sidebar-footer button {
-            width: 100% !important;
-            padding: 10px 12px !important;
-            background: transparent !important;
-            border: 1px solid #2a2a2a !important;
-            border-radius: 6px !important;
-            color: #a0a0a0 !important;
-            font-size: 13px !important;
-            font-family: 'Inter', sans-serif !important;
-            cursor: pointer !important;
-            transition: all 0.2s !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-        }
-        
-        .sidebar-footer button:hover {
-            background: rgba(239,68,68,0.1) !important;
-            color: #ef4444 !important;
-            border-color: rgba(239,68,68,0.2) !important;
-        }
-        
-        .sidebar-footer button svg {
-            width: 18px !important;
-            height: 18px !important;
-            flex-shrink: 0 !important;
-        }
-        
-        /* 11. Support toggle */
+        /* Support toggle */
         .support-toggle {
             display: flex !important;
             align-items: center !important;
@@ -344,8 +292,6 @@
             color: #a0a0a0 !important;
             font-size: 13px !important;
             font-weight: 500 !important;
-            transition: background 0.2s, color 0.2s !important;
-            margin-top: 4px !important;
         }
         
         .support-toggle:hover {
@@ -353,21 +299,12 @@
             color: #ffffff !important;
         }
         
-        .support-toggle svg {
-            width: 18px !important;
-            height: 18px !important;
-            flex-shrink: 0 !important;
-        }
-        
         .support-arrow {
-            width: 14px !important;
-            height: 14px !important;
-            transition: transform 0.3s ease !important;
             margin-left: auto !important;
         }
         
         .support-submenu {
-            padding-left: 32px !important;
+            padding-left: 36px !important;
             list-style: none !important;
             margin-top: 4px !important;
         }
@@ -382,7 +319,6 @@
             color: #a0a0a0 !important;
             font-size: 13px !important;
             font-weight: 500 !important;
-            transition: background 0.2s, color 0.2s !important;
         }
         
         .support-submenu li:hover {
@@ -393,74 +329,56 @@
         .support-submenu li svg {
             width: 18px !important;
             height: 18px !important;
-            flex-shrink: 0 !important;
         }
         
-        /* 12. Mobile */
+        /* Mobile */
         .mobile-menu-btn {
             display: none !important;
-            position: fixed !important;
-            top: 12px !important;
-            left: 12px !important;
-            z-index: 1001 !important;
-            background: #111111 !important;
-            border: 1px solid #2a2a2a !important;
-            border-radius: 10px !important;
-            color: #ffffff !important;
-            padding: 8px 10px !important;
-            cursor: pointer !important;
-            width: 44px !important;
-            height: 44px !important;
-            align-items: center !important;
-            justify-content: center !important;
         }
         
-        .sidebar-backdrop {
-            display: none !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            background: rgba(0,0,0,0.5) !important;
-            z-index: 999 !important;
-        }
-        
-        .sidebar-backdrop.active {
-            display: block !important;
-        }
-        
-        /* ============================================
-           MOBILE RESPONSIVE
-           ============================================ */
         @media screen and (max-width: 768px) {
-            .mobile-menu-btn {
-                display: flex !important;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-                padding: 16px 12px !important;
-                padding-top: 16px !important;
-            }
-            
             .sidebar {
                 transform: translateX(-100%) !important;
                 transition: transform 0.3s ease !important;
-                position: fixed !important;
-                z-index: 1000 !important;
                 width: 280px !important;
-                height: 100vh !important;
-                top: 0 !important;
-                left: 0 !important;
             }
             
             .sidebar.open {
                 transform: translateX(0) !important;
             }
             
+            .main-content {
+                margin-left: 0 !important;
+                padding: 16px 12px !important;
+            }
+            
+            .mobile-menu-btn {
+                display: flex !important;
+                position: fixed !important;
+                top: 12px !important;
+                left: 12px !important;
+                z-index: 1001 !important;
+                background: #111111 !important;
+                border: 1px solid #2a2a2a !important;
+                border-radius: 10px !important;
+                color: #ffffff !important;
+                padding: 8px 10px !important;
+                cursor: pointer !important;
+                width: 44px !important;
+                height: 44px !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
             .sidebar-backdrop {
                 display: none !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                background: rgba(0,0,0,0.5) !important;
+                z-index: 999 !important;
             }
             
             .sidebar-backdrop.active {
@@ -474,132 +392,20 @@
                 gap: 12px !important;
             }
             
-            .page-header h2 {
-                font-size: 22px !important;
-            }
-            
-            .search-tabs {
-                flex-wrap: nowrap !important;
-                overflow-x: auto !important;
-                gap: 4px !important;
-                padding: 4px !important;
-            }
-            
-            .search-tab {
-                flex: 0 0 auto !important;
-                padding: 8px 14px !important;
-                font-size: 12px !important;
-                white-space: nowrap !important;
-            }
-            
             .form-grid {
                 grid-template-columns: 1fr !important;
-                gap: 10px !important;
             }
             
             .search-actions {
                 flex-direction: column !important;
             }
             
-            .search-actions .btn-primary,
-            .search-actions .btn-secondary,
             #searchBtn,
             #searchBtnPro,
             #clearBtn,
             #clearBtnPro {
                 width: 100% !important;
                 justify-content: center !important;
-            }
-            
-            .lookup-form {
-                flex-direction: column !important;
-                gap: 10px !important;
-                padding: 16px !important;
-            }
-            
-            .lookup-form .form-group {
-                min-width: unset !important;
-                width: 100% !important;
-            }
-            
-            .lookup-form .btn-primary {
-                width: 100% !important;
-                justify-content: center !important;
-            }
-            
-            #grapheContainer {
-                height: 350px !important;
-            }
-            
-            .result-header-full {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 8px !important;
-            }
-            
-            .result-fields.open {
-                grid-template-columns: 1fr !important;
-            }
-            
-            .result-actions {
-                flex-wrap: wrap !important;
-            }
-            
-            .fiche-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 4px !important;
-            }
-            
-            .fiche-actions {
-                flex-wrap: wrap !important;
-            }
-            
-            .history-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 6px !important;
-            }
-            
-            .ticket-item .ticket-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 6px !important;
-            }
-            
-            .investigation-body {
-                grid-template-columns: 1fr !important;
-            }
-            
-            .investigation-info-grid {
-                grid-template-columns: 1fr !important;
-            }
-            
-            .investigation-actions {
-                flex-direction: column !important;
-            }
-            
-            .investigation-actions .btn-primary,
-            .investigation-actions .btn-secondary {
-                width: 100% !important;
-                justify-content: center !important;
-            }
-            
-            .results-counter {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 8px !important;
-            }
-        }
-        
-        @media screen and (max-width: 480px) {
-            .search-tab {
-                font-size: 11px !important;
-                padding: 6px 10px !important;
-            }
-            
-            .result-name-full {
-                font-size: 14px !important;
             }
         }
     </style>
