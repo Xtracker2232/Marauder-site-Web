@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+// ROUTES PAGES HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
@@ -182,7 +183,6 @@ async function callBrix(method, path, body = null) {
     }
 }
 
-// FONCTION PIVOT FAMILLE (complète)
 async function enrichirAvecPivotFamille(results) {
     if (!results || results.length === 0) return results;
     
@@ -390,8 +390,9 @@ async function enrichirAvecPivotFamille(results) {
 }
 
 // ============================================
-// ROUTES AUTH (sans bcrypt)
+// ROUTES
 // ============================================
+
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -450,8 +451,6 @@ app.post('/api/login', async (req, res) => {
         }
         
         const user = result.rows[0];
-        
-        // COMPARAISON DIRECTE (pas de hash)
         if (user.password !== password) {
             return res.status(401).json({ success: false, error: 'Identifiants incorrects' });
         }
@@ -517,6 +516,7 @@ app.get('/api/me', authenticate, async (req, res) => {
 // ============================================
 // ROUTES BRIXHUB
 // ============================================
+
 app.post('/api/brix/search', authenticate, async (req, res) => {
     try {
         const query = req.body;
@@ -605,6 +605,7 @@ app.get('/api/brix/lookup/:type/:value', authenticate, async (req, res) => {
 // ============================================
 // ROUTES HISTORIQUE
 // ============================================
+
 app.get('/api/history', authenticate, async (req, res) => {
     try {
         const result = await pool.query(
@@ -647,6 +648,7 @@ app.post('/api/history/:id/replay', authenticate, async (req, res) => {
 // ============================================
 // ROUTES FICHES
 // ============================================
+
 app.get('/api/fiches', authenticate, async (req, res) => {
     try {
         const result = await pool.query(
@@ -767,6 +769,7 @@ app.post('/api/fiches/:id/persons', authenticate, async (req, res) => {
 // ============================================
 // ROUTES GRAPHES
 // ============================================
+
 app.get('/api/graphes/all', authenticate, async (req, res) => {
     try {
         const result = await pool.query(
@@ -854,6 +857,7 @@ app.delete('/api/graphes/:id', authenticate, async (req, res) => {
 // ============================================
 // ROUTES ADMIN
 // ============================================
+
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
     try {
         const usersResult = await pool.query('SELECT COUNT(*) as total FROM users');
@@ -873,6 +877,7 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 // ============================================
 // HEALTH CHECK
 // ============================================
+
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -880,6 +885,7 @@ app.get('/api/health', (req, res) => {
 // ============================================
 // DÉMARRAGE
 // ============================================
+
 app.listen(PORT, () => {
     console.log(`🚀 Serveur Marauder démarré sur le port ${PORT}`);
     console.log(`🔗 http://localhost:${PORT}`);
