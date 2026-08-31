@@ -14,93 +14,271 @@
     <meta property="og:site_name" content="Marauder">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* ============================================
-           FIX TOTAL DASHBOARD - SUPPRESSION CADRILLAGE
-           ============================================ */
-        
-        /* Supprimer le cadrillage sur le dashboard */
+        /* RESET DASHBOARD */
         body.dashboard-page::before,
         body.dashboard-page::after,
         .dashboard-page::before,
         .dashboard-page::after {
             display: none !important;
             content: none !important;
-            background: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
         }
-        
         body.dashboard-page {
             background: #0a0a0a !important;
         }
-        
-        /* Supprimer tout fond noir sur la zone de recherche */
         .dashboard-page .main-content {
             background: transparent !important;
         }
-        
-        #page-search {
-            background: transparent !important;
-        }
-        
         #page-search .section {
             background: #111111 !important;
             border: 1px solid #2a2a2a !important;
         }
-        
         #page-search .section-body {
             background: transparent !important;
         }
-        
         #page-search .section-header {
             background: #111111 !important;
         }
-        
-        /* Forcer le bouton Rechercher en blanc */
-        .search-actions .btn-primary,
-        #searchBtn,
-        #searchBtnPro {
+        #searchBtn, #searchBtnPro {
             background: #ffffff !important;
             color: #000000 !important;
             border: none !important;
         }
-        
-        .search-actions .btn-primary:hover,
-        #searchBtn:hover,
-        #searchBtnPro:hover {
+        #searchBtn:hover, #searchBtnPro:hover {
             background: #cccccc !important;
             color: #000000 !important;
         }
-        
-        /* Forcer le bouton Effacer */
-        .search-actions .btn-secondary,
-        #clearBtn,
-        #clearBtnPro {
+        #clearBtn, #clearBtnPro {
             background: transparent !important;
             color: #a0a0a0 !important;
             border: 1px solid #2a2a2a !important;
         }
-        
-        .search-actions .btn-secondary:hover,
-        #clearBtn:hover,
-        #clearBtnPro:hover {
+        #clearBtn:hover, #clearBtnPro:hover {
             background: rgba(255,255,255,0.05) !important;
             color: #ffffff !important;
         }
-        
-        /* Forcer les inputs */
+        .search-actions .btn-primary {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border: none !important;
+        }
+        .search-actions .btn-primary:hover {
+            background: #cccccc !important;
+            color: #000000 !important;
+        }
+        .search-actions .btn-secondary {
+            background: transparent !important;
+            color: #a0a0a0 !important;
+            border: 1px solid #2a2a2a !important;
+        }
+        .search-actions .btn-secondary:hover {
+            background: rgba(255,255,255,0.05) !important;
+            color: #ffffff !important;
+        }
         #page-search input,
-        #page-search select,
-        #page-search textarea {
+        #page-search select {
             background: #1e1e1e !important;
             color: #ffffff !important;
             border: 1px solid #2a2a2a !important;
         }
-        
         #page-search input:focus,
-        #page-search select:focus,
-        #page-search textarea:focus {
+        #page-search select:focus {
             border-color: #ffffff !important;
+        }
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1001;
+            background: #111111;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            color: #ffffff;
+            padding: 8px 10px;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+        }
+        .sidebar-backdrop.active {
+            display: block;
+        }
+        .sidebar {
+            width: 220px !important;
+        }
+        .sidebar-nav li {
+            padding: 10px 12px !important;
+            gap: 12px !important;
+        }
+        .sidebar-nav li svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        .support-toggle {
+            padding: 10px 12px !important;
+            gap: 12px !important;
+        }
+        .support-toggle svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        .support-submenu {
+            padding-left: 32px !important;
+        }
+        .support-submenu li {
+            padding: 8px 12px !important;
+            gap: 12px !important;
+        }
+        .support-submenu li svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        @media screen and (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 16px 12px !important;
+                padding-top: 16px !important;
+            }
+            .sidebar {
+                transform: translateX(-100%) !important;
+                transition: transform 0.3s ease !important;
+                position: fixed !important;
+                z-index: 1000 !important;
+                width: 280px !important;
+                height: 100vh !important;
+            }
+            .sidebar.open {
+                transform: translateX(0) !important;
+            }
+            .page-header {
+                padding-left: 48px !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+            .page-header h2 {
+                font-size: 22px !important;
+            }
+            .search-tabs {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                gap: 4px !important;
+                padding: 4px !important;
+            }
+            .search-tab {
+                flex: 0 0 auto !important;
+                padding: 8px 14px !important;
+                font-size: 12px !important;
+                white-space: nowrap !important;
+            }
+            .form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            .search-actions {
+                flex-direction: column !important;
+            }
+            .search-actions .btn-primary,
+            .search-actions .btn-secondary {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            .lookup-form {
+                flex-direction: column !important;
+                gap: 10px !important;
+                padding: 16px !important;
+            }
+            .lookup-form .form-group {
+                min-width: unset !important;
+                width: 100% !important;
+            }
+            .lookup-form .btn-primary {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            #grapheContainer {
+                height: 350px !important;
+            }
+            .result-header-full {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            .result-fields.open {
+                grid-template-columns: 1fr !important;
+            }
+            .result-actions {
+                flex-wrap: wrap !important;
+            }
+            .fiche-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 4px !important;
+            }
+            .fiche-actions {
+                flex-wrap: wrap !important;
+            }
+            .history-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+            .ticket-item .ticket-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+            .investigation-body {
+                grid-template-columns: 1fr !important;
+            }
+            .investigation-info-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .investigation-actions {
+                flex-direction: column !important;
+            }
+            .investigation-actions .btn-primary,
+            .investigation-actions .btn-secondary {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            .results-counter {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+        }
+        @media screen and (max-width: 480px) {
+            .hero-title {
+                font-size: 32px !important;
+            }
+            .section-title {
+                font-size: 24px !important;
+            }
+            .search-tab {
+                font-size: 11px !important;
+                padding: 6px 10px !important;
+            }
+            .result-name-full {
+                font-size: 14px !important;
+            }
         }
     </style>
 </head>
