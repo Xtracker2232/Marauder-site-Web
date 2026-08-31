@@ -52,7 +52,6 @@ function initGrapheModule() {
     grapheCtx = grapheCanvas.getContext('2d');
     resizeGraphe();
     
-    // Événements souris
     grapheCanvas.addEventListener('mousedown', onGrapheMouseDown);
     grapheCanvas.addEventListener('mousemove', onGrapheMouseMove);
     grapheCanvas.addEventListener('mouseup', onGrapheMouseUp);
@@ -73,13 +72,11 @@ function initGrapheModule() {
     });
     
     window.addEventListener('resize', resizeGraphe);
-    
-    // Recharger depuis localStorage
     loadGrapheFromLocal();
     
     window.grapheIsInitialized = true;
     renderGraphe();
-    console.log('✅ Graphe initialise avec', window.grapheNodes.length, 'noeuds');
+    console.log('Graphe initialise avec', window.grapheNodes.length, 'noeuds');
 }
 
 // ========================================
@@ -93,7 +90,7 @@ function loadGrapheFromLocal() {
             if (data.nodes && data.nodes.length > 0) {
                 window.grapheNodes = data.nodes;
                 window.grapheEdges = data.edges || [];
-                console.log('📂 Graphe charge depuis localStorage:', window.grapheNodes.length, 'noeuds');
+                console.log('Graphe charge depuis localStorage:', window.grapheNodes.length, 'noeuds');
             }
         }
     } catch (e) {
@@ -130,7 +127,6 @@ function renderGraphe() {
     
     grapheCtx.clearRect(0, 0, W, H);
     
-    // Grille
     const step = 40;
     const ox = ((window.graphePanX % step) + step) % step;
     const oy = ((window.graphePanY % step) + step) % step;
@@ -153,7 +149,6 @@ function renderGraphe() {
     grapheCtx.translate(window.graphePanX, window.graphePanY);
     grapheCtx.scale(window.grapheZoom, window.grapheZoom);
     
-    // Arêtes
     window.grapheEdges.forEach(edge => {
         const from = window.grapheNodes.find(n => n.id === edge.from);
         const to = window.grapheNodes.find(n => n.id === edge.to);
@@ -166,7 +161,6 @@ function renderGraphe() {
         grapheCtx.stroke();
     });
     
-    // Noeuds
     window.grapheNodes.forEach(node => {
         const r = node.radius || 24;
         const isSelected = window.grapheLinkMode && window.grapheLinkFrom === node.id;
@@ -262,7 +256,7 @@ function onGrapheMouseDown(e) {
     if (window.grapheLinkMode && node) {
         if (window.grapheLinkFrom === null) {
             window.grapheLinkFrom = node.id;
-            showToast('✅ Selectionnez la destination', 'info');
+            showToast('Selectionnez la destination', 'info');
             return;
         }
         if (window.grapheLinkFrom !== node.id) {
@@ -275,7 +269,7 @@ function onGrapheMouseDown(e) {
                 btn.style.borderColor = 'var(--border-color)';
                 btn.style.color = 'var(--text-secondary)';
             }
-            showToast('🔗 Personnes attachees !', 'success');
+            showToast('Personnes attachees !', 'success');
             renderGraphe();
         }
         return;
@@ -351,8 +345,6 @@ function showGrapheContextMenu(x, y) {
     menu.style.display = 'block';
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
-    
-    // Ajouter les événements des boutons du menu
     setupContextMenuEvents();
 }
 
@@ -368,7 +360,6 @@ function setupContextMenuEvents() {
     const menu = document.getElementById('grapheContextMenu');
     if (!menu) return;
     
-    // Supprimer les anciens événements pour éviter les doublons
     const items = menu.querySelectorAll('.menu-item');
     items.forEach(item => {
         item.removeEventListener('click', handleContextMenuAction);
@@ -397,7 +388,7 @@ function handleContextMenuAction(e) {
                 if (name) node.label = name;
                 node.role = role;
                 renderGraphe();
-                showToast('✅ Modifie !', 'success');
+                showToast('Modifie !', 'success');
             });
             break;
         case 'color':
@@ -413,7 +404,7 @@ function handleContextMenuAction(e) {
             `, 'Appliquer', () => {
                 node.role = document.getElementById('editRoleInput').value.trim();
                 renderGraphe();
-                showToast('✅ Fonction mise a jour !', 'success');
+                showToast('Fonction mise a jour !', 'success');
             });
             break;
         case 'link':
@@ -425,20 +416,20 @@ function handleContextMenuAction(e) {
                 btn.style.borderColor = '#ffffff';
                 btn.style.color = '#ffffff';
             }
-            showToast('🔗 Cliquez sur une personne pour l attacher', 'info');
+            showToast('Cliquez sur une personne pour l attacher', 'info');
             break;
         case 'detach':
             const toRemove = window.grapheEdges.filter(e => e.from === node.id || e.to === node.id);
             toRemove.forEach(e => { window.grapheEdges = window.grapheEdges.filter(ed => ed.id !== e.id); });
             renderGraphe();
-            showToast('🔓 Personne detachee', 'info');
+            showToast('Personne detachee', 'info');
             break;
         case 'delete':
             showModal('Confirmation', `<p style="color:var(--text-secondary);">Supprimer "<strong style="color:#fff;">${node.label}</strong>" du graphe ?</p>`, 'Supprimer', () => {
                 window.grapheNodes = window.grapheNodes.filter(n => n.id !== node.id);
                 window.grapheEdges = window.grapheEdges.filter(e => e.from !== node.id && e.to !== node.id);
                 renderGraphe();
-                showToast('🗑️ Personne supprimee', 'info');
+                showToast('Personne supprimee', 'info');
             });
             break;
         case 'fiche':
@@ -456,7 +447,6 @@ function handleContextMenuAction(e) {
     }
 }
 
-// Fermer le menu contextuel en cliquant ailleurs
 document.addEventListener('click', function(e) {
     const menu = document.getElementById('grapheContextMenu');
     if (menu && menu.style.display === 'block') {
@@ -472,7 +462,7 @@ function changeGrapheColor(nodeId, color) {
         node.color = color; 
         closeModal();
         renderGraphe();
-        showToast('🎨 Couleur changee !', 'success');
+        showToast('Couleur changee !', 'success');
     }
 }
 
@@ -481,7 +471,7 @@ function changeGrapheColor(nodeId, color) {
 // ========================================
 function addPersonToGrapheWithFamily(personData) {
     if (!personData) {
-        showToast('❌ Personne introuvable', 'error');
+        showToast('Personne introuvable', 'error');
         return;
     }
     
@@ -545,7 +535,7 @@ function addPersonToGrapheWithFamily(personData) {
     
     saveGrapheToLocal();
     renderGraphe();
-    showToast(`✅ "${name}" et sa famille ajoutes au graphe !`, 'success');
+    showToast('"' + name + '" et sa famille ajoutes au graphe !', 'success');
 }
 
 // ========================================
@@ -563,12 +553,12 @@ function saveGrapheToLocal() {
 }
 
 // ========================================
-// TOAST (fallback si pas dans dashboard)
+// TOAST
 // ========================================
 function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toastContainer');
     if (!container) {
-        console.log('📢', message);
+        console.log(message);
         return;
     }
     const toast = document.createElement('div');
@@ -588,14 +578,13 @@ function showToast(message, type = 'info', duration = 3000) {
 }
 
 // ========================================
-// MODAL (fallback)
+// MODAL
 // ========================================
 function showModal(title, bodyHtml, confirmText, onConfirm) {
     const overlay = document.getElementById('modalOverlay');
     const titleEl = document.getElementById('modalTitle');
     const bodyEl = document.getElementById('modalBody');
     if (!overlay || !titleEl || !bodyEl) {
-        alert(title + '\n\n' + bodyHtml.replace(/<[^>]*>/g, ''));
         return;
     }
     titleEl.textContent = title;
@@ -628,7 +617,6 @@ function closeModal() {
 // BOUTONS DU GRAPHE
 // ========================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Ajouter une personne
     const addBtn = document.getElementById('grapheAddPersonne');
     if (addBtn) {
         addBtn.addEventListener('click', function() {
@@ -646,16 +634,15 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             window.grapheNodes.push(newNode);
             renderGraphe();
-            showToast('✅ Personne ajoutee !', 'success');
+            showToast('Personne ajoutee !', 'success');
         });
     }
 
-    // Attacher
     const attachBtn = document.getElementById('grapheAttacher');
     if (attachBtn) {
         attachBtn.addEventListener('click', function() {
             if (window.grapheNodes.length < 2) {
-                showToast('⚠️ Ajoutez au moins 2 personnes', 'warning');
+                showToast('Ajoutez au moins 2 personnes', 'warning');
                 return;
             }
             if (window.grapheLinkMode) {
@@ -664,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.style.background = 'rgba(255,255,255,0.05)';
                 this.style.borderColor = '#2a2a2a';
                 this.style.color = '#a0a0a0';
-                showToast('🔓 Mode attacher desactive', 'info');
+                showToast('Mode attacher desactive', 'info');
                 return;
             }
             window.grapheLinkMode = true;
@@ -672,20 +659,18 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.background = 'rgba(255,255,255,0.15)';
             this.style.borderColor = '#ffffff';
             this.style.color = '#ffffff';
-            showToast('🔗 Cliquez sur une personne source, puis sur la destination', 'info');
+            showToast('Cliquez sur une personne source, puis sur la destination', 'info');
         });
     }
 
-    // Sauvegarder
     const saveBtn = document.getElementById('grapheSauvegarder');
     if (saveBtn) {
         saveBtn.addEventListener('click', function() {
             saveGrapheToLocal();
-            showToast('💾 Graphe sauvegarde (local)', 'success');
+            showToast('Graphe sauvegarde (local)', 'success');
         });
     }
 
-    // Mes graphes
     const myGraphsBtn = document.getElementById('grapheMesGraphes');
     if (myGraphsBtn) {
         myGraphsBtn.addEventListener('click', function() {
@@ -718,7 +703,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Effacer
     const clearBtn = document.getElementById('grapheEffacer');
     if (clearBtn) {
         clearBtn.addEventListener('click', function() {
@@ -726,16 +710,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('Deja vide', 'info');
                 return;
             }
-            if (confirm('Effacer tout le graphe ?')) {
+            showModal('Confirmation', '<p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>', 'Effacer', () => {
                 window.grapheNodes = [];
                 window.grapheEdges = [];
                 renderGraphe();
-                showToast('🗑️ Graphe efface', 'info');
-            }
+                showToast('Graphe efface', 'info');
+            });
         });
     }
 
-    // Fermer le modal des graphes
     const closeModalBtn = document.getElementById('closeGraphesModal');
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', function() {
@@ -753,7 +736,7 @@ function loadGrapheFromList() {
             window.grapheEdges = data.edges || [];
             document.getElementById('graphesModal').style.display = 'none';
             renderGraphe();
-            showToast('📂 Graphe charge !', 'success');
+            showToast('Graphe charge !', 'success');
         }
     } catch (e) {
         showToast('Erreur de chargement', 'error');
@@ -773,4 +756,4 @@ window.loadGrapheFromLocal = loadGrapheFromLocal;
 window.showToast = showToast;
 window.loadGrapheFromList = loadGrapheFromList;
 
-console.log('✅ Module graphe charge');
+console.log('Module graphe charge');
