@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { Pool } = require('pg');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 require('dotenv').config();
 
 const app = express();
@@ -33,7 +35,6 @@ if (!process.env.ADMIN_PASSWORD) {
 }
 
 console.log('✅ Toutes les variables d\'environnement sont définies');
-
 console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
 console.log('🔍 JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
 
@@ -97,9 +98,43 @@ const initDB = async () => {
 initDB();
 
 // ============ MIDDLEWARE ============
-app.use(cors({ origin: '*' }));
+
+// CORS restreint
+const allowedOrigins = [
+    'https://marauder-site-web-production.up.railway.app',
+    'http://localhost:3000',
+    'http://localhost:8080'
+];
+
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS non autorisé'));
+        }
+    },
+    credentials: true
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
+
+// ============ RATE LIMITING ============
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Trop de requêtes, réessayez plus tard'
+});
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: 'Trop de tentatives de connexion, réessayez dans 15 minutes'
+});
+
+app.use('/api/', limiter);
 
 // ============ AUTH ============
 const authenticateToken = (req, res, next) => {
@@ -120,8 +155,8 @@ app.get('/api/test', authenticateToken, (req, res) => {
     res.json({ message: 'API OK', user: req.user });
 });
 
-// Login
-app.post('/api/login', async (req, res) => {
+// Login (avec rate limiting)
+app.post('/api/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -136,24 +171,33 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Register
-app.post('/api/register', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password || password.length < 8) {
-        return res.status(400).json({ error: 'Nom ou mot de passe invalide' });
+// Register (avec validation)
+app.post('/api/register',
+    body('username').isLength({ min: 3 }).trim().escape(),
+    body('password').isLength({ min: 8 }),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        
+        const { username, password } = req.body;
+        if (!username || !password || password.length < 8) {
+            return res.status(400).json({ error: 'Nom ou mot de passe invalide' });
+        }
+        try {
+            const hashed = await bcrypt.hash(password, 12);
+            const result = await pool.query(
+                'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role',
+                [username, hashed]
+            );
+            res.status(201).json({ success: true, user: result.rows[0] });
+        } catch (error) {
+            if (error.code === '23505') return res.status(400).json({ error: 'Nom déjà utilisé' });
+            res.status(500).json({ error: 'Erreur serveur' });
+        }
     }
-    try {
-        const hashed = await bcrypt.hash(password, 12);
-        const result = await pool.query(
-            'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role',
-            [username, hashed]
-        );
-        res.status(201).json({ success: true, user: result.rows[0] });
-    } catch (error) {
-        if (error.code === '23505') return res.status(400).json({ error: 'Nom déjà utilisé' });
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
+);
 
 // Verify
 app.get('/api/verify', authenticateToken, (req, res) => {
