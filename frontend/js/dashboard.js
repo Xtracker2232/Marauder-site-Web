@@ -1555,173 +1555,718 @@ async function loadProfile() {
     }
 }
 
-// ============ GRAPHE BOUTONS ============
-document.getElementById('grapheAddPersonne')?.addEventListener('click', () => {
-    if (!window.grapheNodes) { showToast('Graphe non initialise', 'warning'); return; }
-    showModal('Ajouter une personne', `
-        <div class="form-group"><label>Prenom</label><input type="text" id="newNodePrenom" class="search-input"></div>
-        <div class="form-group"><label>Nom</label><input type="text" id="newNodeNom" class="search-input"></div>
-        <div class="form-group"><label>Role</label><input type="text" id="newNodeRole" class="search-input"></div>
-    `, 'Ajouter', () => {
-        const prenom = document.getElementById('newNodePrenom').value.trim();
-        const nom = document.getElementById('newNodeNom').value.trim();
-        const role = document.getElementById('newNodeRole').value.trim();
-        const label = `${prenom} ${nom}`.trim() || 'Personne';
-        const container = document.getElementById('grapheContainer');
-        const cx = container ? container.offsetWidth / 2 : 400;
-        const cy = container ? container.offsetHeight / 2 : 300;
-        const newNode = {
-            id: Date.now(),
-            label: label,
-            role: role,
-            x: cx + (Math.random() - 0.5) * 100,
-            y: cy + (Math.random() - 0.5) * 100,
-            radius: 24,
-            color: ['#ffffff','#ef4444','#f59e0b','#22c55e','#06b6d4','#ec4899','#8b5cf6','#f97316'][Math.floor(Math.random() * 8)]
-        };
-        window.grapheNodes.push(newNode);
-        if (window.grapheLinkMode && window.grapheLinkFrom !== null) {
-            window.grapheEdges.push({ id: Date.now() + 1, from: window.grapheLinkFrom, to: newNode.id });
-            window.grapheLinkMode = false;
-            window.grapheLinkFrom = null;
+// ============================================
+// GRAPHE - MODULE COMPLET
+// ============================================
+
+// Variables globales du graphe
+window.grapheNodes = [];
+window.grapheEdges = [];
+let grapheZoom = 1;
+let grapheOffsetX = 0;
+let grapheOffsetY = 0;
+let grapheIsPanning = false;
+let graphePanStartX = 0;
+let graphePanStartY = 0;
+let grapheDraggingNode = null;
+let grapheDragOffsetX = 0;
+let grapheDragOffsetY = 0;
+let grapheLinkMode = false;
+let grapheLinkFrom = null;
+let grapheCanvas = null;
+let grapheCtx = null;
+
+// Initialiser le graphe
+function initGraphe() {
+    grapheCanvas = document.getElementById('grapheCanvas');
+    if (!grapheCanvas) {
+        console.warn('Canvas du graphe non trouve');
+        setTimeout(initGraphe, 300);
+        return;
+    }
+    
+    grapheCtx = grapheCanvas.getContext('2d');
+    resizeGraphe();
+    
+    // Événements
+    grapheCanvas.addEventListener('mousedown', onGrapheMouseDown);
+    grapheCanvas.addEventListener('mousemove', onGrapheMouseMove);
+    grapheCanvas.addEventListener('mouseup', onGrapheMouseUp);
+    grapheCanvas.addEventListener('mouseleave', onGrapheMouseUp);
+    grapheCanvas.addEventListener('wheel', onGrapheWheel, { passive: false });
+    grapheCanvas.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        const rect = grapheCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const node = getGrapheNodeAt(x, y);
+        if (node) {
+            window.grapheContextNode = node;
+            showGrapheContextMenu(e.clientX, e.clientY);
+        }
+    });
+    
+    window.addEventListener('resize', resizeGraphe);
+    renderGraphe();
+    console.log('✅ Graphe initialise');
+}
+
+// Redimensionner
+function resizeGraphe() {
+    const container = document.getElementById('grapheContainer');
+    if (!container || !grapheCanvas) return;
+    const rect = container.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    grapheCanvas.width = rect.width * dpr;
+    grapheCanvas.height = rect.height * dpr;
+    grapheCanvas.style.width = rect.width + 'px';
+    grapheCanvas.style.height = rect.height + 'px';
+    if (grapheCtx) {
+        grapheCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+}
+
+// Rendre le graphe
+function renderGraphe() {
+    if (!grapheCtx || !grapheCanvas) return;
+    
+    const rect = grapheCanvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = rect.height;
+    
+    grapheCtx.clearRect(0, 0, W, H);
+    
+    // Grille
+    const step = 40;
+    const ox = ((grapheOffsetX % step) + step) % step;
+    const oy = ((grapheOffsetY % step) + step) % step;
+    grapheCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+    grapheCtx.lineWidth = 1;
+    for (let x = -step + ox; x < W + step; x += step) {
+        grapheCtx.beginPath();
+        grapheCtx.moveTo(x, 0);
+        grapheCtx.lineTo(x, H);
+        grapheCtx.stroke();
+    }
+    for (let y = -step + oy; y < H + step; y += step) {
+        grapheCtx.beginPath();
+        grapheCtx.moveTo(0, y);
+        grapheCtx.lineTo(W, y);
+        grapheCtx.stroke();
+    }
+    
+    grapheCtx.save();
+    grapheCtx.translate(grapheOffsetX, grapheOffsetY);
+    grapheCtx.scale(grapheZoom, grapheZoom);
+    
+    // Arêtes
+    window.grapheEdges.forEach(edge => {
+        const from = window.grapheNodes.find(n => n.id === edge.from);
+        const to = window.grapheNodes.find(n => n.id === edge.to);
+        if (!from || !to) return;
+        grapheCtx.beginPath();
+        grapheCtx.moveTo(from.x, from.y);
+        grapheCtx.lineTo(to.x, to.y);
+        grapheCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+        grapheCtx.lineWidth = 2 / grapheZoom;
+        grapheCtx.stroke();
+    });
+    
+    // Noeuds
+    window.grapheNodes.forEach(node => {
+        const r = node.radius || 24;
+        const isSelected = grapheLinkMode && grapheLinkFrom === node.id;
+        const color = node.color || '#ffffff';
+        
+        grapheCtx.shadowColor = 'rgba(255,255,255,0.05)';
+        grapheCtx.shadowBlur = 20;
+        
+        grapheCtx.beginPath();
+        grapheCtx.arc(node.x, node.y, r + 2, 0, Math.PI * 2);
+        grapheCtx.fillStyle = isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)';
+        grapheCtx.fill();
+        
+        grapheCtx.shadowBlur = 0;
+        grapheCtx.beginPath();
+        grapheCtx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        grapheCtx.fillStyle = isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
+        grapheCtx.fill();
+        grapheCtx.strokeStyle = isSelected ? '#ffffff' : 'rgba(255,255,255,0.15)';
+        grapheCtx.lineWidth = isSelected ? 3 / grapheZoom : 1.5 / grapheZoom;
+        grapheCtx.stroke();
+        
+        grapheCtx.beginPath();
+        grapheCtx.arc(node.x, node.y, 4 / grapheZoom, 0, Math.PI * 2);
+        grapheCtx.fillStyle = color;
+        grapheCtx.fill();
+        
+        grapheCtx.shadowBlur = 0;
+        grapheCtx.fillStyle = '#ffffff';
+        grapheCtx.font = `${12 / grapheZoom}px Arial, sans-serif`;
+        grapheCtx.textAlign = 'center';
+        grapheCtx.textBaseline = 'top';
+        let label = node.label || 'Personne';
+        if (label.length > 18) label = label.slice(0, 16) + '...';
+        grapheCtx.fillText(label, node.x, node.y + r + 6 / grapheZoom);
+        
+        if (node.role) {
+            grapheCtx.fillStyle = 'rgba(255,255,255,0.35)';
+            grapheCtx.font = `${10 / grapheZoom}px Arial, sans-serif`;
+            grapheCtx.fillText(node.role, node.x, node.y + r + 22 / grapheZoom);
+        }
+    });
+    
+    grapheCtx.restore();
+    
+    if (window.grapheNodes.length === 0) {
+        grapheCtx.fillStyle = 'rgba(255,255,255,0.15)';
+        grapheCtx.font = '16px Arial, sans-serif';
+        grapheCtx.textAlign = 'center';
+        grapheCtx.textBaseline = 'middle';
+        grapheCtx.fillText('Ajoutez des personnes', W/2, H/2 - 10);
+        grapheCtx.fillStyle = 'rgba(255,255,255,0.08)';
+        grapheCtx.font = '13px Arial, sans-serif';
+        grapheCtx.fillText('Cliquez sur "Ajouter une personne"', W/2, H/2 + 20);
+    }
+}
+
+function getGrapheNodeAt(x, y) {
+    const wx = (x - grapheOffsetX) / grapheZoom;
+    const wy = (y - grapheOffsetY) / grapheZoom;
+    for (let i = window.grapheNodes.length - 1; i >= 0; i--) {
+        const node = window.grapheNodes[i];
+        const dx = wx - node.x;
+        const dy = wy - node.y;
+        const r = node.radius || 24;
+        if (dx * dx + dy * dy < r * r) {
+            return node;
+        }
+    }
+    return null;
+}
+
+function onGrapheMouseDown(e) {
+    const rect = grapheCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const node = getGrapheNodeAt(x, y);
+    
+    if (e.button === 2) return;
+    
+    if (grapheLinkMode && node) {
+        if (grapheLinkFrom === null) {
+            grapheLinkFrom = node.id;
+            showToast('Selectionnez la destination', 'info');
+            return;
+        }
+        if (grapheLinkFrom !== node.id) {
+            window.grapheEdges.push({ id: Date.now(), from: grapheLinkFrom, to: node.id });
+            grapheLinkFrom = null;
+            grapheLinkMode = false;
             const btn = document.getElementById('grapheAttacher');
             if (btn) {
                 btn.style.background = 'rgba(255,255,255,0.05)';
-                btn.style.borderColor = 'var(--border-color)';
-                btn.style.color = 'var(--text-secondary)';
+                btn.style.borderColor = '#2a2a2a';
+                btn.style.color = '#a0a0a0';
             }
             showToast('Personnes attachees !', 'success');
+            renderGraphe();
         }
-        if (typeof window.renderGraphe === 'function') window.renderGraphe();
-        showToast(`"${label}" ajoute !`, 'success');
-    });
-});
-
-document.getElementById('grapheAttacher')?.addEventListener('click', function() {
-    const nodes = window.grapheNodes || [];
-    if (window.grapheLinkMode) {
-        window.grapheLinkMode = false;
-        window.grapheLinkFrom = null;
-        this.style.background = 'rgba(255,255,255,0.05)';
-        this.style.borderColor = 'var(--border-color)';
-        this.style.color = 'var(--text-secondary)';
-        showToast('Mode attacher desactive', 'info');
         return;
     }
-    if (nodes.length < 2) { showToast('Ajoutez au moins 2 personnes', 'warning'); return; }
-    window.grapheLinkMode = true;
-    window.grapheLinkFrom = null;
-    this.style.background = 'rgba(255,255,255,0.15)';
-    this.style.borderColor = '#ffffff';
-    this.style.color = '#ffffff';
-    showToast('Cliquez sur une personne pour l attacher', 'info');
-});
-
-document.getElementById('grapheSauvegarder')?.addEventListener('click', () => {
-    const nodes = window.grapheNodes || [];
-    const edges = window.grapheEdges || [];
-    const data = { name: 'Mon graphe', nodes: nodes, edges: edges };
-    localStorage.setItem('marauder_graphe', JSON.stringify(data));
-    fetch(`${API_URL}/api/graphes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(data)
-    }).then(r => r.ok ? showToast('Sauvegarde sur le serveur !', 'success') : showToast('Sauvegarde locale', 'info'))
-      .catch(() => showToast('Sauvegarde locale', 'info'));
-});
-
-document.getElementById('grapheMesGraphes')?.addEventListener('click', showGraphesModal);
-
-document.getElementById('grapheEffacer').addEventListener('click', function() {
-    if (window.grapheNodes.length === 0) {
-        showToast('Deja vide', 'info');
+    
+    if (node) {
+        grapheDraggingNode = node;
+        const wx = (x - grapheOffsetX) / grapheZoom;
+        const wy = (y - grapheOffsetY) / grapheZoom;
+        grapheDragOffsetX = wx - node.x;
+        grapheDragOffsetY = wy - node.y;
+        grapheCanvas.style.cursor = 'grabbing';
         return;
     }
-    showModal('Confirmation', '<p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>', 'Effacer', () => {
-        window.grapheNodes = [];
-        window.grapheEdges = [];
+    
+    grapheIsPanning = true;
+    graphePanStartX = x;
+    graphePanStartY = y;
+    grapheCanvas.style.cursor = 'grabbing';
+}
+
+function onGrapheMouseMove(e) {
+    const rect = grapheCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    if (grapheDraggingNode) {
+        const wx = (x - grapheOffsetX) / grapheZoom;
+        const wy = (y - grapheOffsetY) / grapheZoom;
+        grapheDraggingNode.x = wx - grapheDragOffsetX;
+        grapheDraggingNode.y = wy - grapheDragOffsetY;
         renderGraphe();
-        showToast('Graphe efface', 'info');
+        return;
+    }
+    
+    if (grapheIsPanning) {
+        grapheOffsetX += x - graphePanStartX;
+        grapheOffsetY += y - graphePanStartY;
+        graphePanStartX = x;
+        graphePanStartY = y;
+        renderGraphe();
+    }
+}
+
+function onGrapheMouseUp() {
+    grapheDraggingNode = null;
+    grapheIsPanning = false;
+    grapheCanvas.style.cursor = 'default';
+}
+
+function onGrapheWheel(e) {
+    e.preventDefault();
+    const rect = grapheCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.max(0.3, Math.min(3, grapheZoom * delta));
+    const wx = (x - grapheOffsetX) / grapheZoom;
+    const wy = (y - grapheOffsetY) / grapheZoom;
+    grapheZoom = newZoom;
+    grapheOffsetX = x - wx * grapheZoom;
+    grapheOffsetY = y - wy * grapheZoom;
+    renderGraphe();
+}
+
+function showGrapheContextMenu(x, y) {
+    const menu = document.getElementById('grapheContextMenu');
+    if (!menu) return;
+    x = Math.min(x, window.innerWidth - 220);
+    y = Math.min(y, window.innerHeight - 300);
+    menu.style.display = 'block';
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    window.grapheContextNode = window.grapheContextNode || null;
+}
+
+function hideGrapheContextMenu() {
+    const menu = document.getElementById('grapheContextMenu');
+    if (menu) menu.style.display = 'none';
+    window.grapheContextNode = null;
+}
+
+// Menu contextuel actions
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('grapheContextMenu');
+    if (menu && menu.style.display === 'block') {
+        if (!menu.contains(e.target)) {
+            hideGrapheContextMenu();
+        }
+    }
+});
+
+document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const action = this.dataset.action;
+        const nodeId = window.grapheContextNode?.id;
+        if (!nodeId) return;
+        const node = window.grapheNodes.find(n => n.id === nodeId);
+        if (!node) return;
+        hideGrapheContextMenu();
+        
+        switch(action) {
+            case 'edit':
+                showModal('Modifier', `
+                    <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}"></div>
+                    <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}"></div>
+                `, 'Sauvegarder', () => {
+                    node.label = document.getElementById('editNodeName').value.trim() || 'Personne';
+                    node.role = document.getElementById('editNodeRole').value.trim();
+                    renderGraphe();
+                    showToast('Modifie !', 'success');
+                });
+                break;
+            case 'color':
+                const colors = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
+                const colorHtml = colors.map(c => `
+                    <button onclick="changeGrapheColor(${node.id}, '${c}')" style="width:30px;height:30px;border-radius:50%;border:2px solid ${c === node.color ? '#fff' : 'transparent'};background:${c};cursor:pointer;margin:3px;"></button>
+                `).join('');
+                showModal('Choisir une couleur', `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:8px 0;">${colorHtml}</div>`, 'Fermer', closeModal);
+                break;
+            case 'role':
+                showModal('Fonction', `
+                    <div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}"></div>
+                `, 'Appliquer', () => {
+                    node.role = document.getElementById('editRoleInput').value.trim();
+                    renderGraphe();
+                    showToast('Fonction mise a jour !', 'success');
+                });
+                break;
+            case 'link':
+                grapheLinkMode = true;
+                grapheLinkFrom = node.id;
+                const btn = document.getElementById('grapheAttacher');
+                if (btn) {
+                    btn.style.background = 'rgba(255,255,255,0.15)';
+                    btn.style.borderColor = '#ffffff';
+                    btn.style.color = '#ffffff';
+                }
+                showToast('Cliquez sur une personne pour l attacher', 'info');
+                break;
+            case 'detach':
+                const toRemove = window.grapheEdges.filter(e => e.from === node.id || e.to === node.id);
+                toRemove.forEach(e => { window.grapheEdges = window.grapheEdges.filter(ed => ed.id !== e.id); });
+                renderGraphe();
+                showToast('Personne detachee', 'info');
+                break;
+            case 'delete':
+                showModal('Confirmation', `<p style="color:var(--text-secondary);">Supprimer "<strong style="color:#fff;">${node.label}</strong>" du graphe ?</p>`, 'Supprimer', () => {
+                    window.grapheNodes = window.grapheNodes.filter(n => n.id !== node.id);
+                    window.grapheEdges = window.grapheEdges.filter(e => e.from !== node.id && e.to !== node.id);
+                    renderGraphe();
+                    showToast('Personne supprimee', 'info');
+                });
+                break;
+            case 'fiche':
+                showModal('Fiche de ' + node.label, `
+                    <div style="font-size:13px;color:var(--text-secondary);">
+                        ${node.prenom ? `<div><strong>Prenom</strong> ${node.prenom}</div>` : ''}
+                        ${node.nom_famille ? `<div><strong>Nom</strong> ${node.nom_famille}</div>` : ''}
+                        ${node.role ? `<div><strong>Role</strong> ${node.role}</div>` : ''}
+                        ${node.email ? `<div><strong>Email</strong> ${node.email}</div>` : ''}
+                        ${node.telephone ? `<div><strong>Telephone</strong> ${formatPhone(node.telephone)}</div>` : ''}
+                        ${node.adresse ? `<div><strong>Adresse</strong> ${node.adresse}</div>` : ''}
+                    </div>
+                `, 'Fermer', closeModal);
+                break;
+        }
     });
 });
 
-// ============ MODAL GRAPHES ============
-async function showGraphesModal() {
-    const modal = document.getElementById('graphesModal');
-    const list = document.getElementById('graphesList');
-    if (!modal || !list) return;
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Chargement...</div>';
-    modal.style.display = 'flex';
-    try {
-        const response = await fetch(`${API_URL}/api/graphes/all`, { headers: { 'Authorization': `Bearer ${token}` } });
-        let graphes = [];
-        if (response.ok) { const data = await response.json(); graphes = data.graphes || []; }
-        const saved = localStorage.getItem('marauder_graphe');
-        if (saved) {
-            try { const data = JSON.parse(saved); graphes.push({ id: 'local', name: 'Graphe local', nodes: data.nodes || [], edges: data.edges || [], created_at: new Date().toISOString(), isLocal: true }); } catch (e) {}
-        }
-        if (graphes.length === 0) {
-            list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegarde</div>';
+function changeGrapheColor(nodeId, color) {
+    const node = window.grapheNodes.find(n => n.id === nodeId);
+    if (node) {
+        node.color = color;
+        closeModal();
+        renderGraphe();
+        showToast('Couleur changee !', 'success');
+    }
+}
+
+function addPersonToGrapheWithFamily(personData) {
+    if (!personData) {
+        showToast('Personne introuvable', 'error');
+        return;
+    }
+    
+    const name = `${personData.prenom || ''} ${personData.nom_famille || 'Inconnu'}`.trim();
+    const container = document.getElementById('grapheContainer');
+    const rect = container.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    
+    const mainNode = {
+        id: Date.now(),
+        label: name,
+        prenom: personData.prenom || '',
+        nom_famille: personData.nom_famille || '',
+        role: '',
+        email: personData.email || '',
+        telephone: personData.telephone || '',
+        adresse: personData.adresse || '',
+        x: cx + (Math.random() - 0.5) * 50,
+        y: cy + (Math.random() - 0.5) * 50,
+        radius: 28,
+        color: '#ffffff',
+        isMain: true
+    };
+    
+    window.grapheNodes.push(mainNode);
+    
+    const famille = personData.famille || [];
+    const colors = ['#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
+    if (famille.length > 0) {
+        const angleStep = (Math.PI * 2) / famille.length;
+        famille.forEach((member, index) => {
+            const angle = index * angleStep - Math.PI / 2;
+            const radius = 180 + Math.random() * 40;
+            const memberName = `${member.prenom || ''} ${member.nom_famille || 'Inconnu'}`.trim();
+            
+            const memberNode = {
+                id: Date.now() + index + 1,
+                label: memberName,
+                prenom: member.prenom || '',
+                nom_famille: member.nom_famille || '',
+                role: member.lien || 'Famille',
+                email: member.email || '',
+                telephone: member.telephone || '',
+                adresse: member.adresse || '',
+                x: mainNode.x + Math.cos(angle) * radius,
+                y: mainNode.y + Math.sin(angle) * radius,
+                radius: 24,
+                color: colors[index % colors.length],
+                isMain: false
+            };
+            
+            window.grapheNodes.push(memberNode);
+            window.grapheEdges.push({
+                id: Date.now() + index + 100,
+                from: mainNode.id,
+                to: memberNode.id,
+                label: member.lien || 'Famille'
+            });
+        });
+    }
+    
+    renderGraphe();
+    showToast(`"${name}" et sa famille ajoutes au graphe !`, 'success');
+}
+
+// ============ GRAPHE BOUTONS ============
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajouter une personne
+    document.getElementById('grapheAddPersonne')?.addEventListener('click', function() {
+        const container = document.getElementById('grapheContainer');
+        const rect = container.getBoundingClientRect();
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+        const newNode = {
+            id: Date.now(),
+            label: 'Personne ' + (window.grapheNodes.length + 1),
+            x: cx + (Math.random() - 0.5) * 100,
+            y: cy + (Math.random() - 0.5) * 100,
+            radius: 24,
+            color: '#ffffff'
+        };
+        window.grapheNodes.push(newNode);
+        renderGraphe();
+        showToast('Personne ajoutee !', 'success');
+    });
+
+    // Attacher
+    document.getElementById('grapheAttacher')?.addEventListener('click', function() {
+        if (window.grapheNodes.length < 2) {
+            showToast('Ajoutez au moins 2 personnes', 'warning');
             return;
         }
-        list.innerHTML = graphes.map((g, i) => {
-            const isLocalIcon = g.isLocal ? '<span style="color:#6b6b6b;font-size:14px;">📁</span>' : '';
-            return `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#111;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;">
-                <div>
-                    <div style="font-weight:600;color:#fff;">${g.name || 'Sans nom'} ${isLocalIcon}</div>
-                    <div style="font-size:12px;color:#6b6b6b;">${g.nodes?.length || 0} personnes · ${new Date(g.created_at).toLocaleDateString()}</div>
+        if (grapheLinkMode) {
+            grapheLinkMode = false;
+            grapheLinkFrom = null;
+            this.style.background = 'rgba(255,255,255,0.05)';
+            this.style.borderColor = '#2a2a2a';
+            this.style.color = '#a0a0a0';
+            showToast('Mode attacher desactive', 'info');
+            return;
+        }
+        grapheLinkMode = true;
+        grapheLinkFrom = null;
+        this.style.background = 'rgba(255,255,255,0.15)';
+        this.style.borderColor = '#ffffff';
+        this.style.color = '#ffffff';
+        showToast('Cliquez sur une personne source, puis sur la destination', 'info');
+    });
+
+    // Sauvegarder
+    document.getElementById('grapheSauvegarder')?.addEventListener('click', function() {
+        try {
+            localStorage.setItem('marauder_graphe', JSON.stringify({
+                nodes: window.grapheNodes,
+                edges: window.grapheEdges
+            }));
+            showToast('Graphe sauvegarde (local)', 'success');
+        } catch (e) {
+            showToast('Erreur de sauvegarde', 'error');
+        }
+    });
+
+    // Mes graphes
+    document.getElementById('grapheMesGraphes')?.addEventListener('click', function() {
+        const saved = localStorage.getItem('marauder_graphe');
+        if (!saved) {
+            showToast('Aucun graphe sauvegarde', 'warning');
+            return;
+        }
+        try {
+            const data = JSON.parse(saved);
+            window.grapheNodes = data.nodes || [];
+            window.grapheEdges = data.edges || [];
+            renderGraphe();
+            showToast('Graphe charge !', 'success');
+        } catch (e) {
+            showToast('Erreur de chargement', 'error');
+        }
+    });
+
+    // Effacer
+    document.getElementById('grapheEffacer')?.addEventListener('click', function() {
+        if (window.grapheNodes.length === 0) {
+            showToast('Deja vide', 'info');
+            return;
+        }
+        showModal('Confirmation', '<p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>', 'Effacer', () => {
+            window.grapheNodes = [];
+            window.grapheEdges = [];
+            renderGraphe();
+            showToast('Graphe efface', 'info');
+        });
+    });
+});
+
+// Exposer les fonctions
+window.initGraphe = initGraphe;
+window.renderGraphe = renderGraphe;
+window.addPersonToGrapheWithFamily = addPersonToGrapheWithFamily;
+window.changeGrapheColor = changeGrapheColor;
+
+// ============================================
+// TICKETS
+// ============================================
+
+function openCreateTicket() {
+    showModal('Nouveau ticket', `
+        <div class="form-group">
+            <label>Sujet</label>
+            <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+        </div>
+    `, 'Envoyer', async function() {
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        
+        if (!subject || !message) {
+            showToast('Veuillez remplir tous les champs', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch(API_URL + '/api/tickets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ subject, message })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                showToast('Ticket cree !', 'success');
+                loadTickets();
+                closeModal();
+            } else {
+                showToast(data.error || 'Erreur', 'error');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            showToast('Erreur reseau', 'error');
+        }
+    });
+}
+
+async function loadTickets() {
+    const container = document.getElementById('ticketsList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+    try {
+        const response = await fetch(API_URL + '/api/tickets', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await response.json();
+        const tickets = data.tickets || [];
+
+        if (tickets.length === 0) {
+            container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
+            return;
+        }
+
+        container.innerHTML = tickets.map(ticket => `
+            <div class="ticket-item" onclick="viewTicket(${ticket.id})">
+                <div class="ticket-header">
+                    <span class="ticket-subject">${ticket.subject}</span>
+                    <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
                 </div>
-                <div style="display:flex;gap:6px;">
-                    <button onclick="loadGrapheFromList(${i}, ${!!g.isLocal})" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#a0a0a0;cursor:pointer;">Charger</button>
-                    ${!g.isLocal ? `<button onclick="deleteGrapheFromList(${g.id})" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#ef4444;cursor:pointer;">Supprimer</button>` : ''}
-                </div>
+                <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${(ticket.message || '').substring(0, 100)}</div>
             </div>
-        `}).join('');
+        `).join('');
     } catch (error) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">Erreur de chargement</div>';
+        container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
     }
 }
 
-document.getElementById('closeGraphesModal')?.addEventListener('click', () => {
-    document.getElementById('graphesModal').style.display = 'none';
-});
-
-async function loadGrapheFromList(index, isLocal) {
+async function viewTicket(ticketId) {
     try {
-        let data;
-        if (isLocal) {
-            const saved = localStorage.getItem('marauder_graphe');
-            if (saved) data = JSON.parse(saved);
-        } else {
-            const response = await fetch(`${API_URL}/api/graphes/all`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const result = await response.json();
-            if (result.graphes && result.graphes[index]) data = result.graphes[index];
-        }
-        if (data) {
-            if (window.grapheNodes) window.grapheNodes = data.nodes || [];
-            if (window.grapheEdges) window.grapheEdges = data.edges || [];
-            document.getElementById('graphesModal').style.display = 'none';
-            if (typeof window.renderGraphe === 'function') window.renderGraphe();
-            showToast('Graphe charge !', 'success');
-        }
-    } catch (error) { showToast('Erreur de chargement', 'error'); }
+        const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await response.json();
+        const ticket = data.ticket;
+        const messages = data.messages || [];
+
+        let messagesHtml = messages.map(m => `
+            <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
+                <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
+                <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
+            </div>
+        `).join('');
+
+        showModal(ticket.subject, `
+            <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
+            <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
+            ${ticket.status !== 'closed' ? `
+                <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
+                    <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;font-family:Arial;outline:none;">
+                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
+                </div>
+            ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
+        `, 'Fermer', closeModal);
+
+    } catch (error) {
+        showToast('Erreur de chargement', 'error');
+    }
 }
 
-async function deleteGrapheFromList(grapheId) {
-    showModal('Confirmation', '<p style="color:var(--text-secondary);">Supprimer ce graphe ?</p>', 'Supprimer', async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                showToast('Graphe supprime !', 'success');
-                showGraphesModal();
-            }
-        } catch (error) { showToast('Erreur', 'error'); }
-    });
+async function replyTicket(ticketId) {
+    const input = document.getElementById('ticketReplyInput');
+    if (!input) return;
+    const message = input.value.trim();
+    if (!message) {
+        showToast('Veuillez entrer un message', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ message })
+        });
+        if (response.ok) {
+            showToast('Message envoye !', 'success');
+            viewTicket(ticketId);
+            loadTickets();
+        }
+    } catch (error) {
+        showToast('Erreur', 'error');
+    }
 }
+
+// ============ ATTACHER LE BOUTON TICKET ============
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('openTicketBtn');
+    if (btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openCreateTicket();
+        });
+        console.log('✅ Bouton ticket attache');
+    }
+});
 
 // ============ SUPPORT TOGGLE ============
 document.addEventListener('DOMContentLoaded', function() {
@@ -1754,206 +2299,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ============================================
-// TICKETS - SOLUTION FINALE SANS ALERTE
-// ============================================
-
-console.log('🔵 CHARGEMENT TICKETS');
-
-// Fonction pour ouvrir le modal - SANS ALERTE
-function openCreateTicket() {
-    console.log('🔵 openCreateTicket appelee');
-    
-    showModal('Nouveau ticket', `
-        <div class="form-group">
-            <label>Sujet</label>
-            <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
-        </div>
-        <div class="form-group">
-            <label>Message</label>
-            <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
-        </div>
-    `, 'Envoyer', async function() {
-        const subject = document.getElementById('ticketSubject').value.trim();
-        const message = document.getElementById('ticketMessage').value.trim();
-        
-        if (!subject || !message) {
-            showToast('Veuillez remplir tous les champs', 'warning');
-            return;
-        }
-        
-        try {
-            const response = await fetch(API_URL + '/api/tickets', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ subject, message })
-            });
-            
-            const data = await response.json();
-            console.log('🔵 Reponse creation:', data);
-            
-            if (response.ok && data.success) {
-                showToast('Ticket cree !', 'success');
-                loadTickets();
-                closeModal();
-            } else {
-                showToast(data.error || 'Erreur lors de la creation', 'error');
-            }
-        } catch (error) {
-            console.error('❌ Erreur creation:', error);
-            showToast('Erreur reseau', 'error');
-        }
-    });
-}
-
-// Fonction pour charger les tickets
-async function loadTickets() {
-    console.log('🔵 loadTickets');
-    const container = document.getElementById('ticketsList');
-    if (!container) {
-        console.error('❌ ticketsList non trouve');
-        return;
-    }
-    
-    container.innerHTML = '<div class="empty-state">Chargement...</div>';
-
-    try {
-        const response = await fetch(API_URL + '/api/tickets', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        const data = await response.json();
-        const tickets = data.tickets || [];
-
-        if (tickets.length === 0) {
-            container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
-            return;
-        }
-
-        container.innerHTML = tickets.map(ticket => `
-            <div class="ticket-item" onclick="viewTicket(${ticket.id})">
-                <div class="ticket-header">
-                    <span class="ticket-subject">${ticket.subject}</span>
-                    <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
-                </div>
-                <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${(ticket.message || '').substring(0, 100)}</div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('❌ Erreur loadTickets:', error);
-        container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
-    }
-}
-
-// Fonction pour voir un ticket
-async function viewTicket(ticketId) {
-    console.log('🔵 viewTicket:', ticketId);
-    try {
-        const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await response.json();
-        const ticket = data.ticket;
-        const messages = data.messages || [];
-
-        let messagesHtml = messages.map(m => `
-            <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
-                <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
-                <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
-            </div>
-        `).join('');
-
-        showModal(ticket.subject, `
-            <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
-            <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
-            ${ticket.status !== 'closed' ? `
-                <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
-                    <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;font-family:Arial;outline:none;">
-                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
-                </div>
-            ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
-        `, 'Fermer', closeModal);
-
-    } catch (error) {
-        console.error('❌ viewTicket error:', error);
-        showToast('Erreur de chargement', 'error');
-    }
-}
-
-// Fonction pour repondre
-async function replyTicket(ticketId) {
-    const input = document.getElementById('ticketReplyInput');
-    if (!input) return;
-    const message = input.value.trim();
-    if (!message) {
-        showToast('Veuillez entrer un message', 'warning');
-        return;
-    }
-
-    try {
-        const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ message })
-        });
-        if (response.ok) {
-            showToast('Message envoye !', 'success');
-            viewTicket(ticketId);
-            loadTickets();
-        } else {
-            const data = await response.json();
-            showToast(data.error || 'Erreur', 'error');
-        }
-    } catch (error) {
-        console.error('❌ replyTicket error:', error);
-        showToast('Erreur reseau', 'error');
-    }
-}
-
-// Attacher le bouton - SANS ALERTE
-function attachButton() {
-    const btn = document.getElementById('openTicketBtn');
-    console.log('🔵 openTicketBtn:', btn);
-    
-    if (btn) {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🔵 CLIC NOUVEAU TICKET');
-            openCreateTicket();
-        });
-        console.log('✅ Bouton ticket attache');
-        return true;
-    }
-    return false;
-}
-
-// Essayer plusieurs fois
-if (!attachButton()) {
-    setTimeout(attachButton, 300);
-    setTimeout(attachButton, 600);
-    setTimeout(attachButton, 1000);
-}
-
-// Charger les tickets au demarrage
-setTimeout(function() {
-    if (document.getElementById('page-tickets')) {
-        console.log('🔵 Chargement tickets...');
-        loadTickets();
-    }
-}, 500);
-
-console.log('✅ Tickets prets');
-
 // ============ MOBILE MENU ============
 document.addEventListener('DOMContentLoaded', function() {
     const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -1979,5 +2324,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============ INIT ============
 verifyToken();
 loadProfile();
+initGraphe();
 
 console.log('✅ Dashboard charge');
