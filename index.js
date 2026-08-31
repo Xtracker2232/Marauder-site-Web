@@ -59,7 +59,6 @@ const initDB = async () => {
         client = await pool.connect();
         console.log('✅ Connexion DB établie');
 
-        // Table users
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -72,7 +71,6 @@ const initDB = async () => {
             )
         `);
 
-        // Table search_history
         await client.query(`
             CREATE TABLE IF NOT EXISTS search_history (
                 id SERIAL PRIMARY KEY,
@@ -83,7 +81,6 @@ const initDB = async () => {
             )
         `);
 
-        // Table fiches
         await client.query(`
             CREATE TABLE IF NOT EXISTS fiches (
                 id SERIAL PRIMARY KEY,
@@ -95,7 +92,6 @@ const initDB = async () => {
             )
         `);
 
-        // Table graphes
         await client.query(`
             CREATE TABLE IF NOT EXISTS graphes (
                 id SERIAL PRIMARY KEY,
@@ -108,7 +104,6 @@ const initDB = async () => {
             )
         `);
 
-        // Indexes
         await client.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_fiches_user_id ON fiches(user_id)`);
@@ -116,7 +111,6 @@ const initDB = async () => {
 
         console.log('✅ Tables créées/vérifiées avec succès');
 
-        // Créer le compte admin
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
 
         if (parseInt(result.rows[0].count) === 0) {
@@ -139,7 +133,6 @@ const initDB = async () => {
     }
 };
 
-// Initialiser la DB
 let dbReady = false;
 pool.connect(async (err, client, release) => {
     if (err) {
@@ -420,7 +413,6 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
 
 // ============ ROUTES FICHES ============
 
-// Récupérer toutes les fiches
 app.get('/api/fiches', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
@@ -434,7 +426,6 @@ app.get('/api/fiches', authenticateToken, async (req, res) => {
     }
 });
 
-// Créer une fiche
 app.post('/api/fiches', authenticateToken, async (req, res) => {
     const { name } = req.body;
 
@@ -454,7 +445,6 @@ app.post('/api/fiches', authenticateToken, async (req, res) => {
     }
 });
 
-// Modifier une fiche
 app.put('/api/fiches/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { name } = req.body;
@@ -478,7 +468,6 @@ app.put('/api/fiches/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Ajouter une personne à une fiche
 app.post('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { person } = req.body;
@@ -528,7 +517,6 @@ app.post('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
     }
 });
 
-// Supprimer une personne d'une fiche
 app.delete('/api/fiches/:id/persons/:personId', authenticateToken, async (req, res) => {
     const { id, personId } = req.params;
 
@@ -564,7 +552,6 @@ app.delete('/api/fiches/:id/persons/:personId', authenticateToken, async (req, r
     }
 });
 
-// Supprimer une fiche
 app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
 
@@ -583,7 +570,6 @@ app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Récupérer les personnes d'une fiche
 app.get('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
     const { id } = req.params;
 
@@ -609,9 +595,11 @@ app.get('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
 
 // Sauvegarder un graphe
 app.post('/api/graphes', authenticateToken, async (req, res) => {
+    console.log('📝 Sauvegarde graphe - user:', req.user.id);
     const { name, nodes, edges } = req.body;
 
     try {
+        // Supprimer l'ancien graphe de l'utilisateur
         await pool.query(
             'DELETE FROM graphes WHERE user_id = $1',
             [req.user.id]
@@ -621,6 +609,7 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
             'INSERT INTO graphes (user_id, name, nodes, edges) VALUES ($1, $2, $3, $4) RETURNING *',
             [req.user.id, name || 'Mon graphe', JSON.stringify(nodes || []), JSON.stringify(edges || [])]
         );
+        console.log('✅ Graphe sauvegardé, id:', result.rows[0].id);
         res.status(201).json({ graphe: result.rows[0] });
     } catch (error) {
         console.error('❌ Erreur sauvegarde graphe:', error);
@@ -630,6 +619,7 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
 
 // Récupérer le dernier graphe d'un utilisateur
 app.get('/api/graphes', authenticateToken, async (req, res) => {
+    console.log('📝 Récupération graphe - user:', req.user.id);
     try {
         const result = await pool.query(
             'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
@@ -647,11 +637,13 @@ app.get('/api/graphes', authenticateToken, async (req, res) => {
 
 // Récupérer TOUS les graphes sauvegardés
 app.get('/api/graphes/all', authenticateToken, async (req, res) => {
+    console.log('📝 Récupération tous les graphes - user:', req.user.id);
     try {
         const result = await pool.query(
             'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC',
             [req.user.id]
         );
+        console.log('📊 Nombre de graphes trouvés:', result.rows.length);
         res.json({ graphes: result.rows });
     } catch (error) {
         console.error('❌ Erreur récupération graphes:', error);
@@ -662,6 +654,7 @@ app.get('/api/graphes/all', authenticateToken, async (req, res) => {
 // Charger un graphe spécifique
 app.get('/api/graphes/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
+    console.log('📝 Chargement graphe id:', id, '- user:', req.user.id);
     try {
         const result = await pool.query(
             'SELECT * FROM graphes WHERE id = $1 AND user_id = $2',
@@ -680,6 +673,7 @@ app.get('/api/graphes/:id', authenticateToken, async (req, res) => {
 // Supprimer un graphe
 app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
+    console.log('📝 Suppression graphe id:', id, '- user:', req.user.id);
     try {
         const result = await pool.query(
             'DELETE FROM graphes WHERE id = $1 AND user_id = $2 RETURNING *',
