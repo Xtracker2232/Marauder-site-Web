@@ -132,11 +132,17 @@ async function verifyToken() {
 }
 
 // ============ NAVIGATION ============
-document.querySelectorAll('.sidebar-nav li').forEach(item => {
+document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
     item.addEventListener('click', function() {
-        document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-        this.classList.add('active');
         const page = this.dataset.page;
+        
+        if (page === 'discord') {
+            window.open('https://discord.gg/ton-invite', '_blank');
+            return;
+        }
+        
+        document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+        this.classList.add('active');
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const target = document.getElementById(`page-${page}`);
         if (target) target.classList.add('active');
@@ -150,6 +156,18 @@ document.querySelectorAll('.sidebar-nav li').forEach(item => {
             }
         }
     });
+});
+
+// ============ SUPPORT TOGGLE ============
+document.getElementById('supportToggle')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const submenu = document.getElementById('supportSubmenu');
+    const arrow = this.querySelector('.support-arrow');
+    if (submenu) {
+        const isOpen = submenu.style.display === 'block';
+        submenu.style.display = isOpen ? 'none' : 'block';
+        if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
 });
 
 // ============ LOGOUT ============
@@ -261,7 +279,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         const data = await response.json();
         let results = data.data?.results || [];
 
-        // Pagination auto (max 5 pages)
         const total = data.meta?.total || 0;
         const perPage = query.per_page || 100;
         const totalPages = Math.ceil(total / perPage);
@@ -285,7 +302,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             }
         }
 
-        // Déduplication
         const uniqueResults = [];
         const seen = new Set();
         results.forEach(p => {
@@ -297,7 +313,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // PIVOT FAMILLE
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
@@ -529,7 +544,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // PIVOT FAMILLE
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
@@ -1301,7 +1315,7 @@ async function replaySearch(searchId) {
             if (data.results && data.results.length > 0) {
                 const container = document.getElementById('searchResults');
                 if (container) displayResults(container, data.results);
-                document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+                document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
                 const searchLi = document.querySelector('[data-page="search"]');
                 if (searchLi) searchLi.classList.add('active');
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1596,16 +1610,16 @@ async function loadTickets() {
             container.innerHTML = `
                 <div class="empty-state">
                     <p>Aucun ticket</p>
-                    <p style="font-size:13px;color:var(--text-muted);">Créez un ticket pour contacter le support</p>
+                    <p style="font-size:13px;color:var(--text-muted);">Creez un ticket pour contacter le support</p>
                 </div>
             `;
             return;
         }
 
         container.innerHTML = tickets.map(ticket => {
-            const statusText = ticket.status === 'open' ? '🟢 Ouvert' : 
-                               ticket.status === 'in_progress' ? '🟡 En cours' : 
-                               '🔴 Fermé';
+            const statusText = ticket.status === 'open' ? 'Ouvert' : 
+                               ticket.status === 'in_progress' ? 'En cours' : 
+                               'Ferme';
             const date = new Date(ticket.created_at).toLocaleString('fr-FR');
             const hasUnread = ticket.status === 'open' || ticket.status === 'in_progress';
             return `
@@ -1616,8 +1630,8 @@ async function loadTickets() {
                             <span style="font-size:12px;color:var(--text-muted);margin-left:12px;">${date}</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;">
-                            <span style="font-size:12px;color:var(--text-muted);">${ticket.status}</span>
-                            <span style="font-size:12px;color:var(--text-muted);">💬 ${ticket.message?.length || 0} caractères</span>
+                            <span style="font-size:12px;color:var(--text-muted);">${statusText}</span>
+                            <span style="font-size:12px;color:var(--text-muted);">${ticket.message?.length || 0} caracteres</span>
                             ${hasUnread ? '<span style="font-size:10px;color:var(--warning);">● Nouveau</span>' : ''}
                         </div>
                     </div>
@@ -1633,16 +1647,15 @@ async function loadTickets() {
     }
 }
 
-// ============ OUVRIR UN TICKET ============
 document.getElementById('openTicketBtn')?.addEventListener('click', () => {
     showModal('Nouveau ticket', `
         <div class="form-group">
             <label>Sujet</label>
-            <input type="text" id="ticketSubject" placeholder="Résumé de votre problème" class="search-input">
+            <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" class="search-input">
         </div>
         <div class="form-group">
             <label>Message</label>
-            <textarea id="ticketMessage" rows="5" placeholder="Décrivez votre problème en détail..." style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
+            <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme en detail..." style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
         </div>
     `, 'Envoyer', async () => {
         const subject = document.getElementById('ticketSubject')?.value?.trim();
@@ -1661,19 +1674,18 @@ document.getElementById('openTicketBtn')?.addEventListener('click', () => {
                 body: JSON.stringify({ subject, message })
             });
             if (response.ok) {
-                showToast('Ticket créé !', 'success');
+                showToast('Ticket cree !', 'success');
                 loadTickets();
             } else {
                 const data = await response.json();
                 showToast(data.error || 'Erreur', 'error');
             }
         } catch (error) {
-            showToast('Erreur réseau', 'error');
+            showToast('Erreur reseau', 'error');
         }
     });
 });
 
-// ============ VOIR UN TICKET ============
 async function viewTicket(ticketId) {
     try {
         const response = await fetch(`${API_URL}/api/tickets/${ticketId}`, {
@@ -1697,19 +1709,19 @@ async function viewTicket(ticketId) {
             messagesHtml = '<div style="color:var(--text-muted);font-size:13px;">Aucun message</div>';
         }
 
-        showModal(`🎫 ${ticket.subject}`, `
+        showModal(`${ticket.subject}`, `
             <div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">
-                Status: ${ticket.status} · Créé le ${new Date(ticket.created_at).toLocaleString()}
+                Statut: ${ticket.status} · Cree le ${new Date(ticket.created_at).toLocaleString()}
             </div>
             <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">
                 ${messagesHtml}
             </div>
             ${ticket.status !== 'closed' ? `
                 <div style="display:flex;gap:10px;border-top:1px solid var(--border-color);padding-top:12px;">
-                    <input type="text" id="ticketReplyInput" placeholder="Votre réponse..." style="flex:1;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:'Inter',sans-serif;outline:none;">
-                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Répondre</button>
+                    <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:'Inter',sans-serif;outline:none;">
+                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
                 </div>
-            ` : '<div style="color:var(--text-muted);font-size:13px;border-top:1px solid var(--border-color);padding-top:12px;">Ce ticket est fermé</div>'}
+            ` : '<div style="color:var(--text-muted);font-size:13px;border-top:1px solid var(--border-color);padding-top:12px;">Ce ticket est ferme</div>'}
         `, 'Fermer', closeModal);
 
     } catch (error) {
@@ -1717,7 +1729,6 @@ async function viewTicket(ticketId) {
     }
 }
 
-// ============ RÉPONDRE À UN TICKET ============
 async function replyTicket(ticketId) {
     const input = document.getElementById('ticketReplyInput');
     if (!input) return;
@@ -1734,7 +1745,7 @@ async function replyTicket(ticketId) {
             body: JSON.stringify({ message })
         });
         if (response.ok) {
-            showToast('Message envoyé !', 'success');
+            showToast('Message envoye !', 'success');
             viewTicket(ticketId);
             loadTickets();
         } else {
@@ -1742,7 +1753,7 @@ async function replyTicket(ticketId) {
             showToast(data.error || 'Erreur', 'error');
         }
     } catch (error) {
-        showToast('Erreur réseau', 'error');
+        showToast('Erreur reseau', 'error');
     }
 }
 

@@ -46,19 +46,19 @@ async function checkAdmin() {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!response.ok) {
-            showToast('Accès refusé - Admin requis', 'error');
+            showToast('Acces refuse - Admin requis', 'error');
             window.location.href = '/dashboard.html';
             return false;
         }
         var data = await response.json();
         if (!data.isAdmin) {
-            showToast('Accès refusé - Admin requis', 'error');
+            showToast('Acces refuse - Admin requis', 'error');
             window.location.href = '/dashboard.html';
             return false;
         }
         return true;
     } catch (error) {
-        showToast('Erreur de vérification', 'error');
+        showToast('Erreur de verification', 'error');
         window.location.href = '/dashboard.html';
         return false;
     }
@@ -145,16 +145,16 @@ async function loadUsers(page, search) {
                     '<td><div class="admin-actions">';
                 if (!isAdmin) {
                     html += '<button class="primary" onclick="viewUser(' + u.id + ')">Voir</button>';
-                    html += '<button class="' + (u.banned ? 'success' : 'danger') + '" onclick="toggleBan(' + u.id + ', ' + (!u.banned) + ')">' + (u.banned ? 'Débannir' : 'Bannir') + '</button>';
+                    html += '<button class="' + (u.banned ? 'success' : 'danger') + '" onclick="toggleBan(' + u.id + ', ' + (!u.banned) + ')">' + (u.banned ? 'Debannir' : 'Bannir') + '</button>';
                     html += '<button class="danger" onclick="deleteUser(' + u.id + ')">Supprimer</button>';
                 } else {
-                    html += '<span style="color:var(--text-muted);font-size:11px;">🔒 Protégé</span>';
+                    html += '<span style="color:var(--text-muted);font-size:11px;">Protege</span>';
                 }
                 html += '</div></td></tr>';
             });
             tbody.innerHTML = html;
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Aucun utilisateur trouvé</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Aucun utilisateur trouve</td></tr>';
         }
         updatePagination('users', page, usersTotal);
     } catch (error) {
@@ -206,23 +206,23 @@ async function viewUser(userId) {
         var isProtected = user.username === 'Admin';
         var html = '<div class="user-detail-modal"><div class="info-grid">' +
             '<div class="info-item"><span class="label">Nom d\'utilisateur</span><span class="value highlight">' + user.username + '</span></div>' +
-            '<div class="info-item"><span class="label">Rôle</span><span class="value">' + user.role + '</span></div>' +
+            '<div class="info-item"><span class="label">Role</span><span class="value">' + user.role + '</span></div>' +
             '<div class="info-item"><span class="label">Status</span><span class="value' + (user.banned ? ' style=color:var(--danger);' : '') + '">' + (user.banned ? 'Banni' : 'Actif') + '</span></div>' +
             '<div class="info-item"><span class="label">IP d\'inscription</span><span class="value">' + (user.reg_ip || '-') + '</span></div>' +
             '<div class="info-item"><span class="label">Nombre de recherches</span><span class="value">' + (user.search_count || 0) + '</span></div>' +
             '<div class="info-item"><span class="label">Nombre de fiches</span><span class="value">' + (user.fiche_count || 0) + '</span></div>' +
             '<div class="info-item"><span class="label">Membre depuis</span><span class="value">' + new Date(user.created_at).toLocaleDateString() + '</span></div>' +
-            '<div class="info-item"><span class="label">Dernière connexion</span><span class="value">' + (user.last_login ? new Date(user.last_login).toLocaleString() : 'Jamais') + '</span></div>' +
+            '<div class="info-item"><span class="label">Derniere connexion</span><span class="value">' + (user.last_login ? new Date(user.last_login).toLocaleString() : 'Jamais') + '</span></div>' +
             '</div>';
         if (ips.length > 0) {
-            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">IPs liées (' + ips.length + ')</div>';
+            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">IPs liees (' + ips.length + ')</div>';
             ips.forEach(function(ip) {
                 html += '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.03);"><span>' + ip.ip + '</span><span style="font-size:11px;color:var(--text-muted);">' + new Date(ip.created_at).toLocaleDateString() + '</span></div>';
             });
             html += '</div>';
         }
         if (searches.length > 0) {
-            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">Dernières recherches</div>';
+            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">Dernieres recherches</div>';
             searches.forEach(function(s) {
                 var criteria = Object.entries(s.query || {}).filter(function(kv) { return !['flexible','per_page','page'].includes(kv[0]); });
                 html += '<div style="font-size:13px;color:var(--text-secondary);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);"><span>' + (criteria.map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(' · ') || 'Recherche') + '</span><span style="font-size:11px;color:var(--text-muted);float:right;">' + new Date(s.created_at).toLocaleString() + '</span></div>';
@@ -230,15 +230,15 @@ async function viewUser(userId) {
             html += '</div>';
         }
         if (isProtected) {
-            html += '<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:var(--warning);font-size:13px;text-align:center;">🔒 Ce compte admin est protégé</div>';
+            html += '<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:var(--warning);font-size:13px;text-align:center;">Ce compte admin est protege</div>';
         }
         html += '<div class="modal-actions" style="margin-top:16px;">';
         if (!isProtected) {
-            html += '<button class="btn-primary" onclick="closeModal();toggleBan(' + user.id + ', ' + (!user.banned) + ')">' + (user.banned ? 'Débannir' : 'Bannir') + '</button>';
+            html += '<button class="btn-primary" onclick="closeModal();toggleBan(' + user.id + ', ' + (!user.banned) + ')">' + (user.banned ? 'Debannir' : 'Bannir') + '</button>';
             html += '<button class="btn-secondary" style="color:var(--danger);border-color:rgba(239,68,68,0.3);" onclick="closeModal();deleteUser(' + user.id + ')">Supprimer</button>';
         }
         html += '<button class="btn-secondary" onclick="closeModal()">Fermer</button></div></div>';
-        showModal('Détails utilisateur', html);
+        showModal('Details utilisateur', html);
     } catch (error) {
         showToast('Erreur chargement utilisateur', 'error');
     }
@@ -246,7 +246,7 @@ async function viewUser(userId) {
 
 // ============ TOGGLE BAN ============
 async function toggleBan(userId, banned) {
-    if (!confirm('Confirmer le ' + (banned ? 'bannissement' : 'débannissement') + ' ?')) return;
+    if (!confirm('Confirmer le ' + (banned ? 'bannissement' : 'debannissement') + ' ?')) return;
     try {
         var response = await fetch(API_URL + '/api/admin/users/' + userId + '/ban', {
             method: 'POST',
@@ -257,34 +257,34 @@ async function toggleBan(userId, banned) {
             body: JSON.stringify({ banned: banned })
         });
         if (response.ok) {
-            showToast('Utilisateur ' + (banned ? 'banni' : 'débanni') + ' !', 'success');
+            showToast('Utilisateur ' + (banned ? 'banni' : 'debanni') + ' !', 'success');
             loadUsers(usersPage, usersSearch);
         } else {
             var data = await response.json();
             showToast(data.error || 'Erreur', 'error');
         }
     } catch (error) {
-        showToast('Erreur réseau', 'error');
+        showToast('Erreur reseau', 'error');
     }
 }
 
 // ============ DELETE USER ============
 async function deleteUser(userId) {
-    if (!confirm('Confirmer la suppression de cet utilisateur ? (Cette action est irréversible)')) return;
+    if (!confirm('Confirmer la suppression de cet utilisateur ? (Cette action est irreversible)')) return;
     try {
         var response = await fetch(API_URL + '/api/admin/users/' + userId, {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (response.ok) {
-            showToast('Utilisateur supprimé !', 'success');
+            showToast('Utilisateur supprime !', 'success');
             loadUsers(usersPage, usersSearch);
         } else {
             var data = await response.json();
             showToast(data.error || 'Erreur', 'error');
         }
     } catch (error) {
-        showToast('Erreur réseau', 'error');
+        showToast('Erreur reseau', 'error');
     }
 }
 
@@ -337,7 +337,7 @@ document.getElementById('searchesNextPage').addEventListener('click', function()
 async function loadBlocklist() {
     var tbody = document.getElementById('blocklistTableBody');
     if (!tbody) {
-        console.error('blocklistTableBody non trouvé');
+        console.error('blocklistTableBody non trouve');
         return;
     }
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
@@ -359,7 +359,7 @@ async function loadBlocklist() {
             });
             tbody.innerHTML = html;
         } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune entrée dans la blocklist</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune entree dans la blocklist</td></tr>';
         }
     } catch (error) {
         console.error('Blocklist error:', error);
@@ -385,7 +385,7 @@ document.getElementById('blocklistAddBtn').addEventListener('click', async funct
             body: JSON.stringify({ type: type, value: value, reason: reason })
         });
         if (response.ok) {
-            showToast('Ajouté à la blocklist !', 'success');
+            showToast('Ajoute a la blocklist !', 'success');
             document.getElementById('blocklistValue').value = '';
             document.getElementById('blocklistReason').value = '';
             loadBlocklist();
@@ -393,19 +393,19 @@ document.getElementById('blocklistAddBtn').addEventListener('click', async funct
             showToast('Erreur', 'error');
         }
     } catch (error) {
-        showToast('Erreur réseau', 'error');
+        showToast('Erreur reseau', 'error');
     }
 });
 
 async function deleteBlocklistItem(id) {
-    if (!confirm('Supprimer cette entrée ?')) return;
+    if (!confirm('Supprimer cette entree ?')) return;
     try {
         var response = await fetch(API_URL + '/api/admin/blocklist/' + id, {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (response.ok) {
-            showToast('Supprimé !', 'success');
+            showToast('Supprime !', 'success');
             loadBlocklist();
         }
     } catch (error) {
@@ -431,7 +431,7 @@ async function loadTickets(filter) {
         if (data.tickets && data.tickets.length > 0) {
             var html = '';
             data.tickets.forEach(function(t) {
-                var statusText = t.status === 'open' ? 'Ouvert' : t.status === 'in_progress' ? 'En cours' : 'Fermé';
+                var statusText = t.status === 'open' ? 'Ouvert' : t.status === 'in_progress' ? 'En cours' : 'Ferme';
                 html += '<div class="ticket-item" data-id="' + t.id + '">' +
                     '<div class="ticket-header">' +
                     '<div><span class="ticket-subject">' + t.subject + '</span><span style="font-size:12px;color:var(--text-muted);margin-left:12px;">par ' + (t.user_name || 'Inconnu') + '</span></div>' +
@@ -440,7 +440,7 @@ async function loadTickets(filter) {
                     '<div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + t.message.substring(0, 150) + (t.message.length > 150 ? '...' : '') + '</div>' +
                     '<div class="ticket-detail" id="ticketDetail-' + t.id + '">' +
                     '<div id="ticketMessages-' + t.id + '"></div>' +
-                    '<div class="ticket-reply"><input type="text" id="ticketReplyInput-' + t.id + '" placeholder="Répondre..." /><button onclick="replyTicket(' + t.id + ')">Envoyer</button></div>' +
+                    '<div class="ticket-reply"><input type="text" id="ticketReplyInput-' + t.id + '" placeholder="Repondre..." /><button onclick="replyTicket(' + t.id + ')">Envoyer</button></div>' +
                     '<div style="margin-top:8px;display:flex;gap:8px;">' +
                     '<button onclick="changeTicketStatus(' + t.id + ', \'open\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">Ouvrir</button>' +
                     '<button onclick="changeTicketStatus(' + t.id + ', \'in_progress\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">En cours</button>' +
@@ -516,14 +516,14 @@ async function replyTicket(ticketId) {
         });
         if (response.ok) {
             input.value = '';
-            showToast('Réponse envoyée !', 'success');
+            showToast('Reponse envoyee !', 'success');
             loadTicketMessages(ticketId);
             loadTickets(ticketsFilter);
         } else {
             showToast('Erreur', 'error');
         }
     } catch (error) {
-        showToast('Erreur réseau', 'error');
+        showToast('Erreur reseau', 'error');
     }
 }
 
@@ -538,7 +538,7 @@ async function changeTicketStatus(ticketId, status) {
             body: JSON.stringify({ status: status })
         });
         if (response.ok) {
-            showToast('Status mis à jour : ' + status, 'success');
+            showToast('Status mis a jour : ' + status, 'success');
             loadTickets(ticketsFilter);
         }
     } catch (error) {
@@ -551,14 +551,11 @@ async function init() {
     var isAdmin = await checkAdmin();
     if (!isAdmin) return;
     loadStats();
-    loadBlocklist(); // 👈 AJOUTE CETTE LIGNE
+    loadBlocklist();
 }
 
 init();
 
-init();
-
-// Exposer les fonctions globalement
 window.loadBlocklist = loadBlocklist;
 window.loadUsers = loadUsers;
 window.loadStats = loadStats;
