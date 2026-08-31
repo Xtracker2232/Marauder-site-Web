@@ -1,5 +1,5 @@
 // ============================================
-// INVESTIGATION MODULE - TOUT EST ICI
+// INVESTIGATION MODULE - COMPLET
 // ============================================
 console.log('🔍 Investigation module chargé');
 
@@ -42,64 +42,97 @@ const CITY_COORDS = {
     'la rochelle': { cx: 160, cy: 300 }
 };
 
-// ============ GENERER LA CARTE SVG ============
+// ============ GENERER LA CARTE FRANCE ============
 function generateFranceMap() {
     return `
-        <svg class="france-map" viewBox="0 0 600 700" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="700" fill="#151515" rx="12" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-            
-            <!-- Carte France -->
-            <g stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none">
-                <path d="M80,280 L70,300 L60,320 L50,340 L45,360 L50,380 L60,400 L75,415 L90,425 L105,435 L120,440 L135,445 L150,450 L165,455 L180,460 L195,465 L210,470 L225,475 L240,480 L255,485 L270,490"/>
-                <path d="M270,490 L285,495 L300,500 L315,505 L330,510 L345,515 L360,520 L375,525 L390,530 L405,535 L420,540 L435,545 L450,550 L465,555 L480,560 L495,565 L510,570 L525,575 L540,580 L555,585 L570,590"/>
-                <path d="M80,280 L90,260 L100,240 L110,220 L120,200 L130,180 L140,160 L150,140 L160,125 L170,115 L185,110 L200,105 L215,100 L230,95 L250,90 L270,85 L290,82 L310,80 L330,82 L350,85 L370,90 L390,95 L410,100 L430,105 L445,110 L460,115 L470,125 L480,140 L490,160 L500,180 L510,200 L520,220 L530,240 L540,260 L550,280"/>
-                <path d="M550,280 L560,300 L565,320 L570,340 L572,360 L570,380 L565,400 L560,420 L555,440 L550,460 L545,480 L540,500 L535,520 L530,540 L525,560 L520,580 L515,590 L505,595 L495,600 L485,605 L475,610 L465,615 L455,620 L445,625 L435,630 L425,635 L415,640 L405,645 L395,650"/>
-                <path d="M395,650 L380,655 L365,660 L350,662 L335,660 L320,655 L305,650 L290,645 L275,640 L260,635 L245,630 L230,625 L215,620 L200,615 L185,610 L170,605 L155,600 L140,595 L125,590 L110,585 L95,580 L80,575 L65,570 L50,565 L35,560 L25,555 L20,545 L25,535 L35,525 L50,515 L65,505 L80,495 L95,485 L110,475 L125,465 L140,455 L155,445 L170,435 L185,425 L200,415 L215,405 L230,395 L245,385 L260,375 L275,365 L290,355 L305,345 L320,335 L335,325 L350,315 L365,305 L380,295 L395,285 L410,275 L425,265 L440,255 L455,245 L470,235 L485,225 L500,215 L515,205 L530,195 L545,185 L555,175"/>
-                <path d="M555,175 L545,165 L530,155 L515,145 L500,135 L485,125 L470,115 L455,105 L440,95 L425,85 L410,75 L395,65 L380,55 L365,45 L350,40 L335,38 L320,40 L305,45 L290,55 L275,65 L260,75 L245,85 L230,95 L215,105 L200,115 L185,125 L170,135 L155,145 L140,155 L125,165 L110,175 L95,185 L80,195 L70,205 L60,215 L55,225 L55,240 L60,255 L70,270 L80,280 Z"/>
-            </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" width="100%" height="100%">
+    <rect width="600" height="700" fill="#151515" rx="8" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    
+    <g stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none">
+        <path d="M80,280 L70,300 L60,320 L55,340 L50,360 L55,380 L65,400 L80,415 L95,425 L110,435 L125,440 L140,445 L155,450 L170,455 L185,460 L200,465 L215,470 L230,475 L245,480 L260,485 L275,490 L290,495 L305,500 L320,505 L335,510 L350,515 L365,520 L380,525 L395,530 L410,535 L425,540 L440,545 L455,550 L470,555 L485,560 L500,565 L515,570 L530,575 L545,580 L560,585 L575,590"/>
+        <path d="M575,590 L580,570 L585,550 L590,530 L592,510 L590,490 L585,470 L580,450 L575,430 L570,410 L565,390 L560,370 L555,350 L550,330 L545,310 L540,290 L535,270 L530,250 L525,230 L520,210 L515,190 L510,170 L505,150 L500,130 L495,110 L490,95 L480,85 L465,80 L450,75 L435,72 L420,70 L405,72 L390,75 L375,80 L360,85 L345,90 L330,95 L315,100 L300,105 L285,110 L270,115 L255,120 L240,125 L225,130 L210,135 L195,140 L180,145 L165,150 L150,155 L135,160 L120,165 L105,170 L90,175 L75,180 L65,190 L60,200 L55,215 L55,230 L60,245 L65,260 L75,275 L80,280 Z"/>
+    </g>
 
-            <!-- Points des villes -->
-            <g fill="#ffffff" stroke="none">
-                <circle cx="300" cy="190" r="5" fill="#ffffff"/>
-                <circle cx="300" cy="190" r="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-                ${Object.values(CITY_COORDS).map(c => `<circle cx="${c.cx}" cy="${c.cy}" r="2.5" fill="rgba(255,255,255,0.25)"/>`).join('')}
-            </g>
+    <g fill="rgba(255,255,255,0.4)">
+        <circle cx="300" cy="190" r="4"/>
+        <circle cx="320" cy="310" r="3"/>
+        <circle cx="340" cy="420" r="3"/>
+        <circle cx="260" cy="380" r="3"/>
+        <circle cx="190" cy="360" r="3"/>
+        <circle cx="240" cy="120" r="3"/>
+        <circle cx="390" cy="390" r="3"/>
+        <circle cx="170" cy="280" r="3"/>
+        <circle cx="400" cy="180" r="3"/>
+        <circle cx="300" cy="380" r="3"/>
+        <circle cx="160" cy="230" r="3"/>
+        <circle cx="350" cy="330" r="3"/>
+        <circle cx="360" cy="410" r="3"/>
+        <circle cx="190" cy="260" r="3"/>
+        <circle cx="350" cy="240" r="3"/>
+        <circle cx="210" cy="170" r="3"/>
+        <circle cx="320" cy="160" r="3"/>
+        <circle cx="310" cy="320" r="3"/>
+        <circle cx="220" cy="310" r="3"/>
+        <circle cx="270" cy="290" r="3"/>
+        <circle cx="260" cy="140" r="3"/>
+        <circle cx="290" cy="430" r="3"/>
+        <circle cx="190" cy="190" r="3"/>
+        <circle cx="270" cy="230" r="3"/>
+        <circle cx="370" cy="170" r="3"/>
+        <circle cx="380" cy="220" r="3"/>
+        <circle cx="410" cy="210" r="3"/>
+        <circle cx="330" cy="340" r="3"/>
+        <circle cx="290" cy="370" r="3"/>
+        <circle cx="310" cy="400" r="3"/>
+        <circle cx="210" cy="290" r="3"/>
+        <circle cx="160" cy="300" r="3"/>
+    </g>
 
-            <!-- Noms des régions -->
-            <g fill="rgba(255,255,255,0.06)" font-size="11" font-family="Arial" text-anchor="middle">
-                <text x="300" y="240">Île-de-France</text>
-                <text x="340" y="370">Auvergne-Rhône-Alpes</text>
-                <text x="240" y="420">Occitanie</text>
-                <text x="200" y="340">Nouvelle-Aquitaine</text>
-                <text x="260" y="160">Hauts-de-France</text>
-                <text x="370" y="460">Provence-Alpes-Côte d'Azur</text>
-                <text x="180" y="260">Pays de la Loire</text>
-                <text x="380" y="210">Grand Est</text>
-                <text x="250" y="280">Centre-Val de Loire</text>
-                <text x="330" y="260">Bourgogne-Franche-Comté</text>
-            </g>
+    <g fill="rgba(255,255,255,0.06)" font-size="10" font-family="Arial" text-anchor="middle">
+        <text x="300" y="240">Île-de-France</text>
+        <text x="340" y="370">Auvergne-Rhône-Alpes</text>
+        <text x="240" y="420">Occitanie</text>
+        <text x="200" y="340">Nouvelle-Aquitaine</text>
+        <text x="260" y="160">Hauts-de-France</text>
+        <text x="370" y="460">Provence-Alpes-Côte d'Azur</text>
+        <text x="180" y="260">Pays de la Loire</text>
+        <text x="380" y="210">Grand Est</text>
+        <text x="250" y="280">Centre-Val de Loire</text>
+        <text x="330" y="260">Bourgogne-Franche-Comté</text>
+        <text x="220" y="150">Normandie</text>
+        <text x="430" y="150">Grand Est</text>
+    </g>
 
-            <!-- Grille -->
-            <g stroke="rgba(255,255,255,0.015)" stroke-width="0.5">
-                <line x1="0" y1="100" x2="600" y2="100"/>
-                <line x1="0" y1="200" x2="600" y2="200"/>
-                <line x1="0" y1="300" x2="600" y2="300"/>
-                <line x1="0" y1="400" x2="600" y2="400"/>
-                <line x1="0" y1="500" x2="600" y2="500"/>
-                <line x1="0" y1="600" x2="600" y2="600"/>
-                <line x1="100" y1="0" x2="100" y2="700"/>
-                <line x1="200" y1="0" x2="200" y2="700"/>
-                <line x1="300" y1="0" x2="300" y2="700"/>
-                <line x1="400" y1="0" x2="400" y2="700"/>
-                <line x1="500" y1="0" x2="500" y2="700"/>
-            </g>
+    <circle id="investigationMapPin" cx="300" cy="190" r="14" fill="none" stroke="#ffffff" stroke-width="3"/>
+    <circle id="investigationMapPinDot" cx="300" cy="190" r="6" fill="#ffffff"/>
+    <circle cx="300" cy="190" r="22" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
 
-            <!-- Pin (point d'investigation) -->
-            <circle id="investigationMapPin" cx="300" cy="300" r="14" fill="none" stroke="#ffffff" stroke-width="3"/>
-            <circle cx="300" cy="300" r="6" fill="#ffffff"/>
-            <circle cx="300" cy="300" r="22" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-        </svg>
+    <g stroke="rgba(255,255,255,0.02)" stroke-width="0.5">
+        <line x1="0" y1="100" x2="600" y2="100"/>
+        <line x1="0" y1="200" x2="600" y2="200"/>
+        <line x1="0" y1="300" x2="600" y2="300"/>
+        <line x1="0" y1="400" x2="600" y2="400"/>
+        <line x1="0" y1="500" x2="600" y2="500"/>
+        <line x1="0" y1="600" x2="600" y2="600"/>
+        <line x1="100" y1="0" x2="100" y2="700"/>
+        <line x1="200" y1="0" x2="200" y2="700"/>
+        <line x1="300" y1="0" x2="300" y2="700"/>
+        <line x1="400" y1="0" x2="400" y2="700"/>
+        <line x1="500" y1="0" x2="500" y2="700"/>
+    </g>
+</svg>
     `;
+}
+
+// ============ INITIALISER LA CARTE ============
+function initFranceMap() {
+    const container = document.getElementById('investigationMapContainer');
+    if (container) {
+        container.innerHTML = generateFranceMap();
+        console.log('✅ Carte France initialisee');
+    } else {
+        console.warn('⚠️ Conteneur investigationMapContainer non trouve');
+    }
 }
 
 // ============ FORMAT PHONE ============
@@ -110,6 +143,36 @@ function formatPhoneInvestigation(phone) {
         return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
     }
     return phone;
+}
+
+// ============ METTRE A JOUR LE POINT SUR LA CARTE ============
+function updateMapPin(ville) {
+    const pin = document.getElementById('investigationMapPin');
+    const pinDot = document.getElementById('investigationMapPinDot');
+    if (!pin) return;
+
+    const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let found = false;
+    for (const [key, pos] of Object.entries(CITY_COORDS)) {
+        if (cityKey.includes(key) || key.includes(cityKey)) {
+            pin.setAttribute('cx', pos.cx);
+            pin.setAttribute('cy', pos.cy);
+            if (pinDot) {
+                pinDot.setAttribute('cx', pos.cx);
+                pinDot.setAttribute('cy', pos.cy);
+            }
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        pin.setAttribute('cx', 300);
+        pin.setAttribute('cy', 190);
+        if (pinDot) {
+            pinDot.setAttribute('cx', 300);
+            pinDot.setAttribute('cy', 190);
+        }
+    }
 }
 
 // ============ OUVRIR INVESTIGATION ============
@@ -201,27 +264,6 @@ function openInvestigation(index) {
 
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
-}
-
-// ============ METTRE A JOUR LE POINT SUR LA CARTE ============
-function updateMapPin(ville) {
-    const pin = document.getElementById('investigationMapPin');
-    if (!pin) return;
-
-    const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    let found = false;
-    for (const [key, pos] of Object.entries(CITY_COORDS)) {
-        if (cityKey.includes(key) || key.includes(cityKey)) {
-            pin.setAttribute('cx', pos.cx);
-            pin.setAttribute('cy', pos.cy);
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        pin.setAttribute('cx', 300);
-        pin.setAttribute('cy', 300);
-    }
 }
 
 // ============ FERMER INVESTIGATION ============
@@ -347,13 +389,24 @@ function addInvestigationToGraphe() {
     }
 }
 
-// ============ INITIALISER LA CARTE AU CHARGEMENT ============
-function initInvestigationModule() {
-    const mapContainer = document.getElementById('investigationMapContainer');
-    if (mapContainer) {
-        mapContainer.innerHTML = generateFranceMap();
+// ============ AJOUTER PERSONNE A UNE FICHE (helper) ============
+async function addPersonToFiche(ficheId, person) {
+    try {
+        const response = await fetch(API_URL + '/api/fiches/' + ficheId + '/persons', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ person })
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            if (typeof showToast === 'function') showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        if (typeof showToast === 'function') showToast('Erreur reseau', 'error');
     }
-    console.log('✅ Carte France initialisee');
 }
 
 // ============ BOUTONS ============
@@ -365,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('investigationAddFiche')?.addEventListener('click', addInvestigationToFiche);
     
     // Initialiser la carte
-    initInvestigationModule();
+    initFranceMap();
 });
 
 // ============ EXPOSER ============
@@ -373,5 +426,6 @@ window.openInvestigation = openInvestigation;
 window.closeInvestigation = closeInvestigation;
 window.generateFranceMap = generateFranceMap;
 window.updateMapPin = updateMapPin;
+window.initFranceMap = initFranceMap;
 
-console.log('✅ Investigation module pret - Carte France integree');
+console.log('✅ Investigation module pret - Carte France incluse');
