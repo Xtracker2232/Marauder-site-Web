@@ -3107,3 +3107,70 @@ body.dashboard-page::before,
 body.dashboard-page::after {
     display: none !important;
 }
+
+/* ============================================
+   FIX - PANEL DE RECHERCHE AU-DESSUS DU FOND NOIR
+   ============================================ */
+
+/* Le fond noir (cadrillage) doit être en arrière-plan */
+body.dashboard-page::before,
+body.dashboard-page::after,
+.dashboard-page::before,
+.dashboard-page::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: -9999 !important;
+}
+
+/* Forcer le panel de recherche à être au-dessus de tout */
+#page-search {
+    position: relative !important;
+    z-index: 10 !important;
+    background: transparent !important;
+}
+
+#page-search .section {
+    position: relative !important;
+    z-index: 11 !important;
+    background: #111111 !important;
+    border: 1px solid #2a2a2a !important;
+}
+
+#page-search .section-header {
+    background: #111111 !important;
+    position: relative !important;
+    z-index: 12 !important;
+}
+
+#page-search .section-body {
+    background: transparent !important;
+    position: relative !important;
+    z-index: 13 !important;
+}
+
+/* Supprimer tout overlay noir */
+.search-loading {
+    z-index: 9999 !important;
+}
+
+/* Supprimer le fond noir du main-content */
+.main-content {
+    position: relative !important;
+    z-index: 5 !important;
+    background: transparent !important;
+}
+
+/* S'assurer que le body n'a pas de fond noir qui bloque */
+body.dashboard-page {
+    background: #0a0a0a !important;
+}
+
+/* Supprimer les pseudo-elements partout */
+*::before,
+*::after {
+    display: none !important;
+    content: none !important;
+}
