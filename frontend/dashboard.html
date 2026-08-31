@@ -14,7 +14,11 @@
     <meta property="og:site_name" content="Marauder">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* SUPPRESSION TOTALE DU CADRILLAGE SUR LE DASHBOARD */
+        /* ============================================
+           FIX TOTAL DASHBOARD - SUPPRESSION CADRILLAGE
+           ============================================ */
+        
+        /* Supprimer le cadrillage sur le dashboard */
         body.dashboard-page::before,
         body.dashboard-page::after,
         .dashboard-page::before,
@@ -24,22 +28,18 @@
             background: none !important;
             opacity: 0 !important;
             visibility: hidden !important;
-            position: fixed !important;
-            width: 0 !important;
-            height: 0 !important;
-            z-index: -9999 !important;
         }
         
         body.dashboard-page {
             background: #0a0a0a !important;
         }
         
+        /* Supprimer tout fond noir sur la zone de recherche */
         .dashboard-page .main-content {
             background: transparent !important;
         }
         
-        #page-search,
-        #page-search * {
+        #page-search {
             background: transparent !important;
         }
         
@@ -54,6 +54,53 @@
         
         #page-search .section-header {
             background: #111111 !important;
+        }
+        
+        /* Forcer le bouton Rechercher en blanc */
+        .search-actions .btn-primary,
+        #searchBtn,
+        #searchBtnPro {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border: none !important;
+        }
+        
+        .search-actions .btn-primary:hover,
+        #searchBtn:hover,
+        #searchBtnPro:hover {
+            background: #cccccc !important;
+            color: #000000 !important;
+        }
+        
+        /* Forcer le bouton Effacer */
+        .search-actions .btn-secondary,
+        #clearBtn,
+        #clearBtnPro {
+            background: transparent !important;
+            color: #a0a0a0 !important;
+            border: 1px solid #2a2a2a !important;
+        }
+        
+        .search-actions .btn-secondary:hover,
+        #clearBtn:hover,
+        #clearBtnPro:hover {
+            background: rgba(255,255,255,0.05) !important;
+            color: #ffffff !important;
+        }
+        
+        /* Forcer les inputs */
+        #page-search input,
+        #page-search select,
+        #page-search textarea {
+            background: #1e1e1e !important;
+            color: #ffffff !important;
+            border: 1px solid #2a2a2a !important;
+        }
+        
+        #page-search input:focus,
+        #page-search select:focus,
+        #page-search textarea:focus {
+            border-color: #ffffff !important;
         }
     </style>
 </head>
