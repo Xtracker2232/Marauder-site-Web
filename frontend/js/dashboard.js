@@ -2314,3 +2314,106 @@ setTimeout(function() {
 }, 2000);
 
 console.log('✅ FIX ULTIME termine');
+
+// ============================================
+// FIX ULTIME - BOUTON TICKET
+// ============================================
+
+console.log('🔵 FIX ULTIME TICKET - Version finale');
+
+// Fonction pour ouvrir le modal de ticket
+function openTicketModal() {
+    console.log('🔵 openTicketModal appelee !');
+    
+    showModal('Nouveau ticket', `
+        <div class="form-group">
+            <label>Sujet</label>
+            <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+        </div>
+    `, 'Envoyer', async function() {
+        console.log('🔵 Envoi du ticket');
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        
+        if (!subject || !message) {
+            showToast('Veuillez remplir tous les champs', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch(API_URL + '/api/tickets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ subject, message })
+            });
+            
+            const data = await response.json();
+            console.log('🔵 Reponse:', data);
+            
+            if (response.ok && data.success) {
+                showToast('Ticket cree !', 'success');
+                loadTickets();
+                closeModal();
+            } else {
+                showToast(data.error || 'Erreur', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Erreur:', error);
+            showToast('Erreur reseau', 'error');
+        }
+    });
+}
+
+// Rendre la fonction accessible globalement
+window.openTicketModal = openTicketModal;
+
+// Forcer le bouton a utiliser la fonction
+setTimeout(function() {
+    const btn = document.getElementById('openTicketBtn');
+    console.log('🔵 Recherche bouton:', btn);
+    
+    if (btn) {
+        // Supprimer tous les anciens événements
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Ajouter le nouvel événement
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔵 CLIC SUR NOUVEAU TICKET !');
+            openTicketModal();
+        });
+        
+        console.log('✅ Bouton ticket configure !');
+    } else {
+        console.error('❌ Bouton introuvable !');
+        
+        // Créer le bouton s'il n'existe pas
+        const header = document.querySelector('.page-header');
+        if (header) {
+            const newBtn = document.createElement('button');
+            newBtn.id = 'openTicketBtn';
+            newBtn.className = 'btn-primary';
+            newBtn.style.cssText = 'width:auto;padding:10px 24px;';
+            newBtn.textContent = 'Nouveau ticket';
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔵 CLIC SUR NOUVEAU TICKET (cree) !');
+                openTicketModal();
+            });
+            header.appendChild(newBtn);
+            console.log('✅ Bouton cree dans le header !');
+        }
+    }
+}, 500);
+
+console.log('✅ FIX ULTIME termine');
