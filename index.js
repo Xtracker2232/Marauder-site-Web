@@ -35,8 +35,6 @@ if (!process.env.ADMIN_PASSWORD) {
 }
 
 console.log('✅ Toutes les variables d\'environnement sont définies');
-console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
-console.log('🔍 JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
 
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
@@ -48,6 +46,7 @@ const pool = new Pool({
 const initDB = async () => {
     const client = await pool.connect();
     try {
+        // Tables existantes
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -55,7 +54,9 @@ const initDB = async () => {
                 password_hash VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_login TIMESTAMP,
-                role VARCHAR(50) DEFAULT 'user'
+                role VARCHAR(50) DEFAULT 'user',
+                banned BOOLEAN DEFAULT FALSE,
+                reg_ip TEXT
             );
             CREATE TABLE IF NOT EXISTS search_history (
                 id SERIAL PRIMARY KEY,
@@ -79,9 +80,47 @@ const initDB = async () => {
                 edges JSONB DEFAULT '[]',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE TABLE IF NOT EXISTS ip_used (
+                id SERIAL PRIMARY KEY,
+                ip TEXT UNIQUE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
+
+        // Nouvelles tables admin
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS blocklist (
+                id SERIAL PRIMARY KEY,
+                type VARCHAR(50) NOT NULL,
+                value TEXT NOT NULL,
+                reason TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE TABLE IF NOT EXISTS tickets (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                subject VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                status VARCHAR(50) DEFAULT 'open',
+                admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS ticket_messages (
+                id SERIAL PRIMARY KEY,
+                ticket_id INTEGER REFERENCES tickets(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                message TEXT NOT NULL,
+                is_admin BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         console.log('✅ Tables OK');
-        
+
+        // Créer admin (protégé, ne peut pas être supprimé)
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
@@ -90,6 +129,13 @@ const initDB = async () => {
                 [process.env.ADMIN_USERNAME, hashedPassword, 'admin']
             );
             console.log('✅ Admin créé');
+        } else {
+            // S'assurer que l'admin a bien le rôle admin
+            await client.query(
+                'UPDATE users SET role = $1 WHERE username = $2',
+                ['admin', process.env.ADMIN_USERNAME]
+            );
+            console.log('✅ Admin vérifié');
         }
     } finally {
         client.release();
@@ -98,8 +144,6 @@ const initDB = async () => {
 initDB();
 
 // ============ MIDDLEWARE ============
-
-// CORS restreint
 const allowedOrigins = [
     'https://marauder-site-web-production.up.railway.app',
     'http://localhost:3000',
@@ -148,30 +192,43 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// ============ ROUTES ============
+const requireAdmin = async (req, res, next) => {
+    try {
+        const result = await pool.query('SELECT role FROM users WHERE id = $1', [req.user.id]);
+        if (result.rows.length === 0 || result.rows[0].role !== 'admin') {
+            return res.status(403).json({ error: 'Accès refusé - Admin requis' });
+        }
+        next();
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
 
-// Test
-app.get('/api/test', authenticateToken, (req, res) => {
-    res.json({ message: 'API OK', user: req.user });
-});
+// ============ ROUTES AUTH ============
 
-// Login (avec rate limiting)
 app.post('/api/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (result.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
         const user = result.rows[0];
+        if (user.banned) return res.status(403).json({ error: 'Compte banni' });
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
-        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        
+        await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
+        
+        const token = jwt.sign(
+            { id: user.id, username: user.username, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
         res.json({ success: true, token, user: { id: user.id, username: user.username, role: user.role } });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
-// Register (avec validation)
 app.post('/api/register',
     body('username').isLength({ min: 3 }).trim().escape(),
     body('password').isLength({ min: 8 }),
@@ -180,17 +237,16 @@ app.post('/api/register',
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        
         const { username, password } = req.body;
-        if (!username || !password || password.length < 8) {
-            return res.status(400).json({ error: 'Nom ou mot de passe invalide' });
-        }
         try {
+            const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || 'unknown';
             const hashed = await bcrypt.hash(password, 12);
             const result = await pool.query(
-                'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role',
-                [username, hashed]
+                'INSERT INTO users (username, password_hash, reg_ip) VALUES ($1, $2, $3) RETURNING id, username, role',
+                [username, hashed, ip]
             );
+            // Enregistrer l'IP
+            await pool.query('INSERT INTO ip_used (ip, user_id) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING', [ip, result.rows[0].id]);
             res.status(201).json({ success: true, user: result.rows[0] });
         } catch (error) {
             if (error.code === '23505') return res.status(400).json({ error: 'Nom déjà utilisé' });
@@ -199,63 +255,11 @@ app.post('/api/register',
     }
 );
 
-// Verify
 app.get('/api/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
-// ============ HISTORIQUE ============
-app.get('/api/history', authenticateToken, async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
-            [req.user.id]
-        );
-        res.json({ history: result.rows });
-    } catch (error) {
-        console.error('History error:', error);
-        res.status(500).json({ error: 'Erreur' });
-    }
-});
-
-app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query(
-            'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Recherche non trouvée' });
-        }
-        let query = result.rows[0].query;
-        if (typeof query === 'string') {
-            query = JSON.parse(query);
-        }
-        query.per_page = 100;
-        const response = await axios.post(
-            'https://api.brixhub.to/api/v1/search',
-            query,
-            {
-                headers: {
-                    'X-API-Key': process.env.BRIX_API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 10000
-            }
-        );
-        res.json({
-            results: response.data.data?.results || [],
-            total: response.data.meta?.total || 0,
-            took_ms: response.data.meta?.took_ms || 0
-        });
-    } catch (error) {
-        console.error('Replay error:', error.message);
-        res.status(500).json({ error: 'Erreur replay' });
-    }
-});
-
-// ============ API BRIXHUB ============
+// ============ ROUTES BRIXHUB ============
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
         const response = await axios.post(
@@ -305,7 +309,56 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
     }
 });
 
-// ============ FICHES ============
+// ============ ROUTES HISTORIQUE ============
+app.get('/api/history', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            [req.user.id]
+        );
+        res.json({ history: result.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur' });
+    }
+});
+
+app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Recherche non trouvée' });
+        }
+        let query = result.rows[0].query;
+        if (typeof query === 'string') {
+            query = JSON.parse(query);
+        }
+        query.per_page = 100;
+        const response = await axios.post(
+            'https://api.brixhub.to/api/v1/search',
+            query,
+            {
+                headers: {
+                    'X-API-Key': process.env.BRIX_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000
+            }
+        );
+        res.json({
+            results: response.data.data?.results || [],
+            total: response.data.meta?.total || 0,
+            took_ms: response.data.meta?.took_ms || 0
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur replay' });
+    }
+});
+
+// ============ ROUTES FICHES ============
 app.get('/api/fiches', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM fiches WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
@@ -376,18 +429,7 @@ app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query('SELECT persons FROM fiches WHERE id = $1 AND user_id = $2', [id, req.user.id]);
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Fiche non trouvée' });
-        res.json(result.rows[0].persons || []);
-    } catch (error) {
-        res.status(500).json({ error: 'Erreur' });
-    }
-});
-
-// ============ GRAPHES ============
+// ============ ROUTES GRAPHES ============
 app.post('/api/graphes', authenticateToken, async (req, res) => {
     const { name, nodes, edges } = req.body;
     try {
@@ -398,7 +440,6 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
         );
         res.status(201).json({ graphe: result.rows[0] });
     } catch (error) {
-        console.error('❌ Erreur sauvegarde graphe:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -418,7 +459,6 @@ app.get('/api/graphes/all', authenticateToken, async (req, res) => {
         const result = await pool.query('SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
         res.json({ graphes: result.rows });
     } catch (error) {
-        console.error('❌ Erreur récupération graphes:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -445,7 +485,7 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ PROFIL ============
+// ============ ROUTES PROFIL ============
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query('SELECT id, username, role, created_at, last_login FROM users WHERE id = $1', [req.user.id]);
@@ -455,7 +495,467 @@ app.get('/api/me', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ STATIQUES ============
+// ============================================================
+// ============ ROUTES ADMIN ============
+// ============================================================
+
+// Vérification admin (protégé contre suppression)
+app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, username, role FROM users WHERE id = $1',
+            [req.user.id]
+        );
+        const isProtected = result.rows[0]?.username === process.env.ADMIN_USERNAME;
+        res.json({
+            isAdmin: true,
+            isProtected: isProtected,
+            user: result.rows[0]
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur' });
+    }
+});
+
+// ============ STATS ============
+app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const totalUsers = await pool.query('SELECT COUNT(*) FROM users');
+        const totalSearches = await pool.query('SELECT COUNT(*) FROM search_history');
+        const totalFiches = await pool.query('SELECT COUNT(*) FROM fiches');
+        const totalGraphes = await pool.query('SELECT COUNT(*) FROM graphes');
+        const bannedUsers = await pool.query('SELECT COUNT(*) FROM users WHERE banned = TRUE');
+        const searchesToday = await pool.query(
+            'SELECT COUNT(*) FROM search_history WHERE DATE(created_at) = CURRENT_DATE'
+        );
+        const usersToday = await pool.query(
+            'SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURRENT_DATE'
+        );
+
+        res.json({
+            total_users: parseInt(totalUsers.rows[0].count),
+            total_searches: parseInt(totalSearches.rows[0].count),
+            total_fiches: parseInt(totalFiches.rows[0].count),
+            total_graphes: parseInt(totalGraphes.rows[0].count),
+            banned_users: parseInt(bannedUsers.rows[0].count),
+            searches_today: parseInt(searchesToday.rows[0].count),
+            users_today: parseInt(usersToday.rows[0].count)
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ LISTE UTILISATEURS ============
+app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+    const { page = 1, limit = 20, search = '' } = req.query;
+    const offset = (page - 1) * limit;
+    try {
+        let query = `
+            SELECT 
+                u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip,
+                (SELECT COUNT(*) FROM search_history WHERE user_id = u.id) as search_count,
+                (SELECT COUNT(*) FROM fiches WHERE user_id = u.id) as fiche_count,
+                (SELECT COUNT(*) FROM ip_used WHERE ip = u.reg_ip) as ip_count
+            FROM users u
+            WHERE u.username != $1
+        `;
+        const params = [process.env.ADMIN_USERNAME];
+        
+        if (search) {
+            query += ` AND (u.username ILIKE $${params.length + 1} OR u.reg_ip ILIKE $${params.length + 1})`;
+            params.push(`%${search}%`);
+        }
+        
+        query += ` ORDER BY u.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+        params.push(limit, offset);
+
+        const result = await pool.query(query, params);
+        
+        // Total count
+        let countQuery = 'SELECT COUNT(*) FROM users WHERE username != $1';
+        const countParams = [process.env.ADMIN_USERNAME];
+        if (search) {
+            countQuery += ` AND (username ILIKE $${countParams.length + 1} OR reg_ip ILIKE $${countParams.length + 1})`;
+            countParams.push(`%${search}%`);
+        }
+        const countResult = await pool.query(countQuery, countParams);
+
+        res.json({
+            users: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        console.error('Admin users error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ UTILISATEUR PAR ID ============
+app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Vérifier que ce n'est pas l'admin protégé
+        const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
+        if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
+            return res.status(403).json({ error: 'Ce compte admin ne peut pas être consulté' });
+        }
+
+        const result = await pool.query(`
+            SELECT 
+                u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip,
+                (SELECT COUNT(*) FROM search_history WHERE user_id = u.id) as search_count,
+                (SELECT COUNT(*) FROM fiches WHERE user_id = u.id) as fiche_count,
+                (SELECT COUNT(*) FROM graphes WHERE user_id = u.id) as graphe_count
+            FROM users u
+            WHERE u.id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        // Récupérer les IPs liées
+        const ips = await pool.query('SELECT ip, created_at FROM ip_used WHERE user_id = $1', [id]);
+        
+        // Récupérer les dernières recherches
+        const searches = await pool.query(
+            'SELECT id, query, results_count, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
+            [id]
+        );
+
+        res.json({
+            user: result.rows[0],
+            ips: ips.rows,
+            recent_searches: searches.rows
+        });
+    } catch (error) {
+        console.error('User detail error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ BANNIR / DÉBANNIR ============
+app.post('/api/admin/users/:id/ban', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { banned } = req.body;
+    try {
+        // Vérifier que ce n'est pas l'admin protégé
+        const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
+        if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
+            return res.status(403).json({ error: 'Ce compte admin ne peut pas être banni' });
+        }
+
+        await pool.query('UPDATE users SET banned = $1 WHERE id = $2', [banned, id]);
+        res.json({ success: true, banned });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ SUPPRIMER UTILISATEUR ============
+app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Vérifier que ce n'est pas l'admin protégé
+        const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
+        if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
+            return res.status(403).json({ error: 'Ce compte admin ne peut pas être supprimé' });
+        }
+
+        await pool.query('DELETE FROM users WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ CHANGER RÔLE ============
+app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+    try {
+        // Vérifier que ce n'est pas l'admin protégé
+        const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
+        if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
+            return res.status(403).json({ error: 'Le rôle de l\'admin principal ne peut pas être modifié' });
+        }
+
+        await pool.query('UPDATE users SET role = $1 WHERE id = $2', [role, id]);
+        res.json({ success: true, role });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ IPs LIÉES ============
+app.get('/api/admin/ips/:ip', authenticateToken, requireAdmin, async (req, res) => {
+    const { ip } = req.params;
+    try {
+        const result = await pool.query(`
+            SELECT u.id, u.username, u.role, u.created_at, u.banned
+            FROM users u
+            WHERE u.reg_ip = $1
+        `, [ip]);
+        res.json({ accounts: result.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ BLOCKLIST ============
+app.get('/api/admin/blocklist', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM blocklist ORDER BY created_at DESC'
+        );
+        res.json({ blocklist: result.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.post('/api/admin/blocklist', authenticateToken, requireAdmin, async (req, res) => {
+    const { type, value, reason } = req.body;
+    if (!type || !value) {
+        return res.status(400).json({ error: 'Type et valeur requis' });
+    }
+    try {
+        const result = await pool.query(
+            'INSERT INTO blocklist (type, value, reason, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
+            [type, value, reason, req.user.id]
+        );
+        res.status(201).json({ success: true, entry: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.delete('/api/admin/blocklist/:id', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM blocklist WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ TICKETS ============
+
+// Créer un ticket
+app.post('/api/tickets', authenticateToken, async (req, res) => {
+    const { subject, message } = req.body;
+    if (!subject || !message) {
+        return res.status(400).json({ error: 'Sujet et message requis' });
+    }
+    try {
+        const result = await pool.query(
+            'INSERT INTO tickets (user_id, subject, message) VALUES ($1, $2, $3) RETURNING *',
+            [req.user.id, subject, message]
+        );
+        res.status(201).json({ success: true, ticket: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer les tickets d'un utilisateur
+app.get('/api/tickets', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM tickets WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json({ tickets: result.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer un ticket spécifique avec ses messages
+app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketResult = await pool.query(
+            'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (ticketResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket non trouvé' });
+        }
+        const messages = await pool.query(
+            'SELECT * FROM ticket_messages WHERE ticket_id = $1 ORDER BY created_at ASC',
+            [id]
+        );
+        res.json({ ticket: ticketResult.rows[0], messages: messages.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Ajouter un message à un ticket
+app.post('/api/tickets/:id/messages', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { message } = req.body;
+    if (!message) {
+        return res.status(400).json({ error: 'Message requis' });
+    }
+    try {
+        // Vérifier que le ticket appartient à l'utilisateur
+        const ticketCheck = await pool.query(
+            'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (ticketCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket non trouvé' });
+        }
+        // Vérifier que le ticket n'est pas fermé
+        if (ticketCheck.rows[0].status === 'closed') {
+            return res.status(400).json({ error: 'Ce ticket est fermé' });
+        }
+        const result = await pool.query(
+            'INSERT INTO ticket_messages (ticket_id, user_id, message) VALUES ($1, $2, $3) RETURNING *',
+            [id, req.user.id, message]
+        );
+        // Mettre à jour le ticket
+        await pool.query(
+            'UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+            [id]
+        );
+        res.status(201).json({ success: true, message: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ ROUTES ADMIN TICKETS ============
+
+// Récupérer tous les tickets (admin)
+app.get('/api/admin/tickets', authenticateToken, requireAdmin, async (req, res) => {
+    const { status } = req.query;
+    try {
+        let query = `
+            SELECT t.*, u.username as user_name 
+            FROM tickets t 
+            JOIN users u ON t.user_id = u.id
+        `;
+        const params = [];
+        if (status) {
+            query += ` WHERE t.status = $1`;
+            params.push(status);
+        }
+        query += ` ORDER BY t.created_at DESC`;
+        const result = await pool.query(query, params);
+        res.json({ tickets: result.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Récupérer un ticket admin avec messages
+app.get('/api/admin/tickets/:id', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketResult = await pool.query(`
+            SELECT t.*, u.username as user_name 
+            FROM tickets t 
+            JOIN users u ON t.user_id = u.id 
+            WHERE t.id = $1
+        `, [id]);
+        if (ticketResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket non trouvé' });
+        }
+        const messages = await pool.query(`
+            SELECT tm.*, u.username, u.role 
+            FROM ticket_messages tm 
+            JOIN users u ON tm.user_id = u.id 
+            WHERE tm.ticket_id = $1 
+            ORDER BY tm.created_at ASC
+        `, [id]);
+        res.json({ ticket: ticketResult.rows[0], messages: messages.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Répondre à un ticket (admin)
+app.post('/api/admin/tickets/:id/reply', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { message } = req.body;
+    if (!message) {
+        return res.status(400).json({ error: 'Message requis' });
+    }
+    try {
+        const ticketCheck = await pool.query('SELECT * FROM tickets WHERE id = $1', [id]);
+        if (ticketCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket non trouvé' });
+        }
+        if (ticketCheck.rows[0].status === 'closed') {
+            return res.status(400).json({ error: 'Ce ticket est fermé' });
+        }
+        // Ajouter le message admin
+        await pool.query(
+            'INSERT INTO ticket_messages (ticket_id, user_id, message, is_admin) VALUES ($1, $2, $3, $4)',
+            [id, req.user.id, message, true]
+        );
+        // Mettre à jour le statut
+        await pool.query(
+            'UPDATE tickets SET status = $1, admin_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+            ['in_progress', req.user.id, id]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Changer le statut d'un ticket (admin)
+app.patch('/api/admin/tickets/:id/status', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const validStatus = ['open', 'in_progress', 'closed'];
+    if (!validStatus.includes(status)) {
+        return res.status(400).json({ error: 'Statut invalide' });
+    }
+    try {
+        await pool.query(
+            'UPDATE tickets SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [status, id]
+        );
+        res.json({ success: true, status });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ HISTORIQUE GLOBAL (ADMIN) ============
+app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res) => {
+    const { page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
+    try {
+        const result = await pool.query(`
+            SELECT s.*, u.username 
+            FROM search_history s 
+            JOIN users u ON s.user_id = u.id 
+            ORDER BY s.created_at DESC 
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
+        const count = await pool.query('SELECT COUNT(*) FROM search_history');
+        res.json({
+            searches: result.rows,
+            total: parseInt(count.rows[0].count),
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============ ROUTES STATIQUES ============
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'login.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
