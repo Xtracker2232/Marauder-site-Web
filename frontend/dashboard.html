@@ -2,10 +2,18 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Marauder - Dashboard | Plateforme CSINT</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-<link rel="shortcut icon" type="image/png" href="/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    
+    <meta property="og:title" content="Marauder - Dashboard | Plateforme CSINT">
+    <meta property="og:description" content="Dashboard d'investigation avancée avec recherche multi-critères et graphe de connexions.">
+    <meta property="og:image" content="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    <meta property="og:url" content="https://marauder-site-web-production.up.railway.app/dashboard.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Marauder">
+    
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="dashboard-page">
@@ -250,6 +258,16 @@
             </button>
         </div>
     </nav>
+
+    <!-- ============ BOUTON MENU MOBILE ============ -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- ============ MAIN CONTENT ============ -->
     <main class="main-content">
