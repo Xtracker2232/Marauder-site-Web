@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
     <style>
         /* ============================================
-           STYLES COMPLETS - TOUT LE CSS
+           STYLES COMPLETS
            ============================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #0a0a0a; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #ffffff; min-height: 100vh; }
@@ -198,6 +198,34 @@
         #grapheContainer { width: 100%; height: 500px; background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; position: relative; cursor: default; user-select: none; }
         #grapheCanvas { width: 100%; height: 100%; display: block; cursor: default; }
 
+        /* ============ INVESTIGATION OVERLAY ============ */
+        .investigation-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0a0a; z-index: 9999; display: none; overflow-y: auto; }
+        .investigation-overlay.active { display: block; animation: fadeIn 0.3s ease; }
+        .investigation-container { max-width: 1400px; margin: 0 auto; padding: 24px 32px 40px; min-height: 100vh; }
+        .investigation-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #2a2a2a; margin-bottom: 28px; }
+        .investigation-back { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: transparent; border: 1px solid #2a2a2a; border-radius: 8px; color: #a0a0a0; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s; }
+        .investigation-back:hover { border-color: rgba(255,255,255,0.2); color: #ffffff; }
+        .investigation-title { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: #ffffff; }
+        .investigation-body { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        .investigation-map-wrapper { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; }
+        .investigation-city-label { text-align: center; font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 16px; letter-spacing: 0.5px; }
+        .investigation-map-container { width: 100%; aspect-ratio: 600/700; position: relative; background: #151515; border-radius: 8px; overflow: hidden; }
+        .investigation-map-container .france-map { width: 100%; height: 100%; display: block; }
+        .investigation-info-col { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; max-height: 700px; }
+        .investigation-info-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #2a2a2a; margin-bottom: 16px; }
+        .investigation-info-header h3 { font-size: 16px; font-weight: 600; color: #ffffff; }
+        .investigation-confidence { font-size: 14px; font-weight: 700; padding: 4px 14px; border-radius: 20px; border: 1px solid #2a2a2a; }
+        .investigation-confidence.high { color: #10b981; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+        .investigation-confidence.medium { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+        .investigation-confidence.low { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+        .investigation-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; flex: 1; overflow-y: auto; padding-right: 4px; }
+        .investigation-info-item { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .investigation-info-item.important { background: rgba(255,255,255,0.02); border-radius: 4px; padding: 6px 10px; margin: 0 -6px; }
+        .investigation-info-label { font-size: 10px; font-weight: 500; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .investigation-info-value { font-size: 14px; color: #a0a0a0; word-break: break-all; }
+        .investigation-info-item.important .investigation-info-value { color: #ffffff; font-weight: 500; }
+        .investigation-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #2a2a2a; flex-wrap: wrap; }
+
         .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; background: #111111; border: 1px solid #2a2a2a; border-radius: 10px; color: #ffffff; padding: 8px 10px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; }
         .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; }
         .sidebar-backdrop.active { display: block; }
@@ -223,6 +251,10 @@
             .history-header { flex-direction: column; align-items: flex-start; gap: 6px; }
             .ticket-item .ticket-header { flex-direction: column; align-items: flex-start; gap: 6px; }
             #grapheContainer { height: 350px; }
+            .investigation-body { grid-template-columns: 1fr; }
+            .investigation-info-grid { grid-template-columns: 1fr; }
+            .investigation-actions { flex-direction: column; }
+            .investigation-actions .btn-primary, .investigation-actions .btn-secondary { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -276,6 +308,53 @@
             <div id="graphesList" style="margin-top:16px;max-height:400px;overflow-y:auto;"></div>
             <div class="modal-actions">
                 <button class="btn-secondary" id="closeGraphesModal">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ VUE INVESTIGATION ============ -->
+    <div id="investigationOverlay" class="investigation-overlay">
+        <div class="investigation-container">
+            <div class="investigation-header">
+                <button id="investigationBack" class="investigation-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Retour
+                </button>
+                <div class="investigation-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span id="investigationName">Investigation</span>
+                </div>
+                <div style="width:80px;"></div>
+            </div>
+
+            <div class="investigation-body">
+                <div class="investigation-map-col">
+                    <div class="investigation-map-wrapper">
+                        <div class="investigation-city-label" id="investigationCityLabel">Paris</div>
+                        <div class="investigation-map-container" id="investigationMapContainer">
+                            <!-- La carte est générée par investigation.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="investigation-info-col">
+                    <div class="investigation-info-header">
+                        <h3>Informations completes</h3>
+                        <span class="investigation-confidence" id="investigationConfidence">95%</span>
+                    </div>
+                    <div class="investigation-info-grid" id="investigationInfoGrid"></div>
+                    <div class="investigation-actions">
+                        <button class="btn-primary" id="investigationAddFiche" style="width:auto;padding:10px 24px;">Ajouter a une fiche</button>
+                        <button class="btn-secondary" id="investigationCopy" style="width:auto;padding:10px 24px;">Copier</button>
+                        <button class="btn-secondary" id="investigationGraphe" style="width:auto;padding:10px 24px;">Graphe</button>
+                        <button class="btn-secondary" id="investigationClose" style="width:auto;padding:10px 24px;">Fermer</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -623,6 +702,7 @@
         <a href="/cgu.html" style="color:#6b6b6b;text-decoration:none;">CGU</a> · <span style="color:#6b6b6b;">Created by Index</span>
     </div>
 
+    <!-- ============ SCRIPTS ============ -->
     <script src="/js/dashboard.js"></script>
     <script src="/js/graphe.js"></script>
     <script src="/js/investigation.js"></script>
