@@ -1882,3 +1882,194 @@ loadProfile();
 initTicketCreation();
 
 console.log('Dashboard charge');
+
+// ============================================
+// TICKETS - FIX SIMPLE
+// ============================================
+
+console.log('🔵 Chargement des tickets...');
+
+// Fonction pour charger les tickets
+window.loadTickets = async function() {
+    console.log('🔵 loadTickets appelee');
+    const container = document.getElementById('ticketsList');
+    if (!container) {
+        console.error('❌ ticketsList non trouve dans le DOM');
+        return;
+    }
+    
+    container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+    try {
+        const response = await fetch(API_URL + '/api/tickets', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        console.log('🔵 Reponse tickets:', response.status);
+        const data = await response.json();
+        console.log('🔵 Donnees tickets:', data);
+        
+        const tickets = data.tickets || [];
+
+        if (tickets.length === 0) {
+            container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
+            return;
+        }
+
+        container.innerHTML = tickets.map(ticket => `
+            <div class="ticket-item" onclick="viewTicket(${ticket.id})">
+                <div class="ticket-header">
+                    <span class="ticket-subject">${ticket.subject}</span>
+                    <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
+                </div>
+                <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${(ticket.message || '').substring(0, 100)}${(ticket.message || '').length > 100 ? '...' : ''}</div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('❌ Erreur tickets:', error);
+        container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+    }
+};
+
+// Fonction pour voir un ticket
+window.viewTicket = async function(ticketId) {
+    console.log('🔵 viewTicket:', ticketId);
+    try {
+        const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await response.json();
+        console.log('🔵 Detail ticket:', data);
+        const ticket = data.ticket;
+        const messages = data.messages || [];
+
+        let messagesHtml = messages.map(m => `
+            <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
+                <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
+                <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
+            </div>
+        `).join('');
+
+        showModal(ticket.subject, `
+            <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
+            <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
+            ${ticket.status !== 'closed' ? `
+                <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
+                    <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;font-family:Arial;outline:none;">
+                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
+                </div>
+            ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
+        `, 'Fermer', closeModal);
+
+    } catch (error) {
+        console.error('❌ View ticket error:', error);
+        showToast('Erreur de chargement', 'error');
+    }
+};
+
+// Fonction pour repondre
+window.replyTicket = async function(ticketId) {
+    const input = document.getElementById('ticketReplyInput');
+    if (!input) return;
+    const message = input.value.trim();
+    if (!message) {
+        showToast('Veuillez entrer un message', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ message })
+        });
+        if (response.ok) {
+            showToast('Message envoye !', 'success');
+            window.viewTicket(ticketId);
+            window.loadTickets();
+        } else {
+            const data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        console.error('Reply error:', error);
+        showToast('Erreur reseau', 'error');
+    }
+};
+
+// BOUTON CREER TICKET
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔵 DOM ready - recherche bouton');
+    const openBtn = document.getElementById('openTicketBtn');
+    console.log('🔵 openBtn:', openBtn);
+    
+    if (openBtn) {
+        openBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔵 Clic sur Nouveau ticket !');
+            showModal('Nouveau ticket', `
+                <div class="form-group">
+                    <label>Sujet</label>
+                    <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+                </div>
+            `, 'Envoyer', async function() {
+                console.log('🔵 Envoi du formulaire');
+                const subject = document.getElementById('ticketSubject').value.trim();
+                const message = document.getElementById('ticketMessage').value.trim();
+                
+                if (!subject || !message) {
+                    showToast('Veuillez remplir tous les champs', 'warning');
+                    return;
+                }
+                
+                console.log('🔵 Subject:', subject);
+                console.log('🔵 Message:', message);
+                
+                try {
+                    const response = await fetch(API_URL + '/api/tickets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ subject, message })
+                    });
+                    
+                    console.log('🔵 Response status:', response.status);
+                    const data = await response.json();
+                    console.log('🔵 Response data:', data);
+                    
+                    if (response.ok && data.success) {
+                        showToast('Ticket cree !', 'success');
+                        window.loadTickets();
+                        closeModal();
+                    } else {
+                        showToast(data.error || 'Erreur lors de la creation', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ Create ticket error:', error);
+                    showToast('Erreur reseau', 'error');
+                }
+            });
+        });
+    } else {
+        console.error('❌ openTicketBtn NON TROUVE !');
+    }
+});
+
+// Charger les tickets au demarrage
+setTimeout(function() {
+    if (document.getElementById('page-tickets')) {
+        console.log('🔵 Page tickets trouvee, chargement...');
+        window.loadTickets();
+    }
+}, 1000);
+
+console.log('✅ Tickets charges');
