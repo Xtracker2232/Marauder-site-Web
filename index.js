@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const fetch = require('node-fetch');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -14,7 +15,29 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 app.use(cors());
 app.use(express.json());
-app.use(express.static('frontend'));
+
+// Servir les fichiers statiques du dossier frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Route pour la page d'accueil
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// Route pour login
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
+});
+
+// Route pour dashboard
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
+});
+
+// Route pour CGU
+app.get('/cgu.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'cgu.html'));
+});
 
 // ============================================
 // BASE DE DONNÉES
@@ -53,7 +76,140 @@ function formatPhone(phone) {
 }
 
 // ============================================
-// PIVOT FAMILLE
+// INIT DB
+// ============================================
+async function initDatabase() {
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role TEXT DEFAULT 'user',
+                created_at TIMESTAMP DEFAULT NOW(),
+                last_login TIMESTAMP
+            )
+        `);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS search_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                query JSONB,
+                results_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS fiches (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                name TEXT NOT NULL,
+                persons JSONB DEFAULT '[]',
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS graphes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                name TEXT DEFAULT 'Mon graphe',
+                nodes JSONB DEFAULT '[]',
+                edges JSONB DEFAULT '[]',
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        
+        const adminCheck = await client.query('SELECT * FROM users WHERE username = $1', ['Admin']);
+        if (adminCheck.rows.length === 0) {
+            const hashedPassword = await bcrypt.hash('Salto06530', 10);
+            await client.query(
+                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+                ['Admin', hashedPassword, 'admin']
+            );
+            console.log('✅ Compte admin créé');
+        }
+        
+        console.log('✅ Base de données initialisée');
+    } catch (error) {
+        console.error('❌ Erreur DB:', error.message);
+    } finally {
+        client.release();
+    }
+}
+
+initDatabase();
+
+// ============================================
+// MIDDLEWARE AUTH
+// ============================================
+async function authenticate(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, error: 'Token manquant' });
+    }
+    
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+    if (!decoded) {
+        return res.status(401).json({ success: false, error: 'Token invalide' });
+    }
+    
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+        if (result.rows.length === 0) {
+            return res.status(401).json({ success: false, error: 'Utilisateur introuvable' });
+        }
+        req.user = result.rows[0];
+        next();
+    } catch (error) {
+        return res.status(500).json({ success: false, error: 'Erreur serveur' });
+    }
+}
+
+async function requireAdmin(req, res, next) {
+    await authenticate(req, res, () => {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Accès refusé' });
+        }
+        next();
+    });
+}
+
+// ============================================
+// FONCTION APPEL BRIXHUB
+// ============================================
+async function callBrix(method, path, body = null) {
+    const headers = {
+        'X-API-Key': BRIX_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+    
+    const url = `${BRIX_BASE}${path}`;
+    const options = {
+        method,
+        headers,
+        timeout: 30000
+    };
+    
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
+    
+    try {
+        const response = await fetch(url, options);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('BrixHub error:', error.message);
+        throw new Error('Erreur API BrixHub');
+    }
+}
+
+// ============================================
+// FONCTION PIVOT FAMILLE
 // ============================================
 async function enrichirAvecPivotFamille(results) {
     if (!results || results.length === 0) return results;
@@ -283,139 +439,6 @@ async function enrichirAvecPivotFamille(results) {
     }
     
     return enrichedResults;
-}
-
-// ============================================
-// INIT DB
-// ============================================
-async function initDatabase() {
-    const client = await pool.connect();
-    try {
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT NOW(),
-                last_login TIMESTAMP
-            )
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS search_history (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                query JSONB,
-                results_count INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS fiches (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                name TEXT NOT NULL,
-                persons JSONB DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS graphes (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                name TEXT DEFAULT 'Mon graphe',
-                nodes JSONB DEFAULT '[]',
-                edges JSONB DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        
-        const adminCheck = await client.query('SELECT * FROM users WHERE username = $1', ['Admin']);
-        if (adminCheck.rows.length === 0) {
-            const hashedPassword = await bcrypt.hash('Salto06530', 10);
-            await client.query(
-                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-                ['Admin', hashedPassword, 'admin']
-            );
-            console.log('✅ Compte admin créé');
-        }
-        
-        console.log('✅ Base de données initialisée');
-    } catch (error) {
-        console.error('❌ Erreur DB:', error.message);
-    } finally {
-        client.release();
-    }
-}
-
-initDatabase();
-
-// ============================================
-// MIDDLEWARE AUTH
-// ============================================
-async function authenticate(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'Token manquant' });
-    }
-    
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-    if (!decoded) {
-        return res.status(401).json({ success: false, error: 'Token invalide' });
-    }
-    
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
-        if (result.rows.length === 0) {
-            return res.status(401).json({ success: false, error: 'Utilisateur introuvable' });
-        }
-        req.user = result.rows[0];
-        next();
-    } catch (error) {
-        return res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-}
-
-async function requireAdmin(req, res, next) {
-    await authenticate(req, res, () => {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Accès refusé' });
-        }
-        next();
-    });
-}
-
-// ============================================
-// FONCTION APPEL BRIXHUB
-// ============================================
-async function callBrix(method, path, body = null) {
-    const headers = {
-        'X-API-Key': BRIX_API_KEY,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    
-    const url = `${BRIX_BASE}${path}`;
-    const options = {
-        method,
-        headers,
-        timeout: 30000
-    };
-    
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
-    
-    try {
-        const response = await fetch(url, options);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('BrixHub error:', error.message);
-        throw new Error('Erreur API BrixHub');
-    }
 }
 
 // ============================================
