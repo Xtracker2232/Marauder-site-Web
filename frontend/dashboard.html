@@ -12,16 +12,13 @@
     <meta property="og:url" content="https://marauder-site-web-production.up.railway.app/dashboard.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
-    
-    <!-- CHARGEMENT DU CSS -->
     <link rel="stylesheet" href="css/style.css">
-    
     <style>
         /* ============================================
            SUPPRESSION TOTALE DE TOUT FOND NOIR
            ============================================ */
         
-        /* 1. Supprimer le cadrillage sur le dashboard */
+        /* Supprimer le cadrillage */
         body.dashboard-page::before,
         body.dashboard-page::after,
         .dashboard-page::before,
@@ -31,13 +28,9 @@
             background: none !important;
             opacity: 0 !important;
             visibility: hidden !important;
-            width: 0 !important;
-            height: 0 !important;
-            position: absolute !important;
-            z-index: -9999 !important;
         }
         
-        /* 2. Supprimer TOUS les pseudo-elements */
+        /* Supprimer TOUS les pseudo-elements */
         *::before,
         *::after {
             display: none !important;
@@ -45,69 +38,36 @@
             background: none !important;
         }
         
-        /* 3. Fond de la page */
-        body.dashboard-page,
-        .dashboard-page {
+        /* Fond de la page */
+        body.dashboard-page {
             background: #0a0a0a !important;
         }
         
-        /* 4. Main content transparent */
-        .main-content,
-        #page-search,
-        #page-search *,
-        .search-tabs,
-        .search-tabs *,
-        .search-tab-content,
-        .search-tab-content *,
-        .section,
-        .section *,
-        .section-body,
-        .section-body *,
-        .form-grid,
-        .form-grid *,
-        .search-actions,
-        .search-actions *,
-        .results-container,
-        .results-container *,
-        .page,
-        .page * {
+        /* Main content transparent */
+        .main-content {
             background: transparent !important;
         }
         
-        /* 5. Garder les fonds nécessaires */
-        .section {
+        #page-search,
+        #page-search * {
+            background: transparent !important;
+        }
+        
+        #page-search .section {
             background: #111111 !important;
             border: 1px solid #2a2a2a !important;
             border-radius: 12px !important;
         }
         
-        .section-header {
+        #page-search .section-header {
             background: #111111 !important;
         }
         
-        .search-tabs {
-            background: #1e1e1e !important;
-            border-radius: 10px !important;
-            padding: 4px !important;
-        }
-        
-        .search-tab.active {
-            background: #ffffff !important;
-            color: #000000 !important;
-        }
-        
-        .search-tab {
+        #page-search .section-body {
             background: transparent !important;
-            color: #a0a0a0 !important;
         }
         
-        input, select {
-            background: #1e1e1e !important;
-            border: 1px solid #2a2a2a !important;
-            color: #ffffff !important;
-        }
-        
-        /* 6. Boutons blancs */
+        /* Boutons */
         .btn-primary,
         #searchBtn,
         #searchBtnPro {
@@ -131,56 +91,23 @@
             border: 1px solid #2a2a2a !important;
         }
         
-        .btn-secondary:hover,
-        #clearBtn:hover,
-        #clearBtnPro:hover {
-            background: rgba(255,255,255,0.05) !important;
+        /* Inputs */
+        input, select {
+            background: #1e1e1e !important;
+            border: 1px solid #2a2a2a !important;
             color: #ffffff !important;
         }
         
-        /* 7. Sidebar */
+        /* Sidebar */
         .sidebar {
             background: #111111 !important;
             border-right: 1px solid #2a2a2a !important;
         }
         
-        .sidebar-nav li {
-            color: #a0a0a0 !important;
-        }
-        
-        .sidebar-nav li.active {
-            background: rgba(255,255,255,0.05) !important;
-            color: #ffffff !important;
-        }
-        
-        .sidebar-nav li:hover {
-            background: rgba(255,255,255,0.03) !important;
-            color: #ffffff !important;
-        }
-        
-        /* 8. Mobile */
+        /* ============================================
+           MOBILE
+           ============================================ */
         @media screen and (max-width: 768px) {
-            .main-content {
-                margin-left: 0 !important;
-                padding: 16px 12px !important;
-            }
-            
-            .sidebar {
-                transform: translateX(-100%) !important;
-                transition: transform 0.3s ease !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                bottom: 0 !important;
-                z-index: 1000 !important;
-                width: 280px !important;
-                height: 100vh !important;
-            }
-            
-            .sidebar.open {
-                transform: translateX(0) !important;
-            }
-            
             .mobile-menu-btn {
                 display: flex !important;
                 position: fixed !important;
@@ -199,6 +126,21 @@
                 justify-content: center !important;
             }
             
+            .sidebar {
+                transform: translateX(-100%) !important;
+                transition: transform 0.3s ease !important;
+                position: fixed !important;
+                z-index: 1000 !important;
+                width: 280px !important;
+                height: 100vh !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0) !important;
+            }
+            
             .sidebar-backdrop {
                 display: none !important;
                 position: fixed !important;
@@ -212,6 +154,12 @@
             
             .sidebar-backdrop.active {
                 display: block !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 16px 12px !important;
+                padding-top: 16px !important;
             }
             
             .page-header {
@@ -250,6 +198,77 @@
             
             #grapheContainer {
                 height: 350px !important;
+            }
+            
+            .result-header-full {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            
+            .result-fields.open {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .result-actions {
+                flex-wrap: wrap !important;
+            }
+            
+            .fiche-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 4px !important;
+            }
+            
+            .fiche-actions {
+                flex-wrap: wrap !important;
+            }
+            
+            .history-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+            
+            .ticket-item .ticket-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+            
+            .investigation-body {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .investigation-info-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .investigation-actions {
+                flex-direction: column !important;
+            }
+            
+            .investigation-actions .btn-primary,
+            .investigation-actions .btn-secondary {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            
+            .results-counter {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .search-tab {
+                font-size: 11px !important;
+                padding: 6px 10px !important;
+            }
+            
+            .result-name-full {
+                font-size: 14px !important;
             }
         }
     </style>
