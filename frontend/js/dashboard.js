@@ -1555,10 +1555,7 @@ async function loadProfile() {
     }
 }
 
-// ============================================
-// GRAPHE - MODULE COMPLET
-// ============================================
-
+// ============ GRAPHE ============
 window.grapheNodes = [];
 window.grapheEdges = [];
 let grapheZoom = 1;
@@ -1578,14 +1575,11 @@ let grapheCtx = null;
 function initGraphe() {
     grapheCanvas = document.getElementById('grapheCanvas');
     if (!grapheCanvas) {
-        console.warn('Canvas du graphe non trouve');
         setTimeout(initGraphe, 300);
         return;
     }
-    
     grapheCtx = grapheCanvas.getContext('2d');
     resizeGraphe();
-    
     grapheCanvas.addEventListener('mousedown', onGrapheMouseDown);
     grapheCanvas.addEventListener('mousemove', onGrapheMouseMove);
     grapheCanvas.addEventListener('mouseup', onGrapheMouseUp);
@@ -1602,10 +1596,8 @@ function initGraphe() {
             showGrapheContextMenu(e.clientX, e.clientY);
         }
     });
-    
     window.addEventListener('resize', resizeGraphe);
     renderGraphe();
-    console.log('Graphe initialise');
 }
 
 function resizeGraphe() {
@@ -1617,20 +1609,14 @@ function resizeGraphe() {
     grapheCanvas.height = rect.height * dpr;
     grapheCanvas.style.width = rect.width + 'px';
     grapheCanvas.style.height = rect.height + 'px';
-    if (grapheCtx) {
-        grapheCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+    if (grapheCtx) grapheCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function renderGraphe() {
     if (!grapheCtx || !grapheCanvas) return;
-    
     const rect = grapheCanvas.getBoundingClientRect();
-    const W = rect.width;
-    const H = rect.height;
-    
+    const W = rect.width, H = rect.height;
     grapheCtx.clearRect(0, 0, W, H);
-    
     const step = 40;
     const ox = ((grapheOffsetX % step) + step) % step;
     const oy = ((grapheOffsetY % step) + step) % step;
@@ -1648,11 +1634,9 @@ function renderGraphe() {
         grapheCtx.lineTo(W, y);
         grapheCtx.stroke();
     }
-    
     grapheCtx.save();
     grapheCtx.translate(grapheOffsetX, grapheOffsetY);
     grapheCtx.scale(grapheZoom, grapheZoom);
-    
     window.grapheEdges.forEach(edge => {
         const from = window.grapheNodes.find(n => n.id === edge.from);
         const to = window.grapheNodes.find(n => n.id === edge.to);
@@ -1664,20 +1648,16 @@ function renderGraphe() {
         grapheCtx.lineWidth = 2 / grapheZoom;
         grapheCtx.stroke();
     });
-    
     window.grapheNodes.forEach(node => {
         const r = node.radius || 24;
         const isSelected = grapheLinkMode && grapheLinkFrom === node.id;
         const color = node.color || '#ffffff';
-        
         grapheCtx.shadowColor = 'rgba(255,255,255,0.05)';
         grapheCtx.shadowBlur = 20;
-        
         grapheCtx.beginPath();
         grapheCtx.arc(node.x, node.y, r + 2, 0, Math.PI * 2);
         grapheCtx.fillStyle = isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)';
         grapheCtx.fill();
-        
         grapheCtx.shadowBlur = 0;
         grapheCtx.beginPath();
         grapheCtx.arc(node.x, node.y, r, 0, Math.PI * 2);
@@ -1686,12 +1666,10 @@ function renderGraphe() {
         grapheCtx.strokeStyle = isSelected ? '#ffffff' : 'rgba(255,255,255,0.15)';
         grapheCtx.lineWidth = isSelected ? 3 / grapheZoom : 1.5 / grapheZoom;
         grapheCtx.stroke();
-        
         grapheCtx.beginPath();
         grapheCtx.arc(node.x, node.y, 4 / grapheZoom, 0, Math.PI * 2);
         grapheCtx.fillStyle = color;
         grapheCtx.fill();
-        
         grapheCtx.shadowBlur = 0;
         grapheCtx.fillStyle = '#ffffff';
         grapheCtx.font = `${12 / grapheZoom}px Arial, sans-serif`;
@@ -1700,16 +1678,13 @@ function renderGraphe() {
         let label = node.label || 'Personne';
         if (label.length > 18) label = label.slice(0, 16) + '...';
         grapheCtx.fillText(label, node.x, node.y + r + 6 / grapheZoom);
-        
         if (node.role) {
             grapheCtx.fillStyle = 'rgba(255,255,255,0.35)';
             grapheCtx.font = `${10 / grapheZoom}px Arial, sans-serif`;
             grapheCtx.fillText(node.role, node.x, node.y + r + 22 / grapheZoom);
         }
     });
-    
     grapheCtx.restore();
-    
     if (window.grapheNodes.length === 0) {
         grapheCtx.fillStyle = 'rgba(255,255,255,0.15)';
         grapheCtx.font = '16px Arial, sans-serif';
@@ -1730,9 +1705,7 @@ function getGrapheNodeAt(x, y) {
         const dx = wx - node.x;
         const dy = wy - node.y;
         const r = node.radius || 24;
-        if (dx * dx + dy * dy < r * r) {
-            return node;
-        }
+        if (dx * dx + dy * dy < r * r) return node;
     }
     return null;
 }
@@ -1742,9 +1715,7 @@ function onGrapheMouseDown(e) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const node = getGrapheNodeAt(x, y);
-    
     if (e.button === 2) return;
-    
     if (grapheLinkMode && node) {
         if (grapheLinkFrom === null) {
             grapheLinkFrom = node.id;
@@ -1766,7 +1737,6 @@ function onGrapheMouseDown(e) {
         }
         return;
     }
-    
     if (node) {
         grapheDraggingNode = node;
         const wx = (x - grapheOffsetX) / grapheZoom;
@@ -1776,7 +1746,6 @@ function onGrapheMouseDown(e) {
         grapheCanvas.style.cursor = 'grabbing';
         return;
     }
-    
     grapheIsPanning = true;
     graphePanStartX = x;
     graphePanStartY = y;
@@ -1787,7 +1756,6 @@ function onGrapheMouseMove(e) {
     const rect = grapheCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
     if (grapheDraggingNode) {
         const wx = (x - grapheOffsetX) / grapheZoom;
         const wy = (y - grapheOffsetY) / grapheZoom;
@@ -1796,7 +1764,6 @@ function onGrapheMouseMove(e) {
         renderGraphe();
         return;
     }
-    
     if (grapheIsPanning) {
         grapheOffsetX += x - graphePanStartX;
         grapheOffsetY += y - graphePanStartY;
@@ -1845,10 +1812,8 @@ function hideGrapheContextMenu() {
 
 document.addEventListener('click', function(e) {
     const menu = document.getElementById('grapheContextMenu');
-    if (menu && menu.style.display === 'block') {
-        if (!menu.contains(e.target)) {
-            hideGrapheContextMenu();
-        }
+    if (menu && menu.style.display === 'block' && !menu.contains(e.target)) {
+        hideGrapheContextMenu();
     }
 });
 
@@ -1861,13 +1826,9 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
         const node = window.grapheNodes.find(n => n.id === nodeId);
         if (!node) return;
         hideGrapheContextMenu();
-        
         switch(action) {
             case 'edit':
-                showModal('Modifier', `
-                    <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}"></div>
-                    <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}"></div>
-                `, 'Sauvegarder', () => {
+                showModal('Modifier', `<div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}"></div><div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}"></div>`, 'Sauvegarder', () => {
                     node.label = document.getElementById('editNodeName').value.trim() || 'Personne';
                     node.role = document.getElementById('editNodeRole').value.trim();
                     renderGraphe();
@@ -1876,15 +1837,11 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 break;
             case 'color':
                 const colors = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
-                const colorHtml = colors.map(c => `
-                    <button onclick="changeGrapheColor(${node.id}, '${c}')" style="width:30px;height:30px;border-radius:50%;border:2px solid ${c === node.color ? '#fff' : 'transparent'};background:${c};cursor:pointer;margin:3px;"></button>
-                `).join('');
+                const colorHtml = colors.map(c => `<button onclick="changeGrapheColor(${node.id}, '${c}')" style="width:30px;height:30px;border-radius:50%;border:2px solid ${c === node.color ? '#fff' : 'transparent'};background:${c};cursor:pointer;margin:3px;"></button>`).join('');
                 showModal('Choisir une couleur', `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:8px 0;">${colorHtml}</div>`, 'Fermer', closeModal);
                 break;
             case 'role':
-                showModal('Fonction', `
-                    <div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}"></div>
-                `, 'Appliquer', () => {
+                showModal('Fonction', `<div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}"></div>`, 'Appliquer', () => {
                     node.role = document.getElementById('editRoleInput').value.trim();
                     renderGraphe();
                     showToast('Fonction mise a jour !', 'success');
@@ -1946,13 +1903,11 @@ function addPersonToGrapheWithFamily(personData) {
         showToast('Personne introuvable', 'error');
         return;
     }
-    
     const name = `${personData.prenom || ''} ${personData.nom_famille || 'Inconnu'}`.trim();
     const container = document.getElementById('grapheContainer');
     const rect = container.getBoundingClientRect();
     const cx = rect.width / 2;
     const cy = rect.height / 2;
-    
     const mainNode = {
         id: Date.now(),
         label: name,
@@ -1968,9 +1923,7 @@ function addPersonToGrapheWithFamily(personData) {
         color: '#ffffff',
         isMain: true
     };
-    
     window.grapheNodes.push(mainNode);
-    
     const famille = personData.famille || [];
     const colors = ['#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
     if (famille.length > 0) {
@@ -1979,7 +1932,6 @@ function addPersonToGrapheWithFamily(personData) {
             const angle = index * angleStep - Math.PI / 2;
             const radius = 180 + Math.random() * 40;
             const memberName = `${member.prenom || ''} ${member.nom_famille || 'Inconnu'}`.trim();
-            
             const memberNode = {
                 id: Date.now() + index + 1,
                 label: memberName,
@@ -1995,17 +1947,10 @@ function addPersonToGrapheWithFamily(personData) {
                 color: colors[index % colors.length],
                 isMain: false
             };
-            
             window.grapheNodes.push(memberNode);
-            window.grapheEdges.push({
-                id: Date.now() + index + 100,
-                from: mainNode.id,
-                to: memberNode.id,
-                label: member.lien || 'Famille'
-            });
+            window.grapheEdges.push({ id: Date.now() + index + 100, from: mainNode.id, to: memberNode.id, label: member.lien || 'Famille' });
         });
     }
-    
     renderGraphe();
     showToast(`"${name}" et sa famille ajoutes au graphe !`, 'success');
 }
@@ -2017,15 +1962,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const rect = container.getBoundingClientRect();
         const cx = rect.width / 2;
         const cy = rect.height / 2;
-        const newNode = {
+        window.grapheNodes.push({
             id: Date.now(),
             label: 'Personne ' + (window.grapheNodes.length + 1),
             x: cx + (Math.random() - 0.5) * 100,
             y: cy + (Math.random() - 0.5) * 100,
             radius: 24,
             color: '#ffffff'
-        };
-        window.grapheNodes.push(newNode);
+        });
         renderGraphe();
         showToast('Personne ajoutee !', 'success');
     });
@@ -2054,10 +1998,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('grapheSauvegarder')?.addEventListener('click', function() {
         try {
-            localStorage.setItem('marauder_graphe', JSON.stringify({
-                nodes: window.grapheNodes,
-                edges: window.grapheEdges
-            }));
+            localStorage.setItem('marauder_graphe', JSON.stringify({ nodes: window.grapheNodes, edges: window.grapheEdges }));
             showToast('Graphe sauvegarde (local)', 'success');
         } catch (e) {
             showToast('Erreur de sauvegarde', 'error');
@@ -2100,10 +2041,7 @@ window.renderGraphe = renderGraphe;
 window.addPersonToGrapheWithFamily = addPersonToGrapheWithFamily;
 window.changeGrapheColor = changeGrapheColor;
 
-// ============================================
-// TICKETS
-// ============================================
-
+// ============ TICKETS ============
 function openCreateTicket() {
     showModal('Nouveau ticket', `
         <div class="form-group">
@@ -2117,24 +2055,17 @@ function openCreateTicket() {
     `, 'Envoyer', async function() {
         const subject = document.getElementById('ticketSubject').value.trim();
         const message = document.getElementById('ticketMessage').value.trim();
-        
         if (!subject || !message) {
             showToast('Veuillez remplir tous les champs', 'warning');
             return;
         }
-        
         try {
             const response = await fetch(API_URL + '/api/tickets', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify({ subject, message })
             });
-            
             const data = await response.json();
-            
             if (response.ok && data.success) {
                 showToast('Ticket cree !', 'success');
                 loadTickets();
@@ -2143,7 +2074,6 @@ function openCreateTicket() {
                 showToast(data.error || 'Erreur', 'error');
             }
         } catch (error) {
-            console.error('Erreur:', error);
             showToast('Erreur reseau', 'error');
         }
     });
@@ -2153,19 +2083,16 @@ async function loadTickets() {
     const container = document.getElementById('ticketsList');
     if (!container) return;
     container.innerHTML = '<div class="empty-state">Chargement...</div>';
-
     try {
         const response = await fetch(API_URL + '/api/tickets', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await response.json();
         const tickets = data.tickets || [];
-
         if (tickets.length === 0) {
             container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
             return;
         }
-
         container.innerHTML = tickets.map(ticket => `
             <div class="ticket-item" onclick="viewTicket(${ticket.id})">
                 <div class="ticket-header">
@@ -2188,14 +2115,12 @@ async function viewTicket(ticketId) {
         const data = await response.json();
         const ticket = data.ticket;
         const messages = data.messages || [];
-
         let messagesHtml = messages.map(m => `
             <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
                 <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
                 <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
             </div>
         `).join('');
-
         showModal(ticket.subject, `
             <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
             <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
@@ -2206,7 +2131,6 @@ async function viewTicket(ticketId) {
                 </div>
             ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
         `, 'Fermer', closeModal);
-
     } catch (error) {
         showToast('Erreur de chargement', 'error');
     }
@@ -2220,7 +2144,6 @@ async function replyTicket(ticketId) {
         showToast('Veuillez entrer un message', 'warning');
         return;
     }
-
     try {
         const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
             method: 'POST',
@@ -2240,16 +2163,9 @@ async function replyTicket(ticketId) {
     }
 }
 
-// ============ ATTACHER LE BOUTON TICKET ============
-document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.getElementById('openTicketBtn');
-    if (btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            openCreateTicket();
-        });
-        console.log('Bouton ticket attache');
-    }
+document.getElementById('openTicketBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    openCreateTicket();
 });
 
 // ============ SUPPORT TOGGLE ============
@@ -2257,12 +2173,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const supportToggle = document.getElementById('supportToggle');
     const supportSubmenu = document.getElementById('supportSubmenu');
     const supportArrow = supportToggle ? supportToggle.querySelector('.support-arrow') : null;
-
     if (supportToggle && supportSubmenu) {
         supportToggle.addEventListener('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
-            
             const isOpen = supportSubmenu.style.display === 'block';
             supportSubmenu.style.display = isOpen ? 'none' : 'block';
             if (supportArrow) {
@@ -2270,7 +2184,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
     document.addEventListener('click', function(e) {
         if (supportToggle && supportSubmenu) {
             if (!supportToggle.contains(e.target) && !supportSubmenu.contains(e.target)) {
@@ -2288,7 +2201,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const mobileBtn = document.getElementById('mobileMenuBtn');
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebarBackdrop');
-    
     if (mobileBtn && sidebar) {
         mobileBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -2296,7 +2208,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (backdrop) backdrop.classList.toggle('active');
         });
     }
-    
     if (backdrop) {
         backdrop.addEventListener('click', function() {
             sidebar.classList.remove('open');
@@ -2308,6 +2219,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============ INIT ============
 verifyToken();
 loadProfile();
-initGraphe();
+setTimeout(initGraphe, 500);
 
 console.log('Dashboard charge');
