@@ -1,3 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Marauder - Dashboard</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    <style>
+        /* ============================================
+           STYLES COMPLETS
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; font-family: Arial, sans-serif; color: #ffffff; min-height: 100vh; }
+        body::before, body::after { display: none !important; }
+
+        .sidebar { width: 220px; background: #111111; border-right: 1px solid #2a2a2a; position: fixed; top: 0; left: 0; bottom: 0; padding: 16px 12px; overflow-y: auto; z-index: 1000; transition: transform 0.3s ease; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid #2a2a2a; margin-bottom: 12px; }
+        .sidebar-header .logo { width: 28px; height: 28px; color: #ffffff; }
+        .sidebar-header span { font-size: 18px; font-weight: 800; color: #ffffff; }
+        .sidebar-nav { list-style: none; }
+        .sidebar-nav li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px; cursor: pointer; color: #a0a0a0; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .sidebar-nav li:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+        .sidebar-nav li.active { background: rgba(255,255,255,0.05); color: #ffffff; }
+        .sidebar-nav li svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
+        
+        .support-toggle { display: flex !important; align-items: center !important; gap: 12px !important; padding: 10px 12px !important; border-radius: 6px !important; cursor: pointer !important; color: #a0a0a0 !important; font-size: 13px !important; font-weight: 500 !important; transition: all 0.2s !important; margin-top: 4px !important; }
+        .support-toggle:hover { background: rgba(255,255,255,0.03) !important; color: #ffffff !important; }
+        .support-toggle svg { width: 18px !important; height: 18px !important; flex-shrink: 0 !important; }
+        .support-arrow { margin-left: auto !important; transition: transform 0.3s ease !important; }
+        .support-submenu { padding-left: 36px !important; list-style: none !important; margin-top: 4px !important; }
+        .support-submenu li { display: flex !important; align-items: center !important; gap: 12px !important; padding: 8px 12px !important; border-radius: 6px !important; cursor: pointer !important; color: #a0a0a0 !important; font-size: 13px !important; font-weight: 500 !important; transition: all 0.2s !important; }
+        .support-submenu li:hover { background: rgba(255,255,255,0.03) !important; color: #ffffff !important; }
+        .support-submenu li svg { width: 18px !important; height: 18px !important; flex-shrink: 0 !important; }
+
+        .sidebar-footer { padding-top: 12px; border-top: 1px solid #2a2a2a; margin-top: 12px; }
+        .sidebar-footer button { width: 100%; padding: 8px 12px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 12px; font-family: Arial, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
+        .sidebar-footer button:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+        .sidebar-footer button svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .main-content { margin-left: 220px; padding: 32px 40px; min-height: 100vh; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .page-header h2 { font-size: 28px; font-weight: 700; color: #ffffff; }
+        .user-info { font-size: 14px; color: #a0a0a0; }
+
+        .search-tabs { background: #1e1e1e; border-radius: 10px; padding: 4px; display: flex; gap: 4px; margin-bottom: 20px; }
+        .search-tab { flex: 1; padding: 10px 16px; background: transparent; border: none; border-radius: 8px; color: #a0a0a0; font-size: 13px; font-weight: 500; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; }
+        .search-tab:hover { color: #ffffff; }
+        .search-tab.active { background: #ffffff; color: #000000; }
+        .search-tab-content { display: none; }
+        .search-tab-content.active { display: block; }
+        .section { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; user-select: none; }
+        .section-header h3 { font-size: 15px; font-weight: 600; color: #ffffff; }
+        .section-header .toggle-icon { color: #6b6b6b; transition: transform 0.3s ease; }
+        .section-header .toggle-icon.open { transform: rotate(180deg); }
+        .section-body { padding: 0 20px 20px 20px; display: none; }
+        .section-body.open { display: block; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .form-group { margin-bottom: 0; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: #a0a0a0; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 14px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; color: #ffffff; font-size: 14px; font-family: Arial, sans-serif; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: #ffffff; }
+
+        .search-actions { display: flex; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; }
+        .btn-primary { background: #ffffff; color: #000000; border: none; padding: 10px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
+        .btn-primary:hover { background: #cccccc; }
+        .btn-secondary { background: transparent; color: #a0a0a0; border: 1px solid #2a2a2a; padding: 10px 28px; border-radius: 8px; font-size: 14px; font-weight: 500; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.05); color: #ffffff; }
+        #searchBtn, #searchBtnPro { background: #ffffff; color: #000000; border: none; padding: 10px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
+        #searchBtn:hover, #searchBtnPro:hover { background: #cccccc; }
+        #clearBtn, #clearBtnPro { background: transparent; color: #a0a0a0; border: 1px solid #2a2a2a; padding: 10px 28px; border-radius: 8px; font-size: 14px; font-weight: 500; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        #clearBtn:hover, #clearBtnPro:hover { background: rgba(255,255,255,0.05); color: #ffffff; }
+
+        .lookup-form { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; display: flex; gap: 16px; align-items: end; margin-bottom: 24px; flex-wrap: wrap; }
+        .lookup-form .form-group { flex: 1; min-width: 180px; margin-bottom: 0; }
+        .lookup-form .btn-primary { width: auto; padding: 12px 28px; }
+
+        .results-container { margin-top: 20px; }
+        .results-counter { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; margin-bottom: 16px; }
+        .results-counter .count { font-size: 14px; color: #a0a0a0; }
+        .results-counter .count strong { color: #ffffff; font-weight: 700; }
+        .results-counter .badge { font-size: 12px; color: #6b6b6b; background: rgba(255,255,255,0.03); padding: 4px 12px; border-radius: 20px; border: 1px solid #2a2a2a; }
+        .result-card-full { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px 24px; margin-bottom: 12px; transition: border-color 0.2s; }
+        .result-card-full:hover { border-color: rgba(255,255,255,0.1); }
+        .result-header-full { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #2a2a2a; margin-bottom: 12px; }
+        .result-name-full { font-size: 20px; font-weight: 700; color: #ffffff; cursor: pointer; }
+        .result-meta { display: flex; align-items: center; gap: 12px; }
+        .result-fields { display: none; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 16px; }
+        .result-fields.open { display: grid; }
+        .result-field { display: flex; flex-direction: column; padding: 4px 0; }
+        .result-field .field-label { font-size: 11px; font-weight: 500; color: #6b6b6b; text-transform: uppercase; }
+        .result-field .field-value { font-size: 14px; color: #a0a0a0; word-break: break-all; }
+        .result-field .field-value.highlight { color: #ffffff; }
+        .result-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a2a2a; flex-wrap: wrap; }
+        .btn-deep { padding: 6px 16px; background: rgba(255,255,255,0.03); border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 12px; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-deep:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); color: #ffffff; }
+        .btn-deep svg { width: 14px; height: 14px; }
+
+        .deep-panel { display: none; margin-top: 12px; padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid #2a2a2a; border-radius: 8px; }
+        .deep-panel.open { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .family-tree { margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.01); border: 1px solid #2a2a2a; border-radius: 6px; }
+        .family-tree .tree-title { font-size: 12px; font-weight: 500; color: #6b6b6b; margin-bottom: 8px; }
+        .family-tree .tree-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; color: #a0a0a0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .family-tree .tree-item .relation { font-size: 10px; color: #6b6b6b; background: rgba(255,255,255,0.03); padding: 2px 10px; border-radius: 4px; }
+
+        .confidence-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #2a2a2a; }
+        .confidence-high { background: rgba(16,185,129,0.1); color: #10b981; border-color: rgba(16,185,129,0.2); }
+        .confidence-medium { background: rgba(245,158,11,0.1); color: #f59e0b; border-color: rgba(245,158,11,0.2); }
+        .confidence-low { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+
+        .empty-state { text-align: center; padding: 48px 24px; color: #6b6b6b; }
+
+        .fiche-item { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+        .fiche-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .fiche-name { font-size: 16px; font-weight: 600; color: #ffffff; }
+        .fiche-count { font-size: 12px; color: #6b6b6b; background: rgba(255,255,255,0.03); padding: 2px 10px; border-radius: 12px; }
+        .fiche-persons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .fiche-person { font-size: 13px; color: #a0a0a0; background: rgba(255,255,255,0.02); border: 1px solid #2a2a2a; padding: 2px 10px; border-radius: 4px; }
+        .fiche-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a; }
+        .fiche-btn { padding: 4px 12px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 12px; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; }
+        .fiche-btn:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+        .fiche-btn.danger:hover { border-color: rgba(239,68,68,0.3); color: #ef4444; }
+
+        .history-item { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; }
+        .history-date { font-size: 13px; color: #a0a0a0; }
+        .history-result-count { font-size: 13px; font-weight: 600; color: #10b981; padding: 2px 12px; border-radius: 12px; background: rgba(16,185,129,0.1); }
+        .history-result-count.empty { color: #6b6b6b; background: rgba(255,255,255,0.03); }
+        .history-footer { margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a2a; }
+        .history-replay { padding: 4px 12px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 12px; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; }
+        .history-replay:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+
+        .ticket-item { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
+        .ticket-item:hover { border-color: rgba(255,255,255,0.1); }
+        .ticket-item .ticket-header { display: flex; justify-content: space-between; align-items: center; }
+        .ticket-item .ticket-subject { font-weight: 600; color: #ffffff; }
+        .ticket-item .ticket-meta { font-size: 12px; color: #6b6b6b; }
+        .ticket-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a2a2a; }
+        .ticket-detail.open { display: block; }
+        .ticket-message { padding: 10px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 13px; color: #a0a0a0; }
+        .ticket-message.admin { background: rgba(255,255,255,0.05); border-left: 2px solid #3b82f6; }
+        .ticket-message .msg-meta { font-size: 11px; color: #6b6b6b; margin-bottom: 4px; }
+        .ticket-reply { display: flex; gap: 10px; margin-top: 12px; }
+        .ticket-reply input { flex: 1; padding: 8px 14px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 6px; color: #ffffff; font-size: 13px; font-family: Arial, sans-serif; outline: none; }
+        .ticket-reply input:focus { border-color: #ffffff; }
+        .ticket-reply button { padding: 8px 20px; background: #ffffff; border: none; border-radius: 6px; color: #000000; font-weight: 600; font-size: 13px; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; }
+        .ticket-reply button:hover { background: #cccccc; }
+
+        .profile-card { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 500px; }
+        .profile-card .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
+        .profile-card .profile-row:last-child { border-bottom: none; }
+        .profile-card .label { color: #6b6b6b; }
+        .profile-card .value { color: #ffffff; font-weight: 500; }
+
+        /* TOAST */
+        .toast-container { position: fixed; top: 80px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
+        .toast { padding: 14px 20px; border-radius: 12px; border: 1px solid #2a2a2a; background: #111111; color: #ffffff; font-size: 14px; font-family: Arial, sans-serif; animation: slideInRight 0.3s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.6); min-width: 200px; }
+        .toast.success { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+        .toast.error { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+        .toast.warning { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        .toast-close { float: right; background: none; border: none; color: #6b6b6b; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px; }
+        .toast-close:hover { color: #ffffff; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.6); max-height: 80vh; overflow-y: auto; }
+        .modal h3 { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 16px; }
+        .modal .form-group { margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .modal-actions .btn-primary { width: auto; padding: 10px 24px; }
+        .modal-actions .btn-secondary { padding: 10px 24px; }
+
+        /* LOADING OVERLAY */
+        .search-loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 30px; }
+        .search-loading.active { display: flex; animation: fadeIn 0.3s ease; }
+        .loading-logo { display: flex; align-items: center; gap: 20px; animation: pulse 1.5s ease-in-out infinite; }
+        .loading-logo svg { width: 64px; height: 64px; color: #ffffff; opacity: 0.9; }
+        .loading-logo span { font-size: 32px; font-weight: 800; color: #ffffff; letter-spacing: 2px; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
+        .thinking-text { display: flex; align-items: center; gap: 8px; font-size: 18px; color: #a0a0a0; font-weight: 300; letter-spacing: 3px; }
+        .thinking-icon { width: 24px; height: 24px; color: #a0a0a0; animation: spin 3s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .thinking-text .dot { display: inline-block; animation: dotBounce 1.4s ease-in-out infinite; }
+        .thinking-text .dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-text .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
+        .neon-bar-container { width: 400px; max-width: 80%; height: 3px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+        .neon-bar { height: 100%; width: 0%; background: linear-gradient(90deg, transparent, #ffffff, transparent); border-radius: 4px; animation: neonSlide 1.8s ease-in-out infinite; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        @keyframes neonSlide { 0% { width: 0%; transform: translateX(-100%); } 50% { width: 60%; transform: translateX(0%); } 100% { width: 0%; transform: translateX(100%); } }
+        .loading-text { font-size: 14px; color: #6b6b6b; font-weight: 300; letter-spacing: 6px; text-transform: uppercase; animation: fadeText 2s ease-in-out infinite; }
+        @keyframes fadeText { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* GRAPHE */
+        #grapheContainer { width: 100%; height: 500px; background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; position: relative; cursor: default; user-select: none; }
+        #grapheCanvas { width: 100%; height: 100%; display: block; cursor: default; }
+
+        /* INVESTIGATION OVERLAY */
+        .investigation-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0a0a; z-index: 9999; display: none; overflow-y: auto; }
+        .investigation-overlay.active { display: block; animation: fadeIn 0.3s ease; }
+        .investigation-container { max-width: 1400px; margin: 0 auto; padding: 24px 32px 40px; min-height: 100vh; }
+        .investigation-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #2a2a2a; margin-bottom: 28px; }
+        .investigation-back { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: transparent; border: 1px solid #2a2a2a; border-radius: 8px; color: #a0a0a0; font-size: 14px; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s; }
+        .investigation-back:hover { border-color: rgba(255,255,255,0.2); color: #ffffff; }
+        .investigation-title { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: #ffffff; }
+        .investigation-body { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        .investigation-map-wrapper { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; }
+        .investigation-city-label { text-align: center; font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 16px; letter-spacing: 0.5px; }
+        .investigation-map-container { width: 100%; aspect-ratio: 600/700; position: relative; background: #151515; border-radius: 8px; overflow: hidden; }
+        .investigation-map-container .france-map { width: 100%; height: 100%; display: block; }
+        .investigation-info-col { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; max-height: 700px; }
+        .investigation-info-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #2a2a2a; margin-bottom: 16px; }
+        .investigation-info-header h3 { font-size: 16px; font-weight: 600; color: #ffffff; }
+        .investigation-confidence { font-size: 14px; font-weight: 700; padding: 4px 14px; border-radius: 20px; border: 1px solid #2a2a2a; }
+        .investigation-confidence.high { color: #10b981; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+        .investigation-confidence.medium { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+        .investigation-confidence.low { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+        .investigation-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; flex: 1; overflow-y: auto; padding-right: 4px; }
+        .investigation-info-item { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .investigation-info-item.important { background: rgba(255,255,255,0.02); border-radius: 4px; padding: 6px 10px; margin: 0 -6px; }
+        .investigation-info-label { font-size: 10px; font-weight: 500; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .investigation-info-value { font-size: 14px; color: #a0a0a0; word-break: break-all; }
+        .investigation-info-item.important .investigation-info-value { color: #ffffff; font-weight: 500; }
+        .investigation-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #2a2a2a; flex-wrap: wrap; }
+
+        /* MOBILE */
+        .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; background: #111111; border: 1px solid #2a2a2a; border-radius: 10px; color: #ffffff; padding: 8px 10px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; }
+        .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; }
+        .sidebar-backdrop.active { display: block; }
+
+        @media screen and (max-width: 768px) {
+            .mobile-menu-btn { display: flex !important; }
+            .sidebar { transform: translateX(-100%); width: 280px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 16px 12px; padding-top: 16px; }
+            .page-header { padding-left: 48px; flex-direction: column; align-items: flex-start; gap: 12px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .search-actions { flex-direction: column; }
+            .search-actions .btn-primary, .search-actions .btn-secondary,
+            #searchBtn, #searchBtnPro, #clearBtn, #clearBtnPro { width: 100%; justify-content: center; }
+            .lookup-form { flex-direction: column; }
+            .lookup-form .form-group { min-width: unset; width: 100%; }
+            .lookup-form .btn-primary { width: 100%; justify-content: center; }
+            .result-header-full { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .result-fields.open { grid-template-columns: 1fr; }
+            .search-tabs { flex-wrap: nowrap; overflow-x: auto; }
+            .search-tab { flex: 0 0 auto; white-space: nowrap; font-size: 12px; padding: 8px 14px; }
+            .fiche-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .history-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .ticket-item .ticket-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            #grapheContainer { height: 350px; }
+            .investigation-body { grid-template-columns: 1fr; }
+            .investigation-info-grid { grid-template-columns: 1fr; }
+            .investigation-actions { flex-direction: column; }
+            .investigation-actions .btn-primary, .investigation-actions .btn-secondary { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
     <!-- ============ OVERLAY DE RECHERCHE ============ -->
     <div id="searchOverlay" class="search-loading">
         <div class="loading-logo">
@@ -74,7 +341,32 @@
                 <div class="investigation-map-col">
                     <div class="investigation-map-wrapper">
                         <div class="investigation-city-label" id="investigationCityLabel">Paris</div>
-                        <div class="investigation-map-container" id="investigationMapContainer"></div>
+                        <div class="investigation-map-container" id="investigationMapContainer">
+                            <svg class="france-map" viewBox="0 0 600 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="600" height="700" fill="#151515" rx="12" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                                <g stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none">
+                                    <path d="M100,80 L130,70 L160,85 L190,75 L220,90 L250,80 L280,95 L300,85 L320,100 L340,90 L360,105 L370,125 L350,145 L330,135 L310,150 L290,140 L270,155 L250,145 L230,160 L210,150 L190,165 L170,155 L150,170 L130,160 L110,175 L90,165 L70,180 L55,165 L45,145 L55,125 L70,135 L85,120 L70,100 L85,90 Z"/>
+                                    <path d="M370,125 L390,115 L410,130 L430,120 L450,135 L470,125 L490,140 L510,130 L530,145 L540,165 L520,180 L500,170 L480,185 L460,175 L440,190 L420,180 L400,195 L380,185 L360,200 L350,180 Z"/>
+                                    <path d="M350,180 L360,200 L340,215 L320,205 L300,220 L280,210 L260,225 L240,215 L220,230 L200,220 L190,235 L170,225 L150,240 L130,230 L120,250 L110,240 L100,260 L90,250 L80,270 L70,260 L60,280 L55,265 L45,285 L40,270 L35,290 L30,275 L25,295 L20,280 L30,310 L40,300 L50,320 L60,310 L70,330 L80,320 L90,340 L100,330 L110,350 L120,340 L130,360 L140,350 L150,370 L160,360 L170,380 L180,370 L190,390 L200,380 L210,400 L220,390 L230,410 L240,400 L250,420 L260,410 L270,430 L280,420 L290,440 L300,430 L310,450 L320,440 L330,460 L340,450 L350,470 L360,460 L370,480 L380,470 L390,490 L400,480 L410,500 L420,490 L430,510 L440,500 L450,520 L460,510 L470,530 L480,520 L490,540 L500,530 L510,550 L520,540 L530,560 L540,550 L545,535 L535,520 L525,530 L515,515 L505,525 L495,510 L485,520 L475,505 L465,515 L455,500 L445,510 L435,495 L425,505 L415,490 L405,500 L395,485 L385,495 L375,480 L365,490 L355,475 L345,485 L335,470 L325,480 L315,465 L305,475 L295,460 L285,470 L275,455 L265,465 L255,450 L245,460 L235,445 L225,455 L215,440 L205,450 L195,435 L185,445 L175,430 L165,440 L155,425 L145,435 L135,420 L125,430 L115,415 L105,425 L95,410 L85,420 L75,405 L65,415 L55,400 L45,410 L35,395 L25,405 L20,390 L30,375 L40,385 L50,370 L60,380 L70,365 L80,375 L90,360 L100,370 L110,355 L120,365 L130,350 L140,360 L150,345 L160,355 L170,340 L180,350 L190,335 L200,345 L210,330 L220,340 L230,325 L240,335 L250,320 L260,330 L270,315 L280,325 L290,310 L300,320 Z"/>
+                                </g>
+                                <circle id="investigationMapPin" cx="300" cy="300" r="14" fill="none" stroke="#ffffff" stroke-width="3"/>
+                                <circle cx="300" cy="300" r="6" fill="#ffffff"/>
+                                <circle cx="300" cy="300" r="22" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                                <g stroke="rgba(255,255,255,0.02)" stroke-width="0.5">
+                                    <line x1="0" y1="100" x2="600" y2="100"/>
+                                    <line x1="0" y1="200" x2="600" y2="200"/>
+                                    <line x1="0" y1="300" x2="600" y2="300"/>
+                                    <line x1="0" y1="400" x2="600" y2="400"/>
+                                    <line x1="0" y1="500" x2="600" y2="500"/>
+                                    <line x1="0" y1="600" x2="600" y2="600"/>
+                                    <line x1="100" y1="0" x2="100" y2="700"/>
+                                    <line x1="200" y1="0" x2="200" y2="700"/>
+                                    <line x1="300" y1="0" x2="300" y2="700"/>
+                                    <line x1="400" y1="0" x2="400" y2="700"/>
+                                    <line x1="500" y1="0" x2="500" y2="700"/>
+                                </g>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -136,6 +428,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/><line x1="12" x2="12" y1="3" y2="9"/><line x1="12" x2="12" y1="15" y2="21"/></svg>
                 <span>Graphe</span>
             </li>
+    
             <li data-page="profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span>Profil</span>
@@ -176,7 +469,9 @@
             </button>
         </div>
     </nav>
-        <main class="main-content">
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <main class="main-content">
 
         <!-- ===== PAGE RECHERCHE ===== -->
         <section id="page-search" class="page active">
@@ -194,8 +489,7 @@
 
             <!-- ===== TAB FRENCH ===== -->
             <div id="tab-french" class="search-tab-content active">
-
-                <!-- IDENTITE -->
+                <!-- Identite -->
                 <div class="section">
                     <div class="section-header" data-section="identity">
                         <h3>Identite</h3>
@@ -205,15 +499,14 @@
                     </div>
                     <div class="section-body open">
                         <div class="form-grid">
-                            <div class="form-group"><label>Nom</label><input type="text" id="searchNom" placeholder="Dupont" class="search-input"></div>
-                            <div class="form-group"><label>Prenom</label><input type="text" id="searchPrenom" placeholder="Jean" class="search-input"></div>
-                            <div class="form-group"><label>Nom de naissance</label><input type="text" id="searchNomNaissance" placeholder="Martin" class="search-input"></div>
-                            <div class="form-group"><label>Nom affiche</label><input type="text" id="searchNomAffichage" placeholder="Jean Dupont" class="search-input"></div>
+                            <div class="form-group"><label>Nom</label><input type="text" id="searchNom" placeholder="Dupont"></div>
+                            <div class="form-group"><label>Prenom</label><input type="text" id="searchPrenom" placeholder="Jean"></div>
+                            <div class="form-group"><label>Nom de naissance</label><input type="text" id="searchNomNaissance" placeholder="Martin"></div>
+                            <div class="form-group"><label>Nom affiche</label><input type="text" id="searchNomAffichage" placeholder="Jean Dupont"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- NAISSANCE -->
+                <!-- Naissance -->
                 <div class="section">
                     <div class="section-header" data-section="birth">
                         <h3>Naissance</h3>
@@ -223,17 +516,16 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>Jour</label><input type="number" id="searchJour" placeholder="15" class="search-input"></div>
-                            <div class="form-group"><label>Mois</label><input type="number" id="searchMois" placeholder="6" class="search-input"></div>
-                            <div class="form-group"><label>Annee</label><input type="number" id="searchAnnee" placeholder="1990" class="search-input"></div>
-                            <div class="form-group"><label>Date exacte</label><input type="date" id="searchDateNaissance" class="search-input"></div>
-                            <div class="form-group"><label>Ville de naissance</label><input type="text" id="searchVilleNaissance" placeholder="Paris" class="search-input"></div>
-                            <div class="form-group"><label>Genre</label><select id="searchGenre" class="search-input"><option value="">Tous</option><option value="M">Homme</option><option value="F">Femme</option></select></div>
+                            <div class="form-group"><label>Jour</label><input type="number" id="searchJour" placeholder="15"></div>
+                            <div class="form-group"><label>Mois</label><input type="number" id="searchMois" placeholder="6"></div>
+                            <div class="form-group"><label>Annee</label><input type="number" id="searchAnnee" placeholder="1990"></div>
+                            <div class="form-group"><label>Date exacte</label><input type="date" id="searchDateNaissance"></div>
+                            <div class="form-group"><label>Ville de naissance</label><input type="text" id="searchVilleNaissance" placeholder="Paris"></div>
+                            <div class="form-group"><label>Genre</label><select id="searchGenre"><option value="">Tous</option><option value="M">Homme</option><option value="F">Femme</option></select></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- CONTACT -->
+                <!-- Contact -->
                 <div class="section">
                     <div class="section-header" data-section="contact">
                         <h3>Contact</h3>
@@ -243,15 +535,14 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>Email</label><input type="email" id="searchEmail" placeholder="jean@example.com" class="search-input"></div>
-                            <div class="form-group"><label>Telephone</label><input type="tel" id="searchPhone" placeholder="0612345678" class="search-input"></div>
-                            <div class="form-group"><label>Nom d'utilisateur</label><input type="text" id="searchUsername" placeholder="jean_d" class="search-input"></div>
-                            <div class="form-group"><label>Adresse IP</label><input type="text" id="searchIp" placeholder="192.168.1.1" class="search-input"></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="searchEmail" placeholder="jean@example.com"></div>
+                            <div class="form-group"><label>Telephone</label><input type="tel" id="searchPhone" placeholder="0612345678"></div>
+                            <div class="form-group"><label>Nom d'utilisateur</label><input type="text" id="searchUsername" placeholder="jean_d"></div>
+                            <div class="form-group"><label>Adresse IP</label><input type="text" id="searchIp" placeholder="192.168.1.1"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- LOCALISATION -->
+                <!-- Localisation -->
                 <div class="section">
                     <div class="section-header" data-section="location">
                         <h3>Localisation</h3>
@@ -261,14 +552,13 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>Adresse</label><input type="text" id="searchAdresse" placeholder="10 rue de la Paix" class="search-input"></div>
-                            <div class="form-group"><label>Code postal</label><input type="text" id="searchCp" placeholder="75001" class="search-input"></div>
-                            <div class="form-group"><label>Ville</label><input type="text" id="searchVille" placeholder="Paris" class="search-input"></div>
+                            <div class="form-group"><label>Adresse</label><input type="text" id="searchAdresse" placeholder="10 rue de la Paix"></div>
+                            <div class="form-group"><label>Code postal</label><input type="text" id="searchCp" placeholder="75001"></div>
+                            <div class="form-group"><label>Ville</label><input type="text" id="searchVille" placeholder="Paris"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- FIVEM -->
+                <!-- FiveM -->
                 <div class="section">
                     <div class="section-header" data-section="fivem">
                         <h3>FiveM / GTA RP</h3>
@@ -278,17 +568,16 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>Steam ID</label><input type="text" id="searchSteam" placeholder="steam:110000123456789" class="search-input"></div>
-                            <div class="form-group"><label>FiveM License</label><input type="text" id="searchFivemLicense" placeholder="license:abc123..." class="search-input"></div>
-                            <div class="form-group"><label>Discord ID</label><input type="text" id="searchDiscord" placeholder="834855528869265459" class="search-input"></div>
-                            <div class="form-group"><label>Xbox Live</label><input type="text" id="searchXbox" placeholder="xbl:2535423154..." class="search-input"></div>
-                            <div class="form-group"><label>Live ID</label><input type="text" id="searchLive" placeholder="live:844425868261" class="search-input"></div>
-                            <div class="form-group"><label>FiveM License2</label><input type="text" id="searchFivemLicense2" placeholder="license2:def456..." class="search-input"></div>
+                            <div class="form-group"><label>Steam ID</label><input type="text" id="searchSteam" placeholder="steam:110000..."></div>
+                            <div class="form-group"><label>FiveM License</label><input type="text" id="searchFivemLicense" placeholder="license:abc123..."></div>
+                            <div class="form-group"><label>Discord ID</label><input type="text" id="searchDiscord" placeholder="834855528869265459"></div>
+                            <div class="form-group"><label>Xbox Live</label><input type="text" id="searchXbox" placeholder="xbl:2535423154..."></div>
+                            <div class="form-group"><label>Live ID</label><input type="text" id="searchLive" placeholder="live:844425868261"></div>
+                            <div class="form-group"><label>FiveM License2</label><input type="text" id="searchFivemLicense2" placeholder="license2:def456..."></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- CHAMPS AVANCES -->
+                <!-- Avances -->
                 <div class="section">
                     <div class="section-header" data-section="advanced">
                         <h3>Champs avances</h3>
@@ -298,23 +587,21 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNir" placeholder="1234567890123" class="search-input"></div>
-                            <div class="form-group"><label>IBAN</label><input type="text" id="searchIban" placeholder="FR76..." class="search-input"></div>
-                            <div class="form-group"><label>BIC</label><input type="text" id="searchBic" placeholder="BNPAFRPP" class="search-input"></div>
-                            <div class="form-group"><label>VIN / Plaque</label><input type="text" id="searchVin" placeholder="AB-123-CD" class="search-input"></div>
+                            <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNir" placeholder="1234567890123"></div>
+                            <div class="form-group"><label>IBAN</label><input type="text" id="searchIban" placeholder="FR76..."></div>
+                            <div class="form-group"><label>BIC</label><input type="text" id="searchBic" placeholder="BNPAFRPP"></div>
+                            <div class="form-group"><label>VIN / Plaque</label><input type="text" id="searchVin" placeholder="AB-123-CD"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="search-actions">
                     <button id="searchBtn" class="btn-primary">Rechercher</button>
                     <button id="clearBtn" class="btn-secondary">Effacer</button>
                 </div>
             </div>
-                        <!-- ===== TAB PRO ===== -->
-            <div id="tab-pro" class="search-tab-content">
 
-                <!-- IDENTITE PRO -->
+            <!-- ===== TAB PRO ===== -->
+            <div id="tab-pro" class="search-tab-content">
                 <div class="section">
                     <div class="section-header" data-section="identity">
                         <h3>Identite Pro</h3>
@@ -324,17 +611,15 @@
                     </div>
                     <div class="section-body open">
                         <div class="form-grid">
-                            <div class="form-group"><label>Nom</label><input type="text" id="searchNomPro" placeholder="Dupont" class="search-input"></div>
-                            <div class="form-group"><label>Prenom</label><input type="text" id="searchPrenomPro" placeholder="Jean" class="search-input"></div>
-                            <div class="form-group"><label>Nom de naissance</label><input type="text" id="searchNomNaissancePro" placeholder="Martin" class="search-input"></div>
-                            <div class="form-group"><label>Societe</label><input type="text" id="searchSociete" placeholder="Entreprise SAS" class="search-input"></div>
-                            <div class="form-group"><label>Profession</label><input type="text" id="searchProfession" placeholder="Developpeur" class="search-input"></div>
-                            <div class="form-group"><label>Fonction</label><input type="text" id="searchFonction" placeholder="CTO" class="search-input"></div>
+                            <div class="form-group"><label>Nom</label><input type="text" id="searchNomPro" placeholder="Dupont"></div>
+                            <div class="form-group"><label>Prenom</label><input type="text" id="searchPrenomPro" placeholder="Jean"></div>
+                            <div class="form-group"><label>Nom de naissance</label><input type="text" id="searchNomNaissancePro" placeholder="Martin"></div>
+                            <div class="form-group"><label>Societe</label><input type="text" id="searchSociete" placeholder="Entreprise SAS"></div>
+                            <div class="form-group"><label>Profession</label><input type="text" id="searchProfession" placeholder="Developpeur"></div>
+                            <div class="form-group"><label>Fonction</label><input type="text" id="searchFonction" placeholder="CTO"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- CONTACT PRO -->
                 <div class="section">
                     <div class="section-header" data-section="contact">
                         <h3>Contact</h3>
@@ -344,14 +629,12 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>Email</label><input type="email" id="searchEmailPro" placeholder="jean@entreprise.com" class="search-input"></div>
-                            <div class="form-group"><label>Telephone</label><input type="tel" id="searchPhonePro" placeholder="0612345678" class="search-input"></div>
-                            <div class="form-group"><label>Adresse IP</label><input type="text" id="searchIpPro" placeholder="192.168.1.1" class="search-input"></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="searchEmailPro" placeholder="jean@entreprise.com"></div>
+                            <div class="form-group"><label>Telephone</label><input type="tel" id="searchPhonePro" placeholder="0612345678"></div>
+                            <div class="form-group"><label>Adresse IP</label><input type="text" id="searchIpPro" placeholder="192.168.1.1"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- IDENTIFIANTS UNIQUES PRO -->
                 <div class="section">
                     <div class="section-header" data-section="pro-identifiants">
                         <h3>Identifiants uniques</h3>
@@ -361,16 +644,15 @@
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
-                            <div class="form-group"><label>SIRET</label><input type="text" id="searchSiret" placeholder="12345678901234" class="search-input"></div>
-                            <div class="form-group"><label>SIREN</label><input type="text" id="searchSiren" placeholder="123456789" class="search-input"></div>
-                            <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNirPro" placeholder="1234567890123" class="search-input"></div>
-                            <div class="form-group"><label>IBAN</label><input type="text" id="searchIbanPro" placeholder="FR76..." class="search-input"></div>
-                            <div class="form-group"><label>BIC</label><input type="text" id="searchBicPro" placeholder="BNPAFRPP" class="search-input"></div>
-                            <div class="form-group"><label>VIN / Plaque</label><input type="text" id="searchVinPro" placeholder="AB-123-CD" class="search-input"></div>
+                            <div class="form-group"><label>SIRET</label><input type="text" id="searchSiret" placeholder="12345678901234"></div>
+                            <div class="form-group"><label>SIREN</label><input type="text" id="searchSiren" placeholder="123456789"></div>
+                            <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNirPro" placeholder="1234567890123"></div>
+                            <div class="form-group"><label>IBAN</label><input type="text" id="searchIbanPro" placeholder="FR76..."></div>
+                            <div class="form-group"><label>BIC</label><input type="text" id="searchBicPro" placeholder="BNPAFRPP"></div>
+                            <div class="form-group"><label>VIN / Plaque</label><input type="text" id="searchVinPro" placeholder="AB-123-CD"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="search-actions">
                     <button id="searchBtnPro" class="btn-primary">Rechercher</button>
                     <button id="clearBtnPro" class="btn-secondary">Effacer</button>
@@ -385,7 +667,7 @@
             <header class="page-header"><h2>Lookup</h2></header>
             <div class="lookup-form">
                 <div class="form-group"><label>Type</label><select id="lookupType"><option value="email">Email</option><option value="phone">Telephone</option><option value="iban">IBAN</option></select></div>
-                <div class="form-group"><label>Valeur</label><input type="text" id="lookupValue" placeholder="jean.dupont@gmail.com" class="search-input"></div>
+                <div class="form-group"><label>Valeur</label><input type="text" id="lookupValue" placeholder="jean.dupont@gmail.com"></div>
                 <button id="lookupBtn" class="btn-primary">Lookup</button>
             </div>
             <div id="lookupResults" class="results-container"></div>
@@ -403,7 +685,8 @@
             <button id="createFicheBtn" class="btn-primary" style="width:auto;padding:10px 24px;">Creer une fiche</button>
             <div id="fichesList" class="results-container" style="margin-top:20px;"></div>
         </section>
-                <!-- ===== PAGE GRAPHE ===== -->
+
+        <!-- ===== PAGE GRAPHE ===== -->
         <section id="page-graphe" class="page">
             <header class="page-header"><h2>Graphe de connexions</h2></header>
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
@@ -413,7 +696,9 @@
                 <button id="grapheMesGraphes" class="btn-secondary">Mes graphes</button>
                 <button id="grapheEffacer" class="btn-secondary" style="color:#ef4444;">Effacer</button>
             </div>
-            <div id="grapheContainer"><canvas id="grapheCanvas"></canvas></div>
+            <div id="grapheContainer">
+                <canvas id="grapheCanvas"></canvas>
+            </div>
         </section>
 
         <!-- ===== PAGE TICKETS ===== -->
@@ -434,9 +719,1724 @@
         <a href="/cgu.html" style="color:#6b6b6b;text-decoration:none;">CGU</a> · <span style="color:#6b6b6b;">Created by Index</span>
     </div>
 
-    <!-- ============ SCRIPTS ============ -->
-    <script src="/js/dashboard.js"></script>
-    <script src="/js/graphe.js"></script>
-    <script src="/js/investigation.js"></script>
+    <!-- ============================================ SCRIPTS ============================================ -->
+    <script>
+        const API_URL = window.location.origin;
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        console.log('Dashboard charge');
+
+        // ============ TOAST ============
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = message + ' <button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(40px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        // ============ MODAL ============
+        function showModal(title, bodyHtml, confirmText, onConfirm) {
+            const overlay = document.getElementById('modalOverlay');
+            const titleEl = document.getElementById('modalTitle');
+            const bodyEl = document.getElementById('modalBody');
+            if (!overlay || !titleEl || !bodyEl) return;
+            titleEl.textContent = title;
+            bodyEl.innerHTML = bodyHtml;
+            overlay.classList.add('active');
+            const confirmBtn = document.getElementById('modalConfirm');
+            const cancelBtn = document.getElementById('modalCancel');
+            if (confirmBtn) {
+                const newConfirm = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+                newConfirm.addEventListener('click', function() {
+                    if (onConfirm) onConfirm();
+                    closeModal();
+                });
+            }
+            if (cancelBtn) {
+                const newCancel = cancelBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                newCancel.addEventListener('click', closeModal);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        // ============ LOADING ============
+        function showSearchLoading() {
+            const overlay = document.getElementById('searchOverlay');
+            if (overlay) overlay.classList.add('active');
+            const bar = document.querySelector('.neon-bar');
+            if (bar) {
+                bar.style.animation = 'none';
+                bar.offsetHeight;
+                bar.style.animation = 'neonSlide 1.8s ease-in-out infinite';
+            }
+        }
+
+        function hideSearchLoading() {
+            const overlay = document.getElementById('searchOverlay');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        // ============ FORMAT PHONE ============
+        function formatPhone(phone) {
+            if (!phone) return '';
+            const cleaned = phone.replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            }
+            return phone;
+        }
+
+        // ============ VERIFY ============
+        async function verifyToken() {
+            try {
+                const response = await fetch(API_URL + '/api/verify', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!response.ok) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                    return;
+                }
+                const data = await response.json();
+                document.getElementById('usernameDisplay').textContent = data.user.username;
+            } catch (error) {
+                console.error('Erreur verify:', error);
+            }
+        }
+        verifyToken();
+
+        // ============ NAVIGATION ============
+        document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.dataset.page;
+                if (page === 'discord') {
+                    window.open('https://discord.gg/ton-invite', '_blank');
+                    return;
+                }
+                document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const target = document.getElementById('page-' + page);
+                if (target) target.classList.add('active');
+                if (page === 'profile') loadProfile();
+                if (page === 'history') loadHistory();
+                if (page === 'fiches') loadFiches();
+                if (page === 'tickets') loadTickets();
+            });
+        });
+
+        // ============ SUPPORT TOGGLE ============
+        document.getElementById('supportToggle').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const submenu = document.getElementById('supportSubmenu');
+            const arrow = this.querySelector('.support-arrow');
+            if (submenu) {
+                const isOpen = submenu.style.display === 'block';
+                submenu.style.display = isOpen ? 'none' : 'block';
+                if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            }
+        });
+
+        // ============ SECTIONS TOGGLE ============
+        document.querySelectorAll('.section-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const body = this.nextElementSibling;
+                const icon = this.querySelector('.toggle-icon');
+                if (body) body.classList.toggle('open');
+                if (icon) icon.classList.toggle('open');
+            });
+        });
+
+        // ============ TABS ============
+        document.querySelectorAll('.search-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ============ LOGOUT ============
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Se déconnecter ?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }
+        });
+
+        // ============ DISPLAY RESULTS ============
+        function displayResults(container, results) {
+            if (!results || results.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                return;
+            }
+
+            const cardsHtml = results.map((person, index) => {
+                const confidence = person._confidence || 0;
+                const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
+                const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
+                
+                let fieldsHtml = '';
+                const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
+                Object.entries(person)
+                    .filter(([key]) => !key.startsWith('_') && !excludedKeys.includes(key))
+                    .forEach(([key, value]) => {
+                        if (!value) return;
+                        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
+                        let displayValue = value;
+                        if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                        fieldsHtml += `
+                            <div class="result-field">
+                                <span class="field-label">${label}</span>
+                                <span class="field-value ${isImportant ? 'highlight' : ''}">${displayValue}</span>
+                            </div>
+                        `;
+                    });
+                
+                let familleHtml = '';
+                if (person.famille && person.famille.length > 0) {
+                    familleHtml = `
+                        <div class="family-tree">
+                            <div class="tree-title">Famille associee (${person.famille.length})</div>
+                            ${person.famille.map(m => `
+                                <div class="tree-item">
+                                    <span>${m.prenom || ''} ${m.nom_famille || ''}${m.date_naissance ? ' · ' + m.date_naissance : ''}</span>
+                                    <span class="relation">${m.lien || 'Lie'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="result-card-full" data-index="${index}">
+                        <div class="result-header-full">
+                            <div class="result-name-full" onclick="toggleFiche(${index})">${fullName}</div>
+                            <div class="result-meta">
+                                <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
+                                ${person._sources ? '<span class="result-sources-badge">' + person._sources.length + ' source(s)</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="result-fields" id="fiche-${index}">
+                            ${fieldsHtml}
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn-deep" onclick="toggleDeep(${index})">Approfondir</button>
+                            <button class="btn-deep" onclick="addToFiche(${index})">+ Fiche</button>
+                            <button class="btn-deep" onclick="copyFullCard(${index})">Copier</button>
+                            <button class="btn-deep" onclick="addToGraphe(${index})">Graphe</button>
+                            <button class="btn-deep" onclick="openInvestigation(${index})" style="border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">Investiguer</button>
+                        </div>
+                        <div class="deep-panel" id="deep-${index}">
+                            <h4>Approfondir</h4>
+                            ${familleHtml || '<div style="color:#6b6b6b;font-size:13px;">Aucun lien familial trouve</div>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="results-counter">
+                    <div class="count"><strong>${results.length}</strong> resultat(s) trouve(s)</div>
+                    <div class="badge">${results.length > 1 ? 'Plusieurs correspondances' : 'Correspondance unique'}</div>
+                </div>
+                ${cardsHtml}
+            `;
+            window._resultsData = results;
+        }
+
+        function toggleFiche(index) {
+            const el = document.getElementById('fiche-' + index);
+            if (el) el.classList.toggle('open');
+        }
+
+        function toggleDeep(index) {
+            const el = document.getElementById('deep-' + index);
+            if (el) el.classList.toggle('open');
+        }
+
+        // ============ SEARCH ============
+        document.getElementById('searchBtn').addEventListener('click', async function() {
+            const query = {
+                flexible: true,
+                per_page: 100,
+                page: 1,
+                nom_famille: document.getElementById('searchNom')?.value || undefined,
+                prenom: document.getElementById('searchPrenom')?.value || undefined,
+                nom_naissance: document.getElementById('searchNomNaissance')?.value || undefined,
+                nom_affichage: document.getElementById('searchNomAffichage')?.value || undefined,
+                email: document.getElementById('searchEmail')?.value || undefined,
+                telephone: document.getElementById('searchPhone')?.value || undefined,
+                nom_utilisateur: document.getElementById('searchUsername')?.value || undefined,
+                adresse_ip: document.getElementById('searchIp')?.value || undefined,
+                adresse: document.getElementById('searchAdresse')?.value || undefined,
+                code_postal: document.getElementById('searchCp')?.value || undefined,
+                ville: document.getElementById('searchVille')?.value || undefined,
+                ville_naissance: document.getElementById('searchVilleNaissance')?.value || undefined,
+                steam_id: document.getElementById('searchSteam')?.value || undefined,
+                fivem_license: document.getElementById('searchFivemLicense')?.value || undefined,
+                discord_id: document.getElementById('searchDiscord')?.value || undefined,
+                xbox_live_id: document.getElementById('searchXbox')?.value || undefined,
+                live_id: document.getElementById('searchLive')?.value || undefined,
+                fivem_license2: document.getElementById('searchFivemLicense2')?.value || undefined,
+                nir: document.getElementById('searchNir')?.value || undefined,
+                iban: document.getElementById('searchIban')?.value || undefined,
+                bic: document.getElementById('searchBic')?.value || undefined,
+                vin_plaque: document.getElementById('searchVin')?.value || undefined
+            };
+
+            const dateNaissance = document.getElementById('searchDateNaissance')?.value;
+            if (dateNaissance) query.date_naissance = dateNaissance;
+            const jour = document.getElementById('searchJour')?.value;
+            if (jour) query.jour_naissance = parseInt(jour);
+            const mois = document.getElementById('searchMois')?.value;
+            if (mois) query.mois_naissance = parseInt(mois);
+            const annee = document.getElementById('searchAnnee')?.value;
+            if (annee) query.annee_naissance = annee;
+            const genre = document.getElementById('searchGenre')?.value;
+            if (genre) query.genre = genre;
+
+            Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
+
+            if (Object.keys(query).length <= 1) {
+                showToast('Veuillez remplir au moins un critere', 'warning');
+                return;
+            }
+
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+            showSearchLoading();
+
+            try {
+                const response = await fetch(API_URL + '/api/brix/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(query)
+                });
+
+                const data = await response.json();
+                let results = data.data?.results || [];
+
+                const total = data.meta?.total || 0;
+                const perPage = query.per_page || 100;
+                const totalPages = Math.ceil(total / perPage);
+                if (totalPages > 1) {
+                    for (let page = 2; page <= Math.min(totalPages, 5); page++) {
+                        try {
+                            const pageQuery = { ...query, page: page };
+                            const pageResponse = await fetch(API_URL + '/api/brix/search', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + token
+                                },
+                                body: JSON.stringify(pageQuery)
+                            });
+                            const pageData = await pageResponse.json();
+                            if (pageData.data?.results) {
+                                results = results.concat(pageData.data.results);
+                            }
+                        } catch (e) { /* Silence */ }
+                    }
+                }
+
+                const uniqueResults = [];
+                const seen = new Set();
+                results.forEach(p => {
+                    const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' + (p.email || '') + '|' + (p.telephone || '');
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueResults.push(p);
+                    }
+                });
+                results = uniqueResults;
+
+                const pivotDone = new Set();
+                for (let p of results.slice(0, 5)) {
+                    const famille = [];
+                    if (p.adresse && p.code_postal) {
+                        const pivotKey = 'adresse_' + p.adresse + '_' + p.code_postal;
+                        if (!pivotDone.has(pivotKey)) {
+                            pivotDone.add(pivotKey);
+                            try {
+                                const pivotPayload = { adresse: p.adresse, code_postal: p.code_postal, flexible: false, per_page: 10 };
+                                const pivotResponse = await fetch(API_URL + '/api/brix/search', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': 'Bearer ' + token
+                                    },
+                                    body: JSON.stringify(pivotPayload)
+                                });
+                                const pivotData = await pivotResponse.json();
+                                const pivotResults = pivotData.data?.results || [];
+                                for (let pr of pivotResults) {
+                                    if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                                    const membre = {
+                                        prenom: pr.prenom || '',
+                                        nom_famille: pr.nom_famille || '',
+                                        date_naissance: pr.date_naissance || '',
+                                        email: pr.email || '',
+                                        telephone: pr.telephone || '',
+                                        lien: 'Meme adresse'
+                                    };
+                                    if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                        famille.push(membre);
+                                    }
+                                }
+                            } catch (e) { /* Silence */ }
+                        }
+                    }
+                    if (p.telephone && famille.length < 5) {
+                        const phoneClean = p.telephone.replace(/\D/g, '');
+                        if (phoneClean.length >= 8) {
+                            const pivotKey = 'tel_' + phoneClean;
+                            if (!pivotDone.has(pivotKey)) {
+                                pivotDone.add(pivotKey);
+                                try {
+                                    const pivotPayload = { telephone: phoneClean, flexible: false, per_page: 5 };
+                                    const pivotResponse = await fetch(API_URL + '/api/brix/search', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': 'Bearer ' + token
+                                        },
+                                        body: JSON.stringify(pivotPayload)
+                                    });
+                                    const pivotData = await pivotResponse.json();
+                                    const pivotResults = pivotData.data?.results || [];
+                                    for (let pr of pivotResults) {
+                                        if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                                        const membre = {
+                                            prenom: pr.prenom || '',
+                                            nom_famille: pr.nom_famille || '',
+                                            date_naissance: pr.date_naissance || '',
+                                            email: pr.email || '',
+                                            telephone: pr.telephone || '',
+                                            lien: 'Telephone partage'
+                                        };
+                                        if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                            famille.push(membre);
+                                        }
+                                    }
+                                } catch (e) { /* Silence */ }
+                            }
+                        }
+                    }
+                    if (p.email && famille.length < 5) {
+                        const pivotKey = 'email_' + p.email;
+                        if (!pivotDone.has(pivotKey)) {
+                            pivotDone.add(pivotKey);
+                            try {
+                                const pivotPayload = { email: p.email, flexible: false, per_page: 5 };
+                                const pivotResponse = await fetch(API_URL + '/api/brix/search', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': 'Bearer ' + token
+                                    },
+                                    body: JSON.stringify(pivotPayload)
+                                });
+                                const pivotData = await pivotResponse.json();
+                                const pivotResults = pivotData.data?.results || [];
+                                for (let pr of pivotResults) {
+                                    if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                                    const membre = {
+                                        prenom: pr.prenom || '',
+                                        nom_famille: pr.nom_famille || '',
+                                        date_naissance: pr.date_naissance || '',
+                                        email: pr.email || '',
+                                        telephone: pr.telephone || '',
+                                        lien: 'Email partage'
+                                    };
+                                    if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                        famille.push(membre);
+                                    }
+                                }
+                            } catch (e) { /* Silence */ }
+                        }
+                    }
+                    if (famille.length > 0) {
+                        p.famille = famille;
+                    }
+                }
+
+                setTimeout(() => {
+                    hideSearchLoading();
+                    if (container) {
+                        if (results.length > 0) {
+                            displayResults(container, results);
+                            showToast(results.length + ' resultat(s) trouve(s)', 'success');
+                        } else {
+                            container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                            showToast('Aucun resultat', 'info');
+                        }
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                setTimeout(() => {
+                    hideSearchLoading();
+                    container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de recherche</div>';
+                    showToast('Erreur de recherche', 'error');
+                }, 1500);
+            }
+        });
+
+        // ============ SEARCH PRO ============
+        document.getElementById('searchBtnPro').addEventListener('click', async function() {
+            const query = {
+                flexible: true,
+                per_page: 100,
+                page: 1,
+                nom_famille: document.getElementById('searchNomPro')?.value || undefined,
+                prenom: document.getElementById('searchPrenomPro')?.value || undefined,
+                nom_naissance: document.getElementById('searchNomNaissancePro')?.value || undefined,
+                email: document.getElementById('searchEmailPro')?.value || undefined,
+                telephone: document.getElementById('searchPhonePro')?.value || undefined,
+                adresse_ip: document.getElementById('searchIpPro')?.value || undefined,
+                societe: document.getElementById('searchSociete')?.value || undefined,
+                profession: document.getElementById('searchProfession')?.value || undefined,
+                fonction: document.getElementById('searchFonction')?.value || undefined,
+                siret: document.getElementById('searchSiret')?.value || undefined,
+                siren: document.getElementById('searchSiren')?.value || undefined,
+                nir: document.getElementById('searchNirPro')?.value || undefined,
+                iban: document.getElementById('searchIbanPro')?.value || undefined,
+                bic: document.getElementById('searchBicPro')?.value || undefined,
+                vin_plaque: document.getElementById('searchVinPro')?.value || undefined
+            };
+
+            Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
+
+            if (Object.keys(query).length <= 1) {
+                showToast('Veuillez remplir au moins un critere', 'warning');
+                return;
+            }
+
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+            showSearchLoading();
+
+            try {
+                const response = await fetch(API_URL + '/api/brix/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(query)
+                });
+
+                const data = await response.json();
+                let results = data.data?.results || [];
+
+                const total = data.meta?.total || 0;
+                const perPage = query.per_page || 100;
+                const totalPages = Math.ceil(total / perPage);
+                if (totalPages > 1) {
+                    for (let page = 2; page <= Math.min(totalPages, 5); page++) {
+                        try {
+                            const pageQuery = { ...query, page: page };
+                            const pageResponse = await fetch(API_URL + '/api/brix/search', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + token
+                                },
+                                body: JSON.stringify(pageQuery)
+                            });
+                            const pageData = await pageResponse.json();
+                            if (pageData.data?.results) {
+                                results = results.concat(pageData.data.results);
+                            }
+                        } catch (e) { /* Silence */ }
+                    }
+                }
+
+                const uniqueResults = [];
+                const seen = new Set();
+                results.forEach(p => {
+                    const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' + (p.email || '') + '|' + (p.telephone || '');
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueResults.push(p);
+                    }
+                });
+                results = uniqueResults;
+
+                const pivotDone = new Set();
+                for (let p of results.slice(0, 5)) {
+                    const famille = [];
+                    if (p.adresse && p.code_postal) {
+                        const pivotKey = 'adresse_' + p.adresse + '_' + p.code_postal;
+                        if (!pivotDone.has(pivotKey)) {
+                            pivotDone.add(pivotKey);
+                            try {
+                                const pivotPayload = { adresse: p.adresse, code_postal: p.code_postal, flexible: false, per_page: 10 };
+                                const pivotResponse = await fetch(API_URL + '/api/brix/search', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': 'Bearer ' + token
+                                    },
+                                    body: JSON.stringify(pivotPayload)
+                                });
+                                const pivotData = await pivotResponse.json();
+                                const pivotResults = pivotData.data?.results || [];
+                                for (let pr of pivotResults) {
+                                    if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                                    const membre = {
+                                        prenom: pr.prenom || '',
+                                        nom_famille: pr.nom_famille || '',
+                                        date_naissance: pr.date_naissance || '',
+                                        email: pr.email || '',
+                                        telephone: pr.telephone || '',
+                                        lien: 'Meme adresse'
+                                    };
+                                    if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
+                                        famille.push(membre);
+                                    }
+                                }
+                            } catch (e) { /* Silence */ }
+                        }
+                    }
+                    if (famille.length > 0) {
+                        p.famille = famille;
+                    }
+                }
+
+                setTimeout(() => {
+                    hideSearchLoading();
+                    if (container) {
+                        if (results.length > 0) {
+                            displayResults(container, results);
+                            showToast(results.length + ' resultat(s) trouve(s)', 'success');
+                        } else {
+                            container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                            showToast('Aucun resultat', 'info');
+                        }
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                setTimeout(() => {
+                    hideSearchLoading();
+                    container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de recherche</div>';
+                    showToast('Erreur de recherche', 'error');
+                }, 1500);
+            }
+        });
+
+        // ============ CLEAR ============
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            document.querySelectorAll('#tab-french input, #tab-french select').forEach(el => el.value = '');
+            document.getElementById('searchResults').innerHTML = '';
+            showToast('Formulaire efface', 'info');
+        });
+
+        document.getElementById('clearBtnPro').addEventListener('click', function() {
+            document.querySelectorAll('#tab-pro input, #tab-pro select').forEach(el => el.value = '');
+            document.getElementById('searchResults').innerHTML = '';
+            showToast('Formulaire Pro efface', 'info');
+        });
+
+        // ============ LOOKUP ============
+        document.getElementById('lookupBtn').addEventListener('click', async function() {
+            const type = document.getElementById('lookupType').value;
+            const value = document.getElementById('lookupValue').value.trim();
+
+            if (!value) {
+                showToast('Veuillez entrer une valeur', 'warning');
+                return;
+            }
+
+            const container = document.getElementById('lookupResults');
+            container.innerHTML = '<div class="empty-state">Recherche en cours...</div>';
+            showSearchLoading();
+
+            try {
+                const response = await fetch(API_URL + '/api/brix/lookup/' + type + '/' + encodeURIComponent(value), {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+                const results = data.data?.results || [];
+
+                setTimeout(() => {
+                    hideSearchLoading();
+                    if (results.length > 0) {
+                        displayResults(container, results);
+                        showToast(results.length + ' enregistrement(s) trouve(s)', 'success');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                        showToast('Aucun resultat', 'info');
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Lookup error:', error);
+                setTimeout(() => {
+                    hideSearchLoading();
+                    container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de lookup</div>';
+                    showToast('Erreur de lookup', 'error');
+                }, 1500);
+            }
+        });
+
+        // ============ HISTORY ============
+        async function loadHistory() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/history', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const history = data.history || [];
+
+                if (history.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucune recherche dans l\'historique</div>';
+                    return;
+                }
+
+                container.innerHTML = history.map(item => {
+                    const date = new Date(item.created_at);
+                    const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    let query = item.query;
+                    if (typeof query === 'string') {
+                        try { query = JSON.parse(query); } catch (e) { query = { raw: query }; }
+                    }
+                    const nom = query.nom_famille || '';
+                    const prenom = query.prenom || '';
+                    const displayName = (prenom + ' ' + nom).trim() || 'Recherche';
+                    const resultCount = item.results_count || 0;
+                    const resultText = resultCount === 0 ? 'Aucun resultat' : resultCount === 1 ? '1 resultat' : resultCount + ' resultats';
+                    return `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <div class="history-date">${dateStr} ${timeStr}</div>
+                                <span class="history-result-count ${resultCount === 0 ? 'empty' : ''}">${resultText}</span>
+                            </div>
+                            <div class="history-footer">
+                                <button class="history-replay" onclick="replaySearch(${item.id})">Relancer</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('History error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        async function replaySearch(id) {
+            try {
+                showSearchLoading();
+                const response = await fetch(API_URL + '/api/history/' + id + '/replay', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const results = data.results || [];
+                
+                setTimeout(() => {
+                    hideSearchLoading();
+                    if (results.length > 0) {
+                        document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+                        document.querySelector('[data-page="search"]').classList.add('active');
+                        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                        document.getElementById('page-search').classList.add('active');
+                        const container = document.getElementById('searchResults');
+                        displayResults(container, results);
+                        showToast(results.length + ' resultat(s) trouve(s)', 'success');
+                    } else {
+                        showToast('Aucun resultat', 'info');
+                    }
+                }, 1500);
+            } catch (error) {
+                console.error('Replay error:', error);
+                hideSearchLoading();
+                showToast('Erreur de relance', 'error');
+            }
+        }
+
+        // ============ FICHES ============
+        let fichesData = [];
+
+        async function loadFiches() {
+            const container = document.getElementById('fichesList');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/fiches', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                fichesData = data.fiches || [];
+
+                if (fichesData.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucune fiche creee</div>';
+                    return;
+                }
+
+                container.innerHTML = fichesData.map((fiche, index) => `
+                    <div class="fiche-item">
+                        <div class="fiche-header">
+                            <span class="fiche-name">${fiche.name}</span>
+                            <span class="fiche-count">${fiche.persons?.length || 0} personne(s)</span>
+                        </div>
+                        <div class="fiche-persons">
+                            ${fiche.persons?.map(p => `<span class="fiche-person">${p.prenom || ''} ${p.nom_famille || 'Inconnu'}</span>`).join('') || 'Aucune personne'}
+                        </div>
+                        <div class="fiche-actions">
+                            <button class="fiche-btn" onclick="viewFiche(${index})">Voir</button>
+                            <button class="fiche-btn" onclick="editFiche(${index})">Modifier</button>
+                            <button class="fiche-btn danger" onclick="deleteFiche(${index})">Supprimer</button>
+                            <button class="fiche-btn" onclick="exportFiche(${index})">Exporter</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Fiches error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        document.getElementById('createFicheBtn').addEventListener('click', function() {
+            showModal('Creer une fiche', `
+                <div class="form-group">
+                    <label>Nom de la fiche</label>
+                    <input type="text" id="ficheNameInput" placeholder="Ex: Enquete Dupont" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;">
+                </div>
+                <div style="font-size:12px;color:#6b6b6b;">Maximum 10 personnes par fiche</div>
+            `, 'Creer', async function() {
+                const name = document.getElementById('ficheNameInput').value.trim();
+                if (!name) {
+                    showToast('Veuillez donner un nom', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/fiches', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name })
+                    });
+                    if (response.ok) {
+                        showToast('Fiche creee !', 'success');
+                        loadFiches();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        });
+
+        function viewFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            const personsHtml = fiche.persons?.map(p => `
+                <div style="padding:4px 0;border-bottom:1px solid #2a2a2a;font-size:13px;color:#a0a0a0;">
+                    ${p.prenom || ''} ${p.nom_famille || 'Inconnu'}
+                    ${p.email ? ' · ' + p.email : ''}
+                    ${p.telephone ? ' · ' + formatPhone(p.telephone) : ''}
+                </div>
+            `).join('') || 'Aucune personne';
+            showModal('Fiche: ' + fiche.name, `
+                <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">${fiche.persons?.length || 0} / 10 personnes</div>
+                <div style="max-height:300px;overflow-y:auto;">${personsHtml}</div>
+            `, 'Fermer', closeModal);
+        }
+
+        function editFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            showModal('Modifier la fiche', `
+                <div class="form-group">
+                    <label>Nom de la fiche</label>
+                    <input type="text" id="editFicheName" value="${fiche.name}" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;">
+                </div>
+            `, 'Sauvegarder', async function() {
+                const name = document.getElementById('editFicheName').value.trim();
+                if (!name) {
+                    showToast('Veuillez donner un nom', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/fiches/' + fiche.id, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name })
+                    });
+                    if (response.ok) {
+                        showToast('Fiche modifiee !', 'success');
+                        loadFiches();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        }
+
+        function deleteFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            showModal('Confirmation', `
+                <p style="color:#a0a0a0;">Supprimer la fiche "<strong style="color:#ffffff;">${fiche.name}</strong>" ?</p>
+                <p style="font-size:13px;color:#6b6b6b;">Cette action est irreversible.</p>
+            `, 'Supprimer', async function() {
+                try {
+                    const response = await fetch(API_URL + '/api/fiches/' + fiche.id, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (response.ok) {
+                        showToast('Fiche supprimee !', 'success');
+                        loadFiches();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        }
+
+        function exportFiche(index) {
+            const fiche = fichesData[index];
+            if (!fiche) return;
+            let text = '=== Marauder - Fiche: ' + fiche.name + ' ===\n\n';
+            fiche.persons?.forEach((p, i) => {
+                text += 'Personne ' + (i+1) + ':\n';
+                Object.entries(p).forEach(([key, value]) => {
+                    if (value && !key.startsWith('_')) {
+                        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        let displayValue = value;
+                        if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                        text += '  ' + label + ': ' + displayValue + '\n';
+                    }
+                });
+                text += '\n';
+            });
+            text += '\n--- by Marauder ---';
+            navigator.clipboard.writeText(text).then(() => showToast('Exporte !', 'success'));
+        }
+
+        // ============ ACTIONS SUR RESULTATS ============
+        function addToFiche(index) {
+            const person = window._resultsData?.[index];
+            if (!person) {
+                showToast('Personne introuvable', 'error');
+                return;
+            }
+            if (fichesData.length === 0) {
+                showToast('Aucune fiche existante', 'warning');
+                return;
+            }
+            const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
+            showModal('Ajouter a une fiche', `
+                <div class="form-group">
+                    <label>Selectionner une fiche</label>
+                    <select id="ficheSelect">${selectOptions}<option value="new">+ Creer une nouvelle fiche</option></select>
+                </div>
+                <div id="newFicheNameContainer" style="display:none;">
+                    <div class="form-group"><label>Nom de la nouvelle fiche</label><input type="text" id="newFicheNameInput" placeholder="Nom de la fiche" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
+                </div>
+                <div style="font-size:12px;color:#6b6b6b;">Personne: ${person.prenom || ''} ${person.nom_famille || 'Inconnu'}</div>
+            `, 'Ajouter', async function() {
+                const select = document.getElementById('ficheSelect');
+                const ficheId = select.value;
+                if (ficheId === 'new') {
+                    const nameInput = document.getElementById('newFicheNameInput');
+                    const name = nameInput?.value?.trim();
+                    if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
+                    try {
+                        const createResponse = await fetch(API_URL + '/api/fiches', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify({ name })
+                        });
+                        const createData = await createResponse.json();
+                        if (createData.fiche) {
+                            await addPersonToFiche(createData.fiche.id, person);
+                            loadFiches();
+                            showToast('Personne ajoutee !', 'success');
+                        }
+                    } catch (error) { showToast('Erreur', 'error'); }
+                } else {
+                    await addPersonToFiche(parseInt(ficheId), person);
+                    loadFiches();
+                    showToast('Personne ajoutee !', 'success');
+                }
+            });
+            document.getElementById('ficheSelect')?.addEventListener('change', function() {
+                const container = document.getElementById('newFicheNameContainer');
+                if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
+            });
+        }
+
+        async function addPersonToFiche(ficheId, person) {
+            try {
+                const response = await fetch(API_URL + '/api/fiches/' + ficheId + '/persons', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ person })
+                });
+                if (!response.ok) {
+                    const data = await response.json();
+                    showToast(data.error || 'Erreur', 'error');
+                }
+            } catch (error) { showToast('Erreur reseau', 'error'); }
+        }
+
+        function copyFullCard(index) {
+            const data = window._resultsData;
+            if (!data || !data[index]) return;
+            const person = data[index];
+            let text = '=== Marauder Investigation ===\n\n';
+            Object.entries(person)
+                .filter(([key]) => !key.startsWith('_') && key !== 'famille')
+                .forEach(([key, value]) => {
+                    if (!value) return;
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    let displayValue = value;
+                    if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                    text += label + ': ' + displayValue + '\n';
+                });
+            if (person.famille && person.famille.length > 0) {
+                text += '\n=== Famille ===\n';
+                person.famille.forEach(m => {
+                    text += (m.prenom || '') + ' ' + (m.nom_famille || '');
+                    if (m.lien) text += ' (' + m.lien + ')';
+                    text += '\n';
+                });
+            }
+            if (person._sources) text += '\nSources: ' + person._sources.join(', ');
+            text += '\n\n--- by Marauder ---';
+            navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
+        }
+
+        function addToGraphe(index) {
+            const person = window._resultsData?.[index];
+            if (!person) {
+                showToast('Personne introuvable', 'error');
+                return;
+            }
+            if (typeof window.addPersonToGrapheWithFamily === 'function') {
+                window.addPersonToGrapheWithFamily(person);
+            } else {
+                showToast('Graphe en developpement', 'info');
+            }
+        }
+
+        // ============ INVESTIGATION ============
+        let investigationData = null;
+
+        function openInvestigation(index) {
+            const data = window._resultsData;
+            if (!data || !data[index]) {
+                showToast('Personne introuvable', 'error');
+                return;
+            }
+            investigationData = data[index];
+            const person = investigationData;
+            const overlay = document.getElementById('investigationOverlay');
+            if (!overlay) return;
+
+            const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
+            document.getElementById('investigationName').textContent = 'Investigation - ' + fullName;
+
+            const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
+            document.getElementById('investigationCityLabel').textContent = ville;
+
+            // Déplacer le point sur la carte
+            const pin = document.getElementById('investigationMapPin');
+            if (pin) {
+                const cities = {
+                    'paris': { cx: 300, cy: 190 },
+                    'lyon': { cx: 320, cy: 310 },
+                    'marseille': { cx: 340, cy: 420 },
+                    'toulouse': { cx: 260, cy: 380 },
+                    'bordeaux': { cx: 190, cy: 360 },
+                    'lille': { cx: 240, cy: 120 },
+                    'nice': { cx: 390, cy: 390 },
+                    'nantes': { cx: 170, cy: 280 },
+                    'strasbourg': { cx: 400, cy: 180 },
+                    'montpellier': { cx: 300, cy: 380 },
+                    'rennes': { cx: 160, cy: 230 },
+                    'grenoble': { cx: 350, cy: 330 },
+                    'toulon': { cx: 360, cy: 410 },
+                    'angers': { cx: 190, cy: 260 },
+                    'dijon': { cx: 350, cy: 240 },
+                    'le havre': { cx: 210, cy: 170 },
+                    'reims': { cx: 320, cy: 160 },
+                    'saint-etienne': { cx: 310, cy: 320 },
+                    'limoges': { cx: 220, cy: 310 },
+                    'clermont-ferrand': { cx: 270, cy: 290 },
+                    'amiens': { cx: 260, cy: 140 },
+                    'perpignan': { cx: 290, cy: 430 },
+                    'caen': { cx: 190, cy: 190 },
+                    'orleans': { cx: 270, cy: 230 },
+                    'metz': { cx: 370, cy: 170 },
+                    'besancon': { cx: 380, cy: 220 },
+                    'mulhouse': { cx: 410, cy: 210 },
+                    'valence': { cx: 330, cy: 340 },
+                    'nimes': { cx: 290, cy: 370 },
+                    'avignon': { cx: 310, cy: 400 },
+                    'poitiers': { cx: 210, cy: 290 },
+                    'la rochelle': { cx: 160, cy: 300 }
+                };
+                const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                let found = false;
+                for (const [key, pos] of Object.entries(cities)) {
+                    if (cityKey.includes(key) || key.includes(cityKey)) {
+                        pin.setAttribute('cx', pos.cx);
+                        pin.setAttribute('cy', pos.cy);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    pin.setAttribute('cx', 300);
+                    pin.setAttribute('cy', 300);
+                }
+            }
+
+            const confidence = person._confidence || 0;
+            const confEl = document.getElementById('investigationConfidence');
+            confEl.textContent = confidence + '%';
+            confEl.className = 'investigation-confidence ' + (confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low');
+
+            const grid = document.getElementById('investigationInfoGrid');
+            let html = '';
+            const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
+            Object.entries(person)
+                .filter(([key]) => !key.startsWith('_') && key !== 'famille')
+                .forEach(([key, value]) => {
+                    if (!value) return;
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const isImportant = importantKeys.includes(key);
+                    let displayValue = value;
+                    if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                    html += `
+                        <div class="investigation-info-item ${isImportant ? 'important' : ''}">
+                            <span class="investigation-info-label">${label}</span>
+                            <span class="investigation-info-value">${displayValue}</span>
+                        </div>
+                    `;
+                });
+            if (person.famille && person.famille.length > 0) {
+                html += `
+                    <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
+                        <span class="investigation-info-label" style="color:#6b6b6b;font-weight:600;">Famille (${person.famille.length})</span>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+                            ${person.famille.map(m => `<span style="background:rgba(255,255,255,0.04);border:1px solid #2a2a2a;border-radius:6px;padding:4px 12px;font-size:13px;color:#a0a0a0;">${m.prenom || ''} ${m.nom_famille || ''} ${m.lien ? ' · ' + m.lien : ''}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        document.getElementById('investigationBack')?.addEventListener('click', function() {
+            document.getElementById('investigationOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+        document.getElementById('investigationClose')?.addEventListener('click', function() {
+            document.getElementById('investigationOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+
+        document.getElementById('investigationCopy')?.addEventListener('click', function() {
+            if (!investigationData) { showToast('Aucune donnee', 'error'); return; }
+            const person = investigationData;
+            let text = '=== Marauder Investigation ===\n\n';
+            Object.entries(person)
+                .filter(([key]) => !key.startsWith('_') && key !== 'famille')
+                .forEach(([key, value]) => {
+                    if (!value) return;
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    let displayValue = value;
+                    if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                    text += label + ': ' + displayValue + '\n';
+                });
+            if (person.famille && person.famille.length > 0) {
+                text += '\n=== Famille ===\n';
+                person.famille.forEach(m => {
+                    text += (m.prenom || '') + ' ' + (m.nom_famille || '');
+                    if (m.lien) text += ' (' + m.lien + ')';
+                    text += '\n';
+                });
+            }
+            if (person._sources) text += '\nSources: ' + person._sources.join(', ');
+            text += '\n\n--- by Marauder ---';
+            navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
+        });
+
+        document.getElementById('investigationGraphe')?.addEventListener('click', function() {
+            if (!investigationData) { showToast('Aucune donnee', 'error'); return; }
+            if (typeof window.addPersonToGrapheWithFamily === 'function') {
+                window.addPersonToGrapheWithFamily(investigationData);
+                document.getElementById('investigationOverlay').classList.remove('active');
+                document.body.style.overflow = '';
+                document.querySelector('[data-page="graphe"]')?.click();
+            } else {
+                showToast('Graphe en developpement', 'info');
+            }
+        });
+
+        document.getElementById('investigationAddFiche')?.addEventListener('click', function() {
+            if (!investigationData) { showToast('Aucune donnee', 'error'); return; }
+            if (fichesData.length === 0) { showToast('Aucune fiche existante', 'warning'); return; }
+            const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
+            showModal('Ajouter a une fiche', `
+                <div class="form-group"><label>Selectionner une fiche</label>
+                <select id="ficheSelectInvestigation">${selectOptions}<option value="new">+ Creer une nouvelle fiche</option></select></div>
+                <div id="newFicheNameContainerInvestigation" style="display:none;">
+                    <div class="form-group"><label>Nom de la nouvelle fiche</label><input type="text" id="newFicheNameInvestigation" placeholder="Nom de la fiche" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
+                </div>
+                <div style="font-size:12px;color:#6b6b6b;">Personne: ${investigationData.prenom || ''} ${investigationData.nom_famille || 'Inconnu'}</div>
+            `, 'Ajouter', async function() {
+                const select = document.getElementById('ficheSelectInvestigation');
+                const ficheId = select.value;
+                if (ficheId === 'new') {
+                    const nameInput = document.getElementById('newFicheNameInvestigation');
+                    const name = nameInput?.value?.trim();
+                    if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
+                    try {
+                        const createResponse = await fetch(API_URL + '/api/fiches', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify({ name })
+                        });
+                        const createData = await createResponse.json();
+                        if (createData.fiche) {
+                            await addPersonToFiche(createData.fiche.id, investigationData);
+                            loadFiches();
+                            showToast('Personne ajoutee !', 'success');
+                        }
+                    } catch (error) { showToast('Erreur', 'error'); }
+                } else {
+                    await addPersonToFiche(parseInt(ficheId), investigationData);
+                    loadFiches();
+                    showToast('Personne ajoutee !', 'success');
+                }
+            });
+            document.getElementById('ficheSelectInvestigation')?.addEventListener('change', function() {
+                const container = document.getElementById('newFicheNameContainerInvestigation');
+                if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
+            });
+        });
+
+        // ============ TICKETS ============
+        async function loadTickets() {
+            const container = document.getElementById('ticketsList');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/tickets', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const tickets = data.tickets || [];
+
+                if (tickets.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
+                    return;
+                }
+
+                container.innerHTML = tickets.map(ticket => `
+                    <div class="ticket-item" onclick="viewTicket(${ticket.id})">
+                        <div class="ticket-header">
+                            <span class="ticket-subject">${ticket.subject}</span>
+                            <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
+                        </div>
+                        <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${ticket.message?.substring(0, 100) || ''}${ticket.message?.length > 100 ? '...' : ''}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Tickets error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        document.getElementById('openTicketBtn').addEventListener('click', function() {
+            showModal('Nouveau ticket', `
+                <div class="form-group"><label>Sujet</label><input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
+                <div class="form-group"><label>Message</label><textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea></div>
+            `, 'Envoyer', async function() {
+                const subject = document.getElementById('ticketSubject').value.trim();
+                const message = document.getElementById('ticketMessage').value.trim();
+                if (!subject || !message) {
+                    showToast('Veuillez remplir tous les champs', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/tickets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ subject, message })
+                    });
+                    if (response.ok) {
+                        showToast('Ticket cree !', 'success');
+                        loadTickets();
+                        closeModal();
+                    }
+                } catch (error) {
+                    showToast('Erreur', 'error');
+                }
+            });
+        });
+
+        async function viewTicket(ticketId) {
+            try {
+                const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                const ticket = data.ticket;
+                const messages = data.messages || [];
+
+                let messagesHtml = messages.map(m => `
+                    <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
+                        <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
+                        <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
+                    </div>
+                `).join('');
+
+                showModal(ticket.subject, `
+                    <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
+                    <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
+                    ${ticket.status !== 'closed' ? `
+                        <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
+                            <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;font-family:Arial;outline:none;">
+                            <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
+                        </div>
+                    ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
+                `, 'Fermer', closeModal);
+
+            } catch (error) {
+                console.error('View ticket error:', error);
+                showToast('Erreur de chargement', 'error');
+            }
+        }
+
+        async function replyTicket(ticketId) {
+            const input = document.getElementById('ticketReplyInput');
+            if (!input) return;
+            const message = input.value.trim();
+            if (!message) { showToast('Veuillez entrer un message', 'warning'); return; }
+
+            try {
+                const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ message })
+                });
+                if (response.ok) {
+                    showToast('Message envoye !', 'success');
+                    viewTicket(ticketId);
+                    loadTickets();
+                }
+            } catch (error) {
+                showToast('Erreur', 'error');
+            }
+        }
+
+        // ============ PROFIL ============
+        async function loadProfile() {
+            const container = document.getElementById('profileInfo');
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+            try {
+                const response = await fetch(API_URL + '/api/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.user) {
+                    container.innerHTML = `
+                        <div class="profile-card">
+                            <div class="profile-row"><span class="label">Nom d'utilisateur</span><span class="value">${data.user.username}</span></div>
+                            <div class="profile-row"><span class="label">Role</span><span class="value">${data.user.role}</span></div>
+                            <div class="profile-row"><span class="label">Membre depuis</span><span class="value">${new Date(data.user.created_at).toLocaleDateString()}</span></div>
+                            <div class="profile-row"><span class="label">Derniere connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Profile error:', error);
+                container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
+            }
+        }
+
+        // ============ GRAPHE ============
+        window.grapheNodes = [];
+        window.grapheEdges = [];
+        let grapheOffsetX = 0;
+        let grapheOffsetY = 0;
+        let grapheIsPanning = false;
+        let graphePanStartX = 0;
+        let graphePanStartY = 0;
+        let grapheDraggingNode = null;
+        let grapheDragOffsetX = 0;
+        let grapheDragOffsetY = 0;
+
+        function renderGraphe() {
+            const canvas = document.getElementById('grapheCanvas');
+            if (!canvas) return;
+            const container = document.getElementById('grapheContainer');
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            const W = rect.width, H = rect.height;
+
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+            for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+            ctx.save();
+            ctx.translate(grapheOffsetX, grapheOffsetY);
+
+            window.grapheEdges.forEach(edge => {
+                const from = window.grapheNodes.find(n => n.id === edge.from);
+                const to = window.grapheNodes.find(n => n.id === edge.to);
+                if (!from || !to) return;
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            window.grapheNodes.forEach(node => {
+                const r = 24;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const label = node.label || 'Personne';
+                ctx.fillText(label.length > 15 ? label.slice(0, 13) + '...' : label, node.x, node.y);
+                if (node.role) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(node.role, node.x, node.y + r + 14);
+                }
+            });
+
+            ctx.restore();
+
+            if (window.grapheNodes.length === 0) {
+                ctx.fillStyle = '#6b6b6b';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Ajoutez des personnes', W/2, H/2 - 10);
+                ctx.fillStyle = '#6b6b6b';
+                ctx.font = '13px Arial';
+                ctx.fillText('Cliquez sur "Personne" pour commencer', W/2, H/2 + 20);
+            }
+        }
+
+        // Evenements souris
+        const grapheCanvas = document.getElementById('grapheCanvas');
+        const grapheContainer = document.getElementById('grapheContainer');
+
+        grapheCanvas.addEventListener('mousedown', function(e) {
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const wx = x - grapheOffsetX;
+            const wy = y - grapheOffsetY;
+            for (let i = window.grapheNodes.length - 1; i >= 0; i--) {
+                const node = window.grapheNodes[i];
+                const dx = wx - node.x;
+                const dy = wy - node.y;
+                if (dx * dx + dy * dy < 24 * 24) {
+                    grapheDraggingNode = node;
+                    grapheDragOffsetX = wx - node.x;
+                    grapheDragOffsetY = wy - node.y;
+                    grapheCanvas.style.cursor = 'grabbing';
+                    return;
+                }
+            }
+            grapheIsPanning = true;
+            graphePanStartX = x;
+            graphePanStartY = y;
+            grapheCanvas.style.cursor = 'grabbing';
+        });
+
+        grapheCanvas.addEventListener('mousemove', function(e) {
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (grapheDraggingNode) {
+                const wx = x - grapheOffsetX;
+                const wy = y - grapheOffsetY;
+                grapheDraggingNode.x = wx - grapheDragOffsetX;
+                grapheDraggingNode.y = wy - grapheDragOffsetY;
+                renderGraphe();
+                return;
+            }
+            if (grapheIsPanning) {
+                grapheOffsetX += x - graphePanStartX;
+                grapheOffsetY += y - graphePanStartY;
+                graphePanStartX = x;
+                graphePanStartY = y;
+                renderGraphe();
+                return;
+            }
+            const wx = x - grapheOffsetX;
+            const wy = y - grapheOffsetY;
+            let hover = false;
+            for (let node of window.grapheNodes) {
+                const dx = wx - node.x;
+                const dy = wy - node.y;
+                if (dx * dx + dy * dy < 24 * 24) { hover = true; break; }
+            }
+            grapheCanvas.style.cursor = hover ? 'grab' : 'default';
+        });
+
+        grapheCanvas.addEventListener('mouseup', function() {
+            grapheDraggingNode = null;
+            grapheIsPanning = false;
+            grapheCanvas.style.cursor = 'default';
+        });
+
+        grapheCanvas.addEventListener('mouseleave', function() {
+            grapheDraggingNode = null;
+            grapheIsPanning = false;
+        });
+
+        // Touch
+        grapheCanvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            const wx = x - grapheOffsetX;
+            const wy = y - grapheOffsetY;
+            for (let i = window.grapheNodes.length - 1; i >= 0; i--) {
+                const node = window.grapheNodes[i];
+                const dx = wx - node.x;
+                const dy = wy - node.y;
+                if (dx * dx + dy * dy < 24 * 24) {
+                    grapheDraggingNode = node;
+                    grapheDragOffsetX = wx - node.x;
+                    grapheDragOffsetY = wy - node.y;
+                    return;
+                }
+            }
+            grapheIsPanning = true;
+            graphePanStartX = x;
+            graphePanStartY = y;
+        }, { passive: false });
+
+        grapheCanvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = grapheContainer.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            if (grapheDraggingNode) {
+                const wx = x - grapheOffsetX;
+                const wy = y - grapheOffsetY;
+                grapheDraggingNode.x = wx - grapheDragOffsetX;
+                grapheDraggingNode.y = wy - grapheDragOffsetY;
+                renderGraphe();
+                return;
+            }
+            if (grapheIsPanning) {
+                grapheOffsetX += x - graphePanStartX;
+                grapheOffsetY += y - graphePanStartY;
+                graphePanStartX = x;
+                graphePanStartY = y;
+                renderGraphe();
+            }
+        }, { passive: false });
+
+        grapheCanvas.addEventListener('touchend', function() {
+            grapheDraggingNode = null;
+            grapheIsPanning = false;
+        });
+
+        // Boutons graphe
+        document.getElementById('grapheAddPersonne').addEventListener('click', function() {
+            const container = document.getElementById('grapheContainer');
+            const cx = container.offsetWidth / 2;
+            const cy = container.offsetHeight / 2;
+            const newNode = {
+                id: Date.now(),
+                label: 'Personne ' + (window.grapheNodes.length + 1),
+                x: cx + (Math.random() - 0.5) * 100,
+                y: cy + (Math.random() - 0.5) * 100
+            };
+            window.grapheNodes.push(newNode);
+            renderGraphe();
+            showToast('Personne ajoutee !', 'success');
+        });
+
+        document.getElementById('grapheAttacher').addEventListener('click', function() {
+            if (window.grapheNodes.length < 2) {
+                showToast('Ajoutez au moins 2 personnes', 'warning');
+                return;
+            }
+            const from = window.grapheNodes[window.grapheNodes.length - 2];
+            const to = window.grapheNodes[window.grapheNodes.length - 1];
+            window.grapheEdges.push({ id: Date.now(), from: from.id, to: to.id });
+            renderGraphe();
+            showToast('Personnes attachees !', 'success');
+        });
+
+        document.getElementById('grapheSauvegarder').addEventListener('click', function() {
+            localStorage.setItem('marauder_graphe', JSON.stringify({
+                nodes: window.grapheNodes,
+                edges: window.grapheEdges
+            }));
+            showToast('Graphe sauvegarde (local)', 'success');
+        });
+
+        document.getElementById('grapheMesGraphes').addEventListener('click', function() {
+            const saved = localStorage.getItem('marauder_graphe');
+            if (!saved) {
+                showToast('Aucun graphe sauvegarde', 'warning');
+                return;
+            }
+            try {
+                const data = JSON.parse(saved);
+                window.grapheNodes = data.nodes || [];
+                window.grapheEdges = data.edges || [];
+                renderGraphe();
+                showToast('Graphe charge !', 'success');
+            } catch (e) {
+                showToast('Erreur de chargement', 'error');
+            }
+        });
+
+        document.getElementById('grapheEffacer').addEventListener('click', function() {
+            if (window.grapheNodes.length === 0) {
+                showToast('Deja vide', 'info');
+                return;
+            }
+            window.grapheNodes = [];
+            window.grapheEdges = [];
+            renderGraphe();
+            showToast('Graphe efface', 'info');
+        });
+
+        window.addPersonToGrapheWithFamily = function(person) {
+            const container = document.getElementById('grapheContainer');
+            const cx = container.offsetWidth / 2;
+            const cy = container.offsetHeight / 2;
+            const name = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
+            const mainNode = { id: Date.now(), label: name, x: cx, y: cy };
+            window.grapheNodes.push(mainNode);
+            const famille = person.famille || [];
+            if (famille.length > 0) {
+                famille.forEach((m, i) => {
+                    const angle = (i / famille.length) * Math.PI * 2 - Math.PI / 2;
+                    const radius = 150;
+                    const memberNode = {
+                        id: Date.now() + i + 1,
+                        label: (m.prenom || '') + ' ' + (m.nom_famille || 'Inconnu'),
+                        x: cx + Math.cos(angle) * radius,
+                        y: cy + Math.sin(angle) * radius
+                    };
+                    window.grapheNodes.push(memberNode);
+                    window.grapheEdges.push({ id: Date.now() + i + 100, from: mainNode.id, to: memberNode.id });
+                });
+            }
+            renderGraphe();
+            showToast('Personne et famille ajoutees au graphe !', 'success');
+        };
+
+        window.addEventListener('resize', renderGraphe);
+        setTimeout(renderGraphe, 300);
+
+        // ============ MOBILE MENU ============
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarBackdrop').classList.toggle('active');
+        });
+        document.getElementById('sidebarBackdrop').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            this.classList.remove('active');
+        });
+
+        // ============ INIT ============
+        loadProfile();
+        console.log('Dashboard charge avec succes');
+    </script>
 </body>
 </html>
