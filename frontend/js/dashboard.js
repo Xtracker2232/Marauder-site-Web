@@ -135,7 +135,6 @@ async function verifyToken() {
 document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
     item.addEventListener('click', function() {
         const page = this.dataset.page;
-        console.log('Navigation vers:', page);
         
         if (page === 'discord') {
             window.open('https://discord.gg/ton-invite', '_blank');
@@ -159,6 +158,31 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
         if (page === 'fiches') loadFiches();
+    });
+});
+
+// Support submenu items
+document.querySelectorAll('.support-submenu li[data-page]').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const page = this.dataset.page;
+        
+        if (page === 'discord') {
+            window.open('https://discord.gg/ton-invite', '_blank');
+            return;
+        }
+        if (page === 'tickets') {
+            document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById('page-tickets');
+            if (target) target.classList.add('active');
+            loadTickets();
+            // Fermer le submenu
+            const submenu = document.getElementById('supportSubmenu');
+            const arrow = document.querySelector('.support-arrow');
+            if (submenu) submenu.style.display = 'none';
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        }
     });
 });
 
@@ -1739,7 +1763,6 @@ document.getElementById('grapheEffacer').addEventListener('click', function() {
         showToast('Graphe efface', 'info');
     });
 });
-
 // ============ MODAL GRAPHES ============
 async function showGraphesModal() {
     const modal = document.getElementById('graphesModal');
@@ -1759,10 +1782,12 @@ async function showGraphesModal() {
             list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegarde</div>';
             return;
         }
-        list.innerHTML = graphes.map((g, i) => `
+        list.innerHTML = graphes.map((g, i) => {
+            const isLocalIcon = g.isLocal ? '<span style="color:#6b6b6b;font-size:14px;">📁</span>' : '';
+            return `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#111;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;">
                 <div>
-                    <div style="font-weight:600;color:#fff;">${g.name || 'Sans nom'} ${g.isLocal ? '📁' : ''}</div>
+                    <div style="font-weight:600;color:#fff;">${g.name || 'Sans nom'} ${isLocalIcon}</div>
                     <div style="font-size:12px;color:#6b6b6b;">${g.nodes?.length || 0} personnes · ${new Date(g.created_at).toLocaleDateString()}</div>
                 </div>
                 <div style="display:flex;gap:6px;">
@@ -1770,7 +1795,7 @@ async function showGraphesModal() {
                     ${!g.isLocal ? `<button onclick="deleteGrapheFromList(${g.id})" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#ef4444;cursor:pointer;">Supprimer</button>` : ''}
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     } catch (error) {
         list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">Erreur de chargement</div>';
     }
@@ -1802,17 +1827,19 @@ async function loadGrapheFromList(index, isLocal) {
 }
 
 async function deleteGrapheFromList(grapheId) {
-    if (!confirm('Supprimer ce graphe ?')) return;
-    try {
-        const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            showToast('Graphe supprime !', 'success');
-            showGraphesModal();
-        }
-    } catch (error) { showToast('Erreur', 'error'); }
+    // Remplacer confirm() par showModal()
+    showModal('Confirmation', '<p style="color:var(--text-secondary);">Supprimer ce graphe ?</p>', 'Supprimer', async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                showToast('Graphe supprime !', 'success');
+                showGraphesModal();
+            }
+        } catch (error) { showToast('Erreur', 'error'); }
+    });
 }
 
 // ============ INIT ============
