@@ -204,7 +204,12 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (result.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
         const user = result.rows[0];
-        if (user.banned) return res.status(403).json({ error: 'Compte banni' });
+        
+        // Vérification du bannissement
+        if (user.banned) {
+            return res.status(403).json({ error: 'Ce compte a été banni' });
+        }
+        
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
         await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
