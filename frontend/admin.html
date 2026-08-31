@@ -1,568 +1,675 @@
-const API_URL = window.location.origin;
-const token = localStorage.getItem('token');
-
-if (!token) {
-    window.location.href = '/login';
-}
-
-// ============ TOAST ============
-function showToast(message, type = 'info', duration = 3000) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `${message}<button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
-    container.appendChild(toast);
-    if (duration > 0) {
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(40px)';
-            toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
-    }
-}
-
-// ============ MODAL ============
-function showModal(title, bodyHtml) {
-    const overlay = document.getElementById('modalOverlay');
-    const content = document.getElementById('modalContent');
-    if (!overlay || !content) return;
-    content.innerHTML = `
-        <h3>${title}</h3>
-        ${bodyHtml}
-    `;
-    overlay.style.display = 'flex';
-}
-
-function closeModal() {
-    const overlay = document.getElementById('modalOverlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-// ============ VÉRIFICATION ADMIN ============
-async function checkAdmin() {
-    try {
-        const response = await fetch(`${API_URL}/api/admin/check`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            showToast('Accès refusé - Admin requis', 'error');
-            window.location.href = '/dashboard.html';
-            return false;
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marauder - Panel Admin</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-page {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            padding: 80px 40px 40px;
+            position: relative;
+            z-index: 1;
         }
-        const data = await response.json();
-        if (!data.isAdmin) {
-            showToast('Accès refusé - Admin requis', 'error');
-            window.location.href = '/dashboard.html';
-            return false;
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        return true;
-    } catch (error) {
-        showToast('Erreur de vérification', 'error');
-        window.location.href = '/dashboard.html';
-        return false;
-    }
-}
-
-// ============ TABS ============
-document.querySelectorAll('.admin-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        const tabId = this.dataset.tab;
-        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-        const target = document.getElementById(`tab-${tabId}`);
-        if (target) target.classList.add('active');
-        if (tabId === 'dashboard') loadStats();
-        if (tabId === 'users') loadUsers();
-        if (tabId === 'searches') loadSearches();
-        if (tabId === 'blocklist') loadBlocklist();
-        if (tabId === 'tickets') loadTickets();
-    });
-});
-
-// Filtres tickets
-document.querySelectorAll('[data-filter]').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('[data-filter]').forEach(b => b.style.borderColor = 'var(--border-color)');
-        this.style.borderColor = '#ffffff';
-        loadTickets(this.dataset.filter);
-    });
-});
-
-// ============ STATS ============
-async function loadStats() {
-    try {
-        const response = await fetch(`${API_URL}/api/admin/stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        document.getElementById('statUsers').textContent = data.total_users || 0;
-        document.getElementById('statSearches').textContent = data.total_searches || 0;
-        document.getElementById('statFiches').textContent = data.total_fiches || 0;
-        document.getElementById('statGraphes').textContent = data.total_graphes || 0;
-        document.getElementById('statBanned').textContent = data.banned_users || 0;
-        document.getElementById('statTodaySearches').textContent = data.searches_today || 0;
-        document.getElementById('statTodayUsers').textContent = data.users_today || 0;
-    } catch (error) {
-        showToast('Erreur chargement stats', 'error');
-    }
-}
-
-// ============ USERS ============
-let usersPage = 1;
-let usersTotal = 0;
-let usersSearch = '';
-
-async function loadUsers(page = 1, search = '') {
-    usersPage = page;
-    usersSearch = search;
-    const tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
-    try {
-        const url = `${API_URL}/api/admin/users?page=${page}&limit=20&search=${encodeURIComponent(search)}`;
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        usersTotal = data.total || 0;
-        if (data.users && data.users.length > 0) {
-            tbody.innerHTML = data.users.map(u => {
-                const isAdmin = u.role === 'admin';
-                const statusClass = u.banned ? 'banned' : 'active';
-                const statusText = u.banned ? 'Banni' : 'Actif';
-                return `
-                    <tr>
-                        <td><span class="clickable" onclick="viewUser(${u.id})">${u.username}</span></td>
-                        <td><span class="badge-role ${u.role}">${u.role}</span></td>
-                        <td><span class="badge-status ${statusClass}">${statusText}</span></td>
-                        <td>${u.search_count || 0}</td>
-                        <td>${u.fiche_count || 0}</td>
-                        <td>${u.reg_ip || '-'}</td>
-                        <td>
-                            <div class="admin-actions">
-                                ${!isAdmin ? `
-                                    <button class="primary" onclick="viewUser(${u.id})">Voir</button>
-                                    <button class="${u.banned ? 'success' : 'danger'}" onclick="toggleBan(${u.id}, ${!u.banned})">
-                                        ${u.banned ? 'Débannir' : 'Bannir'}
-                                    </button>
-                                    <button class="danger" onclick="deleteUser(${u.id})">Supprimer</button>
-                                ` : `
-                                    <span style="color:var(--text-muted);font-size:11px;">🔒 Protégé</span>
-                                `}
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Aucun utilisateur trouvé</td></tr>';
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
         }
-        updatePagination('users', page, usersTotal);
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
-    }
-}
-
-document.getElementById('userSearchBtn')?.addEventListener('click', () => {
-    const search = document.getElementById('userSearch').value.trim();
-    loadUsers(1, search);
-});
-
-document.getElementById('userSearch')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        const search = document.getElementById('userSearch').value.trim();
-        loadUsers(1, search);
-    }
-});
-
-document.getElementById('usersPrevPage')?.addEventListener('click', () => {
-    if (usersPage > 1) loadUsers(usersPage - 1, usersSearch);
-});
-
-document.getElementById('usersNextPage')?.addEventListener('click', () => {
-    if (usersPage * 20 < usersTotal) loadUsers(usersPage + 1, usersSearch);
-});
-
-function updatePagination(type, page, total) {
-    const totalPages = Math.ceil(total / 20) || 1;
-    const info = document.getElementById(`${type}PaginationInfo`);
-    const prev = document.getElementById(`${type}PrevPage`);
-    const next = document.getElementById(`${type}NextPage`);
-    if (info) info.textContent = `Page ${page} / ${totalPages}`;
-    if (prev) prev.disabled = page <= 1;
-    if (next) next.disabled = page >= totalPages;
-}
-
-// ============ VIEW USER ============
-async function viewUser(userId) {
-    try {
-        const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        const user = data.user;
-        const ips = data.ips || [];
-        const searches = data.recent_searches || [];
-        const isProtected = user.username === 'Admin';
-        showModal('Détails utilisateur', `
-            <div class="user-detail-modal">
-                <div class="info-grid">
-                    <div class="info-item"><span class="label">Nom d'utilisateur</span><span class="value highlight">${user.username}</span></div>
-                    <div class="info-item"><span class="label">Rôle</span><span class="value">${user.role}</span></div>
-                    <div class="info-item"><span class="label">Status</span><span class="value ${user.banned ? 'style=color:var(--danger);' : ''}">${user.banned ? 'Banni' : 'Actif'}</span></div>
-                    <div class="info-item"><span class="label">IP d'inscription</span><span class="value">${user.reg_ip || '-'}</span></div>
-                    <div class="info-item"><span class="label">Nombre de recherches</span><span class="value">${user.search_count || 0}</span></div>
-                    <div class="info-item"><span class="label">Nombre de fiches</span><span class="value">${user.fiche_count || 0}</span></div>
-                    <div class="info-item"><span class="label">Membre depuis</span><span class="value">${new Date(user.created_at).toLocaleDateString()}</span></div>
-                    <div class="info-item"><span class="label">Dernière connexion</span><span class="value">${user.last_login ? new Date(user.last_login).toLocaleString() : 'Jamais'}</span></div>
-                </div>
-                ${ips.length > 0 ? `
-                    <div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;">
-                        <div style="font-weight:600;color:#ffffff;margin-bottom:6px;">IPs liées (${ips.length})</div>
-                        ${ips.map(ip => `
-                            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
-                                <span>${ip.ip}</span>
-                                <span style="font-size:11px;color:var(--text-muted);">${new Date(ip.created_at).toLocaleDateString()}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                ${searches.length > 0 ? `
-                    <div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;">
-                        <div style="font-weight:600;color:#ffffff;margin-bottom:6px;">Dernières recherches</div>
-                        ${searches.map(s => `
-                            <div style="font-size:13px;color:var(--text-secondary);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
-                                <span>${Object.entries(s.query || {}).filter(([k]) => !['flexible','per_page','page'].includes(k)).map(([k,v]) => `${k}: ${v}`).join(' · ') || 'Recherche'}</span>
-                                <span style="font-size:11px;color:var(--text-muted);float:right;">${new Date(s.created_at).toLocaleString()}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                ${isProtected ? `<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:var(--warning);font-size:13px;text-align:center;">🔒 Ce compte admin est protégé</div>` : ''}
-                <div class="modal-actions" style="margin-top:16px;">
-                    ${!isProtected ? `
-                        <button class="btn-primary" onclick="closeModal();toggleBan(${user.id}, ${!user.banned})">${user.banned ? 'Débannir' : 'Bannir'}</button>
-                        <button class="btn-secondary" style="color:var(--danger);border-color:rgba(239,68,68,0.3);" onclick="closeModal();deleteUser(${user.id})">Supprimer</button>
-                    ` : ''}
-                    <button class="btn-secondary" onclick="closeModal()">Fermer</button>
-                </div>
-            </div>
-        `);
-    } catch (error) {
-        showToast('Erreur chargement utilisateur', 'error');
-    }
-}
-
-// ============ TOGGLE BAN ============
-async function toggleBan(userId, banned) {
-    if (!confirm(`Confirmer le ${banned ? 'bannissement' : 'débannissement'} ?`)) return;
-    try {
-        const response = await fetch(`${API_URL}/api/admin/users/${userId}/ban`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ banned })
-        });
-        if (response.ok) {
-            showToast(`Utilisateur ${banned ? 'banni' : 'débanni'} !`, 'success');
-            loadUsers(usersPage, usersSearch);
-        } else {
-            showToast('Erreur', 'error');
+        .admin-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-    } catch (error) {
-        showToast('Erreur réseau', 'error');
-    }
-}
-
-// ============ DELETE USER ============
-async function deleteUser(userId) {
-    if (!confirm('Confirmer la suppression de cet utilisateur ? (Cette action est irréversible)')) return;
-    try {
-        const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            showToast('Utilisateur supprimé !', 'success');
-            loadUsers(usersPage, usersSearch);
-        } else {
-            const data = await response.json();
-            showToast(data.error || 'Erreur', 'error');
+        .admin-header h1 svg {
+            color: var(--text-secondary);
         }
-    } catch (error) {
-        showToast('Erreur réseau', 'error');
-    }
-}
-
-// ============ SEARCHES ============
-let searchesPage = 1;
-let searchesTotal = 0;
-
-async function loadSearches(page = 1) {
-    searchesPage = page;
-    const tbody = document.getElementById('searchesTableBody');
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
-    try {
-        const response = await fetch(`${API_URL}/api/admin/searches?page=${page}&limit=50`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        searchesTotal = data.total || 0;
-        if (data.searches && data.searches.length > 0) {
-            tbody.innerHTML = data.searches.map(s => {
-                const query = s.query || {};
-                const criteria = Object.entries(query).filter(([k]) => !['flexible','per_page','page'].includes(k));
-                return `
-                    <tr>
-                        <td><span class="clickable" onclick="viewUser(${s.user_id})">${s.username || 'Inconnu'}</span></td>
-                        <td style="font-size:12px;">${criteria.map(([k,v]) => `${k}: ${v}`).join(' · ') || '-'}</td>
-                        <td>${s.results_count || 0}</td>
-                        <td style="font-size:12px;color:var(--text-muted);">${new Date(s.created_at).toLocaleString()}</td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune recherche</td></tr>';
+        .admin-back {
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        updatePagination('searches', page, searchesTotal);
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
-    }
-}
-
-document.getElementById('searchesPrevPage')?.addEventListener('click', () => {
-    if (searchesPage > 1) loadSearches(searchesPage - 1);
-});
-
-document.getElementById('searchesNextPage')?.addEventListener('click', () => {
-    if (searchesPage * 50 < searchesTotal) loadSearches(searchesPage + 1);
-});
-
-// ============ BLOCKLIST ============
-async function loadBlocklist() {
-    const tbody = document.getElementById('blocklistTableBody');
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
-    try {
-        const response = await fetch(`${API_URL}/api/admin/blocklist`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        if (data.blocklist && data.blocklist.length > 0) {
-            tbody.innerHTML = data.blocklist.map(b => `
-                <tr>
-                    <td>${b.type}</td>
-                    <td><span style="color:#ffffff;">${b.value}</span></td>
-                    <td>${b.reason || '-'}</td>
-                    <td style="font-size:12px;color:var(--text-muted);">${new Date(b.created_at).toLocaleDateString()}</td>
-                    <td><button class="danger" onclick="deleteBlocklistItem(${b.id})">Supprimer</button></td>
-                </tr>
-            `).join('');
-        } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune entrée dans la blocklist</td></tr>';
+        .admin-back:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: #ffffff;
         }
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
-    }
-}
-
-document.getElementById('blocklistAddBtn')?.addEventListener('click', async () => {
-    const type = document.getElementById('blocklistType').value;
-    const value = document.getElementById('blocklistValue').value.trim();
-    const reason = document.getElementById('blocklistReason').value.trim();
-    if (!value) {
-        showToast('Veuillez entrer une valeur', 'warning');
-        return;
-    }
-    try {
-        const response = await fetch(`${API_URL}/api/admin/blocklist`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ type, value, reason })
-        });
-        if (response.ok) {
-            showToast('Ajouté à la blocklist !', 'success');
-            document.getElementById('blocklistValue').value = '';
-            document.getElementById('blocklistReason').value = '';
-            loadBlocklist();
-        } else {
-            showToast('Erreur', 'error');
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 10px;
+            flex-wrap: wrap;
         }
-    } catch (error) {
-        showToast('Erreur réseau', 'error');
-    }
-});
-
-async function deleteBlocklistItem(id) {
-    if (!confirm('Supprimer cette entrée ?')) return;
-    try {
-        const response = await fetch(`${API_URL}/api/admin/blocklist/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            showToast('Supprimé !', 'success');
-            loadBlocklist();
+        .admin-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-    } catch (error) {
-        showToast('Erreur', 'error');
-    }
-}
-
-// ============ TICKETS ============
-let ticketsFilter = 'all';
-
-async function loadTickets(filter = 'all') {
-    ticketsFilter = filter;
-    const container = document.getElementById('ticketsList');
-    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</div>';
-    try {
-        const url = filter === 'all' ? `${API_URL}/api/admin/tickets` : `${API_URL}/api/admin/tickets?status=${filter}`;
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        if (data.tickets && data.tickets.length > 0) {
-            container.innerHTML = data.tickets.map(t => `
-                <div class="ticket-item" data-id="${t.id}">
-                    <div class="ticket-header">
-                        <div>
-                            <span class="ticket-subject">${t.subject}</span>
-                            <span style="font-size:12px;color:var(--text-muted);margin-left:12px;">par ${t.user_name || 'Inconnu'}</span>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <span class="ticket-status ${t.status}">${t.status === 'open' ? 'Ouvert' : t.status === 'in_progress' ? 'En cours' : 'Fermé'}</span>
-                            <span class="ticket-meta">${new Date(t.created_at).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-                    <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">${t.message.substring(0, 150)}${t.message.length > 150 ? '...' : ''}</div>
-                    <div class="ticket-detail" id="ticketDetail-${t.id}">
-                        <div id="ticketMessages-${t.id}"></div>
-                        <div class="ticket-reply">
-                            <input type="text" id="ticketReplyInput-${t.id}" placeholder="Répondre..." />
-                            <button onclick="replyTicket(${t.id})">Envoyer</button>
-                        </div>
-                        <div style="margin-top:8px;display:flex;gap:8px;">
-                            <button onclick="changeTicketStatus(${t.id}, 'open')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;">Ouvrir</button>
-                            <button onclick="changeTicketStatus(${t.id}, 'in_progress')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;">En cours</button>
-                            <button onclick="changeTicketStatus(${t.id}, 'closed')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;">Fermer</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            document.querySelectorAll('.ticket-item').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    if (e.target.closest('button') || e.target.closest('input')) return;
-                    const id = this.dataset.id;
-                    const detail = document.getElementById(`ticketDetail-${id}`);
-                    if (detail) {
-                        detail.classList.toggle('open');
-                        if (detail.classList.contains('open')) {
-                            loadTicketMessages(id);
-                        }
-                    }
-                });
-            });
-        } else {
-            container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px;">Aucun ticket</div>';
+        .admin-tab:hover {
+            color: var(--text-primary);
         }
-    } catch (error) {
-        container.innerHTML = '<div style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</div>';
-    }
-}
-
-async function loadTicketMessages(ticketId) {
-    const container = document.getElementById(`ticketMessages-${ticketId}`);
-    if (!container) return;
-    container.innerHTML = 'Chargement...';
-    try {
-        const response = await fetch(`${API_URL}/api/admin/tickets/${ticketId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erreur');
-        const data = await response.json();
-        const messages = data.messages || [];
-        if (messages.length > 0) {
-            container.innerHTML = messages.map(m => `
-                <div class="ticket-message ${m.is_admin ? 'admin' : ''}">
-                    <div class="msg-meta">${m.username || 'Inconnu'} · ${new Date(m.created_at).toLocaleString()}${m.is_admin ? ' · Admin' : ''}</div>
-                    ${m.message}
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Aucun message</div>';
+        .admin-tab.active {
+            background: #ffffff;
+            color: #000000;
         }
-    } catch (error) {
-        container.innerHTML = '<div style="color:var(--danger);font-size:13px;">Erreur</div>';
-    }
-}
-
-async function replyTicket(ticketId) {
-    const input = document.getElementById(`ticketReplyInput-${ticketId}`);
-    if (!input) return;
-    const message = input.value.trim();
-    if (!message) {
-        showToast('Veuillez entrer un message', 'warning');
-        return;
-    }
-    try {
-        const response = await fetch(`${API_URL}/api/admin/tickets/${ticketId}/reply`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ message })
-        });
-        if (response.ok) {
-            input.value = '';
-            showToast('Réponse envoyée !', 'success');
-            loadTicketMessages(ticketId);
-            loadTickets(ticketsFilter);
-        } else {
-            showToast('Erreur', 'error');
+        .admin-tab-content {
+            display: none;
         }
-    } catch (error) {
-        showToast('Erreur réseau', 'error');
-    }
-}
-
-async function changeTicketStatus(ticketId, status) {
-    try {
-        const response = await fetch(`${API_URL}/api/admin/tickets/${ticketId}/status`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ status })
-        });
-        if (response.ok) {
-            showToast(`Status mis à jour : ${status}`, 'success');
-            loadTickets(ticketsFilter);
+        .admin-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
         }
-    } catch (error) {
-        showToast('Erreur', 'error');
-    }
-}
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .admin-table-wrap {
+            overflow-x: auto;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .admin-table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .admin-table td {
+            padding: 10px 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .admin-table .clickable {
+            cursor: pointer;
+            color: #ffffff;
+        }
+        .admin-table .clickable:hover {
+            text-decoration: underline;
+        }
+        .badge-role {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-role.admin {
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+        }
+        .badge-role.user {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+        }
+        .badge-status {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-status.banned {
+            background: rgba(239,68,68,0.15);
+            color: var(--danger);
+        }
+        .badge-status.active {
+            background: rgba(16,185,129,0.15);
+            color: var(--success);
+        }
+        .admin-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .admin-actions button {
+            padding: 4px 10px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-actions button:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: #ffffff;
+        }
+        .admin-actions button.danger:hover {
+            border-color: rgba(239,68,68,0.3);
+            color: var(--danger);
+        }
+        .admin-actions button.success:hover {
+            border-color: rgba(16,185,129,0.3);
+            color: var(--success);
+        }
+        .admin-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .admin-pagination button {
+            padding: 6px 16px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .admin-pagination button:hover:not(:disabled) {
+            border-color: rgba(255,255,255,0.2);
+            color: #ffffff;
+        }
+        .admin-pagination button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .admin-search {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .admin-search input {
+            flex: 1;
+            padding: 10px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            min-width: 200px;
+        }
+        .admin-search input:focus {
+            border-color: #ffffff;
+        }
+        .admin-search button {
+            padding: 10px 24px;
+            background: #ffffff;
+            border: none;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .admin-search button:hover {
+            background: #cccccc;
+        }
+        .admin-blocklist-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+        }
+        .admin-blocklist-form select,
+        .admin-blocklist-form input {
+            padding: 8px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+        .admin-blocklist-form select:focus,
+        .admin-blocklist-form input:focus {
+            border-color: #ffffff;
+        }
+        .admin-blocklist-form button {
+            padding: 8px 20px;
+            background: #ffffff;
+            border: none;
+            border-radius: 6px;
+            color: #000000;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .admin-blocklist-form button:hover {
+            background: #cccccc;
+        }
+        .ticket-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .ticket-item:hover {
+            border-color: rgba(255,255,255,0.1);
+        }
+        .ticket-item .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ticket-item .ticket-subject {
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .ticket-item .ticket-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .ticket-item .ticket-status {
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .ticket-status.open {
+            background: rgba(245,158,11,0.15);
+            color: var(--warning);
+        }
+        .ticket-status.in_progress {
+            background: rgba(59,130,246,0.15);
+            color: #3b82f6;
+        }
+        .ticket-status.closed {
+            background: rgba(16,185,129,0.15);
+            color: var(--success);
+        }
+        .ticket-detail {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        .ticket-detail.open {
+            display: block;
+        }
+        .ticket-message {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .ticket-message.admin {
+            background: rgba(255,255,255,0.05);
+            border-left: 2px solid #3b82f6;
+        }
+        .ticket-message .msg-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .ticket-reply {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .ticket-reply input {
+            flex: 1;
+            padding: 8px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+        .ticket-reply input:focus {
+            border-color: #ffffff;
+        }
+        .ticket-reply button {
+            padding: 8px 20px;
+            background: #ffffff;
+            border: none;
+            border-radius: 6px;
+            color: #000000;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ticket-reply button:hover {
+            background: #cccccc;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .modal-actions .btn-primary {
+            padding: 10px 24px;
+            background: #ffffff;
+            border: none;
+            border-radius: 8px;
+            color: #000000;
+            font-weight: 600;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .modal-actions .btn-primary:hover {
+            background: #cccccc;
+        }
+        .modal-actions .btn-secondary {
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-actions .btn-secondary:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: #ffffff;
+        }
+        .user-detail-modal .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+            margin-bottom: 16px;
+        }
+        .user-detail-modal .info-item {
+            display: flex;
+            flex-direction: column;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .user-detail-modal .info-item .label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .user-detail-modal .info-item .value {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .user-detail-modal .info-item .value.highlight {
+            color: #ffffff;
+            font-weight: 500;
+        }
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            animation: slideInRight 0.3s ease;
+            box-shadow: var(--shadow);
+            min-width: 200px;
+        }
+        .toast.success {
+            border-color: rgba(16,185,129,0.3);
+            background: rgba(16,185,129,0.05);
+        }
+        .toast.error {
+            border-color: rgba(239,68,68,0.3);
+            background: rgba(239,68,68,0.05);
+        }
+        .toast.warning {
+            border-color: rgba(245,158,11,0.3);
+            background: rgba(245,158,11,0.05);
+        }
+        .toast.info {
+            border-color: rgba(255,255,255,0.1);
+        }
+        .toast-close {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0 4px;
+        }
+        .toast-close:hover {
+            color: #ffffff;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @media (max-width: 768px) {
+            .admin-page { padding: 70px 16px 20px; }
+            .admin-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .admin-blocklist-form { flex-direction: column; }
+            .admin-search { flex-direction: column; }
+            .user-detail-modal .info-grid { grid-template-columns: 1fr; }
+            .admin-table { font-size: 12px; }
+            .admin-table th, .admin-table td { padding: 6px 8px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="admin-page">
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Panel Admin
+        </h1>
+        <a href="/dashboard.html" class="admin-back">Retour au Dashboard</a>
+    </div>
+    <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="dashboard">Dashboard</button>
+        <button class="admin-tab" data-tab="users">Utilisateurs</button>
+        <button class="admin-tab" data-tab="searches">Recherches</button>
+        <button class="admin-tab" data-tab="blocklist">Blocklist</button>
+        <button class="admin-tab" data-tab="tickets">Tickets</button>
+    </div>
+    <div id="tab-dashboard" class="admin-tab-content active">
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card"><div class="stat-number" id="statUsers">-</div><div class="stat-label">Utilisateurs</div></div>
+            <div class="stat-card"><div class="stat-number" id="statSearches">-</div><div class="stat-label">Recherches totales</div></div>
+            <div class="stat-card"><div class="stat-number" id="statFiches">-</div><div class="stat-label">Fiches</div></div>
+            <div class="stat-card"><div class="stat-number" id="statGraphes">-</div><div class="stat-label">Graphes</div></div>
+            <div class="stat-card"><div class="stat-number" id="statBanned">-</div><div class="stat-label">Bannis</div></div>
+            <div class="stat-card"><div class="stat-number" id="statTodaySearches">-</div><div class="stat-label">Recherches aujourd'hui</div></div>
+            <div class="stat-card"><div class="stat-number" id="statTodayUsers">-</div><div class="stat-label">Inscriptions aujourd'hui</div></div>
+        </div>
+        <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Panel admin — Marauder v1.0</div>
+    </div>
+    <div id="tab-users" class="admin-tab-content">
+        <div class="admin-search">
+            <input type="text" id="userSearch" placeholder="Rechercher un utilisateur ou une IP..." />
+            <button id="userSearchBtn">Rechercher</button>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Status</th><th>Recherches</th><th>Fiches</th><th>IP</th><th>Actions</th></tr></thead>
+                <tbody id="usersTableBody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="admin-pagination">
+            <span id="usersPaginationInfo">Page 1 / 1</span>
+            <div><button id="usersPrevPage" disabled>Précédent</button><button id="usersNextPage">Suivant</button></div>
+        </div>
+    </div>
+    <div id="tab-searches" class="admin-tab-content">
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>Utilisateur</th><th>Critères</th><th>Résultats</th><th>Date</th></tr></thead>
+                <tbody id="searchesTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="admin-pagination">
+            <span id="searchesPaginationInfo">Page 1 / 1</span>
+            <div><button id="searchesPrevPage" disabled>Précédent</button><button id="searchesNextPage">Suivant</button></div>
+        </div>
+    </div>
+    <div id="tab-blocklist" class="admin-tab-content">
+        <div class="admin-blocklist-form">
+            <select id="blocklistType">
+                <option value="nom_famille">Nom</option>
+                <option value="prenom">Prénom</option>
+                <option value="email">Email</option>
+                <option value="telephone">Téléphone</option>
+                <option value="adresse">Adresse</option>
+                <option value="ip">IP</option>
+                <option value="nir">NIR</option>
+                <option value="iban">IBAN</option>
+            </select>
+            <input type="text" id="blocklistValue" placeholder="Valeur à bloquer..." />
+            <input type="text" id="blocklistReason" placeholder="Raison (optionnel)" />
+            <button id="blocklistAddBtn">Ajouter</button>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>Type</th><th>Valeur</th><th>Raison</th><th>Ajouté le</th><th>Actions</th></tr></thead>
+                <tbody id="blocklistTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="tab-tickets" class="admin-tab-content">
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+            <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="all">Tous</button>
+            <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="open">Ouverts</button>
+            <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="in_progress">En cours</button>
+            <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="closed">Fermés</button>
+        </div>
+        <div id="ticketsList"><div style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</div></div>
+    </div>
+</div>
 
-// ============ INIT ============
-async function init() {
-    const isAdmin = await checkAdmin();
-    if (!isAdmin) return;
-    loadStats();
-}
+<div id="modalOverlay" class="modal-overlay">
+    <div id="modalContent" class="modal"></div>
+</div>
+<div id="toastContainer" class="toast-container"></div>
 
-init();
+<script src="js/admin.js"></script>
+</body>
+</html>

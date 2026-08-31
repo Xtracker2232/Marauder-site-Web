@@ -46,7 +46,6 @@ const pool = new Pool({
 const initDB = async () => {
     const client = await pool.connect();
     try {
-        // Tables existantes
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -86,10 +85,6 @@ const initDB = async () => {
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        `);
-
-        // Nouvelles tables admin
-        await client.query(`
             CREATE TABLE IF NOT EXISTS blocklist (
                 id SERIAL PRIMARY KEY,
                 type VARCHAR(50) NOT NULL,
@@ -117,10 +112,8 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-
         console.log('✅ Tables OK');
 
-        // Créer admin (protégé, ne peut pas être supprimé)
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
@@ -130,7 +123,6 @@ const initDB = async () => {
             );
             console.log('✅ Admin créé');
         } else {
-            // S'assurer que l'admin a bien le rôle admin
             await client.query(
                 'UPDATE users SET role = $1 WHERE username = $2',
                 ['admin', process.env.ADMIN_USERNAME]
@@ -205,7 +197,6 @@ const requireAdmin = async (req, res, next) => {
 };
 
 // ============ ROUTES AUTH ============
-
 app.post('/api/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -215,9 +206,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         if (user.banned) return res.status(403).json({ error: 'Compte banni' });
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
-        
         await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
-        
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
@@ -245,7 +234,6 @@ app.post('/api/register',
                 'INSERT INTO users (username, password_hash, reg_ip) VALUES ($1, $2, $3) RETURNING id, username, role',
                 [username, hashed, ip]
             );
-            // Enregistrer l'IP
             await pool.query('INSERT INTO ip_used (ip, user_id) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING', [ip, result.rows[0].id]);
             res.status(201).json({ success: true, user: result.rows[0] });
         } catch (error) {
@@ -499,7 +487,6 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 // ============ ROUTES ADMIN ============
 // ============================================================
 
-// Vérification admin (protégé contre suppression)
 app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const result = await pool.query(
@@ -517,7 +504,6 @@ app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) =>
     }
 });
 
-// ============ STATS ============
 app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const totalUsers = await pool.query('SELECT COUNT(*) FROM users');
@@ -525,13 +511,8 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
         const totalFiches = await pool.query('SELECT COUNT(*) FROM fiches');
         const totalGraphes = await pool.query('SELECT COUNT(*) FROM graphes');
         const bannedUsers = await pool.query('SELECT COUNT(*) FROM users WHERE banned = TRUE');
-        const searchesToday = await pool.query(
-            'SELECT COUNT(*) FROM search_history WHERE DATE(created_at) = CURRENT_DATE'
-        );
-        const usersToday = await pool.query(
-            'SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURRENT_DATE'
-        );
-
+        const searchesToday = await pool.query('SELECT COUNT(*) FROM search_history WHERE DATE(created_at) = CURRENT_DATE');
+        const usersToday = await pool.query('SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURRENT_DATE');
         res.json({
             total_users: parseInt(totalUsers.rows[0].count),
             total_searches: parseInt(totalSearches.rows[0].count),
@@ -546,7 +527,6 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
     }
 });
 
-// ============ LISTE UTILISATEURS ============
 app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
     const { page = 1, limit = 20, search = '' } = req.query;
     const offset = (page - 1) * limit;
@@ -561,18 +541,13 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
             WHERE u.username != $1
         `;
         const params = [process.env.ADMIN_USERNAME];
-        
         if (search) {
             query += ` AND (u.username ILIKE $${params.length + 1} OR u.reg_ip ILIKE $${params.length + 1})`;
             params.push(`%${search}%`);
         }
-        
         query += ` ORDER BY u.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
         params.push(limit, offset);
-
         const result = await pool.query(query, params);
-        
-        // Total count
         let countQuery = 'SELECT COUNT(*) FROM users WHERE username != $1';
         const countParams = [process.env.ADMIN_USERNAME];
         if (search) {
@@ -580,7 +555,6 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
             countParams.push(`%${search}%`);
         }
         const countResult = await pool.query(countQuery, countParams);
-
         res.json({
             users: result.rows,
             total: parseInt(countResult.rows[0].count),
@@ -593,16 +567,13 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
     }
 });
 
-// ============ UTILISATEUR PAR ID ============
 app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     try {
-        // Vérifier que ce n'est pas l'admin protégé
         const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être consulté' });
         }
-
         const result = await pool.query(`
             SELECT 
                 u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip,
@@ -612,20 +583,14 @@ app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
             FROM users u
             WHERE u.id = $1
         `, [id]);
-
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });
         }
-
-        // Récupérer les IPs liées
         const ips = await pool.query('SELECT ip, created_at FROM ip_used WHERE user_id = $1', [id]);
-        
-        // Récupérer les dernières recherches
         const searches = await pool.query(
             'SELECT id, query, results_count, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
             [id]
         );
-
         res.json({
             user: result.rows[0],
             ips: ips.rows,
@@ -637,17 +602,14 @@ app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
     }
 });
 
-// ============ BANNIR / DÉBANNIR ============
 app.post('/api/admin/users/:id/ban', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { banned } = req.body;
     try {
-        // Vérifier que ce n'est pas l'admin protégé
         const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être banni' });
         }
-
         await pool.query('UPDATE users SET banned = $1 WHERE id = $2', [banned, id]);
         res.json({ success: true, banned });
     } catch (error) {
@@ -655,16 +617,13 @@ app.post('/api/admin/users/:id/ban', authenticateToken, requireAdmin, async (req
     }
 });
 
-// ============ SUPPRIMER UTILISATEUR ============
 app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     try {
-        // Vérifier que ce n'est pas l'admin protégé
         const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être supprimé' });
         }
-
         await pool.query('DELETE FROM users WHERE id = $1', [id]);
         res.json({ success: true });
     } catch (error) {
@@ -672,17 +631,14 @@ app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, 
     }
 });
 
-// ============ CHANGER RÔLE ============
 app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     try {
-        // Vérifier que ce n'est pas l'admin protégé
         const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Le rôle de l\'admin principal ne peut pas être modifié' });
         }
-
         await pool.query('UPDATE users SET role = $1 WHERE id = $2', [role, id]);
         res.json({ success: true, role });
     } catch (error) {
@@ -690,7 +646,6 @@ app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (re
     }
 });
 
-// ============ IPs LIÉES ============
 app.get('/api/admin/ips/:ip', authenticateToken, requireAdmin, async (req, res) => {
     const { ip } = req.params;
     try {
@@ -705,12 +660,9 @@ app.get('/api/admin/ips/:ip', authenticateToken, requireAdmin, async (req, res) 
     }
 });
 
-// ============ BLOCKLIST ============
 app.get('/api/admin/blocklist', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const result = await pool.query(
-            'SELECT * FROM blocklist ORDER BY created_at DESC'
-        );
+        const result = await pool.query('SELECT * FROM blocklist ORDER BY created_at DESC');
         res.json({ blocklist: result.rows });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
@@ -743,97 +695,6 @@ app.delete('/api/admin/blocklist/:id', authenticateToken, requireAdmin, async (r
     }
 });
 
-// ============ TICKETS ============
-
-// Créer un ticket
-app.post('/api/tickets', authenticateToken, async (req, res) => {
-    const { subject, message } = req.body;
-    if (!subject || !message) {
-        return res.status(400).json({ error: 'Sujet et message requis' });
-    }
-    try {
-        const result = await pool.query(
-            'INSERT INTO tickets (user_id, subject, message) VALUES ($1, $2, $3) RETURNING *',
-            [req.user.id, subject, message]
-        );
-        res.status(201).json({ success: true, ticket: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
-
-// Récupérer les tickets d'un utilisateur
-app.get('/api/tickets', authenticateToken, async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM tickets WHERE user_id = $1 ORDER BY created_at DESC',
-            [req.user.id]
-        );
-        res.json({ tickets: result.rows });
-    } catch (error) {
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
-
-// Récupérer un ticket spécifique avec ses messages
-app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    try {
-        const ticketResult = await pool.query(
-            'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
-        if (ticketResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Ticket non trouvé' });
-        }
-        const messages = await pool.query(
-            'SELECT * FROM ticket_messages WHERE ticket_id = $1 ORDER BY created_at ASC',
-            [id]
-        );
-        res.json({ ticket: ticketResult.rows[0], messages: messages.rows });
-    } catch (error) {
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
-
-// Ajouter un message à un ticket
-app.post('/api/tickets/:id/messages', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    const { message } = req.body;
-    if (!message) {
-        return res.status(400).json({ error: 'Message requis' });
-    }
-    try {
-        // Vérifier que le ticket appartient à l'utilisateur
-        const ticketCheck = await pool.query(
-            'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
-        if (ticketCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'Ticket non trouvé' });
-        }
-        // Vérifier que le ticket n'est pas fermé
-        if (ticketCheck.rows[0].status === 'closed') {
-            return res.status(400).json({ error: 'Ce ticket est fermé' });
-        }
-        const result = await pool.query(
-            'INSERT INTO ticket_messages (ticket_id, user_id, message) VALUES ($1, $2, $3) RETURNING *',
-            [id, req.user.id, message]
-        );
-        // Mettre à jour le ticket
-        await pool.query(
-            'UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-            [id]
-        );
-        res.status(201).json({ success: true, message: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
-
-// ============ ROUTES ADMIN TICKETS ============
-
-// Récupérer tous les tickets (admin)
 app.get('/api/admin/tickets', authenticateToken, requireAdmin, async (req, res) => {
     const { status } = req.query;
     try {
@@ -855,7 +716,6 @@ app.get('/api/admin/tickets', authenticateToken, requireAdmin, async (req, res) 
     }
 });
 
-// Récupérer un ticket admin avec messages
 app.get('/api/admin/tickets/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     try {
@@ -881,7 +741,6 @@ app.get('/api/admin/tickets/:id', authenticateToken, requireAdmin, async (req, r
     }
 });
 
-// Répondre à un ticket (admin)
 app.post('/api/admin/tickets/:id/reply', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { message } = req.body;
@@ -896,12 +755,10 @@ app.post('/api/admin/tickets/:id/reply', authenticateToken, requireAdmin, async 
         if (ticketCheck.rows[0].status === 'closed') {
             return res.status(400).json({ error: 'Ce ticket est fermé' });
         }
-        // Ajouter le message admin
         await pool.query(
             'INSERT INTO ticket_messages (ticket_id, user_id, message, is_admin) VALUES ($1, $2, $3, $4)',
             [id, req.user.id, message, true]
         );
-        // Mettre à jour le statut
         await pool.query(
             'UPDATE tickets SET status = $1, admin_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
             ['in_progress', req.user.id, id]
@@ -912,7 +769,6 @@ app.post('/api/admin/tickets/:id/reply', authenticateToken, requireAdmin, async 
     }
 });
 
-// Changer le statut d'un ticket (admin)
 app.patch('/api/admin/tickets/:id/status', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -931,7 +787,6 @@ app.patch('/api/admin/tickets/:id/status', authenticateToken, requireAdmin, asyn
     }
 });
 
-// ============ HISTORIQUE GLOBAL (ADMIN) ============
 app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res) => {
     const { page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
@@ -955,11 +810,94 @@ app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res)
     }
 });
 
+// ============ ROUTES TICKETS (USER) ============
+app.post('/api/tickets', authenticateToken, async (req, res) => {
+    const { subject, message } = req.body;
+    if (!subject || !message) {
+        return res.status(400).json({ error: 'Sujet et message requis' });
+    }
+    try {
+        const result = await pool.query(
+            'INSERT INTO tickets (user_id, subject, message) VALUES ($1, $2, $3) RETURNING *',
+            [req.user.id, subject, message]
+        );
+        res.status(201).json({ success: true, ticket: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.get('/api/tickets', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM tickets WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json({ tickets: result.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketResult = await pool.query(
+            'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (ticketResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket non trouvé' });
+        }
+        const messages = await pool.query(
+            'SELECT * FROM ticket_messages WHERE ticket_id = $1 ORDER BY created_at ASC',
+            [id]
+        );
+        res.json({ ticket: ticketResult.rows[0], messages: messages.rows });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.post('/api/tickets/:id/messages', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { message } = req.body;
+    if (!message) {
+        return res.status(400).json({ error: 'Message requis' });
+    }
+    try {
+        const ticketCheck = await pool.query(
+            'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+        if (ticketCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket non trouvé' });
+        }
+        if (ticketCheck.rows[0].status === 'closed') {
+            return res.status(400).json({ error: 'Ce ticket est fermé' });
+        }
+        const result = await pool.query(
+            'INSERT INTO ticket_messages (ticket_id, user_id, message) VALUES ($1, $2, $3) RETURNING *',
+            [id, req.user.id, message]
+        );
+        await pool.query(
+            'UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+            [id]
+        );
+        res.status(201).json({ success: true, message: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // ============ ROUTES STATIQUES ============
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'login.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
+app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'cgu.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
 
+// ============ DÉMARRAGE ============
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Marauder API running on port ${PORT}`);
 });

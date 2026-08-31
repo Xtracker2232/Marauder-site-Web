@@ -29,12 +29,12 @@ function showModal(title, bodyHtml) {
     var content = document.getElementById('modalContent');
     if (!overlay || !content) return;
     content.innerHTML = '<h3>' + title + '</h3>' + bodyHtml;
-    overlay.style.display = 'flex';
+    overlay.classList.add('active');
 }
 
 function closeModal() {
     var overlay = document.getElementById('modalOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) overlay.classList.remove('active');
 }
 
 async function checkAdmin() {
