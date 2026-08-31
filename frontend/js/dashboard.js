@@ -1438,17 +1438,13 @@ function addToGraphe(index) {
     
     grapheNodes.push(newNode);
     
-    // ⚠️ AJOUTER CET APPEL POUR RÉAFFICHER LE GRAPHE
-    // Si le graphe est actif, le mettre à jour
-    if (document.getElementById('page-graphe').classList.contains('active')) {
-        // Réinitialiser le canvas et redessiner
-        if (grapheCanvas) {
-            // Forcer le rendu
-            renderGrapheLoop();
-        } else {
-            // Si le canvas n'est pas initialisé, l'initialiser
-            initGraphe();
-        }
+    // Réinitialiser et afficher le graphe
+    // Si le canvas existe, on redessine
+    if (grapheCanvas) {
+        renderGrapheLoop();
+    } else {
+        // Si le canvas n'existe pas, on initialise
+        initGraphe();
     }
     
     showToast(`"${name}" ajouté au graphe !`, 'success');
