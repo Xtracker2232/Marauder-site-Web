@@ -572,7 +572,10 @@
     </style>
 </head>
 <body class="admin-page">
+
 <div class="admin-container">
+
+    <!-- HEADER -->
     <div class="admin-header">
         <h1>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
@@ -584,6 +587,8 @@
         </h1>
         <a href="/dashboard.html" class="admin-back">Retour au Dashboard</a>
     </div>
+
+    <!-- TABS -->
     <div class="admin-tabs">
         <button class="admin-tab active" data-tab="dashboard">Dashboard</button>
         <button class="admin-tab" data-tab="users">Utilisateurs</button>
@@ -591,6 +596,8 @@
         <button class="admin-tab" data-tab="blocklist">Blocklist</button>
         <button class="admin-tab" data-tab="tickets">Tickets</button>
     </div>
+
+    <!-- TAB DASHBOARD -->
     <div id="tab-dashboard" class="admin-tab-content active">
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card"><div class="stat-number" id="statUsers">-</div><div class="stat-label">Utilisateurs</div></div>
@@ -603,6 +610,8 @@
         </div>
         <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Panel admin — Marauder v1.0</div>
     </div>
+
+    <!-- TAB USERS -->
     <div id="tab-users" class="admin-tab-content">
         <div class="admin-search">
             <input type="text" id="userSearch" placeholder="Rechercher un utilisateur ou une IP..." />
@@ -610,27 +619,58 @@
         </div>
         <div class="admin-table-wrap">
             <table class="admin-table">
-                <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Status</th><th>Recherches</th><th>Fiches</th><th>IP</th><th>Actions</th></tr></thead>
-                <tbody id="usersTableBody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr></tbody>
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Rôle</th>
+                        <th>Status</th>
+                        <th>Recherches</th>
+                        <th>Fiches</th>
+                        <th>IP</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>
+                </tbody>
             </table>
         </div>
         <div class="admin-pagination">
             <span id="usersPaginationInfo">Page 1 / 1</span>
-            <div><button id="usersPrevPage" disabled>Précédent</button><button id="usersNextPage">Suivant</button></div>
+            <div>
+                <button id="usersPrevPage" disabled>Précédent</button>
+                <button id="usersNextPage">Suivant</button>
+            </div>
         </div>
     </div>
+
+    <!-- TAB SEARCHES -->
     <div id="tab-searches" class="admin-tab-content">
         <div class="admin-table-wrap">
             <table class="admin-table">
-                <thead><tr><th>Utilisateur</th><th>Critères</th><th>Résultats</th><th>Date</th></tr></thead>
-                <tbody id="searchesTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr></tbody>
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Critères</th>
+                        <th>Résultats</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="searchesTableBody">
+                    <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>
+                </tbody>
             </table>
         </div>
         <div class="admin-pagination">
             <span id="searchesPaginationInfo">Page 1 / 1</span>
-            <div><button id="searchesPrevPage" disabled>Précédent</button><button id="searchesNextPage">Suivant</button></div>
+            <div>
+                <button id="searchesPrevPage" disabled>Précédent</button>
+                <button id="searchesNextPage">Suivant</button>
+            </div>
         </div>
     </div>
+
+    <!-- TAB BLOCKLIST -->
     <div id="tab-blocklist" class="admin-tab-content">
         <div class="admin-blocklist-form">
             <select id="blocklistType">
@@ -649,11 +689,23 @@
         </div>
         <div class="admin-table-wrap">
             <table class="admin-table">
-                <thead><tr><th>Type</th><th>Valeur</th><th>Raison</th><th>Ajouté le</th><th>Actions</th></tr></thead>
-                <tbody id="blocklistTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr></tbody>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Valeur</th>
+                        <th>Raison</th>
+                        <th>Ajouté le</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="blocklistTableBody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
+
+    <!-- TAB TICKETS -->
     <div id="tab-tickets" class="admin-tab-content">
         <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
             <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="all">Tous</button>
@@ -661,10 +713,14 @@
             <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="in_progress">En cours</button>
             <button class="admin-tab" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;padding:6px 16px;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;" data-filter="closed">Fermés</button>
         </div>
-        <div id="ticketsList"><div style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</div></div>
+        <div id="ticketsList">
+            <div style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</div>
+        </div>
     </div>
+
 </div>
 
+<!-- MODAL -->
 <div id="modalOverlay" class="modal-overlay">
     <div id="modalContent" class="modal"></div>
 </div>
