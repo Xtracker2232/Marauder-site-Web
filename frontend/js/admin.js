@@ -6,41 +6,43 @@ if (!token) {
 }
 
 // ============ TOAST ============
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(message, type, duration) {
+    type = type || 'info';
+    duration = duration || 3000;
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `${message}<button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+    toast.className = 'toast ' + type;
+    toast.innerHTML = message + '<button class="toast-close" onclick="this.parentElement.remove()">×</button>';
     container.appendChild(toast);
     if (duration > 0) {
-        setTimeout(() => {
+        setTimeout(function() {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(40px)';
             toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(function() { toast.remove(); }, 300);
         }, duration);
     }
 }
 
 // ============ MODAL ============
 function showModal(title, bodyHtml) {
-    const overlay = document.getElementById('modalOverlay');
-    const content = document.getElementById('modalContent');
+    var overlay = document.getElementById('modalOverlay');
+    var content = document.getElementById('modalContent');
     if (!overlay || !content) return;
     content.innerHTML = '<h3>' + title + '</h3>' + bodyHtml;
     overlay.style.display = 'flex';
 }
 
 function closeModal() {
-    const overlay = document.getElementById('modalOverlay');
+    var overlay = document.getElementById('modalOverlay');
     if (overlay) overlay.style.display = 'none';
 }
 
-// ============ VÉRIFICATION ADMIN ============
+// ============ VERIFICATION ADMIN ============
 async function checkAdmin() {
     try {
-        const response = await fetch(API_URL + '/api/admin/check', {
+        var response = await fetch(API_URL + '/api/admin/check', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!response.ok) {
@@ -48,7 +50,7 @@ async function checkAdmin() {
             window.location.href = '/dashboard.html';
             return false;
         }
-        const data = await response.json();
+        var data = await response.json();
         if (!data.isAdmin) {
             showToast('Accès refusé - Admin requis', 'error');
             window.location.href = '/dashboard.html';
@@ -203,40 +205,59 @@ async function viewUser(userId) {
         var ips = data.ips || [];
         var searches = data.recent_searches || [];
         var isProtected = user.username === 'Admin';
-        var html = '<div class="user-detail-modal"><div class="info-grid">' +
-            '<div class="info-item"><span class="label">Nom d\'utilisateur</span><span class="value highlight">' + user.username + '</span></div>' +
-            '<div class="info-item"><span class="label">Rôle</span><span class="value">' + user.role + '</span></div>' +
-            '<div class="info-item"><span class="label">Status</span><span class="value' + (user.banned ? ' style=color:var(--danger);' : '') + '">' + (user.banned ? 'Banni' : 'Actif') + '</span></div>' +
-            '<div class="info-item"><span class="label">IP d\'inscription</span><span class="value">' + (user.reg_ip || '-') + '</span></div>' +
-            '<div class="info-item"><span class="label">Nombre de recherches</span><span class="value">' + (user.search_count || 0) + '</span></div>' +
-            '<div class="info-item"><span class="label">Nombre de fiches</span><span class="value">' + (user.fiche_count || 0) + '</span></div>' +
-            '<div class="info-item"><span class="label">Membre depuis</span><span class="value">' + new Date(user.created_at).toLocaleDateString() + '</span></div>' +
-            '<div class="info-item"><span class="label">Dernière connexion</span><span class="value">' + (user.last_login ? new Date(user.last_login).toLocaleString() : 'Jamais') + '</span></div>' +
-            '</div>';
+        
+        var html = '<div class="user-detail-modal">';
+        html += '<div class="info-grid">';
+        html += '<div class="info-item"><span class="label">Nom d\'utilisateur</span><span class="value highlight">' + user.username + '</span></div>';
+        html += '<div class="info-item"><span class="label">Rôle</span><span class="value">' + user.role + '</span></div>';
+        html += '<div class="info-item"><span class="label">Status</span><span class="value' + (user.banned ? ' style=color:var(--danger);' : '') + '">' + (user.banned ? 'Banni' : 'Actif') + '</span></div>';
+        html += '<div class="info-item"><span class="label">IP d\'inscription</span><span class="value">' + (user.reg_ip || '-') + '</span></div>';
+        html += '<div class="info-item"><span class="label">Nombre de recherches</span><span class="value">' + (user.search_count || 0) + '</span></div>';
+        html += '<div class="info-item"><span class="label">Nombre de fiches</span><span class="value">' + (user.fiche_count || 0) + '</span></div>';
+        html += '<div class="info-item"><span class="label">Membre depuis</span><span class="value">' + new Date(user.created_at).toLocaleDateString() + '</span></div>';
+        html += '<div class="info-item"><span class="label">Dernière connexion</span><span class="value">' + (user.last_login ? new Date(user.last_login).toLocaleString() : 'Jamais') + '</span></div>';
+        html += '</div>';
+        
         if (ips.length > 0) {
-            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">IPs liées (' + ips.length + ')</div>';
+            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;">';
+            html += '<div style="font-weight:600;color:#ffffff;margin-bottom:6px;">IPs liées (' + ips.length + ')</div>';
             ips.forEach(function(ip) {
-                html += '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.03);"><span>' + ip.ip + '</span><span style="font-size:11px;color:var(--text-muted);">' + new Date(ip.created_at).toLocaleDateString() + '</span></div>';
+                html += '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.03);">';
+                html += '<span>' + ip.ip + '</span>';
+                html += '<span style="font-size:11px;color:var(--text-muted);">' + new Date(ip.created_at).toLocaleDateString() + '</span>';
+                html += '</div>';
             });
             html += '</div>';
         }
+        
         if (searches.length > 0) {
-            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">Dernières recherches</div>';
+            html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;">';
+            html += '<div style="font-weight:600;color:#ffffff;margin-bottom:6px;">Dernières recherches</div>';
             searches.forEach(function(s) {
-                var criteria = Object.entries(s.query || {}).filter(function(kv) { return !['flexible','per_page','page'].includes(kv[0]); });
-                html += '<div style="font-size:13px;color:var(--text-secondary);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);"><span>' + (criteria.map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(' · ') || 'Recherche') + '</span><span style="font-size:11px;color:var(--text-muted);float:right;">' + new Date(s.created_at).toLocaleString() + '</span></div>';
+                var criteria = Object.entries(s.query || {}).filter(function(kv) {
+                    return !['flexible', 'per_page', 'page'].includes(kv[0]);
+                });
+                var text = criteria.map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(' · ') || 'Recherche';
+                html += '<div style="font-size:13px;color:var(--text-secondary);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">';
+                html += '<span>' + text + '</span>';
+                html += '<span style="font-size:11px;color:var(--text-muted);float:right;">' + new Date(s.created_at).toLocaleString() + '</span>';
+                html += '</div>';
             });
             html += '</div>';
         }
+        
         if (isProtected) {
             html += '<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:var(--warning);font-size:13px;text-align:center;">🔒 Ce compte admin est protégé</div>';
         }
+        
         html += '<div class="modal-actions" style="margin-top:16px;">';
         if (!isProtected) {
             html += '<button class="btn-primary" onclick="closeModal();toggleBan(' + user.id + ', ' + (!user.banned) + ')">' + (user.banned ? 'Débannir' : 'Bannir') + '</button>';
             html += '<button class="btn-secondary" style="color:var(--danger);border-color:rgba(239,68,68,0.3);" onclick="closeModal();deleteUser(' + user.id + ')">Supprimer</button>';
         }
-        html += '<button class="btn-secondary" onclick="closeModal()">Fermer</button></div></div>';
+        html += '<button class="btn-secondary" onclick="closeModal()">Fermer</button>';
+        html += '</div></div>';
+        
         showModal('Détails utilisateur', html);
     } catch (error) {
         showToast('Erreur chargement utilisateur', 'error');
@@ -306,10 +327,13 @@ async function loadSearches(page) {
             var html = '';
             data.searches.forEach(function(s) {
                 var query = s.query || {};
-                var criteria = Object.entries(query).filter(function(kv) { return !['flexible','per_page','page'].includes(kv[0]); });
+                var criteria = Object.entries(query).filter(function(kv) {
+                    return !['flexible', 'per_page', 'page'].includes(kv[0]);
+                });
+                var text = criteria.map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(' · ') || '-';
                 html += '<tr>' +
                     '<td><span class="clickable" onclick="viewUser(' + s.user_id + ')">' + (s.username || 'Inconnu') + '</span></td>' +
-                    '<td style="font-size:12px;">' + (criteria.map(function(kv) { return kv[0] + ': ' + kv[1]; }).join(' · ') || '-') + '</td>' +
+                    '<td style="font-size:12px;">' + text + '</td>' +
                     '<td>' + (s.results_count || 0) + '</td>' +
                     '<td style="font-size:12px;color:var(--text-muted);">' + new Date(s.created_at).toLocaleString() + '</td></tr>';
             });
@@ -425,20 +449,20 @@ async function loadTickets(filter) {
             var html = '';
             data.tickets.forEach(function(t) {
                 var statusText = t.status === 'open' ? 'Ouvert' : t.status === 'in_progress' ? 'En cours' : 'Fermé';
-                html += '<div class="ticket-item" data-id="' + t.id + '">' +
-                    '<div class="ticket-header">' +
-                    '<div><span class="ticket-subject">' + t.subject + '</span><span style="font-size:12px;color:var(--text-muted);margin-left:12px;">par ' + (t.user_name || 'Inconnu') + '</span></div>' +
-                    '<div style="display:flex;align-items:center;gap:12px;"><span class="ticket-status ' + t.status + '">' + statusText + '</span><span class="ticket-meta">' + new Date(t.created_at).toLocaleDateString() + '</span></div>' +
-                    '</div>' +
-                    '<div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + t.message.substring(0, 150) + (t.message.length > 150 ? '...' : '') + '</div>' +
-                    '<div class="ticket-detail" id="ticketDetail-' + t.id + '">' +
-                    '<div id="ticketMessages-' + t.id + '"></div>' +
-                    '<div class="ticket-reply"><input type="text" id="ticketReplyInput-' + t.id + '" placeholder="Répondre..." /><button onclick="replyTicket(' + t.id + ')">Envoyer</button></div>' +
-                    '<div style="margin-top:8px;display:flex;gap:8px;">' +
-                    '<button onclick="changeTicketStatus(' + t.id + ', \'open\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">Ouvrir</button>' +
-                    '<button onclick="changeTicketStatus(' + t.id + ', \'in_progress\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">En cours</button>' +
-                    '<button onclick="changeTicketStatus(' + t.id + ', \'closed\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">Fermer</button>' +
-                    '</div></div></div>';
+                html += '<div class="ticket-item" data-id="' + t.id + '">';
+                html += '<div class="ticket-header">';
+                html += '<div><span class="ticket-subject">' + t.subject + '</span><span style="font-size:12px;color:var(--text-muted);margin-left:12px;">par ' + (t.user_name || 'Inconnu') + '</span></div>';
+                html += '<div style="display:flex;align-items:center;gap:12px;"><span class="ticket-status ' + t.status + '">' + statusText + '</span><span class="ticket-meta">' + new Date(t.created_at).toLocaleDateString() + '</span></div>';
+                html += '</div>';
+                html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + t.message.substring(0, 150) + (t.message.length > 150 ? '...' : '') + '</div>';
+                html += '<div class="ticket-detail" id="ticketDetail-' + t.id + '">';
+                html += '<div id="ticketMessages-' + t.id + '"></div>';
+                html += '<div class="ticket-reply"><input type="text" id="ticketReplyInput-' + t.id + '" placeholder="Répondre..." /><button onclick="replyTicket(' + t.id + ')">Envoyer</button></div>';
+                html += '<div style="margin-top:8px;display:flex;gap:8px;">';
+                html += '<button onclick="changeTicketStatus(' + t.id + ', \'open\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">Ouvrir</button>';
+                html += '<button onclick="changeTicketStatus(' + t.id + ', \'in_progress\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">En cours</button>';
+                html += '<button onclick="changeTicketStatus(' + t.id + ', \'closed\')" style="padding:4px 12px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;">Fermer</button>';
+                html += '</div></div></div>';
             });
             container.innerHTML = html;
             document.querySelectorAll('.ticket-item').forEach(function(el) {
@@ -476,10 +500,10 @@ async function loadTicketMessages(ticketId) {
         if (messages.length > 0) {
             var html = '';
             messages.forEach(function(m) {
-                html += '<div class="ticket-message' + (m.is_admin ? ' admin' : '') + '">' +
-                    '<div class="msg-meta">' + (m.username || 'Inconnu') + ' · ' + new Date(m.created_at).toLocaleString() + (m.is_admin ? ' · Admin' : '') + '</div>' +
-                    m.message +
-                    '</div>';
+                html += '<div class="ticket-message' + (m.is_admin ? ' admin' : '') + '">';
+                html += '<div class="msg-meta">' + (m.username || 'Inconnu') + ' · ' + new Date(m.created_at).toLocaleString() + (m.is_admin ? ' · Admin' : '') + '</div>';
+                html += m.message;
+                html += '</div>';
             });
             container.innerHTML = html;
         } else {
