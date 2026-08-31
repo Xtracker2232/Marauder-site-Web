@@ -3017,3 +3017,21 @@ input::placeholder, textarea::placeholder {
 .dashboard-page::after {
     display: none !important;
 }
+
+/* SUPPRESSION TOTALE DES FONDS NOIRS SUR LA RECHERCHE */
+#page-search,
+#page-search * {
+    background: transparent !important;
+}
+
+#page-search .section {
+    background: var(--bg-secondary) !important;
+}
+
+#page-search .section-body {
+    background: transparent !important;
+}
+
+#page-search .section-header {
+    background: var(--bg-secondary) !important;
+}
