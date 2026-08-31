@@ -1,964 +1,198 @@
-const express = require('express');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { Pool } = require('pg');
-const fetch = require('node-fetch');
-require('dotenv').config();
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marauder - Plateforme d'investigation</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="home-page">
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+    <!-- ============ NAVIGATION ============ -->
+    <nav class="home-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <span>Marauder</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Fonctionnalités</a>
+                <a href="#how-it-works">Comment ça marche</a>
+                <a href="#search-criteria">Critères</a>
+                <a href="/login" class="nav-btn">Se connecter</a>
+            </div>
+        </div>
+    </nav>
 
-// ============================================
-// MIDDLEWARE
-// ============================================
-app.use(cors());
-app.use(express.json());
-app.use(express.static('frontend'));
+    <!-- ============ HERO SECTION ============ -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="hero-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <h1 class="hero-title">Marauder</h1>
+            <div class="hero-subtitle">
+                <span id="typed-text"></span>
+                <span class="cursor">|</span>
+            </div>
+            <div class="hero-buttons">
+                <a href="/login" class="btn-hero-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    Commencer gratuitement
+                </a>
+                <a href="#" id="discordBtn" class="btn-hero-secondary">
+                    <svg viewBox="0 0 71 55" fill="currentColor" stroke="none" width="20" height="20">
+                        <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
+                    </svg>
+                    Discord
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">11+</span>
+                    <span class="stat-label">Milliards d'infos indexées</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">&lt;30</span>
+                    <span class="stat-label">ms de réponse</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">20+</span>
+                    <span class="stat-label">Critères de recherche</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-// ============================================
-// BASE DE DONNÉES
-// ============================================
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+    <!-- ============ CRITÈRES DE RECHERCHE ============ -->
+    <section id="search-criteria" class="criteria-section">
+        <div class="criteria-container">
+            <h2 class="section-title">Que pouvez-vous rechercher ?</h2>
+            <p class="section-subtitle">Plus de 20 critères disponibles, combinables à volonté.</p>
+            <div class="criteria-grid">
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Nom</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Prénom</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Email</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Téléphone</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Adresse</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Code postal</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Ville</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Département</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>NIR</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>IBAN</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>IP</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Discord ID</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Date de naissance</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Employeur</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Profession</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Nationalité</span></div>
+                <div class="criteria-item"><span class="criteria-icon">▸</span><span>Plaque d'immatriculation</span></div>
+                <div class="criteria-item highlight"><span class="criteria-icon">+</span><span>Bien plus encore...</span></div>
+            </div>
+        </div>
+    </section>
 
-const JWT_SECRET = process.env.JWT_SECRET || 'marauder_secret_key_2026';
-const BRIX_API_KEY = process.env.BRIX_API_KEY || '';
-const BRIX_BASE = 'https://api.brixhub.to/api/v1';
+    <!-- ============ COMMENT ÇA MARCHE ============ -->
+    <section id="how-it-works" class="how-section">
+        <div class="how-container">
+            <h2 class="section-title">Comment ça marche</h2>
+            <p class="section-subtitle">De l'inscription à votre première recherche en moins de 2 minutes.</p>
+            <div class="how-grid">
+                <div class="how-card">
+                    <div class="how-number">1</div>
+                    <h3>Rejoignez le Discord</h3>
+                    <p>Rejoignez notre serveur Discord pour accéder à la plateforme. Inscription instantanée et sécurisée via OAuth2.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-number">2</div>
+                    <h3>Authentifiez-vous</h3>
+                    <p>Connectez-vous via Discord OAuth2 ou avec votre identifiant. Un code de vérification unique est envoyé en MP.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-number">3</div>
+                    <h3>Lancez vos recherches</h3>
+                    <p>Utilisez l'interface web ou la commande /breach sur Discord. Plus de 20 critères, résultats instantanés.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-// ============================================
-// FONCTIONS UTILITAIRES
-// ============================================
-function generateToken(userId, role = 'user') {
-    return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: '24h' });
-}
+    <!-- ============ FONCTIONNALITÉS ============ -->
+    <section id="features" class="features-section">
+        <div class="features-container">
+            <h2 class="section-title">Fonctionnalités clés</h2>
+            <p class="section-subtitle">Tout ce dont vous avez besoin pour vos recherches OSINT.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+                    <h3>Recherche multi-critères</h3>
+                    <p>Plus de 20 critères : nom, email, téléphone, adresse, NIR, IBAN, IP, Discord ID et bien plus.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
+                    <h3>Corrélation d'identités</h3>
+                    <p>Croisez automatiquement les données entre plusieurs sources pour établir des liens entre identités.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+                    <h3>Résultats instantanés</h3>
+                    <p>Infrastructure optimisée — temps de réponse sous 30 ms sur des milliards de données.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                    <h3>Confidentialité totale</h3>
+                    <p>Recherches chiffrées, jamais partagées. Accessible via Tor pour un anonymat complet.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+                    <h3>Arbre familial</h3>
+                    <p>Reconstitution automatique des liens familiaux par foyer à partir des données croisées.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+                    <h3>Bot Discord intégré</h3>
+                    <p>Recherchez directement depuis Discord avec /breach. Résultats en Components V2 avec export en MP.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-function verifyToken(token) {
-    try {
-        return jwt.verify(token, JWT_SECRET);
-    } catch (error) {
-        return null;
-    }
-}
+    <!-- ============ FOOTER ============ -->
+    <footer class="home-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <span>Marauder</span>
+            </div>
+            <p class="footer-text">Plateforme d'investigation avancée · OSINT · CSINT</p>
+            <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:8px 0;">
+                <a href="/cgu.html" style="color:var(--text-muted);font-size:13px;text-decoration:none;transition:color 0.2s;">CGU</a>
+                <span style="color:var(--text-muted);font-size:13px;">·</span>
+                <span style="color:var(--text-muted);font-size:13px;">Created by Index</span>
+            </div>
+            <p class="footer-copy">© 2026 Marauder. Tous droits réservés.</p>
+        </div>
+    </footer>
 
-function formatPhone(phone) {
-    if (!phone) return '';
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length === 10) {
-        return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-    }
-    return phone;
-}
-
-// ============================================
-// INIT DB
-// ============================================
-async function initDatabase() {
-    const client = await pool.connect();
-    try {
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT NOW(),
-                last_login TIMESTAMP
-            )
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS search_history (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                query JSONB,
-                results_count INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS fiches (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                name TEXT NOT NULL,
-                persons JSONB DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS graphes (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                name TEXT DEFAULT 'Mon graphe',
-                nodes JSONB DEFAULT '[]',
-                edges JSONB DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        `);
-        
-        // Créer admin par défaut
-        const adminCheck = await client.query('SELECT * FROM users WHERE username = $1', ['Admin']);
-        if (adminCheck.rows.length === 0) {
-            const hashedPassword = await bcrypt.hash('Salto06530', 10);
-            await client.query(
-                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-                ['Admin', hashedPassword, 'admin']
-            );
-            console.log('✅ Compte admin créé');
-        }
-        
-        console.log('✅ Base de données initialisée');
-    } catch (error) {
-        console.error('❌ Erreur DB:', error.message);
-    } finally {
-        client.release();
-    }
-}
-
-initDatabase();
-
-// ============================================
-// MIDDLEWARE AUTH
-// ============================================
-async function authenticate(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'Token manquant' });
-    }
-    
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-    if (!decoded) {
-        return res.status(401).json({ success: false, error: 'Token invalide' });
-    }
-    
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
-        if (result.rows.length === 0) {
-            return res.status(401).json({ success: false, error: 'Utilisateur introuvable' });
-        }
-        req.user = result.rows[0];
-        next();
-    } catch (error) {
-        return res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-}
-
-async function requireAdmin(req, res, next) {
-    await authenticate(req, res, () => {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Accès refusé' });
-        }
-        next();
-    });
-}
-
-// ============================================
-// FONCTION APPEL BRIXHUB
-// ============================================
-async function callBrix(method, path, body = null) {
-    const headers = {
-        'X-API-Key': BRIX_API_KEY,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    
-    const url = `${BRIX_BASE}${path}`;
-    const options = {
-        method,
-        headers,
-        timeout: 30000
-    };
-    
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
-    
-    try {
-        const response = await fetch(url, options);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('BrixHub error:', error.message);
-        throw new Error('Erreur API BrixHub');
-    }
-}
-
-// ============================================
-// FONCTION PIVOT FAMILLE - COMPLÈTE
-// ============================================
-async function enrichirAvecPivotFamille(results, token) {
-    if (!results || results.length === 0) return results;
-    
-    const enrichedResults = [];
-    
-    for (const person of results) {
-        const enriched = { ...person };
-        const famille = [];
-        const pivotDone = new Set();
-        const maxFamille = 10;
-        
-        // ---- PIVOT 1 : ADRESSE + CODE POSTAL ----
-        if (person.adresse && person.code_postal && famille.length < maxFamille) {
-            const pivotKey = `adresse_${person.adresse}_${person.code_postal}`;
-            if (!pivotDone.has(pivotKey)) {
-                pivotDone.add(pivotKey);
-                try {
-                    const pivotPayload = {
-                        adresse: person.adresse,
-                        code_postal: person.code_postal,
-                        flexible: false,
-                        per_page: 20
-                    };
-                    
-                    const pivotResponse = await fetch(`${BRIX_BASE}/search`, {
-                        method: 'POST',
-                        headers: {
-                            'X-API-Key': BRIX_API_KEY,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(pivotPayload)
-                    });
-                    
-                    const pivotData = await pivotResponse.json();
-                    const pivotResults = pivotData.data?.results || [];
-                    
-                    for (const pr of pivotResults) {
-                        if (famille.length >= maxFamille) break;
-                        
-                        // Ignorer la personne elle-même
-                        if (pr.nom_famille === person.nom_famille && 
-                            pr.prenom === person.prenom) {
-                            continue;
-                        }
-                        
-                        // Éviter les doublons
-                        const duplicate = famille.some(m => 
-                            m.prenom === pr.prenom && 
-                            m.nom_famille === pr.nom_famille
-                        );
-                        if (duplicate) continue;
-                        
-                        const membre = {
-                            prenom: pr.prenom || '',
-                            nom_famille: pr.nom_famille || '',
-                            date_naissance: pr.date_naissance || '',
-                            email: pr.email || '',
-                            telephone: pr.telephone || '',
-                            adresse: pr.adresse || '',
-                            code_postal: pr.code_postal || '',
-                            ville: pr.ville || '',
-                            lien: 'Même adresse',
-                            _sources: pr._sources || []
-                        };
-                        famille.push(membre);
-                    }
-                } catch (error) {
-                    console.warn('Pivot adresse échoué:', error.message);
-                }
-            }
-        }
-        
-        // ---- PIVOT 2 : TÉLÉPHONE ----
-        if (person.telephone && famille.length < maxFamille) {
-            const phoneClean = person.telephone.replace(/\D/g, '');
-            if (phoneClean.length >= 8) {
-                const pivotKey = `tel_${phoneClean}`;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = {
-                            telephone: phoneClean,
-                            flexible: false,
-                            per_page: 15
-                        };
-                        
-                        const pivotResponse = await fetch(`${BRIX_BASE}/search`, {
-                            method: 'POST',
-                            headers: {
-                                'X-API-Key': BRIX_API_KEY,
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        
-                        for (const pr of pivotResults) {
-                            if (famille.length >= maxFamille) break;
-                            
-                            if (pr.nom_famille === person.nom_famille && 
-                                pr.prenom === person.prenom) {
-                                continue;
-                            }
-                            
-                            const duplicate = famille.some(m => 
-                                m.prenom === pr.prenom && 
-                                m.nom_famille === pr.nom_famille
-                            );
-                            if (duplicate) continue;
-                            
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                adresse: pr.adresse || '',
-                                code_postal: pr.code_postal || '',
-                                ville: pr.ville || '',
-                                lien: 'Téléphone partagé',
-                                _sources: pr._sources || []
-                            };
-                            famille.push(membre);
-                        }
-                    } catch (error) {
-                        console.warn('Pivot téléphone échoué:', error.message);
-                    }
-                }
-            }
-        }
-        
-        // ---- PIVOT 3 : EMAIL ----
-        if (person.email && famille.length < maxFamille) {
-            const pivotKey = `email_${person.email}`;
-            if (!pivotDone.has(pivotKey)) {
-                pivotDone.add(pivotKey);
-                try {
-                    const pivotPayload = {
-                        email: person.email,
-                        flexible: false,
-                        per_page: 10
-                    };
-                    
-                    const pivotResponse = await fetch(`${BRIX_BASE}/search`, {
-                        method: 'POST',
-                        headers: {
-                            'X-API-Key': BRIX_API_KEY,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(pivotPayload)
-                    });
-                    
-                    const pivotData = await pivotResponse.json();
-                    const pivotResults = pivotData.data?.results || [];
-                    
-                    for (const pr of pivotResults) {
-                        if (famille.length >= maxFamille) break;
-                        
-                        if (pr.nom_famille === person.nom_famille && 
-                            pr.prenom === person.prenom) {
-                            continue;
-                        }
-                        
-                        const duplicate = famille.some(m => 
-                            m.prenom === pr.prenom && 
-                            m.nom_famille === pr.nom_famille
-                        );
-                        if (duplicate) continue;
-                        
-                        const membre = {
-                            prenom: pr.prenom || '',
-                            nom_famille: pr.nom_famille || '',
-                            date_naissance: pr.date_naissance || '',
-                            email: pr.email || '',
-                            telephone: pr.telephone || '',
-                            adresse: pr.adresse || '',
-                            code_postal: pr.code_postal || '',
-                            ville: pr.ville || '',
-                            lien: 'Email partagé',
-                            _sources: pr._sources || []
-                        };
-                        famille.push(membre);
-                    }
-                } catch (error) {
-                    console.warn('Pivot email échoué:', error.message);
-                }
-            }
-        }
-        
-        // ---- PIVOT 4 : VILLE + CODE POSTAL ----
-        if (person.ville && person.code_postal && famille.length < maxFamille) {
-            const pivotKey = `ville_${person.ville}_${person.code_postal}`;
-            if (!pivotDone.has(pivotKey)) {
-                pivotDone.add(pivotKey);
-                try {
-                    const pivotPayload = {
-                        ville: person.ville,
-                        code_postal: person.code_postal,
-                        flexible: false,
-                        per_page: 10
-                    };
-                    
-                    const pivotResponse = await fetch(`${BRIX_BASE}/search`, {
-                        method: 'POST',
-                        headers: {
-                            'X-API-Key': BRIX_API_KEY,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(pivotPayload)
-                    });
-                    
-                    const pivotData = await pivotResponse.json();
-                    const pivotResults = pivotData.data?.results || [];
-                    
-                    for (const pr of pivotResults) {
-                        if (famille.length >= maxFamille) break;
-                        
-                        if (pr.nom_famille === person.nom_famille && 
-                            pr.prenom === person.prenom) {
-                            continue;
-                        }
-                        
-                        const duplicate = famille.some(m => 
-                            m.prenom === pr.prenom && 
-                            m.nom_famille === pr.nom_famille
-                        );
-                        if (duplicate) continue;
-                        
-                        const membre = {
-                            prenom: pr.prenom || '',
-                            nom_famille: pr.nom_famille || '',
-                            date_naissance: pr.date_naissance || '',
-                            email: pr.email || '',
-                            telephone: pr.telephone || '',
-                            adresse: pr.adresse || '',
-                            code_postal: pr.code_postal || '',
-                            ville: pr.ville || '',
-                            lien: 'Même ville',
-                            _sources: pr._sources || []
-                        };
-                        famille.push(membre);
-                    }
-                } catch (error) {
-                    console.warn('Pivot ville échoué:', error.message);
-                }
-            }
-        }
-        
-        if (famille.length > 0) {
-            enriched.famille = famille;
-        }
-        
-        enrichedResults.push(enriched);
-    }
-    
-    return enrichedResults;
-}
-
-// ============================================
-// ROUTES AUTH
-// ============================================
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'Champs requis' });
-        }
-        
-        if (username.length < 3) {
-            return res.status(400).json({ success: false, error: 'Nom d\'utilisateur trop court' });
-        }
-        
-        if (password.length < 8) {
-            return res.status(400).json({ success: false, error: 'Mot de passe trop court (8 caractères min)' });
-        }
-        
-        const existing = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-        if (existing.rows.length > 0) {
-            return res.status(400).json({ success: false, error: 'Nom d\'utilisateur déjà pris' });
-        }
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await pool.query(
-            'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role',
-            [username, hashedPassword]
-        );
-        
-        const user = result.rows[0];
-        const token = generateToken(user.id, user.role);
-        
-        res.json({
-            success: true,
-            token,
-            user: {
-                id: user.id,
-                username: user.username,
-                role: user.role
-            }
-        });
-    } catch (error) {
-        console.error('Register error:', error);
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.post('/api/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'Champs requis' });
-        }
-        
-        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-        if (result.rows.length === 0) {
-            return res.status(401).json({ success: false, error: 'Identifiants incorrects' });
-        }
-        
-        const user = result.rows[0];
-        const valid = await bcrypt.compare(password, user.password_hash);
-        if (!valid) {
-            return res.status(401).json({ success: false, error: 'Identifiants incorrects' });
-        }
-        
-        await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
-        
-        const token = generateToken(user.id, user.role);
-        res.json({
-            success: true,
-            token,
-            user: {
-                id: user.id,
-                username: user.username,
-                role: user.role,
-                created_at: user.created_at,
-                last_login: user.last_login
-            }
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.get('/api/verify', authenticate, async (req, res) => {
-    res.json({
-        success: true,
-        user: {
-            id: req.user.id,
-            username: req.user.username,
-            role: req.user.role,
-            created_at: req.user.created_at,
-            last_login: req.user.last_login
-        }
-    });
-});
-
-app.get('/api/me', authenticate, async (req, res) => {
-    try {
-        const searchesResult = await pool.query(
-            'SELECT COUNT(*) as total FROM search_history WHERE user_id = $1',
-            [req.user.id]
-        );
-        
-        res.json({
-            success: true,
-            user: {
-                id: req.user.id,
-                username: req.user.username,
-                role: req.user.role,
-                created_at: req.user.created_at,
-                last_login: req.user.last_login
-            },
-            stats: {
-                total_searches: parseInt(searchesResult.rows[0]?.total || 0)
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-// ============================================
-// ROUTES BRIXHUB
-// ============================================
-app.post('/api/brix/search', authenticate, async (req, res) => {
-    try {
-        const query = req.body;
-        
-        // Vérifier qu'il y a au moins un critère
-        const hasCriteria = Object.keys(query).some(key => {
-            return key !== 'flexible' && key !== 'per_page' && key !== 'page' && query[key];
-        });
-        
-        if (!hasCriteria) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Veuillez remplir au moins un critère' 
-            });
-        }
-        
-        // Appel BrixHub
-        const result = await callBrix('POST', '/search', query);
-        
-        let results = result.data?.results || [];
-        
-        // Enrichir avec pivot famille
-        const token = req.headers.authorization.substring(7);
-        results = await enrichirAvecPivotFamille(results, token);
-        
-        // Sauvegarder dans l'historique
-        await pool.query(
-            'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
-            [req.user.id, JSON.stringify(query), results.length]
-        );
-        
-        res.json({
-            success: true,
-            data: {
-                results,
-                total: result.meta?.total || results.length,
-                took_ms: result.meta?.took_ms || 0
-            }
-        });
-    } catch (error) {
-        console.error('Search error:', error);
-        res.status(500).json({ success: false, error: error.message || 'Erreur de recherche' });
-    }
-});
-
-app.get('/api/brix/lookup/:type/:value', authenticate, async (req, res) => {
-    try {
-        const { type, value } = req.params;
-        
-        if (!value) {
-            return res.status(400).json({ success: false, error: 'Valeur requise' });
-        }
-        
-        let payload = {};
-        
-        switch(type) {
-            case 'email':
-                payload = { email: value, flexible: false, per_page: 20 };
-                break;
-            case 'phone':
-                const phoneClean = value.replace(/\D/g, '');
-                payload = { telephone: phoneClean, flexible: false, per_page: 20 };
-                break;
-            case 'iban':
-                payload = { iban: value, flexible: false, per_page: 20 };
-                break;
-            default:
-                return res.status(400).json({ success: false, error: 'Type non supporté' });
-        }
-        
-        const result = await callBrix('POST', '/search', payload);
-        let results = result.data?.results || [];
-        
-        // Enrichir avec pivot famille
-        const token = req.headers.authorization.substring(7);
-        results = await enrichirAvecPivotFamille(results, token);
-        
-        await pool.query(
-            'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
-            [req.user.id, JSON.stringify({ lookup: value, type }), results.length]
-        );
-        
-        res.json({
-            success: true,
-            data: {
-                results,
-                total: result.meta?.total || results.length
-            }
-        });
-    } catch (error) {
-        console.error('Lookup error:', error);
-        res.status(500).json({ success: false, error: error.message || 'Erreur de lookup' });
-    }
-});
-
-// ============================================
-// ROUTES HISTORIQUE
-// ============================================
-app.get('/api/history', authenticate, async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT id, query, results_count, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
-            [req.user.id]
-        );
-        res.json({ history: result.rows });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.post('/api/history/:id/replay', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const historyResult = await pool.query(
-            'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
-        
-        if (historyResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Recherche introuvable' });
-        }
-        
-        const query = historyResult.rows[0].query;
-        const result = await callBrix('POST', '/search', query);
-        let results = result.data?.results || [];
-        
-        const token = req.headers.authorization.substring(7);
-        results = await enrichirAvecPivotFamille(results, token);
-        
-        res.json({
-            success: true,
-            results
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur de replay' });
-    }
-});
-
-// ============================================
-// ROUTES FICHES
-// ============================================
-app.get('/api/fiches', authenticate, async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM fiches WHERE user_id = $1 ORDER BY created_at DESC',
-            [req.user.id]
-        );
-        res.json({ fiches: result.rows });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.post('/api/fiches', authenticate, async (req, res) => {
-    try {
-        const { name } = req.body;
-        
-        if (!name) {
-            return res.status(400).json({ success: false, error: 'Nom requis' });
-        }
-        
-        const result = await pool.query(
-            'INSERT INTO fiches (user_id, name) VALUES ($1, $2) RETURNING *',
-            [req.user.id, name]
-        );
-        
-        res.json({ success: true, fiche: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.put('/api/fiches/:id', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name } = req.body;
-        
-        const result = await pool.query(
-            'UPDATE fiches SET name = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3 RETURNING *',
-            [name, id, req.user.id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Fiche introuvable' });
-        }
-        
-        res.json({ success: true, fiche: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.delete('/api/fiches/:id', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const result = await pool.query(
-            'DELETE FROM fiches WHERE id = $1 AND user_id = $2 RETURNING id',
-            [id, req.user.id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Fiche introuvable' });
-        }
-        
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.post('/api/fiches/:id/persons', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { person } = req.body;
-        
-        if (!person) {
-            return res.status(400).json({ success: false, error: 'Personne requise' });
-        }
-        
-        // Récupérer la fiche
-        const ficheResult = await pool.query(
-            'SELECT * FROM fiches WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
-        
-        if (ficheResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Fiche introuvable' });
-        }
-        
-        const fiche = ficheResult.rows[0];
-        let persons = fiche.persons || [];
-        
-        if (persons.length >= 10) {
-            return res.status(400).json({ success: false, error: 'Maximum 10 personnes par fiche' });
-        }
-        
-        // Vérifier si la personne existe déjà
-        const exists = persons.some(p => 
-            p.prenom === person.prenom && 
-            p.nom_famille === person.nom_famille
-        );
-        
-        if (exists) {
-            return res.status(400).json({ success: false, error: 'Personne déjà dans la fiche' });
-        }
-        
-        persons.push(person);
-        
-        const result = await pool.query(
-            'UPDATE fiches SET persons = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3 RETURNING *',
-            [JSON.stringify(persons), id, req.user.id]
-        );
-        
-        res.json({ success: true, fiche: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-// ============================================
-// ROUTES GRAPHES
-// ============================================
-app.get('/api/graphes/all', authenticate, async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC',
-            [req.user.id]
-        );
-        res.json({ graphes: result.rows });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.get('/api/graphes/:id', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query(
-            'SELECT * FROM graphes WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Graphe introuvable' });
-        }
-        
-        res.json({ graphe: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.post('/api/graphes', authenticate, async (req, res) => {
-    try {
-        const { name, nodes, edges } = req.body;
-        
-        const result = await pool.query(
-            'INSERT INTO graphes (user_id, name, nodes, edges) VALUES ($1, $2, $3, $4) RETURNING *',
-            [req.user.id, name || 'Mon graphe', JSON.stringify(nodes || []), JSON.stringify(edges || [])]
-        );
-        
-        res.json({ success: true, graphe: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.put('/api/graphes/:id', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, nodes, edges } = req.body;
-        
-        const result = await pool.query(
-            'UPDATE graphes SET name = $1, nodes = $2, edges = $3 WHERE id = $4 AND user_id = $5 RETURNING *',
-            [name || 'Mon graphe', JSON.stringify(nodes || []), JSON.stringify(edges || []), id, req.user.id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Graphe introuvable' });
-        }
-        
-        res.json({ success: true, graphe: result.rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-app.delete('/api/graphes/:id', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const result = await pool.query(
-            'DELETE FROM graphes WHERE id = $1 AND user_id = $2 RETURNING id',
-            [id, req.user.id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Graphe introuvable' });
-        }
-        
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-// ============================================
-// ROUTES ADMIN
-// ============================================
-app.get('/api/admin/stats', requireAdmin, async (req, res) => {
-    try {
-        const usersResult = await pool.query('SELECT COUNT(*) as total FROM users');
-        const searchesResult = await pool.query('SELECT COUNT(*) as total FROM search_history');
-        const fichesResult = await pool.query('SELECT COUNT(*) as total FROM fiches');
-        
-        res.json({
-            total_users: parseInt(usersResult.rows[0]?.total || 0),
-            total_searches: parseInt(searchesResult.rows[0]?.total || 0),
-            total_fiches: parseInt(fichesResult.rows[0]?.total || 0)
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Erreur serveur' });
-    }
-});
-
-// ============================================
-// HEALTH CHECK
-// ============================================
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// ============================================
-// DÉMARRAGE
-// ============================================
-app.listen(PORT, () => {
-    console.log(`🚀 Serveur Marauder démarré sur le port ${PORT}`);
-    console.log(`🔗 http://localhost:${PORT}`);
-});
+    <script src="js/home.js"></script>
+</body>
+</html>

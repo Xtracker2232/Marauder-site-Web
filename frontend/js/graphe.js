@@ -1,4 +1,16 @@
 // ========================================
+// FORMAT PHONE
+// ========================================
+function formatPhone(phone) {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+    }
+    return phone;
+}
+
+// ========================================
 // GRAPHE - Module autonome
 // ========================================
 
@@ -268,6 +280,59 @@ function hideGrapheContextMenu() {
 
 document.addEventListener('click', hideGrapheContextMenu);
 
+// ============ TOAST ============
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        ${message}
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(toast);
+    if (duration > 0) {
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(40px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+}
+
+// ============ MODAL ============
+function showModal(title, bodyHtml, confirmText, onConfirm) {
+    const overlay = document.getElementById('modalOverlay');
+    const titleEl = document.getElementById('modalTitle');
+    const bodyEl = document.getElementById('modalBody');
+    if (!overlay || !titleEl || !bodyEl) return;
+    titleEl.textContent = title;
+    bodyEl.innerHTML = bodyHtml;
+    overlay.classList.add('active');
+    const confirmBtn = document.getElementById('modalConfirm');
+    if (confirmBtn) {
+        confirmBtn.textContent = confirmText || 'Confirmer';
+        const newConfirm = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+        newConfirm.addEventListener('click', function() {
+            if (onConfirm) onConfirm();
+            closeModal();
+        });
+    }
+    const cancelBtn = document.getElementById('modalCancel');
+    if (cancelBtn) {
+        const newCancel = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+        newCancel.addEventListener('click', closeModal);
+    }
+}
+
+function closeModal() {
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
 // ============ ACTIONS DU MENU ============
 document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
     item.addEventListener('click', function(e) {
@@ -351,15 +416,6 @@ function changeGrapheColor(nodeId, color) {
             window.renderGraphe();
         }
     }
-}
-
-function formatPhone(phone) {
-    if (!phone) return '';
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length === 10) {
-        return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-    }
-    return phone;
 }
 
 // ============ AJOUTER UNE PERSONNE AVEC SA FAMILLE ============
