@@ -9,7 +9,7 @@ if (!token) {
 
 // ============ TOAST ============
 function showToast(message, type = 'info', duration = 3000) {
-    console.log('TOAST:', message, type);
+    console.log('TOAST:', message);
     const container = document.getElementById('toastContainer');
     if (!container) {
         console.error('Toast container non trouvé');
@@ -76,65 +76,65 @@ document.querySelectorAll('.search-tab').forEach(tab => {
 // ============ BOUTON RECHERCHE ============
 const searchBtn = document.getElementById('searchBtn');
 if (searchBtn) {
-    console.log('Bouton searchBtn trouvé');
+    console.log('✅ searchBtn trouvé');
     searchBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur searchBtn');
+        console.log('🔍 Click sur searchBtn');
         showToast('Recherche en cours...', 'info');
     });
 } else {
-    console.error('searchBtn NON trouvé');
+    console.error('❌ searchBtn NON trouvé');
 }
 
 // ============ BOUTON RECHERCHE PRO ============
 const searchBtnPro = document.getElementById('searchBtnPro');
 if (searchBtnPro) {
-    console.log('Bouton searchBtnPro trouvé');
+    console.log('✅ searchBtnPro trouvé');
     searchBtnPro.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur searchBtnPro');
+        console.log('🔍 Click sur searchBtnPro');
         showToast('Recherche Pro en cours...', 'info');
     });
 } else {
-    console.error('searchBtnPro NON trouvé');
+    console.error('❌ searchBtnPro NON trouvé');
 }
 
 // ============ BOUTON EFFACER ============
 const clearBtn = document.getElementById('clearBtn');
 if (clearBtn) {
-    console.log('Bouton clearBtn trouvé');
+    console.log('✅ clearBtn trouvé');
     clearBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur clearBtn');
+        console.log('🧹 Click sur clearBtn');
         document.querySelectorAll('#tab-french input, #tab-french select').forEach(el => el.value = '');
         document.getElementById('searchResults').innerHTML = '';
         showToast('Formulaire efface', 'info');
     });
 } else {
-    console.error('clearBtn NON trouvé');
+    console.error('❌ clearBtn NON trouvé');
 }
 
 const clearBtnPro = document.getElementById('clearBtnPro');
 if (clearBtnPro) {
-    console.log('Bouton clearBtnPro trouvé');
+    console.log('✅ clearBtnPro trouvé');
     clearBtnPro.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur clearBtnPro');
+        console.log('🧹 Click sur clearBtnPro');
         document.querySelectorAll('#tab-pro input, #tab-pro select').forEach(el => el.value = '');
         document.getElementById('searchResults').innerHTML = '';
         showToast('Formulaire efface', 'info');
     });
 } else {
-    console.error('clearBtnPro NON trouvé');
+    console.error('❌ clearBtnPro NON trouvé');
 }
 
 // ============ BOUTON LOOKUP ============
 const lookupBtn = document.getElementById('lookupBtn');
 if (lookupBtn) {
-    console.log('Bouton lookupBtn trouvé');
+    console.log('✅ lookupBtn trouvé');
     lookupBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur lookupBtn');
+        console.log('🔍 Click sur lookupBtn');
         const value = document.getElementById('lookupValue').value.trim();
         if (!value) {
             showToast('Veuillez entrer une valeur', 'warning');
@@ -143,42 +143,55 @@ if (lookupBtn) {
         showToast('Lookup en cours...', 'info');
     });
 } else {
-    console.error('lookupBtn NON trouvé');
+    console.error('❌ lookupBtn NON trouvé');
 }
 
 // ============ BOUTON CREER FICHE ============
 const createFicheBtn = document.getElementById('createFicheBtn');
 if (createFicheBtn) {
-    console.log('Bouton createFicheBtn trouvé');
+    console.log('✅ createFicheBtn trouvé');
     createFicheBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur createFicheBtn');
+        console.log('📁 Click sur createFicheBtn');
         showToast('Création de fiche...', 'info');
     });
 } else {
-    console.error('createFicheBtn NON trouvé');
+    console.error('❌ createFicheBtn NON trouvé');
+}
+
+// ============ BOUTON NOUVEAU TICKET ============
+const openTicketBtn = document.getElementById('openTicketBtn');
+if (openTicketBtn) {
+    console.log('✅ openTicketBtn trouvé');
+    openTicketBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🎫 Click sur openTicketBtn');
+        showToast('Nouveau ticket...', 'info');
+    });
+} else {
+    console.error('❌ openTicketBtn NON trouvé');
 }
 
 // ============ LOGOUT ============
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
-    console.log('Bouton logoutBtn trouvé');
+    console.log('✅ logoutBtn trouvé');
     logoutBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Click sur logoutBtn');
+        console.log('🚪 Click sur logoutBtn');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';
     });
 } else {
-    console.error('logoutBtn NON trouvé');
+    console.error('❌ logoutBtn NON trouvé');
 }
 
 // ============ NAVIGATION ============
 document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
     item.addEventListener('click', function() {
         const page = this.dataset.page;
-        console.log('Navigation vers:', page);
+        console.log('📱 Navigation vers:', page);
         
         if (page === 'discord') {
             window.open('https://discord.gg/ton-invite', '_blank');
@@ -196,7 +209,7 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
 // ============ SUPPORT TOGGLE ============
 const supportToggle = document.getElementById('supportToggle');
 if (supportToggle) {
-    console.log('Support toggle trouvé');
+    console.log('✅ supportToggle trouvé');
     supportToggle.addEventListener('click', function(e) {
         e.stopPropagation();
         const submenu = document.getElementById('supportSubmenu');
@@ -208,7 +221,7 @@ if (supportToggle) {
         }
     });
 } else {
-    console.error('supportToggle NON trouvé');
+    console.error('❌ supportToggle NON trouvé');
 }
 
 // ============ MOBILE MENU ============
@@ -217,7 +230,7 @@ const sidebar = document.querySelector('.sidebar');
 const backdrop = document.getElementById('sidebarBackdrop');
 
 if (mobileBtn && sidebar && backdrop) {
-    console.log('Menu mobile trouvé');
+    console.log('✅ Menu mobile trouvé');
     mobileBtn.addEventListener('click', function() {
         sidebar.classList.toggle('open');
         backdrop.classList.toggle('active');
@@ -230,12 +243,8 @@ if (mobileBtn && sidebar && backdrop) {
         document.body.style.overflow = '';
     });
 } else {
-    console.error('Menu mobile NON trouvé');
+    console.error('❌ Menu mobile NON trouvé');
 }
-
-// ============ INIT ============
-console.log('Initialisation...');
-verifyToken();
 
 // ============ PROFIL ============
 async function loadProfile() {
@@ -251,7 +260,7 @@ async function loadProfile() {
         if (data.user) {
             container.innerHTML = `
                 <div class="profile-card">
-                    <div class="profile-row"><span class="label">Nom d'utilisateur</span><span class="value">${data.user.username}</span></div>
+                    <div class="profile-row"><span class="label">Nom d\'utilisateur</span><span class="value">${data.user.username}</span></div>
                     <div class="profile-row"><span class="label">Role</span><span class="value">${data.user.role}</span></div>
                     <div class="profile-row"><span class="label">Membre depuis</span><span class="value">${new Date(data.user.created_at).toLocaleDateString()}</span></div>
                     <div class="profile-row"><span class="label">Derniere connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
@@ -263,6 +272,8 @@ async function loadProfile() {
     }
 }
 
+// ============ INIT ============
+console.log('🚀 Initialisation...');
+verifyToken();
 loadProfile();
-
-console.log('Dashboard.js terminé');
+console.log('✅ Dashboard.js terminé');
