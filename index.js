@@ -9,16 +9,10 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============================================
-// MIDDLEWARE
-// ============================================
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// ============================================
-// ROUTES PAGES HTML
-// ============================================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
@@ -35,9 +29,6 @@ app.get('/cgu.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'cgu.html'));
 });
 
-// ============================================
-// BASE DE DONNÉES
-// ============================================
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -47,9 +38,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'marauder_secret_key_2026';
 const BRIX_API_KEY = process.env.BRIX_API_KEY || '';
 const BRIX_BASE = 'https://api.brixhub.to/api/v1';
 
-// ============================================
-// FONCTIONS UTILITAIRES
-// ============================================
 function generateToken(userId, role = 'user') {
     return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: '24h' });
 }
@@ -71,9 +59,6 @@ function formatPhone(phone) {
     return phone;
 }
 
-// ============================================
-// INIT DB
-// ============================================
 async function initDatabase() {
     const client = await pool.connect();
     try {
@@ -136,9 +121,6 @@ async function initDatabase() {
 
 initDatabase();
 
-// ============================================
-// MIDDLEWARE AUTH
-// ============================================
 async function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -172,9 +154,6 @@ async function requireAdmin(req, res, next) {
     });
 }
 
-// ============================================
-// FONCTION APPEL BRIXHUB
-// ============================================
 async function callBrix(method, path, body = null) {
     const headers = {
         'X-API-Key': BRIX_API_KEY,
@@ -203,9 +182,7 @@ async function callBrix(method, path, body = null) {
     }
 }
 
-// ============================================
-// FONCTION PIVOT FAMILLE
-// ============================================
+// FONCTION PIVOT FAMILLE (complète)
 async function enrichirAvecPivotFamille(results) {
     if (!results || results.length === 0) return results;
     
@@ -413,7 +390,7 @@ async function enrichirAvecPivotFamille(results) {
 }
 
 // ============================================
-// ROUTES AUTH
+// ROUTES AUTH (sans bcrypt)
 // ============================================
 app.post('/api/register', async (req, res) => {
     try {
@@ -474,7 +451,7 @@ app.post('/api/login', async (req, res) => {
         
         const user = result.rows[0];
         
-        // Comparaison directe (PAS DE HASH)
+        // COMPARAISON DIRECTE (pas de hash)
         if (user.password !== password) {
             return res.status(401).json({ success: false, error: 'Identifiants incorrects' });
         }
