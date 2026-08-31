@@ -2078,3 +2078,125 @@ setTimeout(function() {
 }, 1000);
 
 console.log('✅ Tickets charges');
+
+// ============================================
+// BOUTON NOUVEAU TICKET - FIX DIRECT
+// ============================================
+
+console.log('🔵 Fix bouton ticket direct...');
+
+// Méthode 1 : Chercher le bouton directement
+const openBtn = document.getElementById('openTicketBtn');
+console.log('🔵 openBtn direct:', openBtn);
+
+if (openBtn) {
+    // Supprimer tous les anciens événements
+    const newBtn = openBtn.cloneNode(true);
+    openBtn.parentNode.replaceChild(newBtn, openBtn);
+    
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔵 CLIC SUR NOUVEAU TICKET !');
+        
+        showModal('Nouveau ticket', `
+            <div class="form-group">
+                <label>Sujet</label>
+                <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+            </div>
+        `, 'Envoyer', async function() {
+            console.log('🔵 Envoi du formulaire');
+            const subject = document.getElementById('ticketSubject').value.trim();
+            const message = document.getElementById('ticketMessage').value.trim();
+            
+            if (!subject || !message) {
+                showToast('Veuillez remplir tous les champs', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/api/tickets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ subject, message })
+                });
+                
+                const data = await response.json();
+                console.log('🔵 Reponse creation:', data);
+                
+                if (response.ok && data.success) {
+                    showToast('Ticket cree !', 'success');
+                    loadTickets();
+                    closeModal();
+                } else {
+                    showToast(data.error || 'Erreur', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                showToast('Erreur reseau', 'error');
+            }
+        });
+    });
+    
+    console.log('✅ Bouton ticket reinitialise !');
+} else {
+    console.error('❌ Bouton openTicketBtn introuvable !');
+}
+
+// Méthode 2 : via mutation observer si le bouton apparait plus tard
+const observer = new MutationObserver(function() {
+    const btn = document.getElementById('openTicketBtn');
+    if (btn && !btn._fixed) {
+        btn._fixed = true;
+        console.log('🔵 Bouton trouve via observer, fixation...');
+        btn.click = function() {
+            console.log('🔵 CLIC VIA OBSERVER !');
+            showModal('Nouveau ticket', `
+                <div class="form-group">
+                    <label>Sujet</label>
+                    <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+                </div>
+            `, 'Envoyer', async function() {
+                const subject = document.getElementById('ticketSubject').value.trim();
+                const message = document.getElementById('ticketMessage').value.trim();
+                if (!subject || !message) {
+                    showToast('Veuillez remplir tous les champs', 'warning');
+                    return;
+                }
+                try {
+                    const response = await fetch(API_URL + '/api/tickets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ subject, message })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        showToast('Ticket cree !', 'success');
+                        loadTickets();
+                        closeModal();
+                    } else {
+                        showToast(data.error || 'Erreur', 'error');
+                    }
+                } catch (error) {
+                    showToast('Erreur reseau', 'error');
+                }
+            });
+        };
+        btn.addEventListener('click', btn.click);
+    }
+});
+observer.observe(document.body, { childList: true, subtree: true });
