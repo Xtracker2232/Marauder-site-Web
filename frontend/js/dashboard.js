@@ -132,21 +132,58 @@ async function verifyToken() {
 }
 
 // ============ NAVIGATION ============
-document.querySelectorAll('.sidebar-nav li').forEach(item => {
+document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
     item.addEventListener('click', function() {
-        document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-        this.classList.add('active');
         const page = this.dataset.page;
+        console.log('Navigation vers:', page);
+        
+        if (page === 'discord') {
+            window.open('https://discord.gg/ton-invite', '_blank');
+            return;
+        }
+        if (page === 'tickets') {
+            document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById('page-tickets');
+            if (target) target.classList.add('active');
+            loadTickets();
+            return;
+        }
+        
+        document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+        this.classList.add('active');
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        const target = document.getElementById(`page-${page}`);
+        const target = document.getElementById('page-' + page);
         if (target) target.classList.add('active');
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
         if (page === 'fiches') loadFiches();
-        if (page === 'graphe') {
-            if (typeof window.initGrapheModule === 'function') {
-                window.initGrapheModule();
-            }
+    });
+});
+
+// Support submenu items
+document.querySelectorAll('.support-submenu li[data-page]').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const page = this.dataset.page;
+        console.log('Support submenu ->', page);
+        
+        if (page === 'discord') {
+            window.open('https://discord.gg/ton-invite', '_blank');
+            return;
+        }
+        if (page === 'tickets') {
+            document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById('page-tickets');
+            if (target) target.classList.add('active');
+            loadTickets();
+            // Fermer le submenu
+            const submenu = document.getElementById('supportSubmenu');
+            const arrow = document.querySelector('.support-arrow');
+            if (submenu) submenu.style.display = 'none';
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
         }
     });
 });
