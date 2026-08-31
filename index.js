@@ -10,12 +10,29 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ============ FORCER LES VARIABLES ============
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:gtGztIyjmvGHVYieqyDdPRyAkopTRhev@postgres.railway.internal:5432/railway';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'Marauder2026UltraSecureKey!@#$%^&*()';
-process.env.BRIX_API_KEY = process.env.BRIX_API_KEY || 'brix_Kvlxh9SqVL8bokxVb_SrD_WltbNCGbn9hMxan85R7TencJAw';
-process.env.ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Admin';
-process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Salto06530';
+// ============ VÉRIFICATION DES VARIABLES ============
+if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL non défini');
+    process.exit(1);
+}
+if (!process.env.JWT_SECRET) {
+    console.error('❌ JWT_SECRET non défini');
+    process.exit(1);
+}
+if (!process.env.BRIX_API_KEY) {
+    console.error('❌ BRIX_API_KEY non défini');
+    process.exit(1);
+}
+if (!process.env.ADMIN_USERNAME) {
+    console.error('❌ ADMIN_USERNAME non défini');
+    process.exit(1);
+}
+if (!process.env.ADMIN_PASSWORD) {
+    console.error('❌ ADMIN_PASSWORD non défini');
+    process.exit(1);
+}
+
+console.log('✅ Toutes les variables d\'environnement sont définies');
 
 console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? '✅' : '❌');
 console.log('🔍 JWT_SECRET:', process.env.JWT_SECRET ? '✅' : '❌');
