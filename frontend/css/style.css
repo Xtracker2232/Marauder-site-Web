@@ -3210,3 +3210,78 @@ body.dashboard-page {
     background: #2a2a2a !important;
     margin: 4px 8px !important;
 }
+
+/* ============================================
+   MENU CONTEXTUEL GRAPHE
+   ============================================ */
+.graphe-context-menu {
+    position: fixed !important;
+    background: #1a1a1a !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 8px !important;
+    padding: 6px !important;
+    min-width: 200px !important;
+    z-index: 9999 !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+    display: none !important;
+}
+.graphe-context-menu .menu-item {
+    padding: 8px 14px !important;
+    color: #a0a0a0 !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    border-radius: 6px !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.graphe-context-menu .menu-item:hover {
+    background: rgba(255,255,255,0.05) !important;
+    color: #ffffff !important;
+}
+.graphe-context-menu .menu-item.danger:hover {
+    background: rgba(239,68,68,0.1) !important;
+    color: #ef4444 !important;
+}
+.graphe-context-menu .menu-divider {
+    height: 1px !important;
+    background: #2a2a2a !important;
+    margin: 4px 8px !important;
+}
+
+.graphe-context-menu {
+    position: fixed;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 6px;
+    min-width: 200px;
+    z-index: 9999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    display: none;
+}
+.graphe-context-menu .menu-item {
+    padding: 8px 14px;
+    color: #a0a0a0;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.graphe-context-menu .menu-item:hover {
+    background: rgba(255,255,255,0.05);
+    color: #ffffff;
+}
+.graphe-context-menu .menu-item.danger:hover {
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+}
+.graphe-context-menu .menu-divider {
+    height: 1px;
+    background: #2a2a2a;
+    margin: 4px 8px;
+}

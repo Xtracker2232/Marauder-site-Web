@@ -14,7 +14,6 @@ function formatPhone(phone) {
 // GRAPHE - Module autonome
 // ========================================
 
-// Initialisation des variables globales
 window.grapheNodes = window.grapheNodes || [];
 window.grapheEdges = window.grapheEdges || [];
 window.grapheZoom = 1;
@@ -61,11 +60,15 @@ function initGrapheModule() {
     grapheCanvas.addEventListener('wheel', onGrapheWheel, { passive: false });
     grapheCanvas.addEventListener('contextmenu', function(e) {
         e.preventDefault();
-        const pos = getGraphePos(e);
-        const node = getGrapheNode(pos.x, pos.y);
+        const rect = grapheCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const node = getGrapheNode(x, y);
         if (node) {
             window.grapheContextNode = node;
             showGrapheContextMenu(e.clientX, e.clientY);
+        } else {
+            hideGrapheContextMenu();
         }
     });
     
@@ -170,17 +173,14 @@ function renderGraphe() {
         const isHover = node._hover;
         const color = node.color || '#ffffff';
         
-        // Ombre
         grapheCtx.shadowColor = 'rgba(255,255,255,0.05)';
         grapheCtx.shadowBlur = 20;
         
-        // Cercle extérieur
         grapheCtx.beginPath();
         grapheCtx.arc(node.x, node.y, r + 2, 0, Math.PI * 2);
         grapheCtx.fillStyle = isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)';
         grapheCtx.fill();
         
-        // Cercle principal
         grapheCtx.shadowBlur = 0;
         grapheCtx.beginPath();
         grapheCtx.arc(node.x, node.y, r, 0, Math.PI * 2);
@@ -190,13 +190,11 @@ function renderGraphe() {
         grapheCtx.lineWidth = isSelected ? 3 / window.grapheZoom : 1.5 / window.grapheZoom;
         grapheCtx.stroke();
         
-        // Petit point de couleur
         grapheCtx.beginPath();
         grapheCtx.arc(node.x, node.y, 4 / window.grapheZoom, 0, Math.PI * 2);
         grapheCtx.fillStyle = color;
         grapheCtx.fill();
         
-        // Label
         grapheCtx.shadowBlur = 0;
         grapheCtx.fillStyle = '#ffffff';
         grapheCtx.font = `${12 / window.grapheZoom}px Inter, Arial, sans-serif`;
@@ -206,7 +204,6 @@ function renderGraphe() {
         if (label.length > 18) label = label.slice(0, 16) + '...';
         grapheCtx.fillText(label, node.x, node.y + r + 6 / window.grapheZoom);
         
-        // Role
         if (node.role) {
             grapheCtx.fillStyle = 'rgba(255,255,255,0.35)';
             grapheCtx.font = `${10 / window.grapheZoom}px Inter, Arial, sans-serif`;
@@ -216,7 +213,6 @@ function renderGraphe() {
     
     grapheCtx.restore();
     
-    // Texte vide
     if (window.grapheNodes.length === 0) {
         grapheCtx.fillStyle = 'rgba(255,255,255,0.15)';
         grapheCtx.font = '16px Inter, Arial, sans-serif';
@@ -261,10 +257,8 @@ function onGrapheMouseDown(e) {
     const pos = getGraphePos(e);
     const node = getGrapheNode(pos.x, pos.y);
     
-    // Clic droit capturé par contextmenu
     if (e.button === 2) return;
     
-    // Mode lien
     if (window.grapheLinkMode && node) {
         if (window.grapheLinkFrom === null) {
             window.grapheLinkFrom = node.id;
@@ -287,7 +281,6 @@ function onGrapheMouseDown(e) {
         return;
     }
     
-    // Drag node
     if (node) {
         window.grapheDraggingNode = node;
         const wx = (pos.x - window.graphePanX) / window.grapheZoom;
@@ -298,7 +291,6 @@ function onGrapheMouseDown(e) {
         return;
     }
     
-    // Pan
     window.grapheIsPanning = true;
     window.graphePanStartX = pos.x;
     window.graphePanStartY = pos.y;
@@ -351,123 +343,128 @@ function onGrapheWheel(e) {
 function showGrapheContextMenu(x, y) {
     const menu = document.getElementById('grapheContextMenu');
     if (!menu) {
-        console.warn('Menu contextuel non trouve, creation...');
-        createContextMenu();
+        console.warn('Menu contextuel non trouve');
         return;
     }
-    // Ajuster pour ne pas sortir de l'écran
     x = Math.min(x, window.innerWidth - 220);
     y = Math.min(y, window.innerHeight - 300);
     menu.style.display = 'block';
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
+    
+    // Ajouter les événements des boutons du menu
+    setupContextMenuEvents();
 }
 
 function hideGrapheContextMenu() {
     const menu = document.getElementById('grapheContextMenu');
-    if (menu) menu.style.display = 'none';
+    if (menu) {
+        menu.style.display = 'none';
+        window.grapheContextNode = null;
+    }
 }
 
-function createContextMenu() {
-    const menu = document.createElement('div');
-    menu.id = 'grapheContextMenu';
-    menu.className = 'graphe-context-menu';
-    menu.innerHTML = `
-        <div class="menu-item" data-action="edit">✏️ Modifier</div>
-        <div class="menu-item" data-action="color">🎨 Changer couleur</div>
-        <div class="menu-item" data-action="role">👤 Changer fonction</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="link">🔗 Attacher/Lier</div>
-        <div class="menu-item" data-action="detach">🔓 Détacher</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="fiche">📋 Voir la fiche</div>
-        <div class="menu-item danger" data-action="delete">🗑️ Supprimer</div>
-    `;
-    document.body.appendChild(menu);
+function setupContextMenuEvents() {
+    const menu = document.getElementById('grapheContextMenu');
+    if (!menu) return;
     
-    // Événements du menu
-    menu.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const action = this.dataset.action;
-            const nodeId = window.grapheContextNode?.id;
-            if (!nodeId) return;
-            const node = window.grapheNodes.find(n => n.id === nodeId);
-            if (!node) return;
-            hideGrapheContextMenu();
-            
-            switch(action) {
-                case 'edit':
-                    showModal('Modifier', `
-                        <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}" class="search-input"></div>
-                        <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}" class="search-input"></div>
-                    `, 'Sauvegarder', () => {
-                        node.label = document.getElementById('editNodeName').value.trim() || 'Personne';
-                        node.role = document.getElementById('editNodeRole').value.trim();
-                        renderGraphe();
-                        showToast('✅ Modifie !', 'success');
-                    });
-                    break;
-                case 'color':
-                    const colors = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
-                    const colorHtml = colors.map(c => `
-                        <button onclick="changeGrapheColor(${node.id}, '${c}')" style="width:30px;height:30px;border-radius:50%;border:2px solid ${c === node.color ? '#fff' : 'transparent'};background:${c};cursor:pointer;margin:3px;"></button>
-                    `).join('');
-                    showModal('Choisir une couleur', `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:8px 0;">${colorHtml}</div>`, 'Fermer', closeModal);
-                    break;
-                case 'role':
-                    showModal('Fonction', `
-                        <div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}" class="search-input"></div>
-                    `, 'Appliquer', () => {
-                        node.role = document.getElementById('editRoleInput').value.trim();
-                        renderGraphe();
-                        showToast('✅ Fonction mise a jour !', 'success');
-                    });
-                    break;
-                case 'link':
-                    window.grapheLinkMode = true;
-                    window.grapheLinkFrom = node.id;
-                    const btn = document.getElementById('grapheAttacher');
-                    if (btn) {
-                        btn.style.background = 'rgba(255,255,255,0.15)';
-                        btn.style.borderColor = '#ffffff';
-                        btn.style.color = '#ffffff';
-                    }
-                    showToast('🔗 Cliquez sur une personne pour l attacher', 'info');
-                    break;
-                case 'detach':
-                    const toRemove = window.grapheEdges.filter(e => e.from === node.id || e.to === node.id);
-                    toRemove.forEach(e => { window.grapheEdges = window.grapheEdges.filter(ed => ed.id !== e.id); });
-                    renderGraphe();
-                    showToast('🔓 Personne detachee', 'info');
-                    break;
-                case 'delete':
-                    showModal('Confirmation', `<p style="color:var(--text-secondary);">Supprimer "<strong style="color:#fff;">${node.label}</strong>" du graphe ?</p>`, 'Supprimer', () => {
-                        window.grapheNodes = window.grapheNodes.filter(n => n.id !== node.id);
-                        window.grapheEdges = window.grapheEdges.filter(e => e.from !== node.id && e.to !== node.id);
-                        renderGraphe();
-                        showToast('🗑️ Personne supprimee', 'info');
-                    });
-                    break;
-                case 'fiche':
-                    showModal('Fiche de ' + node.label, `
-                        <div style="font-size:13px;color:var(--text-secondary);">
-                            ${node.prenom ? `<div><strong>Prenom</strong> ${node.prenom}</div>` : ''}
-                            ${node.nom_famille ? `<div><strong>Nom</strong> ${node.nom_famille}</div>` : ''}
-                            ${node.role ? `<div><strong>Role</strong> ${node.role}</div>` : ''}
-                            ${node.email ? `<div><strong>Email</strong> ${node.email}</div>` : ''}
-                            ${node.telephone ? `<div><strong>Telephone</strong> ${formatPhone(node.telephone)}</div>` : ''}
-                            ${node.adresse ? `<div><strong>Adresse</strong> ${node.adresse}</div>` : ''}
-                        </div>
-                    `, 'Fermer', closeModal);
-                    break;
-            }
-        });
+    // Supprimer les anciens événements pour éviter les doublons
+    const items = menu.querySelectorAll('.menu-item');
+    items.forEach(item => {
+        item.removeEventListener('click', handleContextMenuAction);
+        item.addEventListener('click', handleContextMenuAction);
     });
-    
-    // Fermer le menu en cliquant ailleurs
-    document.addEventListener('click', hideGrapheContextMenu);
 }
+
+function handleContextMenuAction(e) {
+    e.stopPropagation();
+    const action = this.dataset.action;
+    const node = window.grapheContextNode;
+    if (!node) {
+        hideGrapheContextMenu();
+        return;
+    }
+    hideGrapheContextMenu();
+    
+    switch(action) {
+        case 'edit':
+            showModal('Modifier', `
+                <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}" class="search-input"></div>
+                <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}" class="search-input"></div>
+            `, 'Sauvegarder', () => {
+                const name = document.getElementById('editNodeName').value.trim();
+                const role = document.getElementById('editNodeRole').value.trim();
+                if (name) node.label = name;
+                node.role = role;
+                renderGraphe();
+                showToast('✅ Modifie !', 'success');
+            });
+            break;
+        case 'color':
+            const colors = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
+            const colorHtml = colors.map(c => `
+                <button onclick="changeGrapheColor(${node.id}, '${c}')" style="width:30px;height:30px;border-radius:50%;border:2px solid ${c === node.color ? '#fff' : 'transparent'};background:${c};cursor:pointer;margin:3px;"></button>
+            `).join('');
+            showModal('Choisir une couleur', `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:8px 0;">${colorHtml}</div>`, 'Fermer', closeModal);
+            break;
+        case 'role':
+            showModal('Fonction', `
+                <div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}" class="search-input"></div>
+            `, 'Appliquer', () => {
+                node.role = document.getElementById('editRoleInput').value.trim();
+                renderGraphe();
+                showToast('✅ Fonction mise a jour !', 'success');
+            });
+            break;
+        case 'link':
+            window.grapheLinkMode = true;
+            window.grapheLinkFrom = node.id;
+            const btn = document.getElementById('grapheAttacher');
+            if (btn) {
+                btn.style.background = 'rgba(255,255,255,0.15)';
+                btn.style.borderColor = '#ffffff';
+                btn.style.color = '#ffffff';
+            }
+            showToast('🔗 Cliquez sur une personne pour l attacher', 'info');
+            break;
+        case 'detach':
+            const toRemove = window.grapheEdges.filter(e => e.from === node.id || e.to === node.id);
+            toRemove.forEach(e => { window.grapheEdges = window.grapheEdges.filter(ed => ed.id !== e.id); });
+            renderGraphe();
+            showToast('🔓 Personne detachee', 'info');
+            break;
+        case 'delete':
+            showModal('Confirmation', `<p style="color:var(--text-secondary);">Supprimer "<strong style="color:#fff;">${node.label}</strong>" du graphe ?</p>`, 'Supprimer', () => {
+                window.grapheNodes = window.grapheNodes.filter(n => n.id !== node.id);
+                window.grapheEdges = window.grapheEdges.filter(e => e.from !== node.id && e.to !== node.id);
+                renderGraphe();
+                showToast('🗑️ Personne supprimee', 'info');
+            });
+            break;
+        case 'fiche':
+            showModal('Fiche de ' + node.label, `
+                <div style="font-size:13px;color:var(--text-secondary);">
+                    ${node.prenom ? `<div><strong>Prenom</strong> ${node.prenom}</div>` : ''}
+                    ${node.nom_famille ? `<div><strong>Nom</strong> ${node.nom_famille}</div>` : ''}
+                    ${node.role ? `<div><strong>Role</strong> ${node.role}</div>` : ''}
+                    ${node.email ? `<div><strong>Email</strong> ${node.email}</div>` : ''}
+                    ${node.telephone ? `<div><strong>Telephone</strong> ${formatPhone(node.telephone)}</div>` : ''}
+                    ${node.adresse ? `<div><strong>Adresse</strong> ${node.adresse}</div>` : ''}
+                </div>
+            `, 'Fermer', closeModal);
+            break;
+    }
+}
+
+// Fermer le menu contextuel en cliquant ailleurs
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('grapheContextMenu');
+    if (menu && menu.style.display === 'block') {
+        if (!menu.contains(e.target)) {
+            hideGrapheContextMenu();
+        }
+    }
+});
 
 function changeGrapheColor(nodeId, color) {
     const node = window.grapheNodes.find(n => n.id === nodeId);
@@ -494,7 +491,6 @@ function addPersonToGrapheWithFamily(personData) {
     const cx = rect.width / 2;
     const cy = rect.height / 2;
     
-    // Noeud principal
     const mainNode = {
         id: Date.now(),
         label: name,
@@ -513,7 +509,6 @@ function addPersonToGrapheWithFamily(personData) {
     
     window.grapheNodes.push(mainNode);
     
-    // Famille
     const famille = personData.famille || [];
     if (famille.length > 0) {
         const angleStep = (Math.PI * 2) / famille.length;
@@ -548,10 +543,8 @@ function addPersonToGrapheWithFamily(personData) {
         });
     }
     
-    // Sauvegarde auto
     saveGrapheToLocal();
     renderGraphe();
-    
     showToast(`✅ "${name}" et sa famille ajoutes au graphe !`, 'success');
 }
 
@@ -579,18 +572,17 @@ function showToast(message, type = 'info', duration = 3000) {
         return;
     }
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        ${message}
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-    `;
+    toast.className = 'toast ' + type;
+    toast.innerHTML = message + ' <button class="toast-close" onclick="this.parentElement.remove()">×</button>';
     container.appendChild(toast);
     if (duration > 0) {
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(40px)';
-            toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
+            if (toast.parentElement) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }
         }, duration);
     }
 }
@@ -602,7 +594,10 @@ function showModal(title, bodyHtml, confirmText, onConfirm) {
     const overlay = document.getElementById('modalOverlay');
     const titleEl = document.getElementById('modalTitle');
     const bodyEl = document.getElementById('modalBody');
-    if (!overlay || !titleEl || !bodyEl) return;
+    if (!overlay || !titleEl || !bodyEl) {
+        alert(title + '\n\n' + bodyHtml.replace(/<[^>]*>/g, ''));
+        return;
+    }
     titleEl.textContent = title;
     bodyEl.innerHTML = bodyHtml;
     overlay.classList.add('active');
@@ -630,6 +625,142 @@ function closeModal() {
 }
 
 // ========================================
+// BOUTONS DU GRAPHE
+// ========================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajouter une personne
+    const addBtn = document.getElementById('grapheAddPersonne');
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            const container = document.getElementById('grapheContainer');
+            const rect = container.getBoundingClientRect();
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const newNode = {
+                id: Date.now(),
+                label: 'Personne ' + (window.grapheNodes.length + 1),
+                x: cx + (Math.random() - 0.5) * 100,
+                y: cy + (Math.random() - 0.5) * 100,
+                radius: 24,
+                color: '#ffffff'
+            };
+            window.grapheNodes.push(newNode);
+            renderGraphe();
+            showToast('✅ Personne ajoutee !', 'success');
+        });
+    }
+
+    // Attacher
+    const attachBtn = document.getElementById('grapheAttacher');
+    if (attachBtn) {
+        attachBtn.addEventListener('click', function() {
+            if (window.grapheNodes.length < 2) {
+                showToast('⚠️ Ajoutez au moins 2 personnes', 'warning');
+                return;
+            }
+            if (window.grapheLinkMode) {
+                window.grapheLinkMode = false;
+                window.grapheLinkFrom = null;
+                this.style.background = 'rgba(255,255,255,0.05)';
+                this.style.borderColor = '#2a2a2a';
+                this.style.color = '#a0a0a0';
+                showToast('🔓 Mode attacher desactive', 'info');
+                return;
+            }
+            window.grapheLinkMode = true;
+            window.grapheLinkFrom = null;
+            this.style.background = 'rgba(255,255,255,0.15)';
+            this.style.borderColor = '#ffffff';
+            this.style.color = '#ffffff';
+            showToast('🔗 Cliquez sur une personne source, puis sur la destination', 'info');
+        });
+    }
+
+    // Sauvegarder
+    const saveBtn = document.getElementById('grapheSauvegarder');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            saveGrapheToLocal();
+            showToast('💾 Graphe sauvegarde (local)', 'success');
+        });
+    }
+
+    // Mes graphes
+    const myGraphsBtn = document.getElementById('grapheMesGraphes');
+    if (myGraphsBtn) {
+        myGraphsBtn.addEventListener('click', function() {
+            const modal = document.getElementById('graphesModal');
+            const list = document.getElementById('graphesList');
+            if (!modal || !list) return;
+            
+            list.innerHTML = '<div style="text-align:center;padding:20px;color:#6b6b6b;">Chargement...</div>';
+            modal.style.display = 'flex';
+            
+            const saved = localStorage.getItem('marauder_graphe');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    list.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#111;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;">
+                            <div>
+                                <div style="font-weight:600;color:#fff;">Graphe local</div>
+                                <div style="font-size:12px;color:#6b6b6b;">${data.nodes?.length || 0} personnes</div>
+                            </div>
+                            <button onclick="loadGrapheFromList()" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#a0a0a0;cursor:pointer;">Charger</button>
+                        </div>
+                    `;
+                } catch (e) {
+                    list.innerHTML = '<div style="text-align:center;padding:20px;color:#6b6b6b;">Aucun graphe sauvegarde</div>';
+                }
+            } else {
+                list.innerHTML = '<div style="text-align:center;padding:20px;color:#6b6b6b;">Aucun graphe sauvegarde</div>';
+            }
+        });
+    }
+
+    // Effacer
+    const clearBtn = document.getElementById('grapheEffacer');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (window.grapheNodes.length === 0) {
+                showToast('Deja vide', 'info');
+                return;
+            }
+            if (confirm('Effacer tout le graphe ?')) {
+                window.grapheNodes = [];
+                window.grapheEdges = [];
+                renderGraphe();
+                showToast('🗑️ Graphe efface', 'info');
+            }
+        });
+    }
+
+    // Fermer le modal des graphes
+    const closeModalBtn = document.getElementById('closeGraphesModal');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function() {
+            document.getElementById('graphesModal').style.display = 'none';
+        });
+    }
+});
+
+function loadGrapheFromList() {
+    try {
+        const saved = localStorage.getItem('marauder_graphe');
+        if (saved) {
+            const data = JSON.parse(saved);
+            window.grapheNodes = data.nodes || [];
+            window.grapheEdges = data.edges || [];
+            document.getElementById('graphesModal').style.display = 'none';
+            renderGraphe();
+            showToast('📂 Graphe charge !', 'success');
+        }
+    } catch (e) {
+        showToast('Erreur de chargement', 'error');
+    }
+}
+
+// ========================================
 // EXPOSER
 // ========================================
 window.initGrapheModule = initGrapheModule;
@@ -640,5 +771,6 @@ window.changeGrapheColor = changeGrapheColor;
 window.saveGrapheToLocal = saveGrapheToLocal;
 window.loadGrapheFromLocal = loadGrapheFromLocal;
 window.showToast = showToast;
+window.loadGrapheFromList = loadGrapheFromList;
 
 console.log('✅ Module graphe charge');
