@@ -2200,3 +2200,117 @@ const observer = new MutationObserver(function() {
     }
 });
 observer.observe(document.body, { childList: true, subtree: true });
+
+// ============================================
+// FIX ULTIME - NOUVEAU TICKET
+// ============================================
+
+console.log('🔵 FIX ULTIME TICKET');
+
+// Créer un bouton flottant de test
+const testBtn = document.createElement('button');
+testBtn.textContent = 'TEST TICKET';
+testBtn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:#ff4444;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:bold;';
+testBtn.onclick = function() {
+    console.log('🔵 TEST CLIC !');
+    alert('Le test fonctionne !');
+};
+document.body.appendChild(testBtn);
+
+// Fonction globale pour ouvrir le ticket
+window.openTicketDirect = function() {
+    console.log('🔵 openTicketDirect appelee !');
+    
+    // Utiliser alert pour tester
+    alert('Ouverture du ticket !');
+    
+    showModal('Nouveau ticket', `
+        <div class="form-group">
+            <label>Sujet</label>
+            <input type="text" id="ticketSubject" placeholder="Resume de votre probleme" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;">
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
+        </div>
+    `, 'Envoyer', async function() {
+        console.log('🔵 Envoi du ticket');
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        
+        if (!subject || !message) {
+            showToast('Veuillez remplir tous les champs', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch(API_URL + '/api/tickets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ subject, message })
+            });
+            
+            const data = await response.json();
+            console.log('🔵 Reponse:', data);
+            
+            if (response.ok && data.success) {
+                showToast('Ticket cree !', 'success');
+                loadTickets();
+                closeModal();
+            } else {
+                showToast(data.error || 'Erreur', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Erreur:', error);
+            showToast('Erreur reseau', 'error');
+        }
+    });
+};
+
+// FORCER le bouton openTicketBtn
+setTimeout(function() {
+    const btn = document.getElementById('openTicketBtn');
+    console.log('🔵 Recherche bouton openTicketBtn:', btn);
+    
+    if (btn) {
+        console.log('🔵 Bouton trouve, remplacement...');
+        // Remplacer par un nouveau bouton
+        const newBtn = document.createElement('button');
+        newBtn.id = 'openTicketBtn';
+        newBtn.className = 'btn-primary';
+        newBtn.style.cssText = 'width:auto;padding:10px 24px;';
+        newBtn.textContent = 'Nouveau ticket';
+        newBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔵 CLIC SUR NOUVEAU TICKET (force)');
+            window.openTicketDirect();
+        };
+        btn.parentNode.replaceChild(newBtn, btn);
+        console.log('✅ Bouton remplace !');
+    } else {
+        console.error('❌ Bouton openTicketBtn NON TROUVE !');
+        // Créer le bouton s'il n'existe pas
+        const header = document.querySelector('.page-header');
+        if (header) {
+            const newBtn = document.createElement('button');
+            newBtn.id = 'openTicketBtn';
+            newBtn.className = 'btn-primary';
+            newBtn.style.cssText = 'width:auto;padding:10px 24px;';
+            newBtn.textContent = 'Nouveau ticket';
+            newBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔵 CLIC SUR NOUVEAU TICKET (cree)');
+                window.openTicketDirect();
+            };
+            header.appendChild(newBtn);
+            console.log('✅ Bouton cree dans le header !');
+        }
+    }
+}, 2000);
+
+console.log('✅ FIX ULTIME termine');
