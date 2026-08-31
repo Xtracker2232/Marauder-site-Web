@@ -177,33 +177,6 @@ document.querySelectorAll('.support-submenu li[data-page]').forEach(item => {
             const target = document.getElementById('page-tickets');
             if (target) target.classList.add('active');
             loadTickets();
-            // Fermer le submenu
-            const submenu = document.getElementById('supportSubmenu');
-            const arrow = document.querySelector('.support-arrow');
-            if (submenu) submenu.style.display = 'none';
-            if (arrow) arrow.style.transform = 'rotate(0deg)';
-        }
-    });
-});
-
-// Support submenu items
-document.querySelectorAll('.support-submenu li[data-page]').forEach(item => {
-    item.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const page = this.dataset.page;
-        console.log('Support submenu ->', page);
-        
-        if (page === 'discord') {
-            window.open('https://discord.gg/ton-invite', '_blank');
-            return;
-        }
-        if (page === 'tickets') {
-            document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById('page-tickets');
-            if (target) target.classList.add('active');
-            loadTickets();
-            // Fermer le submenu
             const submenu = document.getElementById('supportSubmenu');
             const arrow = document.querySelector('.support-arrow');
             if (submenu) submenu.style.display = 'none';
@@ -321,7 +294,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         const data = await response.json();
         let results = data.data?.results || [];
 
-        // Pagination auto (max 5 pages)
         const total = data.meta?.total || 0;
         const perPage = query.per_page || 100;
         const totalPages = Math.ceil(total / perPage);
@@ -345,7 +317,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             }
         }
 
-        // Déduplication
         const uniqueResults = [];
         const seen = new Set();
         results.forEach(p => {
@@ -357,14 +328,11 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // ============================================
-        // PIVOT FAMILLE - Marauder fait les recherches
-        // ============================================
+        // PIVOT FAMILLE
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
 
-            // PIVOT 1 : ADRESSE + CODE POSTAL
             if (p.adresse && p.code_postal) {
                 const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
                 if (!pivotDone.has(pivotKey)) {
@@ -405,7 +373,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 }
             }
 
-            // PIVOT 2 : TÉLÉPHONE
             if (p.telephone && famille.length < 5) {
                 const phoneClean = p.telephone.replace(/\D/g, '');
                 if (phoneClean.length >= 8) {
@@ -448,7 +415,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 }
             }
 
-            // PIVOT 3 : EMAIL
             if (p.email && famille.length < 5) {
                 const pivotKey = `email_${p.email}`;
                 if (!pivotDone.has(pivotKey)) {
@@ -594,9 +560,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // ============================================
-        // PIVOT FAMILLE - Marauder fait les recherches
-        // ============================================
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
@@ -631,87 +594,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
                                 email: pr.email || '',
                                 telephone: pr.telephone || '',
                                 lien: 'Même adresse',
-                                _sources: pr._sources || []
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-
-            if (p.telephone && famille.length < 5) {
-                const phoneClean = p.telephone.replace(/\D/g, '');
-                if (phoneClean.length >= 8) {
-                    const pivotKey = `tel_${phoneClean}`;
-                    if (!pivotDone.has(pivotKey)) {
-                        pivotDone.add(pivotKey);
-                        try {
-                            const pivotPayload = {
-                                telephone: phoneClean,
-                                flexible: false,
-                                per_page: 5
-                            };
-                            const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify(pivotPayload)
-                            });
-                            const pivotData = await pivotResponse.json();
-                            const pivotResults = pivotData.data?.results || [];
-                            for (let pr of pivotResults) {
-                                if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                                const membre = {
-                                    prenom: pr.prenom || '',
-                                    nom_famille: pr.nom_famille || '',
-                                    date_naissance: pr.date_naissance || '',
-                                    email: pr.email || '',
-                                    telephone: pr.telephone || '',
-                                    lien: 'Téléphone partagé',
-                                    _sources: pr._sources || []
-                                };
-                                if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                    famille.push(membre);
-                                }
-                            }
-                        } catch (e) { /* Silence */ }
-                    }
-                }
-            }
-
-            if (p.email && famille.length < 5) {
-                const pivotKey = `email_${p.email}`;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = {
-                            email: p.email,
-                            flexible: false,
-                            per_page: 5
-                        };
-                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Email partagé',
                                 _sources: pr._sources || []
                             };
                             if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
@@ -1763,6 +1645,7 @@ document.getElementById('grapheEffacer').addEventListener('click', function() {
         showToast('Graphe efface', 'info');
     });
 });
+
 // ============ MODAL GRAPHES ============
 async function showGraphesModal() {
     const modal = document.getElementById('graphesModal');
@@ -1827,7 +1710,6 @@ async function loadGrapheFromList(index, isLocal) {
 }
 
 async function deleteGrapheFromList(grapheId) {
-    // Remplacer confirm() par showModal()
     showModal('Confirmation', '<p style="color:var(--text-secondary);">Supprimer ce graphe ?</p>', 'Supprimer', async () => {
         try {
             const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
@@ -1861,7 +1743,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Fermer le submenu en cliquant ailleurs
     document.addEventListener('click', function(e) {
         if (supportToggle && supportSubmenu) {
             if (!supportToggle.contains(e.target) && !supportSubmenu.contains(e.target)) {
@@ -1874,22 +1755,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ============ INIT ============
-verifyToken();
-loadProfile();
-
-// Initialiser les tickets
-initTicketCreation();
-
-console.log('Dashboard charge');
-
 // ============================================
-// TICKETS - SOLUTION FINALE
+// TICKETS - ULTIME SOLUTION
 // ============================================
 
-console.log('🔵 TICKETS SOLUTION FINALE');
+console.log('🔵 ULTIME SOLUTION TICKETS');
 
-// Fonction pour ouvrir le modal
+// 1. Fonction pour ouvrir le modal
 function openCreateTicket() {
     console.log('🔵 openCreateTicket appelee !');
     
@@ -1938,7 +1810,7 @@ function openCreateTicket() {
     });
 }
 
-// Fonction pour charger les tickets
+// 2. Fonction pour charger les tickets
 async function loadTickets() {
     console.log('🔵 loadTickets');
     const container = document.getElementById('ticketsList');
@@ -1977,7 +1849,7 @@ async function loadTickets() {
     }
 }
 
-// Fonction pour voir un ticket
+// 3. Fonction pour voir un ticket
 async function viewTicket(ticketId) {
     console.log('🔵 viewTicket:', ticketId);
     try {
@@ -2012,7 +1884,7 @@ async function viewTicket(ticketId) {
     }
 }
 
-// Fonction pour repondre
+// 4. Fonction pour repondre
 async function replyTicket(ticketId) {
     const input = document.getElementById('ticketReplyInput');
     if (!input) return;
@@ -2042,35 +1914,43 @@ async function replyTicket(ticketId) {
     }
 }
 
-// ATTACHER LE BOUTON
-(function() {
-    console.log('🔵 Attachement du bouton...');
-    
-    function attachBtn() {
-        const btn = document.getElementById('openTicketBtn');
-        if (btn) {
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('🔵 CLIC NOUVEAU TICKET');
-                openCreateTicket();
-            });
-            console.log('✅ Bouton attache');
-            return true;
-        }
-        return false;
-    }
-    
-    // Essayer plusieurs fois
-    if (!attachBtn()) {
-        setTimeout(attachBtn, 300);
-        setTimeout(attachBtn, 600);
-        setTimeout(attachBtn, 1000);
-    }
-})();
+// 5. ATTACHER LE BOUTON - METHODE DIRECTE
+console.log('🔵 Attachement direct du bouton...');
 
-// Charger les tickets
+function attachButton() {
+    const btn = document.getElementById('openTicketBtn');
+    console.log('🔵 openTicketBtn:', btn);
+    
+    if (btn) {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔵 CLIC SUR NOUVEAU TICKET !');
+            openCreateTicket();
+        });
+        console.log('✅ Bouton ticket attache !');
+        return true;
+    }
+    return false;
+}
+
+// Essayer immediatement
+if (!attachButton()) {
+    document.addEventListener('DOMContentLoaded', function() {
+        attachButton();
+    });
+    setTimeout(function() {
+        attachButton();
+    }, 500);
+    setTimeout(function() {
+        attachButton();
+    }, 1000);
+}
+
+// 6. Charger les tickets
 setTimeout(function() {
     if (document.getElementById('page-tickets')) {
         console.log('🔵 Chargement tickets...');
@@ -2079,3 +1959,9 @@ setTimeout(function() {
 }, 500);
 
 console.log('✅ Tickets pret');
+
+// ============ INIT ============
+verifyToken();
+loadProfile();
+
+console.log('Dashboard charge');
