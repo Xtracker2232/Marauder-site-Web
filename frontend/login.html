@@ -12,9 +12,451 @@
     <meta property="og:url" content="https://marauder-site-web-production.up.railway.app/login">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ============================================
+           RESET COMPLET
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================
+           FOND AVEC CADRAGE
+           ============================================ */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ============================================
+           CONTAINER
+           ============================================ */
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           LOGIN BOX
+           ============================================ */
+        .login-box {
+            background: #111111;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 40px 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 255, 255, 0.03);
+            position: relative;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 18px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.08), transparent, rgba(255,255,255,0.08));
+            background-size: 300% 300%;
+            animation: neonBorder 4s ease-in-out infinite;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        @keyframes neonBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .login-box:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 50px rgba(255, 255, 255, 0.04);
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-header .logo {
+            width: 56px;
+            height: 56px;
+            color: #ffffff;
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .login-header p {
+            color: #a0a0a0;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        /* ============================================
+           FORM
+           ============================================ */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a0a0a0;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: #6b6b6b;
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px 12px 44px;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 15px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input::placeholder {
+            color: #6b6b6b;
+        }
+
+        input:focus {
+            border-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05), 0 0 30px rgba(255, 255, 255, 0.02);
+        }
+
+        /* ============================================
+           BUTTON
+           ============================================ */
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #ffffff;
+            border: none;
+            border-radius: 10px;
+            color: #000000;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #cccccc;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary svg {
+            width: 20px;
+            height: 20px;
+            color: #000000;
+        }
+
+        /* ============================================
+           REGISTER LINK
+           ============================================ */
+        .register-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+
+        .register-link a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .register-link a:hover {
+            opacity: 0.7;
+        }
+
+        /* ============================================
+           ERROR MESSAGE
+           ============================================ */
+        .error-message {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            color: #ef4444;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* ============================================
+           FOOTER LINKS
+           ============================================ */
+        .login-footer {
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #2a2a2a;
+            padding-top: 16px;
+        }
+
+        .login-footer p {
+            font-size: 12px;
+            color: #6b6b6b;
+        }
+
+        .login-footer a {
+            color: #6b6b6b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .login-footer a:hover {
+            color: #ffffff;
+        }
+
+        .login-footer .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: #6b6b6b;
+        }
+
+        .login-footer .footer-links a {
+            color: #6b6b6b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .login-footer .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        /* ============================================
+           MOBILE RESPONSIVE
+           ============================================ */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 12px;
+                align-items: flex-start;
+                padding-top: 40px;
+            }
+
+            .login-box {
+                padding: 28px 20px;
+                border-radius: 14px;
+            }
+
+            .login-box::before {
+                border-radius: 16px;
+            }
+
+            .login-header .logo {
+                width: 44px;
+                height: 44px;
+                margin-bottom: 12px;
+            }
+
+            .login-header h1 {
+                font-size: 22px;
+            }
+
+            .login-header p {
+                font-size: 13px;
+            }
+
+            .form-group {
+                margin-bottom: 14px;
+            }
+
+            .form-group label {
+                font-size: 12px;
+            }
+
+            input {
+                padding: 10px 12px 10px 38px;
+                font-size: 16px;
+                border-radius: 8px;
+            }
+
+            .input-wrapper .input-icon {
+                width: 16px;
+                height: 16px;
+                left: 12px;
+            }
+
+            .btn-primary {
+                padding: 12px;
+                font-size: 14px;
+                border-radius: 8px;
+            }
+
+            .btn-primary svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .register-link {
+                font-size: 13px;
+                margin-top: 14px;
+            }
+
+            .error-message {
+                font-size: 13px;
+                padding: 10px;
+            }
+
+            .login-footer p {
+                font-size: 11px;
+            }
+
+            .login-footer .footer-links {
+                font-size: 11px;
+                gap: 14px;
+            }
+        }
+
+        @media screen and (max-width: 380px) {
+            body {
+                padding: 8px;
+                padding-top: 30px;
+            }
+
+            .login-box {
+                padding: 20px 16px;
+                border-radius: 12px;
+            }
+
+            .login-header .logo {
+                width: 36px;
+                height: 36px;
+                margin-bottom: 10px;
+            }
+
+            .login-header h1 {
+                font-size: 18px;
+            }
+
+            .login-header p {
+                font-size: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 10px;
+            }
+
+            input {
+                padding: 8px 10px 8px 34px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+
+            .input-wrapper .input-icon {
+                width: 14px;
+                height: 14px;
+                left: 10px;
+            }
+
+            .btn-primary {
+                padding: 10px;
+                font-size: 13px;
+                border-radius: 6px;
+            }
+
+            .register-link {
+                font-size: 12px;
+            }
+        }
+
+        /* Pour les très grands écrans (optionnel) */
+        @media screen and (min-width: 1024px) {
+            .login-box {
+                padding: 48px 40px;
+            }
+        }
+    </style>
 </head>
-<body class="login-page">
+<body>
+
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
@@ -26,7 +468,7 @@
                 <h1>Marauder</h1>
                 <p>Plateforme d'investigation avancée</p>
             </div>
-            
+
             <form id="loginForm">
                 <div class="form-group">
                     <label>Nom d'utilisateur</label>
@@ -35,7 +477,7 @@
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
-                        <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                        <input type="text" id="username" placeholder="Nom d'utilisateur" required autocomplete="username">
                     </div>
                 </div>
                 <div class="form-group">
@@ -45,7 +487,7 @@
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
-                        <input type="password" id="password" placeholder="••••••••" required>
+                        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
                     </div>
                 </div>
                 <button type="submit" class="btn-primary">
@@ -67,7 +509,7 @@
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
-                        <input type="text" id="regUsername" placeholder="Choisissez un nom" required>
+                        <input type="text" id="regUsername" placeholder="Choisissez un nom" required autocomplete="off">
                     </div>
                 </div>
                 <div class="form-group">
@@ -77,7 +519,7 @@
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
-                        <input type="password" id="regPassword" placeholder="Minimum 8 caractères" required>
+                        <input type="password" id="regPassword" placeholder="Minimum 8 caractères" required autocomplete="new-password">
                     </div>
                 </div>
                 <button type="submit" class="btn-primary">
@@ -91,23 +533,23 @@
                 </button>
                 <p class="register-link"><a href="#" id="showLogin">← Retour à la connexion</a></p>
             </form>
-            
+
             <div id="errorMessage" class="error-message"></div>
 
-            <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-color);padding-top:16px;">
-                En vous connectant ou en vous inscrivant, vous acceptez les 
-                <a href="/cgu.html" target="_blank" style="color:#ff8c00;text-decoration:none;font-weight:500;transition:opacity 0.2s;">
-                    Conditions Générales d'Utilisation
-                </a>
-            </p>
-
-            <div style="margin-top:12px;text-align:center;display:flex;justify-content:center;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-color);padding-top:12px;">
-                <a href="/cgu.html" style="color:var(--text-muted);text-decoration:none;transition:color 0.2s;">CGU</a>
-                <span>·</span>
-                <span>Created by Index</span>
+            <div class="login-footer">
+                <p>
+                    En vous connectant ou en vous inscrivant, vous acceptez les
+                    <a href="/cgu.html" target="_blank" style="color:#ff8c00;font-weight:500;">Conditions Générales d'Utilisation</a>
+                </p>
+                <div class="footer-links" style="margin-top:12px;">
+                    <a href="/cgu.html">CGU</a>
+                    <span>·</span>
+                    <span>Created by Index</span>
+                </div>
             </div>
         </div>
     </div>
+
     <script src="js/auth.js"></script>
 </body>
 </html>
