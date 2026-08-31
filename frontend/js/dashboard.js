@@ -1690,11 +1690,15 @@ document.getElementById('grapheSauvegarder')?.addEventListener('click', () => {
 
 document.getElementById('grapheMesGraphes')?.addEventListener('click', showGraphesModal);
 
-document.getElementById('grapheEffacer')?.addEventListener('click', () => {
+document.getElementById('grapheEffacer').addEventListener('click', function() {
+    if (window.grapheNodes.length === 0) {
+        showToast('Deja vide', 'info');
+        return;
+    }
     showModal('Confirmation', '<p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>', 'Effacer', () => {
-        if (window.grapheNodes) window.grapheNodes = [];
-        if (window.grapheEdges) window.grapheEdges = [];
-        if (typeof window.renderGraphe === 'function') window.renderGraphe();
+        window.grapheNodes = [];
+        window.grapheEdges = [];
+        renderGraphe();
         showToast('Graphe efface', 'info');
     });
 });
