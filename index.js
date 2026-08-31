@@ -15,26 +15,23 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 app.use(cors());
 app.use(express.json());
-
-// Servir les fichiers statiques du dossier frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// Route pour la page d'accueil
+// ============================================
+// ROUTES POUR LES PAGES HTML
+// ============================================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
-// Route pour login
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
 });
 
-// Route pour dashboard
 app.get('/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
 });
 
-// Route pour CGU
 app.get('/cgu.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'cgu.html'));
 });
