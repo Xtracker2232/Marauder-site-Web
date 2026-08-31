@@ -1,8 +1,10 @@
 // ============ INVESTIGATION MODULE ============
 console.log('🔍 Investigation module chargé');
 
+// Variables du module
 let investigationData = null;
 
+// Coordonnées des villes sur la carte
 const CITY_COORDS = {
     'paris': { cx: 300, cy: 190 },
     'lyon': { cx: 320, cy: 310 },
@@ -38,6 +40,7 @@ const CITY_COORDS = {
     'la rochelle': { cx: 160, cy: 300 }
 };
 
+// ============ FORMAT PHONE ============
 function formatPhoneInvestigation(phone) {
     if (!phone) return '';
     const cleaned = phone.replace(/\D/g, '');
@@ -47,6 +50,7 @@ function formatPhoneInvestigation(phone) {
     return phone;
 }
 
+// ============ OUVERTURE INVESTIGATION ============
 function openInvestigation(index) {
     const data = window._resultsData;
     if (!data || !data[index]) {
@@ -59,12 +63,15 @@ function openInvestigation(index) {
     const overlay = document.getElementById('investigationOverlay');
     if (!overlay) return;
 
+    // Nom
     const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
     document.getElementById('investigationName').textContent = 'Investigation - ' + fullName;
 
+    // Ville
     const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
     document.getElementById('investigationCityLabel').textContent = ville;
 
+    // Déplacer le point sur la carte
     const pin = document.getElementById('investigationMapPin');
     if (pin) {
         const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -83,11 +90,13 @@ function openInvestigation(index) {
         }
     }
 
+    // Confiance
     const confidence = person._confidence || 0;
     const confEl = document.getElementById('investigationConfidence');
     confEl.textContent = confidence + '%';
     confEl.className = 'investigation-confidence ' + (confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low');
 
+    // Grille d'informations
     const grid = document.getElementById('investigationInfoGrid');
     let html = '';
     const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
@@ -124,10 +133,13 @@ function openInvestigation(index) {
     }
 
     grid.innerHTML = html;
+
+    // Afficher l'overlay
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
+// ============ FERMETURE INVESTIGATION ============
 function closeInvestigation() {
     const overlay = document.getElementById('investigationOverlay');
     if (overlay) {
@@ -136,6 +148,7 @@ function closeInvestigation() {
     }
 }
 
+// ============ COPIER LES DONNEES ============
 function copyInvestigationData() {
     if (!investigationData) {
         showToast('Aucune donnee', 'error');
@@ -169,6 +182,7 @@ function copyInvestigationData() {
     navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
 }
 
+// ============ AJOUTER A UNE FICHE ============
 function addInvestigationToFiche() {
     if (!investigationData) {
         showToast('Aucune donnee', 'error');
@@ -224,6 +238,7 @@ function addInvestigationToFiche() {
     });
 }
 
+// ============ AJOUTER AU GRAPHE ============
 function addInvestigationToGraphe() {
     if (!investigationData) {
         showToast('Aucune donnee', 'error');
@@ -238,6 +253,7 @@ function addInvestigationToGraphe() {
     }
 }
 
+// ============ BOUTONS ============
 document.getElementById('investigationBack')?.addEventListener('click', closeInvestigation);
 document.getElementById('investigationClose')?.addEventListener('click', closeInvestigation);
 document.getElementById('investigationCopy')?.addEventListener('click', copyInvestigationData);
