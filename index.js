@@ -166,6 +166,7 @@ function isBlocked(person, blocklist) {
 // ============ MIDDLEWARE ============
 const allowedOrigins = [
     'https://marauder-site-web-production.up.railway.app',
+    'https://marauder.host',
     'http://localhost:3000',
     'http://localhost:8080'
 ];
