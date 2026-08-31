@@ -2953,3 +2953,67 @@ input::placeholder, textarea::placeholder {
         display: flex !important;
     }
 }
+
+/* ============================================
+   FIX : SUPPRESSION DU BLOC NOIR SUR RECHERCHE
+   ============================================ */
+
+/* Supprimer tout fond noir supplémentaire sur la zone de recherche */
+#page-search .section,
+#page-search .section-body,
+#page-search .search-tabs,
+#page-search .form-grid,
+#page-search .form-group,
+#page-search .search-actions,
+#page-search .results-container,
+#page-search .results-counter,
+#page-search .result-card-full,
+#tab-french,
+#tab-pro,
+#tab-french .section,
+#tab-pro .section,
+#tab-french .section-body,
+#tab-pro .section-body {
+    background: transparent !important;
+}
+
+/* Garder le fond des sections seulement */
+#page-search .section {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Le contenu des sections en transparent */
+#page-search .section-body {
+    background: transparent !important;
+}
+
+/* Forcer le fond de la page à être celui du dashboard */
+#page-search {
+    background: transparent !important;
+}
+
+/* Supprimer tout overlay noir */
+.search-loading {
+    background: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* S'assurer que le contenu principal n'a pas de fond noir */
+.main-content {
+    background: transparent !important;
+}
+
+.dashboard-page .main-content {
+    background: transparent !important;
+}
+
+/* Si le bloc noir est sur la page elle-même */
+.dashboard-page {
+    background: var(--bg-primary) !important;
+}
+
+/* Supprimer le cadrillage sur le dashboard */
+.dashboard-page::before,
+.dashboard-page::after {
+    display: none !important;
+}
