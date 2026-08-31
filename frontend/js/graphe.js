@@ -34,7 +34,6 @@ window.grapheIsInitialized = false;
 
 let grapheCanvas = null;
 let grapheCtx = null;
-let grapheAnimationId = null;
 
 const GRAPHE_COLORS = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
 
@@ -60,7 +59,7 @@ function initGrapheModule() {
     
     window.grapheIsInitialized = true;
     renderGraphe();
-    console.log('Graphe initialise avec', window.grapheNodes.length, 'noeuds');
+    console.log('✅ Graphe initialise avec', window.grapheNodes.length, 'noeuds');
 }
 
 function resizeGraphe() {
@@ -73,7 +72,7 @@ function resizeGraphe() {
     grapheCanvas.style.width = rect.width + 'px';
     grapheCanvas.style.height = rect.height + 'px';
     if (grapheCtx) {
-        grapheCtx.scale(dpr, dpr);
+        grapheCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 }
 
@@ -137,7 +136,7 @@ function renderGraphe() {
         grapheCtx.stroke();
         
         grapheCtx.fillStyle = '#ffffff';
-        grapheCtx.font = `${12 / window.grapheZoom}px Inter`;
+        grapheCtx.font = `${12 / window.grapheZoom}px Arial, sans-serif`;
         grapheCtx.textAlign = 'center';
         grapheCtx.textBaseline = 'top';
         let label = node.label || 'Personne';
@@ -146,14 +145,25 @@ function renderGraphe() {
         
         if (node.role) {
             grapheCtx.fillStyle = 'rgba(255,255,255,0.35)';
-            grapheCtx.font = `${10 / window.grapheZoom}px Inter`;
+            grapheCtx.font = `${10 / window.grapheZoom}px Arial, sans-serif`;
             grapheCtx.fillText(node.role, node.x, node.y + r + 22 / window.grapheZoom);
         }
     });
     
     grapheCtx.restore();
     
-    grapheAnimationId = requestAnimationFrame(renderGraphe);
+    if (window.grapheNodes.length === 0) {
+        grapheCtx.fillStyle = '#6b6b6b';
+        grapheCtx.font = '16px Arial, sans-serif';
+        grapheCtx.textAlign = 'center';
+        grapheCtx.textBaseline = 'middle';
+        grapheCtx.fillText('Ajoutez des personnes', W/2, H/2 - 10);
+        grapheCtx.fillStyle = '#6b6b6b';
+        grapheCtx.font = '13px Arial, sans-serif';
+        grapheCtx.fillText('Cliquez sur "Personne" pour commencer', W/2, H/2 + 20);
+    }
+    
+    requestAnimationFrame(renderGraphe);
 }
 
 function getGraphePos(e) {
@@ -201,8 +211,8 @@ function onGrapheMouseDown(e) {
             const btn = document.getElementById('grapheAttacher');
             if (btn) {
                 btn.style.background = 'rgba(255,255,255,0.05)';
-                btn.style.borderColor = 'var(--border-color)';
-                btn.style.color = 'var(--text-secondary)';
+                btn.style.borderColor = '#2a2a2a';
+                btn.style.color = '#a0a0a0';
             }
             showToast('Personnes attachees !', 'success');
         }
@@ -250,7 +260,7 @@ function onGrapheMouseMove(e) {
 function onGrapheMouseUp() {
     window.grapheDraggingNode = null;
     window.grapheIsPanning = false;
-    grapheCanvas.style.cursor = 'grab';
+    grapheCanvas.style.cursor = 'default';
 }
 
 function onGrapheWheel(e) {
@@ -285,11 +295,8 @@ function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        ${message}
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-    `;
+    toast.className = 'toast ' + type;
+    toast.innerHTML = message + ' <button class="toast-close" onclick="this.parentElement.remove()">×</button>';
     container.appendChild(toast);
     if (duration > 0) {
         setTimeout(() => {
@@ -347,8 +354,8 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
         switch(action) {
             case 'edit':
                 showModal('Modifier', `
-                    <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}" class="search-input"></div>
-                    <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}" class="search-input"></div>
+                    <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
+                    <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
                 `, 'Sauvegarder', () => {
                     node.label = document.getElementById('editNodeName').value.trim() || 'Personne';
                     node.role = document.getElementById('editNodeRole').value.trim();
@@ -363,7 +370,7 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                 break;
             case 'role':
                 showModal('Fonction', `
-                    <div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}" class="search-input"></div>
+                    <div class="form-group"><label>Fonction</label><input type="text" id="editRoleInput" value="${node.role || ''}" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>
                 `, 'Appliquer', () => {
                     node.role = document.getElementById('editRoleInput').value.trim();
                 });
@@ -412,9 +419,7 @@ function changeGrapheColor(nodeId, color) {
     if (node) { 
         node.color = color; 
         closeModal();
-        if (typeof window.renderGraphe === 'function') {
-            window.renderGraphe();
-        }
+        renderGraphe();
     }
 }
 
@@ -425,7 +430,7 @@ function addPersonToGrapheWithFamily(personData) {
         return;
     }
     
-    const name = `${personData.prenom || ''} ${personData.nom_famille || 'Inconnu'}`.trim();
+    const name = (personData.prenom || '') + ' ' + (personData.nom_famille || 'Inconnu');
     const container = document.getElementById('grapheContainer');
     const cx = container ? container.offsetWidth / 2 : 400;
     const cy = container ? container.offsetHeight / 2 : 300;
@@ -433,7 +438,7 @@ function addPersonToGrapheWithFamily(personData) {
     // Creer le noeud principal
     const mainNode = {
         id: Date.now(),
-        label: name,
+        label: name.trim(),
         prenom: personData.prenom || '',
         nom_famille: personData.nom_famille || '',
         role: '',
@@ -456,11 +461,11 @@ function addPersonToGrapheWithFamily(personData) {
         famille.forEach((member, index) => {
             const angle = index * angleStep - Math.PI / 2;
             const radius = 180 + Math.random() * 40;
-            const memberName = `${member.prenom || ''} ${member.nom_famille || 'Inconnu'}`.trim();
+            const memberName = (member.prenom || '') + ' ' + (member.nom_famille || 'Inconnu');
             
             const memberNode = {
                 id: Date.now() + index + 1,
-                label: memberName,
+                label: memberName.trim(),
                 prenom: member.prenom || '',
                 nom_famille: member.nom_famille || '',
                 role: member.lien || 'Famille',
@@ -486,18 +491,14 @@ function addPersonToGrapheWithFamily(personData) {
         });
     }
     
-    // Aller a la page du graphe
-    const grapheLi = document.querySelector('[data-page="graphe"]');
-    if (grapheLi) {
-        grapheLi.click();
+    // Initialiser le graphe
+    if (window.grapheIsInitialized) {
+        renderGraphe();
+    } else {
+        initGrapheModule();
     }
     
-    // Initialiser le graphe si besoin
-    if (typeof window.initGrapheModule === 'function') {
-        window.initGrapheModule();
-    }
-    
-    showToast(`"${name}" et sa famille ajoutes au graphe !`, 'success');
+    showToast('"' + name.trim() + '" et sa famille ajoutes au graphe !', 'success');
 }
 
 // ============ EXPOSER ============
@@ -507,4 +508,4 @@ window.resizeGraphe = resizeGraphe;
 window.addPersonToGrapheWithFamily = addPersonToGrapheWithFamily;
 window.changeGrapheColor = changeGrapheColor;
 
-console.log('Module graphe charge');
+console.log('✅ Module graphe charge');
