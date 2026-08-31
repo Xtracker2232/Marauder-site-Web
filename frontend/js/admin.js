@@ -5,12 +5,13 @@ if (!token) {
     window.location.href = '/login';
 }
 
+// ============ TOAST ============
 function showToast(message, type, duration) {
     type = type || 'info';
     duration = duration || 3000;
-    const container = document.getElementById('toastContainer');
+    var container = document.getElementById('toastContainer');
     if (!container) return;
-    const toast = document.createElement('div');
+    var toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = message + '<button class="toast-close" onclick="this.parentElement.remove()">×</button>';
     container.appendChild(toast);
@@ -24,6 +25,7 @@ function showToast(message, type, duration) {
     }
 }
 
+// ============ MODAL ============
 function showModal(title, bodyHtml) {
     var overlay = document.getElementById('modalOverlay');
     var content = document.getElementById('modalContent');
@@ -37,6 +39,7 @@ function closeModal() {
     if (overlay) overlay.classList.remove('active');
 }
 
+// ============ VERIFICATION ADMIN ============
 async function checkAdmin() {
     try {
         var response = await fetch(API_URL + '/api/admin/check', {
@@ -61,6 +64,7 @@ async function checkAdmin() {
     }
 }
 
+// ============ TABS ============
 document.querySelectorAll('.admin-tab').forEach(function(tab) {
     tab.addEventListener('click', function() {
         document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
@@ -85,6 +89,7 @@ document.querySelectorAll('[data-filter]').forEach(function(btn) {
     });
 });
 
+// ============ STATS ============
 async function loadStats() {
     try {
         var response = await fetch(API_URL + '/api/admin/stats', {
@@ -104,6 +109,7 @@ async function loadStats() {
     }
 }
 
+// ============ USERS ============
 var usersPage = 1;
 var usersTotal = 0;
 var usersSearch = '';
@@ -186,6 +192,7 @@ function updatePagination(type, page, total) {
     if (next) next.disabled = page >= totalPages;
 }
 
+// ============ VIEW USER ============
 async function viewUser(userId) {
     try {
         var response = await fetch(API_URL + '/api/admin/users/' + userId, {
@@ -237,6 +244,7 @@ async function viewUser(userId) {
     }
 }
 
+// ============ TOGGLE BAN ============
 async function toggleBan(userId, banned) {
     if (!confirm('Confirmer le ' + (banned ? 'bannissement' : 'débannissement') + ' ?')) return;
     try {
@@ -252,13 +260,15 @@ async function toggleBan(userId, banned) {
             showToast('Utilisateur ' + (banned ? 'banni' : 'débanni') + ' !', 'success');
             loadUsers(usersPage, usersSearch);
         } else {
-            showToast('Erreur', 'error');
+            var data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
         }
     } catch (error) {
         showToast('Erreur réseau', 'error');
     }
 }
 
+// ============ DELETE USER ============
 async function deleteUser(userId) {
     if (!confirm('Confirmer la suppression de cet utilisateur ? (Cette action est irréversible)')) return;
     try {
@@ -278,6 +288,7 @@ async function deleteUser(userId) {
     }
 }
 
+// ============ SEARCHES ============
 var searchesPage = 1;
 var searchesTotal = 0;
 
@@ -322,14 +333,19 @@ document.getElementById('searchesNextPage').addEventListener('click', function()
     if (searchesPage * 50 < searchesTotal) loadSearches(searchesPage + 1);
 });
 
+// ============ BLOCKLIST ============
 async function loadBlocklist() {
     var tbody = document.getElementById('blocklistTableBody');
+    if (!tbody) {
+        console.error('blocklistTableBody non trouvé');
+        return;
+    }
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
     try {
         var response = await fetch(API_URL + '/api/admin/blocklist', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
-        if (!response.ok) throw new Error('Erreur');
+        if (!response.ok) throw new Error('Erreur ' + response.status);
         var data = await response.json();
         if (data.blocklist && data.blocklist.length > 0) {
             var html = '';
@@ -346,6 +362,7 @@ async function loadBlocklist() {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune entrée dans la blocklist</td></tr>';
         }
     } catch (error) {
+        console.error('Blocklist error:', error);
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
     }
 }
@@ -396,6 +413,7 @@ async function deleteBlocklistItem(id) {
     }
 }
 
+// ============ TICKETS ============
 var ticketsFilter = 'all';
 
 async function loadTickets(filter) {
@@ -528,6 +546,7 @@ async function changeTicketStatus(ticketId, status) {
     }
 }
 
+// ============ INIT ============
 async function init() {
     var isAdmin = await checkAdmin();
     if (!isAdmin) return;
@@ -535,3 +554,17 @@ async function init() {
 }
 
 init();
+
+// Exposer les fonctions globalement
+window.loadBlocklist = loadBlocklist;
+window.loadUsers = loadUsers;
+window.loadStats = loadStats;
+window.loadSearches = loadSearches;
+window.loadTickets = loadTickets;
+window.viewUser = viewUser;
+window.toggleBan = toggleBan;
+window.deleteUser = deleteUser;
+window.deleteBlocklistItem = deleteBlocklistItem;
+window.replyTicket = replyTicket;
+window.changeTicketStatus = changeTicketStatus;
+window.closeModal = closeModal;
