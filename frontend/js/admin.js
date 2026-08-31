@@ -551,6 +551,7 @@ async function init() {
     var isAdmin = await checkAdmin();
     if (!isAdmin) return;
     loadStats();
+    loadBlocklist(); // 👈 AJOUTE CETTE LIGNE
 }
 
 init();

@@ -135,6 +135,34 @@ const initDB = async () => {
 };
 initDB();
 
+// ============ BLOCKLIST HELPER ============
+async function getBlocklist() {
+    try {
+        const result = await pool.query('SELECT type, value FROM blocklist');
+        return result.rows;
+    } catch (error) {
+        console.error('Erreur blocklist:', error.message);
+        return [];
+    }
+}
+
+function isBlocked(person, blocklist) {
+    if (!blocklist || blocklist.length === 0) return false;
+    
+    const fieldsToCheck = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'nom_utilisateur', 'adresse_ip', 'steam_id', 'discord_id', 'nir', 'iban', 'nom_naissance', 'nom_affichage', 'societe', 'profession', 'fonction', 'siret', 'siren', 'bic', 'vin_plaque'];
+    
+    for (let entry of blocklist) {
+        const fieldValue = person[entry.type];
+        if (fieldValue) {
+            if (fieldValue.toLowerCase().includes(entry.value.toLowerCase())) {
+                console.log(`🚫 Bloqué: ${entry.type}=${entry.value} trouvé dans ${fieldValue}`);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // ============ MIDDLEWARE ============
 const allowedOrigins = [
     'https://marauder-site-web-production.up.railway.app',
@@ -221,7 +249,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         if (result.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
         const user = result.rows[0];
         
-        // Vérification du bannissement
         if (user.banned) {
             return res.status(403).json({ error: 'Ce compte a été banni' });
         }
@@ -269,9 +296,13 @@ app.get('/api/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
-// ============ ROUTES BRIXHUB ============
+// ============ ROUTES BRIXHUB AVEC BLOCKLIST ============
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
+        // Récupérer la blocklist
+        const blocklist = await getBlocklist();
+        
+        // Faire la recherche BrixHub
         const response = await axios.post(
             'https://api.brixhub.to/api/v1/search',
             req.body,
@@ -283,15 +314,36 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
                 timeout: 10000
             }
         );
+
+        let results = response.data.data?.results || [];
+        const totalBeforeFilter = results.length;
+
+        // Filtrer selon la blocklist
+        if (blocklist.length > 0 && results.length > 0) {
+            results = results.filter(person => !isBlocked(person, blocklist));
+            console.log(`🔍 Blocklist: ${totalBeforeFilter} résultats → ${results.length} après filtrage`);
+        }
+
+        // Sauvegarder dans l'historique
         try {
             await pool.query(
                 'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
-                [req.user.id, req.body, response.data.data?.results?.length || 0]
+                [req.user.id, req.body, results.length]
             );
         } catch (dbError) {
             console.error('Erreur historique:', dbError.message);
         }
-        res.json(response.data);
+
+        // Retourner les résultats filtrés
+        res.json({
+            data: { results: results },
+            meta: { 
+                total: results.length, 
+                filtered: totalBeforeFilter !== results.length,
+                total_before_filter: totalBeforeFilter,
+                took_ms: response.data.meta?.took_ms || 0
+            }
+        });
     } catch (error) {
         console.error('Brix error:', error.message);
         res.status(500).json({ error: 'Erreur de recherche' });
@@ -305,6 +357,7 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         return res.status(400).json({ error: 'Type invalide' });
     }
     try {
+        const blocklist = await getBlocklist();
         const response = await axios.get(
             `https://api.brixhub.to/api/v1/lookup/${type}/${encodeURIComponent(value)}`,
             {
@@ -312,7 +365,16 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
                 timeout: 10000
             }
         );
-        res.json(response.data);
+        
+        let results = response.data.data?.results || [];
+        if (blocklist.length > 0 && results.length > 0) {
+            results = results.filter(row => !isBlocked(row, blocklist));
+        }
+        
+        res.json({
+            data: { results: results },
+            meta: { filtered: true }
+        });
     } catch (error) {
         console.error('Lookup error:', error.message);
         res.status(500).json({ error: 'Erreur de lookup' });
@@ -347,6 +409,8 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
             query = JSON.parse(query);
         }
         query.per_page = 100;
+        
+        const blocklist = await getBlocklist();
         const response = await axios.post(
             'https://api.brixhub.to/api/v1/search',
             query,
@@ -358,9 +422,15 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
                 timeout: 10000
             }
         );
+        
+        let results = response.data.data?.results || [];
+        if (blocklist.length > 0 && results.length > 0) {
+            results = results.filter(person => !isBlocked(person, blocklist));
+        }
+        
         res.json({
-            results: response.data.data?.results || [],
-            total: response.data.meta?.total || 0,
+            results: results,
+            total: results.length,
             took_ms: response.data.meta?.took_ms || 0
         });
     } catch (error) {
@@ -505,9 +575,7 @@ app.get('/api/me', authenticateToken, async (req, res) => {
     }
 });
 
-// ============================================================
 // ============ ROUTES ADMIN ============
-// ============================================================
 
 app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) => {
     try {
@@ -633,11 +701,6 @@ app.post('/api/admin/users/:id/ban', authenticateToken, requireAdmin, async (req
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être banni' });
         }
         await pool.query('UPDATE users SET banned = $1 WHERE id = $2', [banned, id]);
-        
-        // Si l'utilisateur est banni, on pourrait aussi supprimer son token
-        // mais on ne peut pas le faire directement.
-        // Il sera déconnecté à sa prochaine requête.
-        
         res.json({ success: true, banned });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
@@ -923,6 +986,11 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'l
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
 app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'cgu.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
+
+// ============ HEALTH CHECK ============
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // ============ DÉMARRAGE ============
 app.listen(PORT, '0.0.0.0', () => {
