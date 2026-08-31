@@ -1782,3 +1782,35 @@ async function deleteGrapheFromList(grapheId) {
 verifyToken();
 loadProfile();
 console.log('Dashboard charge');
+
+// ============ SUPPORT TOGGLE ============
+document.addEventListener('DOMContentLoaded', function() {
+    const supportToggle = document.getElementById('supportToggle');
+    const supportSubmenu = document.getElementById('supportSubmenu');
+    const supportArrow = supportToggle ? supportToggle.querySelector('.support-arrow') : null;
+
+    if (supportToggle && supportSubmenu) {
+        supportToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const isOpen = supportSubmenu.style.display === 'block';
+            supportSubmenu.style.display = isOpen ? 'none' : 'block';
+            if (supportArrow) {
+                supportArrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            }
+        });
+    }
+
+    // Fermer le submenu en cliquant ailleurs
+    document.addEventListener('click', function(e) {
+        if (supportToggle && supportSubmenu) {
+            if (!supportToggle.contains(e.target) && !supportSubmenu.contains(e.target)) {
+                supportSubmenu.style.display = 'none';
+                if (supportArrow) {
+                    supportArrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+    });
+});
