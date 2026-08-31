@@ -545,7 +545,6 @@ app.delete('/api/fiches/:id/persons/:personId', authenticateToken, async (req, r
         const fiche = ficheResult.rows[0];
         let persons = fiche.persons || [];
 
-        // Supprimer la personne par index (personId est l'index dans le tableau)
         const idx = parseInt(personId);
         if (idx >= 0 && idx < persons.length) {
             persons.splice(idx, 1);
@@ -613,7 +612,6 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
     const { name, nodes, edges } = req.body;
 
     try {
-        // Supprimer l'ancien graphe de l'utilisateur
         await pool.query(
             'DELETE FROM graphes WHERE user_id = $1',
             [req.user.id]
@@ -630,7 +628,7 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
     }
 });
 
-// Récupérer le graphe d'un utilisateur
+// Récupérer le dernier graphe d'un utilisateur
 app.get('/api/graphes', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
