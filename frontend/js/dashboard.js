@@ -1842,11 +1842,6 @@ async function deleteGrapheFromList(grapheId) {
     });
 }
 
-// ============ INIT ============
-verifyToken();
-loadProfile();
-console.log('Dashboard charge');
-
 // ============ SUPPORT TOGGLE ============
 document.addEventListener('DOMContentLoaded', function() {
     const supportToggle = document.getElementById('supportToggle');
@@ -1878,3 +1873,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// ============ INIT ============
+verifyToken();
+loadProfile();
+
+// Initialiser les tickets
+initTicketCreation();
+
+console.log('Dashboard charge');
