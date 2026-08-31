@@ -1755,14 +1755,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// TICKETS - ULTIME SOLUTION
+// TICKETS - SOLUTION FINALE SANS ALERTE
 // ============================================
 
-console.log('🔵 ULTIME SOLUTION TICKETS');
+console.log('🔵 CHARGEMENT TICKETS');
 
-// 1. Fonction pour ouvrir le modal
+// Fonction pour ouvrir le modal - SANS ALERTE
 function openCreateTicket() {
-    console.log('🔵 openCreateTicket appelee !');
+    console.log('🔵 openCreateTicket appelee');
     
     showModal('Nouveau ticket', `
         <div class="form-group">
@@ -1793,23 +1793,23 @@ function openCreateTicket() {
             });
             
             const data = await response.json();
-            console.log('🔵 Reponse:', data);
+            console.log('🔵 Reponse creation:', data);
             
             if (response.ok && data.success) {
                 showToast('Ticket cree !', 'success');
                 loadTickets();
                 closeModal();
             } else {
-                showToast(data.error || 'Erreur', 'error');
+                showToast(data.error || 'Erreur lors de la creation', 'error');
             }
         } catch (error) {
-            console.error('❌ Erreur:', error);
+            console.error('❌ Erreur creation:', error);
             showToast('Erreur reseau', 'error');
         }
     });
 }
 
-// 2. Fonction pour charger les tickets
+// Fonction pour charger les tickets
 async function loadTickets() {
     console.log('🔵 loadTickets');
     const container = document.getElementById('ticketsList');
@@ -1843,12 +1843,12 @@ async function loadTickets() {
             </div>
         `).join('');
     } catch (error) {
-        console.error('❌ Erreur:', error);
+        console.error('❌ Erreur loadTickets:', error);
         container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
     }
 }
 
-// 3. Fonction pour voir un ticket
+// Fonction pour voir un ticket
 async function viewTicket(ticketId) {
     console.log('🔵 viewTicket:', ticketId);
     try {
@@ -1878,12 +1878,12 @@ async function viewTicket(ticketId) {
         `, 'Fermer', closeModal);
 
     } catch (error) {
-        console.error('❌ View ticket error:', error);
+        console.error('❌ viewTicket error:', error);
         showToast('Erreur de chargement', 'error');
     }
 }
 
-// 4. Fonction pour repondre
+// Fonction pour repondre
 async function replyTicket(ticketId) {
     const input = document.getElementById('ticketReplyInput');
     if (!input) return;
@@ -1906,14 +1906,17 @@ async function replyTicket(ticketId) {
             showToast('Message envoye !', 'success');
             viewTicket(ticketId);
             loadTickets();
+        } else {
+            const data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
         }
     } catch (error) {
-        console.error('Reply error:', error);
-        showToast('Erreur', 'error');
+        console.error('❌ replyTicket error:', error);
+        showToast('Erreur reseau', 'error');
     }
 }
 
-// 5. ATTACHER LE BOUTON
+// Attacher le bouton - SANS ALERTE
 function attachButton() {
     const btn = document.getElementById('openTicketBtn');
     console.log('🔵 openTicketBtn:', btn);
@@ -1925,28 +1928,23 @@ function attachButton() {
         newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('🔵 CLIC SUR NOUVEAU TICKET !');
+            console.log('🔵 CLIC NOUVEAU TICKET');
             openCreateTicket();
         });
-        console.log('✅ Bouton ticket attache !');
+        console.log('✅ Bouton ticket attache');
         return true;
     }
     return false;
 }
 
+// Essayer plusieurs fois
 if (!attachButton()) {
-    document.addEventListener('DOMContentLoaded', function() {
-        attachButton();
-    });
-    setTimeout(function() {
-        attachButton();
-    }, 500);
-    setTimeout(function() {
-        attachButton();
-    }, 1000);
+    setTimeout(attachButton, 300);
+    setTimeout(attachButton, 600);
+    setTimeout(attachButton, 1000);
 }
 
-// 6. Charger les tickets
+// Charger les tickets au demarrage
 setTimeout(function() {
     if (document.getElementById('page-tickets')) {
         console.log('🔵 Chargement tickets...');
@@ -1954,10 +1952,32 @@ setTimeout(function() {
     }
 }, 500);
 
-console.log('✅ Tickets pret');
+console.log('✅ Tickets prets');
+
+// ============ MOBILE MENU ============
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    
+    if (mobileBtn && sidebar) {
+        mobileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('open');
+            if (backdrop) backdrop.classList.toggle('active');
+        });
+    }
+    
+    if (backdrop) {
+        backdrop.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            this.classList.remove('active');
+        });
+    }
+});
 
 // ============ INIT ============
 verifyToken();
 loadProfile();
 
-console.log('Dashboard charge');
+console.log('✅ Dashboard charge');
