@@ -390,7 +390,7 @@ async function enrichirAvecPivotFamille(results) {
 }
 
 // ============================================
-// ROUTES
+// ROUTES AUTH (SANS HASH)
 // ============================================
 
 app.post('/api/register', async (req, res) => {
@@ -414,6 +414,7 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Nom d\'utilisateur déjà pris' });
         }
         
+        // MOT DE PASSE EN CLAIR (pas de hash)
         const result = await pool.query(
             'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, role',
             [username, password]
@@ -451,6 +452,8 @@ app.post('/api/login', async (req, res) => {
         }
         
         const user = result.rows[0];
+        
+        // COMPARAISON EN CLAIR (pas de hash)
         if (user.password !== password) {
             return res.status(401).json({ success: false, error: 'Identifiants incorrects' });
         }
