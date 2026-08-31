@@ -85,28 +85,6 @@ function hideSearchLoading() {
     if (overlay) overlay.classList.remove('active');
 }
 
-// ============ SECTIONS TOGGLE ============
-document.querySelectorAll('.section-header').forEach(header => {
-    header.addEventListener('click', function() {
-        const body = this.nextElementSibling;
-        const icon = this.querySelector('.toggle-icon');
-        if (body) body.classList.toggle('open');
-        if (icon) icon.classList.toggle('open');
-    });
-});
-
-// ============ TABS ============
-document.querySelectorAll('.search-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
-        const tabId = this.dataset.tab;
-        const target = document.getElementById(`tab-${tabId}`);
-        if (target) target.classList.add('active');
-    });
-});
-
 // ============ VERIFY TOKEN ============
 async function verifyToken() {
     try {
@@ -194,6 +172,28 @@ document.getElementById('clearBtnPro').addEventListener('click', () => {
     if (results) results.innerHTML = '';
 });
 
+// ============ SECTIONS TOGGLE ============
+document.querySelectorAll('.section-header').forEach(header => {
+    header.addEventListener('click', function() {
+        const body = this.nextElementSibling;
+        const icon = this.querySelector('.toggle-icon');
+        if (body) body.classList.toggle('open');
+        if (icon) icon.classList.toggle('open');
+    });
+});
+
+// ============ TABS ============
+document.querySelectorAll('.search-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
+        const tabId = this.dataset.tab;
+        const target = document.getElementById(`tab-${tabId}`);
+        if (target) target.classList.add('active');
+    });
+});
+
 // ============ ENTER KEY ============
 document.querySelectorAll('.search-input').forEach(input => {
     input.addEventListener('keydown', function(e) {
@@ -279,7 +279,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         const data = await response.json();
         let results = data.data?.results || [];
 
-        // Pagination auto (max 5 pages)
         const total = data.meta?.total || 0;
         const perPage = query.per_page || 100;
         const totalPages = Math.ceil(total / perPage);
@@ -303,7 +302,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             }
         }
 
-        // Déduplication
         const uniqueResults = [];
         const seen = new Set();
         results.forEach(p => {
@@ -314,142 +312,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             }
         });
         results = uniqueResults;
-
-        // ============================================
-        // PIVOT FAMILLE - Marauder fait les recherches
-        // ============================================
-        const pivotDone = new Set();
-        for (let p of results.slice(0, 5)) {
-            const famille = [];
-
-            // PIVOT 1 : ADRESSE + CODE POSTAL
-            if (p.adresse && p.code_postal) {
-                const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = {
-                            adresse: p.adresse,
-                            code_postal: p.code_postal,
-                            flexible: false,
-                            per_page: 10
-                        };
-                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Même adresse',
-                                _sources: pr._sources || []
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-
-            // PIVOT 2 : TÉLÉPHONE
-            if (p.telephone && famille.length < 5) {
-                const phoneClean = p.telephone.replace(/\D/g, '');
-                if (phoneClean.length >= 8) {
-                    const pivotKey = `tel_${phoneClean}`;
-                    if (!pivotDone.has(pivotKey)) {
-                        pivotDone.add(pivotKey);
-                        try {
-                            const pivotPayload = {
-                                telephone: phoneClean,
-                                flexible: false,
-                                per_page: 5
-                            };
-                            const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify(pivotPayload)
-                            });
-                            const pivotData = await pivotResponse.json();
-                            const pivotResults = pivotData.data?.results || [];
-                            for (let pr of pivotResults) {
-                                if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                                const membre = {
-                                    prenom: pr.prenom || '',
-                                    nom_famille: pr.nom_famille || '',
-                                    date_naissance: pr.date_naissance || '',
-                                    email: pr.email || '',
-                                    telephone: pr.telephone || '',
-                                    lien: 'Téléphone partagé',
-                                    _sources: pr._sources || []
-                                };
-                                if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                    famille.push(membre);
-                                }
-                            }
-                        } catch (e) { /* Silence */ }
-                    }
-                }
-            }
-
-            // PIVOT 3 : EMAIL
-            if (p.email && famille.length < 5) {
-                const pivotKey = `email_${p.email}`;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = {
-                            email: p.email,
-                            flexible: false,
-                            per_page: 5
-                        };
-                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Email partagé',
-                                _sources: pr._sources || []
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-
-            if (famille.length > 0) {
-                p.famille = famille;
-            }
-        }
 
         setTimeout(() => {
             hideSearchLoading();
@@ -552,139 +414,6 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // ============================================
-        // PIVOT FAMILLE - Marauder fait les recherches
-        // ============================================
-        const pivotDone = new Set();
-        for (let p of results.slice(0, 5)) {
-            const famille = [];
-
-            if (p.adresse && p.code_postal) {
-                const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = {
-                            adresse: p.adresse,
-                            code_postal: p.code_postal,
-                            flexible: false,
-                            per_page: 10
-                        };
-                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Même adresse',
-                                _sources: pr._sources || []
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-
-            if (p.telephone && famille.length < 5) {
-                const phoneClean = p.telephone.replace(/\D/g, '');
-                if (phoneClean.length >= 8) {
-                    const pivotKey = `tel_${phoneClean}`;
-                    if (!pivotDone.has(pivotKey)) {
-                        pivotDone.add(pivotKey);
-                        try {
-                            const pivotPayload = {
-                                telephone: phoneClean,
-                                flexible: false,
-                                per_page: 5
-                            };
-                            const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify(pivotPayload)
-                            });
-                            const pivotData = await pivotResponse.json();
-                            const pivotResults = pivotData.data?.results || [];
-                            for (let pr of pivotResults) {
-                                if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                                const membre = {
-                                    prenom: pr.prenom || '',
-                                    nom_famille: pr.nom_famille || '',
-                                    date_naissance: pr.date_naissance || '',
-                                    email: pr.email || '',
-                                    telephone: pr.telephone || '',
-                                    lien: 'Téléphone partagé',
-                                    _sources: pr._sources || []
-                                };
-                                if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                    famille.push(membre);
-                                }
-                            }
-                        } catch (e) { /* Silence */ }
-                    }
-                }
-            }
-
-            if (p.email && famille.length < 5) {
-                const pivotKey = `email_${p.email}`;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = {
-                            email: p.email,
-                            flexible: false,
-                            per_page: 5
-                        };
-                        const pivotResponse = await fetch(`${API_URL}/api/brix/search`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Email partagé',
-                                _sources: pr._sources || []
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-
-            if (famille.length > 0) {
-                p.famille = famille;
-            }
-        }
-
         setTimeout(() => {
             hideSearchLoading();
             if (container) {
@@ -703,6 +432,65 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         }, 1500);
     }
 });
+
+// ============ DISPLAY RESULTS ============
+function displayResults(container, results) {
+    const counterHtml = `
+        <div class="results-counter">
+            <div class="count">
+                <strong>${results.length}</strong> resultat${results.length > 1 ? 's' : ''} trouve${results.length > 1 ? 's' : ''}
+            </div>
+            <div class="badge">${results.length > 1 ? 'Plusieurs correspondances' : 'Correspondance unique'}</div>
+        </div>
+    `;
+
+    const cardsHtml = results.map((person, index) => {
+        const confidence = person._confidence || 0;
+        const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
+        const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
+        
+        let fieldsHtml = '';
+        const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
+        Object.entries(person)
+            .filter(([key]) => !key.startsWith('_') && !excludedKeys.includes(key))
+            .forEach(([key, value]) => {
+                if (!value) return;
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
+                let displayValue = value;
+                if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+                fieldsHtml += `
+                    <div class="result-field">
+                        <span class="field-label">${label}</span>
+                        <span class="field-value ${isImportant ? 'highlight' : ''}">${displayValue}</span>
+                    </div>
+                `;
+            });
+        
+        return `
+            <div class="result-card-full" data-index="${index}">
+                <div class="result-header-full">
+                    <div class="result-name-full" onclick="toggleFiche(${index})">${fullName}</div>
+                    <div class="result-meta">
+                        <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
+                        ${person._sources ? `<span class="result-sources-badge">${person._sources.length} source${person._sources.length > 1 ? 's' : ''}</span>` : ''}
+                    </div>
+                </div>
+                <div class="result-fields" id="fiche-${index}">
+                    ${fieldsHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = counterHtml + cardsHtml;
+    window._resultsData = results;
+}
+
+function toggleFiche(index) {
+    const details = document.getElementById(`fiche-${index}`);
+    if (details) details.classList.toggle('open');
+}
 
 // ============ LOOKUP ============
 document.getElementById('lookupBtn').addEventListener('click', async () => {
@@ -745,150 +533,6 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     }
 });
 
-// ============ TOGGLE ============
-function toggleFiche(index) {
-    const details = document.getElementById(`fiche-${index}`);
-    if (details) details.classList.toggle('open');
-}
-
-function toggleDeep(index) {
-    const panel = document.getElementById(`deep-${index}`);
-    if (panel) panel.classList.toggle('open');
-}
-
-// ============ DISPLAY RESULTS ============
-function displayResults(container, results) {
-    const counterHtml = `
-        <div class="results-counter">
-            <div class="count">
-                <strong>${results.length}</strong> resultat${results.length > 1 ? 's' : ''} trouve${results.length > 1 ? 's' : ''}
-            </div>
-            <div class="badge">${results.length > 1 ? 'Plusieurs correspondances' : 'Correspondance unique'}</div>
-        </div>
-    `;
-
-    const cardsHtml = results.map((person, index) => {
-        const confidence = person._confidence || 0;
-        const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
-        const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
-        
-        let fieldsHtml = '';
-        const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
-        Object.entries(person)
-            .filter(([key]) => !key.startsWith('_') && !excludedKeys.includes(key))
-            .forEach(([key, value]) => {
-                if (!value) return;
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
-                let displayValue = value;
-                if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
-                fieldsHtml += `
-                    <div class="result-field">
-                        <span class="field-label">${label}</span>
-                        <span class="field-value ${isImportant ? 'highlight' : ''}">${displayValue}</span>
-                    </div>
-                `;
-            });
-        
-        const sourcesHtml = person._sources ? 
-            person._sources.map(s => `<span class="source-tag">${s}</span>`).join('') : '';
-        
-        let familleHtml = '';
-        if (person.famille && person.famille.length > 0) {
-            familleHtml = `
-                <div class="family-tree">
-                    <div class="tree-title">Famille associee (${person.famille.length})</div>
-                    ${person.famille.map(m => `
-                        <div class="tree-item">
-                            <span>${m.prenom} ${m.nom_famille}${m.date_naissance ? ` · ${m.date_naissance}` : ''}</span>
-                            <span class="relation">${m.lien || 'Lie'}</span>
-                        </div>
-                        ${m.email ? `<div class="tree-sub">${m.email}</div>` : ''}
-                        ${m.telephone ? `<div class="tree-sub">${formatPhone(m.telephone)}</div>` : ''}
-                    `).join('')}
-                </div>
-            `;
-        }
-        
-        const ficheBtn = `
-            <button class="btn-deep" onclick="addToFiche(${index})">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                + Fiche
-            </button>
-        `;
-
-        const investigateBtn = `
-            <button class="btn-deep" onclick="openInvestigation(${index})" style="border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    <path d="M11 7v4l3 3"/>
-                </svg>
-                Investiguer
-            </button>
-        `;
-        
-        return `
-            <div class="result-card-full" data-index="${index}">
-                <div class="result-header-full">
-                    <div class="result-name-full" onclick="toggleFiche(${index})">${fullName}</div>
-                    <div class="result-meta">
-                        <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
-                        ${person._sources ? `<span class="result-sources-badge">${person._sources.length} source${person._sources.length > 1 ? 's' : ''}</span>` : ''}
-                    </div>
-                </div>
-                <div class="result-fields" id="fiche-${index}">
-                    ${fieldsHtml}
-                    ${sourcesHtml ? `
-                        <div class="result-sources-full" style="grid-column:1/-1;">
-                            ${sourcesHtml}
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="result-actions">
-                    <button class="btn-deep" onclick="toggleDeep(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        Approfondir
-                    </button>
-                    ${investigateBtn}
-                    ${ficheBtn}
-                    <button class="btn-deep" onclick="copyFullCard(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        Copier
-                    </button>
-                    <button class="btn-deep" onclick="addToGraphe(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <circle cx="12" cy="12" r="3"/>
-                            <line x1="3" x2="9" y1="12" y2="12"/>
-                            <line x1="15" x2="21" y1="12" y2="12"/>
-                            <line x1="12" x2="12" y1="3" y2="9"/>
-                            <line x1="12" x2="12" y1="15" y2="21"/>
-                        </svg>
-                        Graphe
-                    </button>
-                </div>
-                <div class="deep-panel" id="deep-${index}">
-                    <h4>Approfondir</h4>
-                    ${familleHtml || '<div style="color:var(--text-muted);font-size:13px;">Aucun lien familial trouve</div>'}
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    container.innerHTML = counterHtml + cardsHtml;
-    window._resultsData = results;
-}
-
-// ============ DISPLAY LOOKUP RESULTS ============
 function displayLookupResults(container, results) {
     const counterHtml = `
         <div class="results-counter">
@@ -906,350 +550,27 @@ function displayLookupResults(container, results) {
             .forEach(([key, value]) => {
                 if (!value) return;
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                const isImportant = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse'].includes(key);
                 let displayValue = value;
                 if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
                 fieldsHtml += `
                     <div class="result-field">
                         <span class="field-label">${label}</span>
-                        <span class="field-value ${isImportant ? 'highlight' : ''}">${displayValue}</span>
+                        <span class="field-value">${displayValue}</span>
                     </div>
                 `;
             });
-        
-        const source = row._source_db || 'Source inconnue';
         
         return `
             <div class="result-card-full">
                 <div class="result-header-full">
                     <div class="result-name-full">Enregistrement #${index + 1}</div>
-                    <div class="result-meta">
-                        <span class="result-sources-badge">${source}</span>
-                    </div>
                 </div>
                 <div class="result-fields open">${fieldsHtml}</div>
-                <div class="result-actions">
-                    <button class="btn-deep" onclick="copyLookupCard(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        Copier
-                    </button>
-                </div>
             </div>
         `;
     }).join('');
 
     container.innerHTML = counterHtml + cardsHtml;
-    window._lookupData = results;
-}
-
-// ========================================
-// ============ INVESTIGATION ============
-// ========================================
-
-let investigationData = null;
-
-function openInvestigation(index) {
-    const data = window._resultsData;
-    if (!data || !data[index]) {
-        showToast('Personne introuvable', 'error');
-        return;
-    }
-
-    investigationData = data[index];
-    const person = investigationData;
-
-    const overlay = document.getElementById('investigationOverlay');
-    if (!overlay) return;
-
-    const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
-    document.getElementById('investigationName').textContent = `Investigation - ${fullName}`;
-
-    const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
-    document.getElementById('investigationCityLabel').textContent = ville;
-
-    const confidence = person._confidence || 0;
-    const confEl = document.getElementById('investigationConfidence');
-    confEl.textContent = `${confidence}%`;
-    confEl.className = `investigation-confidence ${confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low'}`;
-
-    const pin = document.getElementById('investigationMapPin');
-    if (pin) {
-        const cities = {
-            'paris': { cx: 300, cy: 190 }, 'lyon': { cx: 320, cy: 310 }, 'marseille': { cx: 340, cy: 420 },
-            'toulouse': { cx: 260, cy: 380 }, 'bordeaux': { cx: 190, cy: 360 }, 'lille': { cx: 240, cy: 120 },
-            'nice': { cx: 390, cy: 390 }, 'nantes': { cx: 170, cy: 280 }, 'strasbourg': { cx: 400, cy: 180 },
-            'montpellier': { cx: 300, cy: 380 }, 'rennes': { cx: 160, cy: 230 }, 'grenoble': { cx: 350, cy: 330 },
-            'toulon': { cx: 360, cy: 410 }, 'angers': { cx: 190, cy: 260 }, 'dijon': { cx: 350, cy: 240 },
-            'le havre': { cx: 210, cy: 170 }, 'reims': { cx: 320, cy: 160 }, 'saint-etienne': { cx: 310, cy: 320 },
-            'limoges': { cx: 220, cy: 310 }, 'clermont-ferrand': { cx: 270, cy: 290 }, 'amiens': { cx: 260, cy: 140 },
-            'perpignan': { cx: 290, cy: 430 }, 'caen': { cx: 190, cy: 190 }, 'orleans': { cx: 270, cy: 230 },
-            'metz': { cx: 370, cy: 170 }, 'besancon': { cx: 380, cy: 220 }, 'mulhouse': { cx: 410, cy: 210 },
-            'valence': { cx: 330, cy: 340 }, 'nimes': { cx: 290, cy: 370 }, 'avignon': { cx: 310, cy: 400 },
-            'poitiers': { cx: 210, cy: 290 }, 'la rochelle': { cx: 160, cy: 300 }
-        };
-        const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        let found = false;
-        for (const [key, pos] of Object.entries(cities)) {
-            if (cityKey.includes(key) || key.includes(cityKey)) {
-                pin.setAttribute('cx', pos.cx);
-                pin.setAttribute('cy', pos.cy);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            pin.setAttribute('cx', 300);
-            pin.setAttribute('cy', 300);
-        }
-    }
-
-    const grid = document.getElementById('investigationInfoGrid');
-    if (grid) {
-        let html = '';
-        const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
-        const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance', 'profession', 'societe', 'fonction'];
-        
-        const sortedKeys = Object.keys(person).sort((a, b) => {
-            const aImp = importantKeys.includes(a) ? 0 : 1;
-            const bImp = importantKeys.includes(b) ? 0 : 1;
-            return aImp - bImp;
-        });
-
-        sortedKeys.forEach(key => {
-            if (key.startsWith('_') || excludedKeys.includes(key)) return;
-            const value = person[key];
-            if (!value) return;
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            let displayValue = value;
-            if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
-            const isImportant = importantKeys.includes(key);
-            html += `
-                <div class="investigation-info-item ${isImportant ? 'important' : ''}">
-                    <span class="investigation-info-label">${label}</span>
-                    <span class="investigation-info-value">${displayValue}</span>
-                </div>
-            `;
-        });
-
-        if (person.famille && person.famille.length > 0) {
-            html += `
-                <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid var(--border-color);padding-top:12px;margin-top:4px;">
-                    <span class="investigation-info-label" style="color:var(--text-muted);font-weight:600;">Famille (${person.famille.length})</span>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
-                        ${person.famille.map(m => `
-                            <span style="background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;padding:4px 12px;font-size:13px;color:var(--text-secondary);">
-                                ${m.prenom || ''} ${m.nom_famille || ''}
-                                ${m.lien ? ` · ${m.lien}` : ''}
-                            </span>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        if (person._sources && person._sources.length > 0) {
-            html += `
-                <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid var(--border-color);padding-top:12px;margin-top:4px;">
-                    <span class="investigation-info-label" style="color:var(--text-muted);font-weight:600;">Sources</span>
-                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
-                        ${person._sources.map(s => `
-                            <span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border:1px solid var(--border-color);padding:2px 10px;border-radius:12px;">${s}</span>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        grid.innerHTML = html;
-    }
-
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeInvestigation() {
-    const overlay = document.getElementById('investigationOverlay');
-    if (overlay) {
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-
-document.getElementById('investigationBack')?.addEventListener('click', closeInvestigation);
-document.getElementById('investigationClose')?.addEventListener('click', closeInvestigation);
-
-document.getElementById('investigationAddFiche')?.addEventListener('click', function() {
-    if (!investigationData) {
-        showToast('Aucune donnee', 'error');
-        return;
-    }
-    if (fichesData.length === 0) {
-        showToast('Aucune fiche existante', 'warning');
-        return;
-    }
-    const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
-    showModal('Ajouter a une fiche', `
-        <div class="form-group">
-            <label>Selectionner une fiche</label>
-            <select id="ficheSelectInvestigation">
-                ${selectOptions}
-                <option value="new">+ Creer une nouvelle fiche</option>
-            </select>
-        </div>
-        <div id="newFicheNameContainerInvestigation" style="display:none;">
-            <div class="form-group">
-                <label>Nom de la nouvelle fiche</label>
-                <input type="text" id="newFicheNameInvestigation" placeholder="Nom de la fiche">
-            </div>
-        </div>
-        <div style="font-size:12px;color:var(--text-muted);">Personne : ${investigationData.prenom || ''} ${investigationData.nom_famille || 'Inconnu'}</div>
-    `, 'Ajouter', async () => {
-        const select = document.getElementById('ficheSelectInvestigation');
-        if (!select) return;
-        const ficheId = select.value;
-        if (ficheId === 'new') {
-            const nameInput = document.getElementById('newFicheNameInvestigation');
-            const name = nameInput?.value?.trim();
-            if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
-            try {
-                const createResponse = await fetch(`${API_URL}/api/fiches`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ name })
-                });
-                const createData = await createResponse.json();
-                if (createData.fiche) {
-                    await addPersonToFiche(createData.fiche.id, investigationData);
-                    loadFiches();
-                    showToast('Personne ajoutee !', 'success');
-                }
-            } catch (error) { showToast('Erreur', 'error'); }
-        } else {
-            await addPersonToFiche(parseInt(ficheId), investigationData);
-            loadFiches();
-            showToast('Personne ajoutee !', 'success');
-        }
-    });
-
-    document.getElementById('ficheSelectInvestigation')?.addEventListener('change', function() {
-        const container = document.getElementById('newFicheNameContainerInvestigation');
-        if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
-    });
-});
-
-document.getElementById('investigationCopy')?.addEventListener('click', function() {
-    if (!investigationData) {
-        showToast('Aucune donnee', 'error');
-        return;
-    }
-    const person = investigationData;
-    let text = '=== Marauder Investigation ===\n\n';
-    Object.entries(person)
-        .filter(([key]) => !key.startsWith('_') && key !== 'famille')
-        .forEach(([key, value]) => {
-            if (!value) return;
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            let displayValue = value;
-            if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
-            text += `${label}: ${displayValue}\n`;
-        });
-    if (person.famille && person.famille.length > 0) {
-        text += '\n=== Famille ===\n';
-        person.famille.forEach(m => {
-            text += `${m.prenom || ''} ${m.nom_famille || ''}`;
-            if (m.lien) text += ` (${m.lien})`;
-            text += '\n';
-        });
-    }
-    if (person._sources) text += `\nSources: ${person._sources.join(', ')}`;
-    text += '\n\n--- by Marauder ---';
-    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
-});
-
-document.getElementById('investigationGraphe')?.addEventListener('click', function() {
-    if (!investigationData) {
-        showToast('Aucune donnee', 'error');
-        return;
-    }
-    if (typeof window.addPersonToGrapheWithFamily === 'function') {
-        window.addPersonToGrapheWithFamily(investigationData);
-        closeInvestigation();
-        const grapheLi = document.querySelector('[data-page="graphe"]');
-        if (grapheLi) grapheLi.click();
-    } else {
-        showToast('Module graphe indisponible', 'warning');
-    }
-});
-
-// ============ COPY ============
-function copyFullCard(index) {
-    const data = window._resultsData;
-    if (!data || !data[index]) return;
-    const person = data[index];
-    let text = '=== Marauder Investigation ===\n\n';
-    Object.entries(person)
-        .filter(([key]) => !key.startsWith('_') && key !== 'famille')
-        .forEach(([key, value]) => {
-            if (!value) return;
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            let displayValue = value;
-            if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
-            text += `${label}: ${displayValue}\n`;
-        });
-    if (person.famille && person.famille.length > 0) {
-        text += '\n=== Famille associee ===\n';
-        person.famille.forEach(m => {
-            text += `${m.prenom} ${m.nom_famille}`;
-            if (m.date_naissance) text += ` (${m.date_naissance})`;
-            if (m.email) text += ` - ${m.email}`;
-            if (m.telephone) text += ` - ${formatPhone(m.telephone)}`;
-            text += ` - ${m.lien || 'Lie'}\n`;
-        });
-    }
-    if (person._sources) text += `\nSources: ${person._sources.join(', ')}`;
-    text += '\n\n--- by Marauder ---';
-    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success')).catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showToast('Copie !', 'success');
-    });
-}
-
-function copyLookupCard(index) {
-    const data = window._lookupData;
-    if (!data || !data[index]) return;
-    const row = data[index];
-    let text = '=== Marauder Lookup ===\n\n';
-    Object.entries(row)
-        .filter(([key]) => !key.startsWith('_'))
-        .forEach(([key, value]) => {
-            if (!value) return;
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            let displayValue = value;
-            if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
-            text += `${label}: ${displayValue}\n`;
-        });
-    if (row._source_db) text += `\nSource: ${row._source_db}`;
-    text += '\n\n--- by Marauder ---';
-    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success')).catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showToast('Copie !', 'success');
-    });
 }
 
 // ============ HISTORY ============
@@ -1395,7 +716,7 @@ document.getElementById('createFicheBtn')?.addEventListener('click', () => {
     showModal('Creer une fiche', `
         <div class="form-group">
             <label>Nom de la fiche</label>
-            <input type="text" id="ficheNameInput" placeholder="Ex: Enquete Dupont">
+            <input type="text" id="ficheNameInput" placeholder="Ex: Enquete Dupont" class="search-input">
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Maximum 10 personnes par fiche</div>
     `, 'Creer', async () => {
@@ -1423,82 +744,6 @@ document.getElementById('createFicheBtn')?.addEventListener('click', () => {
     });
 });
 
-function addToFiche(index) {
-    const person = window._resultsData?.[index];
-    if (!person) { showToast('Personne introuvable', 'error'); return; }
-    if (fichesData.length === 0) { showToast('Aucune fiche existante', 'warning'); return; }
-
-    const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
-
-    showModal('Ajouter a une fiche', `
-        <div class="form-group">
-            <label>Selectionner une fiche</label>
-            <select id="ficheSelect">
-                ${selectOptions}
-                <option value="new">+ Creer une nouvelle fiche</option>
-            </select>
-        </div>
-        <div id="newFicheNameContainer" style="display:none;">
-            <div class="form-group">
-                <label>Nom de la nouvelle fiche</label>
-                <input type="text" id="newFicheNameInput" placeholder="Nom de la fiche">
-            </div>
-        </div>
-        <div style="font-size:12px;color:var(--text-muted);">Personne : ${person.prenom || ''} ${person.nom_famille || 'Inconnu'}</div>
-    `, 'Ajouter', async () => {
-        const select = document.getElementById('ficheSelect');
-        if (!select) return;
-        const ficheId = select.value;
-        if (ficheId === 'new') {
-            const nameInput = document.getElementById('newFicheNameInput');
-            const name = nameInput?.value?.trim();
-            if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
-            try {
-                const createResponse = await fetch(`${API_URL}/api/fiches`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ name })
-                });
-                const createData = await createResponse.json();
-                if (createData.fiche) {
-                    await addPersonToFiche(createData.fiche.id, person);
-                    loadFiches();
-                    showToast('Personne ajoutee !', 'success');
-                }
-            } catch (error) { showToast('Erreur', 'error'); }
-        } else {
-            await addPersonToFiche(parseInt(ficheId), person);
-            loadFiches();
-            showToast('Personne ajoutee !', 'success');
-        }
-    });
-
-    document.getElementById('ficheSelect')?.addEventListener('change', function() {
-        const container = document.getElementById('newFicheNameContainer');
-        if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
-    });
-}
-
-async function addPersonToFiche(ficheId, person) {
-    try {
-        const response = await fetch(`${API_URL}/api/fiches/${ficheId}/persons`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ person })
-        });
-        if (!response.ok) {
-            const data = await response.json();
-            showToast(data.error || 'Erreur', 'error');
-        }
-    } catch (error) { showToast('Erreur reseau', 'error'); }
-}
-
 function viewFiche(index) {
     const fiche = fichesData[index];
     if (!fiche) return;
@@ -1521,7 +766,7 @@ function editFiche(index) {
     showModal('Modifier la fiche', `
         <div class="form-group">
             <label>Nom de la fiche</label>
-            <input type="text" id="editFicheName" value="${fiche.name}">
+            <input type="text" id="editFicheName" value="${fiche.name}" class="search-input">
         </div>
     `, 'Sauvegarder', async () => {
         const name = document.getElementById('editFicheName')?.value?.trim();
@@ -1591,20 +836,6 @@ function exportFiche(index) {
     });
 }
 
-// ============ ADD TO GRAPHE ============
-function addToGraphe(index) {
-    const person = window._resultsData?.[index];
-    if (!person) {
-        showToast('Personne introuvable', 'error');
-        return;
-    }
-    if (typeof window.addPersonToGrapheWithFamily === 'function') {
-        window.addPersonToGrapheWithFamily(person);
-    } else {
-        showToast('Le graphe n est pas disponible', 'warning');
-    }
-}
-
 // ============ TICKETS ============
 
 async function loadTickets() {
@@ -1635,21 +866,18 @@ async function loadTickets() {
                                ticket.status === 'in_progress' ? 'En cours' : 
                                'Ferme';
             const date = new Date(ticket.created_at).toLocaleString('fr-FR');
-            const hasUnread = ticket.status === 'open' || ticket.status === 'in_progress';
             return `
-                <div class="ticket-item" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;cursor:pointer;${hasUnread ? 'border-left:3px solid var(--warning);' : ''}" onclick="viewTicket(${ticket.id})">
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div class="ticket-item" onclick="viewTicket(${ticket.id})">
+                    <div class="ticket-header">
                         <div>
-                            <span style="font-weight:600;color:#ffffff;">${ticket.subject}</span>
+                            <span class="ticket-subject">${ticket.subject}</span>
                             <span style="font-size:12px;color:var(--text-muted);margin-left:12px;">${date}</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;">
                             <span style="font-size:12px;color:var(--text-muted);">${statusText}</span>
-                            <span style="font-size:12px;color:var(--text-muted);">${ticket.message?.length || 0} caracteres</span>
-                            ${hasUnread ? '<span style="font-size:10px;color:var(--warning);">● Nouveau</span>' : ''}
                         </div>
                     </div>
-                    <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%;">
+                    <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">
                         ${ticket.message?.substring(0, 150) || ''}${ticket.message?.length > 150 ? '...' : ''}
                     </div>
                 </div>
@@ -1789,7 +1017,6 @@ async function loadProfile() {
                     <div class="profile-row"><span class="label">Role</span><span class="value">${data.user.role}</span></div>
                     <div class="profile-row"><span class="label">Membre depuis</span><span class="value">${new Date(data.user.created_at).toLocaleDateString()}</span></div>
                     <div class="profile-row"><span class="label">Derniere connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
-                    <div class="profile-row"><span class="label">Total recherches</span><span class="value">${data.stats?.total_searches || 0}</span></div>
                 </div>
             `;
         }
@@ -1798,185 +1025,45 @@ async function loadProfile() {
     }
 }
 
-// ============ GRAPHE BOUTONS ============
+// ============ GRAPHE ============
 document.getElementById('grapheAddPersonne')?.addEventListener('click', () => {
-    if (!window.grapheNodes) { showToast('Graphe non initialise', 'warning'); return; }
-    showModal('Ajouter une personne', `
-        <div class="form-group"><label>Prenom</label><input type="text" id="newNodePrenom" class="search-input"></div>
-        <div class="form-group"><label>Nom</label><input type="text" id="newNodeNom" class="search-input"></div>
-        <div class="form-group"><label>Role</label><input type="text" id="newNodeRole" class="search-input"></div>
-    `, 'Ajouter', () => {
-        const prenom = document.getElementById('newNodePrenom').value.trim();
-        const nom = document.getElementById('newNodeNom').value.trim();
-        const role = document.getElementById('newNodeRole').value.trim();
-        const label = `${prenom} ${nom}`.trim() || 'Personne';
-        const container = document.getElementById('grapheContainer');
-        const cx = container ? container.offsetWidth / 2 : 400;
-        const cy = container ? container.offsetHeight / 2 : 300;
-        const newNode = {
-            id: Date.now(),
-            label: label,
-            role: role,
-            x: cx + (Math.random() - 0.5) * 100,
-            y: cy + (Math.random() - 0.5) * 100,
-            radius: 24,
-            color: ['#ffffff','#ef4444','#f59e0b','#22c55e','#06b6d4','#ec4899','#8b5cf6','#f97316'][Math.floor(Math.random() * 8)]
-        };
-        window.grapheNodes.push(newNode);
-        if (window.grapheLinkMode && window.grapheLinkFrom !== null) {
-            window.grapheEdges.push({ id: Date.now() + 1, from: window.grapheLinkFrom, to: newNode.id });
-            window.grapheLinkMode = false;
-            window.grapheLinkFrom = null;
-            const btn = document.getElementById('grapheAttacher');
-            if (btn) {
-                btn.style.background = 'rgba(255,255,255,0.05)';
-                btn.style.borderColor = 'var(--border-color)';
-                btn.style.color = 'var(--text-secondary)';
-            }
-            showToast('Personnes attachees !', 'success');
-        }
-        if (typeof window.renderGraphe === 'function') window.renderGraphe();
-        showToast(`"${label}" ajoute !`, 'success');
-    });
+    showToast('Fonctionnalite en developpement', 'info');
 });
 
 document.getElementById('grapheAttacher')?.addEventListener('click', function() {
-    const nodes = window.grapheNodes || [];
-    if (window.grapheLinkMode) {
-        window.grapheLinkMode = false;
-        window.grapheLinkFrom = null;
-        this.style.background = 'rgba(255,255,255,0.05)';
-        this.style.borderColor = 'var(--border-color)';
-        this.style.color = 'var(--text-secondary)';
-        showToast('Mode attacher desactive', 'info');
-        return;
-    }
-    if (nodes.length < 2) { showToast('Ajoutez au moins 2 personnes', 'warning'); return; }
-    window.grapheLinkMode = true;
-    window.grapheLinkFrom = null;
-    this.style.background = 'rgba(255,255,255,0.15)';
-    this.style.borderColor = '#ffffff';
-    this.style.color = '#ffffff';
-    showToast('Cliquez sur une personne pour l attacher', 'info');
+    showToast('Fonctionnalite en developpement', 'info');
 });
 
 document.getElementById('grapheSauvegarder')?.addEventListener('click', () => {
-    const nodes = window.grapheNodes || [];
-    const edges = window.grapheEdges || [];
-    const data = { name: 'Mon graphe', nodes: nodes, edges: edges };
-    localStorage.setItem('marauder_graphe', JSON.stringify(data));
-    fetch(`${API_URL}/api/graphes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(data)
-    }).then(r => r.ok ? showToast('Sauvegarde sur le serveur !', 'success') : showToast('Sauvegarde locale', 'info'))
-      .catch(() => showToast('Sauvegarde locale', 'info'));
+    showToast('Sauvegarde en developpement', 'info');
 });
 
-document.getElementById('grapheMesGraphes')?.addEventListener('click', showGraphesModal);
+document.getElementById('grapheMesGraphes')?.addEventListener('click', () => {
+    showToast('Fonctionnalite en developpement', 'info');
+});
 
 document.getElementById('grapheEffacer')?.addEventListener('click', () => {
-    showModal('Confirmation', '<p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>', 'Effacer', () => {
-        if (window.grapheNodes) window.grapheNodes = [];
-        if (window.grapheEdges) window.grapheEdges = [];
-        if (typeof window.renderGraphe === 'function') window.renderGraphe();
-        showToast('Graphe efface', 'info');
-    });
+    showToast('Fonctionnalite en developpement', 'info');
 });
-
-// ============ MODAL GRAPHES ============
-async function showGraphesModal() {
-    const modal = document.getElementById('graphesModal');
-    const list = document.getElementById('graphesList');
-    if (!modal || !list) return;
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Chargement...</div>';
-    modal.style.display = 'flex';
-    try {
-        const response = await fetch(`${API_URL}/api/graphes/all`, { headers: { 'Authorization': `Bearer ${token}` } });
-        let graphes = [];
-        if (response.ok) { const data = await response.json(); graphes = data.graphes || []; }
-        const saved = localStorage.getItem('marauder_graphe');
-        if (saved) {
-            try { const data = JSON.parse(saved); graphes.push({ id: 'local', name: 'Graphe local', nodes: data.nodes || [], edges: data.edges || [], created_at: new Date().toISOString(), isLocal: true }); } catch (e) {}
-        }
-        if (graphes.length === 0) {
-            list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegarde</div>';
-            return;
-        }
-        list.innerHTML = graphes.map((g, i) => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#111;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;">
-                <div>
-                    <div style="font-weight:600;color:#fff;">${g.name || 'Sans nom'} ${g.isLocal ? '📁' : ''}</div>
-                    <div style="font-size:12px;color:#6b6b6b;">${g.nodes?.length || 0} personnes · ${new Date(g.created_at).toLocaleDateString()}</div>
-                </div>
-                <div style="display:flex;gap:6px;">
-                    <button onclick="loadGrapheFromList(${i}, ${!!g.isLocal})" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#a0a0a0;cursor:pointer;">Charger</button>
-                    ${!g.isLocal ? `<button onclick="deleteGrapheFromList(${g.id})" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#ef4444;cursor:pointer;">Supprimer</button>` : ''}
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">Erreur de chargement</div>';
-    }
-}
-
-document.getElementById('closeGraphesModal')?.addEventListener('click', () => {
-    document.getElementById('graphesModal').style.display = 'none';
-});
-
-async function loadGrapheFromList(index, isLocal) {
-    try {
-        let data;
-        if (isLocal) {
-            const saved = localStorage.getItem('marauder_graphe');
-            if (saved) data = JSON.parse(saved);
-        } else {
-            const response = await fetch(`${API_URL}/api/graphes/all`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const result = await response.json();
-            if (result.graphes && result.graphes[index]) data = result.graphes[index];
-        }
-        if (data) {
-            if (window.grapheNodes) window.grapheNodes = data.nodes || [];
-            if (window.grapheEdges) window.grapheEdges = data.edges || [];
-            document.getElementById('graphesModal').style.display = 'none';
-            if (typeof window.renderGraphe === 'function') window.renderGraphe();
-            showToast('Graphe charge !', 'success');
-        }
-    } catch (error) { showToast('Erreur de chargement', 'error'); }
-}
-
-async function deleteGrapheFromList(grapheId) {
-    if (!confirm('Supprimer ce graphe ?')) return;
-    try {
-        const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            showToast('Graphe supprime !', 'success');
-            showGraphesModal();
-        }
-    } catch (error) { showToast('Erreur', 'error'); }
-}
 
 // ============ MOBILE MENU ============
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileBtn = document.getElementById('mobileMenuBtn');
 const sidebar = document.querySelector('.sidebar');
 const backdrop = document.getElementById('sidebarBackdrop');
 
-if (mobileMenuBtn && sidebar && backdrop) {
-    mobileMenuBtn.addEventListener('click', function() {
+if (mobileBtn && sidebar && backdrop) {
+    mobileBtn.addEventListener('click', function() {
         sidebar.classList.toggle('open');
         backdrop.classList.toggle('active');
         document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
     });
-    
+
     backdrop.addEventListener('click', function() {
         sidebar.classList.remove('open');
         backdrop.classList.remove('active');
         document.body.style.overflow = '';
     });
-    
+
     document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
         item.addEventListener('click', function() {
             if (window.innerWidth <= 768) {
@@ -1988,18 +1075,10 @@ if (mobileMenuBtn && sidebar && backdrop) {
     });
 }
 
-// Ajuster la hauteur du graphe sur mobile
-function resizeGrapheMobile() {
-    const container = document.getElementById('grapheContainer');
-    if (container && window.innerWidth <= 768) {
-        container.style.height = '400px';
-    } else if (container) {
-        container.style.height = '600px';
-    }
+// ============ INVESTIGATION ============
+function openInvestigation(index) {
+    showToast('Fonctionnalite en developpement', 'info');
 }
-
-window.addEventListener('resize', resizeGrapheMobile);
-resizeGrapheMobile();
 
 // ============ INIT ============
 verifyToken();
