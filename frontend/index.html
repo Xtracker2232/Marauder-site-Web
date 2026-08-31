@@ -4,44 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Marauder - Plateforme CSINT d'investigation</title>
-    
-    <!-- Favicon via Discord CDN -->
     <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
     <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
-    
-    <!-- Open Graph -->
     <meta property="og:title" content="Marauder - Plateforme CSINT d'investigation">
-    <meta property="og:description" content="Plateforme d'investigation avancée OSINT / CSINT.">
+    <meta property="og:description" content="Plateforme d'investigation avancée OSINT / CSINT. Recherche multi-critères, arbre familial, graphe de connexions.">
     <meta property="og:image" content="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
     <meta property="og:url" content="https://marauder-site-web-production.up.railway.app/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
-    
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Marauder - Plateforme CSINT d'investigation">
     <meta name="twitter:description" content="Plateforme d'investigation avancée OSINT / CSINT.">
     <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
-    
     <link rel="stylesheet" href="css/style.css">
 </head>
+<body class="home-page">
 
     <!-- ============ NAVIGATION ============ -->
-<div class="nav-container">
-    <div class="nav-logo">...</div>
-    <button class="mobile-menu-btn" id="homeMobileMenuBtn" style="display:none;background:transparent;border:none;color:#fff;cursor:pointer;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-    </button>
-    <div class="nav-links" id="homeNavLinks">
-        <a href="#features">Fonctionnalités</a>
-        <a href="#how-it-works">Comment ça marche</a>
-        <a href="#search-criteria">Critères</a>
-        <a href="/login" class="nav-btn">Se connecter</a>
-    </div>
-</div>
+    <nav class="home-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <span>Marauder</span>
+            </div>
+            <button class="mobile-menu-btn" id="homeMobileMenuBtn" style="display:none;background:transparent;border:none;color:#fff;cursor:pointer;padding:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <div class="nav-links" id="homeNavLinks">
+                <a href="#features">Fonctionnalités</a>
+                <a href="#how-it-works">Comment ça marche</a>
+                <a href="#search-criteria">Critères</a>
+                <a href="/login" class="nav-btn">Se connecter</a>
+            </div>
+        </div>
     </nav>
 
     <!-- ============ HERO SECTION ============ -->
