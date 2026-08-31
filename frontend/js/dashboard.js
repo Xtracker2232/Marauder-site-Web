@@ -1884,118 +1884,14 @@ initTicketCreation();
 console.log('Dashboard charge');
 
 // ============================================
-// TICKETS - VERSION UNIQUE ET PROPRE
+// TICKET - FONCTION GLOBALE AVEC ONCLICK
 // ============================================
 
-console.log('🔵 Chargement des tickets...');
+console.log('🔵 Enregistrement de openCreateTicket');
 
-// 1. Fonction pour charger les tickets
-async function loadTickets() {
-    console.log('🔵 loadTickets');
-    const container = document.getElementById('ticketsList');
-    if (!container) {
-        console.error('❌ ticketsList non trouve');
-        return;
-    }
-    
-    container.innerHTML = '<div class="empty-state">Chargement...</div>';
-
-    try {
-        const response = await fetch(API_URL + '/api/tickets', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        const data = await response.json();
-        const tickets = data.tickets || [];
-
-        if (tickets.length === 0) {
-            container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
-            return;
-        }
-
-        container.innerHTML = tickets.map(ticket => `
-            <div class="ticket-item" onclick="viewTicket(${ticket.id})">
-                <div class="ticket-header">
-                    <span class="ticket-subject">${ticket.subject}</span>
-                    <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
-                </div>
-                <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${(ticket.message || '').substring(0, 100)}</div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('❌ Erreur:', error);
-        container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de chargement</div>';
-    }
-}
-
-// 2. Fonction pour voir un ticket
-async function viewTicket(ticketId) {
-    console.log('🔵 viewTicket:', ticketId);
-    try {
-        const response = await fetch(API_URL + '/api/tickets/' + ticketId, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await response.json();
-        const ticket = data.ticket;
-        const messages = data.messages || [];
-
-        let messagesHtml = messages.map(m => `
-            <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
-                <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
-                <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
-            </div>
-        `).join('');
-
-        showModal(ticket.subject, `
-            <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
-            <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
-            ${ticket.status !== 'closed' ? `
-                <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
-                    <input type="text" id="ticketReplyInput" placeholder="Votre reponse..." style="flex:1;padding:10px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;font-family:Arial;outline:none;">
-                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Repondre</button>
-                </div>
-            ` : '<div style="color:#6b6b6b;font-size:13px;border-top:1px solid #2a2a2a;padding-top:12px;">Ce ticket est ferme</div>'}
-        `, 'Fermer', closeModal);
-
-    } catch (error) {
-        console.error('❌ View ticket error:', error);
-        showToast('Erreur de chargement', 'error');
-    }
-}
-
-// 3. Fonction pour repondre
-async function replyTicket(ticketId) {
-    const input = document.getElementById('ticketReplyInput');
-    if (!input) return;
-    const message = input.value.trim();
-    if (!message) {
-        showToast('Veuillez entrer un message', 'warning');
-        return;
-    }
-
-    try {
-        const response = await fetch(API_URL + '/api/tickets/' + ticketId + '/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ message })
-        });
-        if (response.ok) {
-            showToast('Message envoye !', 'success');
-            viewTicket(ticketId);
-            loadTickets();
-        }
-    } catch (error) {
-        console.error('Reply error:', error);
-        showToast('Erreur', 'error');
-    }
-}
-
-// 4. Fonction pour ouvrir le modal de creation
-function openCreateTicket() {
-    console.log('🔵 openCreateTicket');
+// Fonction globale accessible par onclick
+window.openCreateTicket = function() {
+    console.log('🔵 openCreateTicket appelee !');
     
     showModal('Nouveau ticket', `
         <div class="form-group">
@@ -2007,6 +1903,7 @@ function openCreateTicket() {
             <textarea id="ticketMessage" rows="5" placeholder="Decrivez votre probleme..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;resize:vertical;"></textarea>
         </div>
     `, 'Envoyer', async function() {
+        console.log('🔵 Envoi du ticket');
         const subject = document.getElementById('ticketSubject').value.trim();
         const message = document.getElementById('ticketMessage').value.trim();
         
@@ -2026,6 +1923,7 @@ function openCreateTicket() {
             });
             
             const data = await response.json();
+            console.log('🔵 Reponse:', data);
             
             if (response.ok && data.success) {
                 showToast('Ticket cree !', 'success');
@@ -2035,55 +1933,10 @@ function openCreateTicket() {
                 showToast(data.error || 'Erreur', 'error');
             }
         } catch (error) {
-            console.error('Create ticket error:', error);
+            console.error('❌ Erreur:', error);
             showToast('Erreur reseau', 'error');
         }
     });
-}
+};
 
-// 5. Attacher le bouton UNE SEULE FOIS
-(function attachButton() {
-    const btn = document.getElementById('openTicketBtn');
-    console.log('🔵 openTicketBtn:', btn);
-    
-    if (btn) {
-        // Supprimer tous les anciens événements
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('🔵 CLIC NOUVEAU TICKET');
-            openCreateTicket();
-        });
-        console.log('✅ Bouton ticket OK');
-    } else {
-        console.error('❌ openTicketBtn non trouve');
-        // Creer le bouton
-        const header = document.querySelector('.page-header');
-        if (header) {
-            const newBtn = document.createElement('button');
-            newBtn.id = 'openTicketBtn';
-            newBtn.className = 'btn-primary';
-            newBtn.textContent = 'Nouveau ticket';
-            newBtn.style.cssText = 'width:auto;padding:10px 24px;';
-            newBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('🔵 CLIC NOUVEAU TICKET (cree)');
-                openCreateTicket();
-            });
-            header.appendChild(newBtn);
-            console.log('✅ Bouton cree');
-        }
-    }
-})();
-
-// 6. Charger les tickets au demarrage
-setTimeout(function() {
-    if (document.getElementById('page-tickets')) {
-        console.log('🔵 Chargement tickets...');
-        loadTickets();
-    }
-}, 1000);
-
-console.log('✅ Tickets charges proprement');
+console.log('✅ openCreateTicket enregistree');
