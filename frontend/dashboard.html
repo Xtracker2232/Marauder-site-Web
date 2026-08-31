@@ -13,12 +13,14 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- STYLES FORCÉS POUR SUPPRIMER TOUT BLOC NOIR -->
     <style>
         /* ============================================
            SUPPRESSION TOTALE DE TOUT FOND NOIR
            ============================================ */
         
-        /* Supprimer le cadrillage */
+        /* 1. Supprimer le cadrillage de fond */
         body.dashboard-page::before,
         body.dashboard-page::after,
         .dashboard-page::before,
@@ -30,7 +32,7 @@
             visibility: hidden !important;
         }
         
-        /* Supprimer TOUS les pseudo-elements */
+        /* 2. Supprimer TOUS les pseudo-elements */
         *::before,
         *::after {
             display: none !important;
@@ -38,92 +40,408 @@
             background: none !important;
         }
         
-        /* Fond de la page */
-        body.dashboard-page {
+        /* 3. Fond de la page */
+        body.dashboard-page,
+        .dashboard-page {
             background: #0a0a0a !important;
         }
         
-        /* Main content transparent */
+        /* 4. Main content transparent */
         .main-content {
+            background: transparent !important;
+            margin-left: 220px !important;
+            padding: 32px 40px !important;
+        }
+        
+        /* 5. Page recherche transparente */
+        #page-search {
             background: transparent !important;
         }
         
-        #page-search,
         #page-search * {
             background: transparent !important;
         }
         
+        /* 6. Sections avec fond */
         #page-search .section {
             background: #111111 !important;
             border: 1px solid #2a2a2a !important;
             border-radius: 12px !important;
+            margin-bottom: 16px !important;
+            overflow: hidden !important;
         }
         
         #page-search .section-header {
             background: #111111 !important;
+            padding: 16px 20px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        
+        #page-search .section-header h3 {
+            color: #ffffff !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
         }
         
         #page-search .section-body {
             background: transparent !important;
+            padding: 0 20px 20px 20px !important;
         }
         
-        /* Boutons */
-        .btn-primary,
+        #page-search .section-body.open {
+            display: block !important;
+        }
+        
+        /* 7. Onglets */
+        .search-tabs {
+            background: #1e1e1e !important;
+            border-radius: 10px !important;
+            padding: 4px !important;
+            display: flex !important;
+            gap: 4px !important;
+            margin-bottom: 20px !important;
+        }
+        
+        .search-tab {
+            background: transparent !important;
+            color: #a0a0a0 !important;
+            border: none !important;
+            padding: 10px 16px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            font-family: 'Inter', sans-serif !important;
+            flex: 1 !important;
+        }
+        
+        .search-tab.active {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        .search-tab:hover {
+            color: #ffffff !important;
+        }
+        
+        /* 8. Formulaire */
+        .form-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+            gap: 12px !important;
+        }
+        
+        .form-group {
+            margin-bottom: 0 !important;
+        }
+        
+        .form-group label {
+            display: block !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            color: #a0a0a0 !important;
+            margin-bottom: 6px !important;
+        }
+        
+        .form-group input,
+        .form-group select {
+            background: #1e1e1e !important;
+            border: 1px solid #2a2a2a !important;
+            border-radius: 8px !important;
+            color: #ffffff !important;
+            padding: 10px 14px !important;
+            width: 100% !important;
+            font-size: 14px !important;
+            font-family: 'Inter', sans-serif !important;
+            outline: none !important;
+            box-sizing: border-box !important;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.05) !important;
+        }
+        
+        /* 9. Boutons */
+        .search-actions {
+            display: flex !important;
+            gap: 12px !important;
+            margin-top: 20px !important;
+            padding-top: 20px !important;
+            border-top: 1px solid #2a2a2a !important;
+            background: transparent !important;
+        }
+        
         #searchBtn,
-        #searchBtnPro {
+        #searchBtnPro,
+        .search-actions .btn-primary {
             background: #ffffff !important;
             color: #000000 !important;
             border: none !important;
+            padding: 10px 28px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            font-family: 'Inter', sans-serif !important;
+            cursor: pointer !important;
+            transition: background 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            width: auto !important;
         }
         
-        .btn-primary:hover,
         #searchBtn:hover,
-        #searchBtnPro:hover {
+        #searchBtnPro:hover,
+        .search-actions .btn-primary:hover {
             background: #cccccc !important;
             color: #000000 !important;
         }
         
-        .btn-secondary,
         #clearBtn,
-        #clearBtnPro {
+        #clearBtnPro,
+        .search-actions .btn-secondary {
             background: transparent !important;
             color: #a0a0a0 !important;
             border: 1px solid #2a2a2a !important;
+            padding: 10px 28px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            font-family: 'Inter', sans-serif !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: auto !important;
         }
         
-        /* Inputs */
-        input, select {
-            background: #1e1e1e !important;
-            border: 1px solid #2a2a2a !important;
+        #clearBtn:hover,
+        #clearBtnPro:hover,
+        .search-actions .btn-secondary:hover {
+            background: rgba(255,255,255,0.05) !important;
             color: #ffffff !important;
         }
         
-        /* Sidebar */
+        /* 10. Sidebar */
         .sidebar {
+            width: 220px !important;
             background: #111111 !important;
             border-right: 1px solid #2a2a2a !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            z-index: 100 !important;
+        }
+        
+        .sidebar-header {
+            padding: 16px 16px !important;
+            border-bottom: 1px solid #2a2a2a !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+        
+        .sidebar-header .logo {
+            width: 28px !important;
+            height: 28px !important;
+            color: #ffffff !important;
+            opacity: 0.8 !important;
+        }
+        
+        .sidebar-header span {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-nav {
+            list-style: none !important;
+            padding: 8px 8px !important;
+            flex: 1 !important;
+        }
+        
+        .sidebar-nav li {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 12px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            color: #a0a0a0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: background 0.2s, color 0.2s !important;
+        }
+        
+        .sidebar-nav li:hover {
+            background: rgba(255,255,255,0.03) !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-nav li.active {
+            background: rgba(255,255,255,0.05) !important;
+            color: #ffffff !important;
+        }
+        
+        .sidebar-nav li svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .sidebar-footer {
+            padding: 12px 8px !important;
+            border-top: 1px solid #2a2a2a !important;
+        }
+        
+        .sidebar-footer button {
+            width: 100% !important;
+            padding: 10px 12px !important;
+            background: transparent !important;
+            border: 1px solid #2a2a2a !important;
+            border-radius: 6px !important;
+            color: #a0a0a0 !important;
+            font-size: 13px !important;
+            font-family: 'Inter', sans-serif !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+        
+        .sidebar-footer button:hover {
+            background: rgba(239,68,68,0.1) !important;
+            color: #ef4444 !important;
+            border-color: rgba(239,68,68,0.2) !important;
+        }
+        
+        .sidebar-footer button svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* 11. Support toggle */
+        .support-toggle {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 12px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            color: #a0a0a0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: background 0.2s, color 0.2s !important;
+            margin-top: 4px !important;
+        }
+        
+        .support-toggle:hover {
+            background: rgba(255,255,255,0.03) !important;
+            color: #ffffff !important;
+        }
+        
+        .support-toggle svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .support-arrow {
+            width: 14px !important;
+            height: 14px !important;
+            transition: transform 0.3s ease !important;
+            margin-left: auto !important;
+        }
+        
+        .support-submenu {
+            padding-left: 32px !important;
+            list-style: none !important;
+            margin-top: 4px !important;
+        }
+        
+        .support-submenu li {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            color: #a0a0a0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: background 0.2s, color 0.2s !important;
+        }
+        
+        .support-submenu li:hover {
+            background: rgba(255,255,255,0.03) !important;
+            color: #ffffff !important;
+        }
+        
+        .support-submenu li svg {
+            width: 18px !important;
+            height: 18px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* 12. Mobile */
+        .mobile-menu-btn {
+            display: none !important;
+            position: fixed !important;
+            top: 12px !important;
+            left: 12px !important;
+            z-index: 1001 !important;
+            background: #111111 !important;
+            border: 1px solid #2a2a2a !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 8px 10px !important;
+            cursor: pointer !important;
+            width: 44px !important;
+            height: 44px !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        .sidebar-backdrop {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0,0,0,0.5) !important;
+            z-index: 999 !important;
+        }
+        
+        .sidebar-backdrop.active {
+            display: block !important;
         }
         
         /* ============================================
-           MOBILE
+           MOBILE RESPONSIVE
            ============================================ */
         @media screen and (max-width: 768px) {
             .mobile-menu-btn {
                 display: flex !important;
-                position: fixed !important;
-                top: 12px !important;
-                left: 12px !important;
-                z-index: 1001 !important;
-                background: #111111 !important;
-                border: 1px solid #2a2a2a !important;
-                border-radius: 10px !important;
-                color: #ffffff !important;
-                padding: 8px 10px !important;
-                cursor: pointer !important;
-                width: 44px !important;
-                height: 44px !important;
-                align-items: center !important;
-                justify-content: center !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 16px 12px !important;
+                padding-top: 16px !important;
             }
             
             .sidebar {
@@ -143,23 +461,10 @@
             
             .sidebar-backdrop {
                 display: none !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                background: rgba(0,0,0,0.5) !important;
-                z-index: 999 !important;
             }
             
             .sidebar-backdrop.active {
                 display: block !important;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-                padding: 16px 12px !important;
-                padding-top: 16px !important;
             }
             
             .page-header {
@@ -169,8 +474,27 @@
                 gap: 12px !important;
             }
             
+            .page-header h2 {
+                font-size: 22px !important;
+            }
+            
+            .search-tabs {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                gap: 4px !important;
+                padding: 4px !important;
+            }
+            
+            .search-tab {
+                flex: 0 0 auto !important;
+                padding: 8px 14px !important;
+                font-size: 12px !important;
+                white-space: nowrap !important;
+            }
+            
             .form-grid {
                 grid-template-columns: 1fr !important;
+                gap: 10px !important;
             }
             
             .search-actions {
@@ -189,6 +513,13 @@
             
             .lookup-form {
                 flex-direction: column !important;
+                gap: 10px !important;
+                padding: 16px !important;
+            }
+            
+            .lookup-form .form-group {
+                min-width: unset !important;
+                width: 100% !important;
             }
             
             .lookup-form .btn-primary {
@@ -527,10 +858,10 @@
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- ============ MAIN CONTENT ============ -->
-    <main class="main-content" style="background:transparent !important;">
+    <main class="main-content">
 
         <!-- ===== PAGE RECHERCHE ===== -->
-        <section id="page-search" class="page active" style="background:transparent !important;">
+        <section id="page-search" class="page active">
             <header class="page-header">
                 <h2>Recherche</h2>
                 <div class="user-info">
@@ -543,7 +874,7 @@
                 <button class="search-tab" data-tab="pro">Recherche Pro</button>
             </div>
 
-            <div id="tab-french" class="search-tab-content active" style="background:transparent !important;">
+            <div id="tab-french" class="search-tab-content active">
                 <div class="section">
                     <div class="section-header" data-section="identity">
                         <h3>Identite</h3>
@@ -551,7 +882,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body open" style="background:transparent !important;">
+                    <div class="section-body open">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Nom</label>
@@ -580,7 +911,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Jour</label>
@@ -621,7 +952,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Email</label>
@@ -650,7 +981,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Adresse</label>
@@ -675,7 +1006,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Steam ID</label>
@@ -712,7 +1043,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>NIR (Secu)</label>
@@ -734,7 +1065,7 @@
                     </div>
                 </div>
 
-                <div class="search-actions" style="background:transparent !important;">
+                <div class="search-actions">
                     <button id="searchBtn" class="btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <circle cx="11" cy="11" r="8"/>
@@ -752,7 +1083,7 @@
                 </div>
             </div>
 
-            <div id="tab-pro" class="search-tab-content" style="background:transparent !important;">
+            <div id="tab-pro" class="search-tab-content">
                 <div class="section">
                     <div class="section-header" data-section="identity">
                         <h3>Identite</h3>
@@ -760,7 +1091,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body open" style="background:transparent !important;">
+                    <div class="section-body open">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Nom</label>
@@ -797,7 +1128,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Email</label>
@@ -822,7 +1153,7 @@
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </div>
-                    <div class="section-body" style="background:transparent !important;">
+                    <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>SIRET</label>
@@ -852,7 +1183,7 @@
                     </div>
                 </div>
 
-                <div class="search-actions" style="background:transparent !important;">
+                <div class="search-actions">
                     <button id="searchBtnPro" class="btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                             <circle cx="11" cy="11" r="8"/>
