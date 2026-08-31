@@ -2,14 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marauder - Dashboard</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
-    <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
     <style>
-        /* ============================================
-           RESET COMPLET
-           ============================================ */
+        /* TOUT EN GRIS CLAIR POUR VOIR */
         * {
             margin: 0;
             padding: 0;
@@ -17,217 +13,62 @@
         }
         
         body {
-            background: #0a0a0a !important;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #ffffff;
+            background: #cccccc !important;
+            font-family: Arial, sans-serif;
+            color: #000000 !important;
             min-height: 100vh;
+            padding: 20px;
         }
         
-        body::before,
-        body::after {
-            display: none !important;
-            content: none !important;
-        }
-        
-        /* ============================================
-           SIDEBAR
-           ============================================ */
-        .sidebar {
-            width: 220px;
-            background: #111111;
-            border-right: 1px solid #2a2a2a;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            padding: 16px 12px;
-            overflow-y: auto;
-        }
-        
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #2a2a2a;
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-header .logo {
-            width: 28px;
-            height: 28px;
-            color: #ffffff;
-        }
-        
-        .sidebar-header span {
-            font-size: 18px;
-            font-weight: 800;
-            color: #ffffff;
-        }
-        
-        .sidebar-nav {
-            list-style: none;
-        }
-        
-        .sidebar-nav li {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #a0a0a0;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .sidebar-nav li:hover {
-            background: rgba(255,255,255,0.03);
-            color: #ffffff;
-        }
-        
-        .sidebar-nav li.active {
-            background: rgba(255,255,255,0.05);
-            color: #ffffff;
-        }
-        
-        .sidebar-nav li svg {
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
-        }
-        
-        .sidebar-footer {
-            padding-top: 12px;
-            border-top: 1px solid #2a2a2a;
-            margin-top: 12px;
-        }
-        
-        .sidebar-footer button {
-            width: 100%;
-            padding: 10px 12px;
-            background: transparent;
-            border: 1px solid #2a2a2a;
-            border-radius: 6px;
-            color: #a0a0a0;
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-        }
-        
-        .sidebar-footer button:hover {
-            background: rgba(239,68,68,0.1);
-            color: #ef4444;
-            border-color: rgba(239,68,68,0.2);
-        }
-        
-        .sidebar-footer button svg {
-            width: 18px;
-            height: 18px;
-        }
-        
-        /* ============================================
-           MAIN CONTENT
-           ============================================ */
         .main-content {
-            margin-left: 220px;
-            padding: 32px 40px;
-            background: #0a0a0a;
-            min-height: 100vh;
-        }
-        
-        /* ============================================
-           PAGE
-           ============================================ */
-        .page {
-            display: none;
-        }
-        
-        .page.active {
-            display: block;
+            background: #ffffff !important;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #000000;
         }
         
         .page-header h2 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #ffffff;
+            color: #000000 !important;
+            font-size: 24px;
         }
         
-        /* ============================================
-           RECHERCHE
-           ============================================ */
-        .search-tabs {
-            background: #1e1e1e;
-            border-radius: 10px;
-            padding: 4px;
-            display: flex;
-            gap: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .search-tab {
-            flex: 1;
-            padding: 10px 16px;
-            background: transparent;
-            border: none;
-            border-radius: 8px;
-            color: #a0a0a0;
-            font-size: 13px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-        }
-        
-        .search-tab.active {
-            background: #ffffff;
-            color: #000000;
-        }
-        
-        .search-tab-content {
-            display: none;
-        }
-        
-        .search-tab-content.active {
-            display: block;
+        .user-info {
+            color: #000000 !important;
         }
         
         .section {
-            background: #111111;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
+            background: #eeeeee !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px;
             margin-bottom: 16px;
-            overflow: hidden;
+            padding: 16px;
         }
         
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
             cursor: pointer;
         }
         
         .section-header h3 {
-            font-size: 15px;
-            font-weight: 600;
-            color: #ffffff;
+            color: #000000 !important;
+            font-size: 16px;
         }
         
         .section-body {
-            padding: 0 20px 20px 20px;
             display: none;
+            padding-top: 12px;
         }
         
         .section-body.open {
@@ -242,151 +83,124 @@
         
         .form-group label {
             display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #a0a0a0;
-            margin-bottom: 6px;
+            color: #000000 !important;
+            font-weight: 600;
+            margin-bottom: 4px;
         }
         
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 10px 14px;
-            background: #1e1e1e;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            color: #ffffff;
+            padding: 8px 12px;
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 6px;
+            color: #000000 !important;
             font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
         }
         
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #ffffff;
+        .search-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .search-tab {
+            padding: 8px 16px;
+            background: #dddddd;
+            border: 2px solid #000000;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #000000;
+            font-weight: 600;
+        }
+        
+        .search-tab.active {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        .search-tab-content {
+            display: none;
+        }
+        
+        .search-tab-content.active {
+            display: block;
         }
         
         .search-actions {
             display: flex;
             gap: 12px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #2a2a2a;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid #000000;
         }
         
         .btn-primary {
-            background: #ffffff;
-            color: #000000;
+            background: #000000 !important;
+            color: #ffffff !important;
             border: none;
-            padding: 10px 28px;
-            border-radius: 8px;
+            padding: 10px 24px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
-            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .btn-primary:hover {
-            background: #cccccc;
         }
         
         .btn-secondary {
-            background: transparent;
-            color: #a0a0a0;
-            border: 1px solid #2a2a2a;
-            padding: 10px 28px;
-            border-radius: 8px;
+            background: transparent !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+            padding: 10px 24px;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
+            font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.05);
-            color: #ffffff;
         }
         
         #searchBtn,
         #searchBtnPro {
-            background: #ffffff;
-            color: #000000;
+            background: #000000 !important;
+            color: #ffffff !important;
             border: none;
-            padding: 10px 28px;
-            border-radius: 8px;
+            padding: 10px 24px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
-            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        #searchBtn:hover,
-        #searchBtnPro:hover {
-            background: #cccccc;
         }
         
         #clearBtn,
         #clearBtnPro {
-            background: transparent;
-            color: #a0a0a0;
-            border: 1px solid #2a2a2a;
-            padding: 10px 28px;
-            border-radius: 8px;
+            background: transparent !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+            padding: 10px 24px;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
+            font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
-        #clearBtn:hover,
-        #clearBtnPro:hover {
-            background: rgba(255,255,255,0.05);
-            color: #ffffff;
-        }
-        
-        /* ============================================
-           RESULTATS
-           ============================================ */
         .result-card-full {
-            background: #111111;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 12px;
-        }
-        
-        .result-header-full {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #2a2a2a;
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px;
+            padding: 16px;
             margin-bottom: 12px;
         }
         
         .result-name-full {
-            font-size: 20px;
+            color: #000000 !important;
+            font-size: 18px;
             font-weight: 700;
-            color: #ffffff;
-            cursor: pointer;
         }
         
         .result-fields {
             display: none;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 8px 16px;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
         }
         
         .result-fields.open {
@@ -394,91 +208,73 @@
         }
         
         .result-field .field-label {
+            color: #666666;
             font-size: 11px;
-            font-weight: 500;
-            color: #6b6b6b;
             text-transform: uppercase;
         }
         
         .result-field .field-value {
+            color: #000000 !important;
             font-size: 14px;
-            color: #a0a0a0;
         }
         
         .result-field .field-value.highlight {
-            color: #ffffff;
+            color: #000000 !important;
+            font-weight: 700;
         }
         
         .result-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            padding-top: 12px;
-            border-top: 1px solid #2a2a2a;
             margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid #000000;
         }
         
         .btn-deep {
-            padding: 6px 16px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid #2a2a2a;
-            border-radius: 6px;
-            color: #a0a0a0;
+            padding: 4px 12px;
+            background: #eeeeee;
+            border: 2px solid #000000;
+            border-radius: 4px;
+            color: #000000;
             font-size: 12px;
-            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         
-        .btn-deep:hover {
-            background: rgba(255,255,255,0.05);
-            color: #ffffff;
-        }
-        
-        /* ============================================
-           FICHES
-           ============================================ */
         .fiche-item {
-            background: #111111;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            padding: 16px 20px;
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px;
+            padding: 16px;
             margin-bottom: 12px;
         }
         
-        .fiche-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
         .fiche-name {
+            color: #000000 !important;
             font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
+            font-weight: 700;
         }
         
         .fiche-count {
+            color: #666666;
             font-size: 12px;
-            color: #6b6b6b;
         }
         
         .fiche-persons {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
+            margin-top: 8px;
         }
         
         .fiche-person {
-            font-size: 13px;
-            color: #a0a0a0;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid #2a2a2a;
+            color: #000000 !important;
+            background: #eeeeee;
+            border: 1px solid #000000;
             padding: 2px 10px;
             border-radius: 4px;
+            font-size: 13px;
         }
         
         .fiche-actions {
@@ -487,52 +283,129 @@
             flex-wrap: wrap;
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid #2a2a2a;
+            border-top: 2px solid #000000;
         }
         
         .fiche-btn {
             padding: 4px 12px;
             background: transparent;
-            border: 1px solid #2a2a2a;
-            border-radius: 6px;
-            color: #a0a0a0;
+            border: 2px solid #000000;
+            border-radius: 4px;
+            color: #000000;
             font-size: 12px;
-            font-family: 'Inter', sans-serif;
             cursor: pointer;
         }
         
         .fiche-btn:hover {
-            background: rgba(255,255,255,0.03);
+            background: #000000;
             color: #ffffff;
         }
         
-        /* ============================================
-           MOBILE
-           ============================================ */
+        .fiche-btn.danger:hover {
+            background: #ff0000;
+            color: #ffffff;
+            border-color: #ff0000;
+        }
+        
+        .history-item {
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-date {
+            color: #000000 !important;
+            font-size: 13px;
+        }
+        
+        .history-result-count {
+            color: #000000 !important;
+            font-weight: 700;
+        }
+        
+        .history-footer {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 2px solid #000000;
+        }
+        
+        .history-replay {
+            padding: 4px 12px;
+            background: transparent;
+            border: 2px solid #000000;
+            border-radius: 4px;
+            color: #000000;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .lookup-form {
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .lookup-form .form-group {
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .lookup-form .btn-primary {
+            background: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        .profile-card {
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+        }
+        
+        .profile-card .profile-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #000000;
+        }
+        
+        .profile-card .profile-row:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-card .label {
+            color: #666666;
+        }
+        
+        .profile-card .value {
+            color: #000000 !important;
+            font-weight: 700;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #000000 !important;
+            font-size: 16px;
+        }
+        
+        /* Mobile */
         @media screen and (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-                width: 280px;
-                z-index: 1000;
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 16px 12px;
-            }
-            
-            .page-header {
-                padding-left: 48px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-            
             .form-grid {
                 grid-template-columns: 1fr;
             }
@@ -555,55 +428,181 @@
                 flex-direction: column;
             }
             
+            .result-fields.open {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
             .result-header-full {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
             }
-            
-            .result-fields.open {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .mobile-menu-btn {
-            display: none;
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 1001;
-            background: #111111;
-            border: 1px solid #2a2a2a;
-            border-radius: 10px;
-            color: #ffffff;
-            padding: 8px 10px;
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        @media screen and (max-width: 768px) {
-            .mobile-menu-btn {
-                display: flex !important;
-            }
-        }
-        
-        .sidebar-backdrop {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        
-        .sidebar-backdrop.active {
-            display: block;
         }
     </style>
 </head>
 <body>
+
+    <div class="main-content">
+        <!-- PAGE RECHERCHE -->
+        <div class="page active">
+            <header class="page-header">
+                <h2>Recherche</h2>
+                <div class="user-info">Utilisateur: Admin</div>
+            </header>
+
+            <div class="search-tabs">
+                <button class="search-tab active" data-tab="french">Recherche francaise</button>
+                <button class="search-tab" data-tab="pro">Recherche Pro</button>
+            </div>
+
+            <div id="tab-french" class="search-tab-content active">
+                <div class="section">
+                    <div class="section-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <h3>Identite</h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="section-body open">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" placeholder="Dupont">
+                            </div>
+                            <div class="form-group">
+                                <label>Prenom</label>
+                                <input type="text" placeholder="Jean">
+                            </div>
+                            <div class="form-group">
+                                <label>Nom de naissance</label>
+                                <input type="text" placeholder="Martin">
+                            </div>
+                            <div class="form-group">
+                                <label>Nom affiche</label>
+                                <input type="text" placeholder="Jean Dupont">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <h3>Contact</h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" placeholder="jean@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Telephone</label>
+                                <input type="tel" placeholder="0612345678">
+                            </div>
+                            <div class="form-group">
+                                <label>Nom d'utilisateur</label>
+                                <input type="text" placeholder="jean_d">
+                            </div>
+                            <div class="form-group">
+                                <label>Adresse IP</label>
+                                <input type="text" placeholder="192.168.1.1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <h3>Localisation</h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Adresse</label>
+                                <input type="text" placeholder="10 rue de la Paix">
+                            </div>
+                            <div class="form-group">
+                                <label>Code postal</label>
+                                <input type="text" placeholder="75001">
+                            </div>
+                            <div class="form-group">
+                                <label>Ville</label>
+                                <input type="text" placeholder="Paris">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-actions">
+                    <button id="searchBtn" class="btn-primary">Rechercher</button>
+                    <button id="clearBtn" class="btn-secondary">Effacer</button>
+                </div>
+            </div>
+
+            <div id="tab-pro" class="search-tab-content">
+                <div class="section">
+                    <div class="section-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                        <h3>Identite Pro</h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="section-body open">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" placeholder="Dupont">
+                            </div>
+                            <div class="form-group">
+                                <label>Prenom</label>
+                                <input type="text" placeholder="Jean">
+                            </div>
+                            <div class="form-group">
+                                <label>Societe</label>
+                                <input type="text" placeholder="Entreprise SAS">
+                            </div>
+                            <div class="form-group">
+                                <label>Profession</label>
+                                <input type="text" placeholder="Developpeur">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-actions">
+                    <button id="searchBtnPro" class="btn-primary">Rechercher</button>
+                    <button id="clearBtnPro" class="btn-secondary">Effacer</button>
+                </div>
+            </div>
+
+            <div id="searchResults" class="results-container"></div>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="border-top:2px solid #000000;padding:16px;margin-top:40px;text-align:center;color:#000000;">
+            <a href="/cgu.html" style="color:#000000;text-decoration:none;">CGU</a>
+            <span> · </span>
+            <span>Created by Index</span>
+        </div>
+    </div>
+
+    <script>
+        // Tabs
+        document.querySelectorAll('.search-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
+                const tabId = this.dataset.tab;
+                const target = document.getElementById(`tab-${tabId}`);
+                if (target) target.classList.add('active');
+            });
+        });
+    </script>
+
+</body>
+</html>
