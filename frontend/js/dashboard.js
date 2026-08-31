@@ -241,7 +241,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
     if (Object.keys(query).length <= 1) {
         const container = document.getElementById('searchResults');
-        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère</div>';
+        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critere</div>';
         return;
     }
 
@@ -278,7 +278,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 if (results.length > 0) {
                     displayResults(container, results);
                 } else {
-                    container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+                    container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
                 }
             }
         }, 1500);
@@ -293,7 +293,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
 
 // ============ SEARCH PRO ============
 document.getElementById('searchBtnPro').addEventListener('click', async () => {
-    // Même chose que search mais avec les champs Pro
     const query = {
         flexible: true,
         per_page: 100,
@@ -319,7 +318,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
 
     if (Object.keys(query).length <= 1) {
         const container = document.getElementById('searchResults');
-        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critère</div>';
+        if (container) container.innerHTML = '<div class="empty-state" style="color:var(--warning);">Veuillez remplir au moins un critere</div>';
         return;
     }
 
@@ -356,7 +355,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
                 if (results.length > 0) {
                     displayResults(container, results);
                 } else {
-                    container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+                    container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
                 }
             }
         }, 1500);
@@ -397,7 +396,7 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
                 if (data.data?.results?.length > 0) {
                     displayLookupResults(container, data.data.results);
                 } else {
-                    container.innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
+                    container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
                 }
             }
         }, 1500);
@@ -426,7 +425,7 @@ function displayResults(container, results) {
     const counterHtml = `
         <div class="results-counter">
             <div class="count">
-                <strong>${results.length}</strong> résultat${results.length > 1 ? 's' : ''} trouvé${results.length > 1 ? 's' : ''}
+                <strong>${results.length}</strong> resultat${results.length > 1 ? 's' : ''} trouve${results.length > 1 ? 's' : ''}
             </div>
             <div class="badge">${results.length > 1 ? 'Plusieurs correspondances' : 'Correspondance unique'}</div>
         </div>
@@ -462,11 +461,11 @@ function displayResults(container, results) {
         if (person.famille && person.famille.length > 0) {
             familleHtml = `
                 <div class="family-tree">
-                    <div class="tree-title">Famille associée (${person.famille.length})</div>
+                    <div class="tree-title">Famille associee (${person.famille.length})</div>
                     ${person.famille.map(m => `
                         <div class="tree-item">
                             <span>${m.prenom} ${m.nom_famille}${m.date_naissance ? ` · ${m.date_naissance}` : ''}</span>
-                            <span class="relation">${m.lien || 'Lié'}</span>
+                            <span class="relation">${m.lien || 'Lie'}</span>
                         </div>
                         ${m.email ? `<div class="tree-sub">${m.email}</div>` : ''}
                         ${m.telephone ? `<div class="tree-sub">${formatPhone(m.telephone)}</div>` : ''}
@@ -482,6 +481,17 @@ function displayResults(container, results) {
                     <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 + Fiche
+            </button>
+        `;
+
+        const investigateBtn = `
+            <button class="btn-deep" onclick="openInvestigation(${index})" style="border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <path d="M11 7v4l3 3"/>
+                </svg>
+                Investiguer
             </button>
         `;
         
@@ -504,15 +514,16 @@ function displayResults(container, results) {
                 </div>
                 <div class="result-actions">
                     <button class="btn-deep" onclick="toggleDeep(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                             <circle cx="11" cy="11" r="8"/>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
                         Approfondir
                     </button>
+                    ${investigateBtn}
                     ${ficheBtn}
                     <button class="btn-deep" onclick="copyFullCard(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                         </svg>
@@ -531,7 +542,7 @@ function displayResults(container, results) {
                 </div>
                 <div class="deep-panel" id="deep-${index}">
                     <h4>Approfondir</h4>
-                    ${familleHtml || '<div style="color:var(--text-muted);font-size:13px;">Aucun lien familial trouvé</div>'}
+                    ${familleHtml || '<div style="color:var(--text-muted);font-size:13px;">Aucun lien familial trouve</div>'}
                 </div>
             </div>
         `;
@@ -546,7 +557,7 @@ function displayLookupResults(container, results) {
     const counterHtml = `
         <div class="results-counter">
             <div class="count">
-                <strong>${results.length}</strong> enregistrement${results.length > 1 ? 's' : ''} trouvé${results.length > 1 ? 's' : ''}
+                <strong>${results.length}</strong> enregistrement${results.length > 1 ? 's' : ''} trouve${results.length > 1 ? 's' : ''}
             </div>
             <div class="badge">Lookup brut</div>
         </div>
@@ -583,7 +594,7 @@ function displayLookupResults(container, results) {
                 <div class="result-fields open">${fieldsHtml}</div>
                 <div class="result-actions">
                     <button class="btn-deep" onclick="copyLookupCard(${index})">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                         </svg>
@@ -597,6 +608,278 @@ function displayLookupResults(container, results) {
     container.innerHTML = counterHtml + cardsHtml;
     window._lookupData = results;
 }
+
+// ========================================
+// ============ INVESTIGATION ============
+// ========================================
+
+let investigationData = null;
+
+function openInvestigation(index) {
+    const data = window._resultsData;
+    if (!data || !data[index]) {
+        showToast('Personne introuvable', 'error');
+        return;
+    }
+
+    investigationData = data[index];
+    const person = investigationData;
+
+    const overlay = document.getElementById('investigationOverlay');
+    if (!overlay) return;
+
+    // Nom
+    const fullName = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
+    document.getElementById('investigationName').textContent = `Investigation - ${fullName}`;
+
+    // Ville
+    const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
+    document.getElementById('investigationCityLabel').textContent = ville;
+
+    // Confidence
+    const confidence = person._confidence || 0;
+    const confEl = document.getElementById('investigationConfidence');
+    confEl.textContent = `${confidence}%`;
+    confEl.className = `investigation-confidence ${confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low'}`;
+
+    // Position sur la carte (simulation)
+    const pin = document.getElementById('investigationMapPin');
+    if (pin) {
+        const cities = {
+            'paris': { cx: 300, cy: 190 },
+            'lyon': { cx: 320, cy: 310 },
+            'marseille': { cx: 340, cy: 420 },
+            'toulouse': { cx: 260, cy: 380 },
+            'bordeaux': { cx: 190, cy: 360 },
+            'lille': { cx: 240, cy: 120 },
+            'nice': { cx: 390, cy: 390 },
+            'nantes': { cx: 170, cy: 280 },
+            'strasbourg': { cx: 400, cy: 180 },
+            'montpellier': { cx: 300, cy: 380 },
+            'rennes': { cx: 160, cy: 230 },
+            'grenoble': { cx: 350, cy: 330 },
+            'toulon': { cx: 360, cy: 410 },
+            'angers': { cx: 190, cy: 260 },
+            'dijon': { cx: 350, cy: 240 },
+            'le havre': { cx: 210, cy: 170 },
+            'reims': { cx: 320, cy: 160 },
+            'saint-etienne': { cx: 310, cy: 320 },
+            'limoges': { cx: 220, cy: 310 },
+            'clermont-ferrand': { cx: 270, cy: 290 },
+            'amiens': { cx: 260, cy: 140 },
+            'perpignan': { cx: 290, cy: 430 },
+            'caen': { cx: 190, cy: 190 },
+            'orleans': { cx: 270, cy: 230 },
+            'metz': { cx: 370, cy: 170 },
+            'besancon': { cx: 380, cy: 220 },
+            'mulhouse': { cx: 410, cy: 210 },
+            'valence': { cx: 330, cy: 340 },
+            'nimes': { cx: 290, cy: 370 },
+            'avignon': { cx: 310, cy: 400 },
+            'poitiers': { cx: 210, cy: 290 },
+            'la rochelle': { cx: 160, cy: 300 },
+        };
+        const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        let found = false;
+        for (const [key, pos] of Object.entries(cities)) {
+            if (cityKey.includes(key) || key.includes(cityKey)) {
+                pin.setAttribute('cx', pos.cx);
+                pin.setAttribute('cy', pos.cy);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            pin.setAttribute('cx', 300);
+            pin.setAttribute('cy', 300);
+        }
+    }
+
+    // Infos
+    const grid = document.getElementById('investigationInfoGrid');
+    if (grid) {
+        let html = '';
+        const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
+        const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance', 'profession', 'societe', 'fonction'];
+        
+        const sortedKeys = Object.keys(person).sort((a, b) => {
+            const aImp = importantKeys.includes(a) ? 0 : 1;
+            const bImp = importantKeys.includes(b) ? 0 : 1;
+            return aImp - bImp;
+        });
+
+        sortedKeys.forEach(key => {
+            if (key.startsWith('_') || excludedKeys.includes(key)) return;
+            const value = person[key];
+            if (!value) return;
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            let displayValue = value;
+            if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+            const isImportant = importantKeys.includes(key);
+            html += `
+                <div class="investigation-info-item ${isImportant ? 'important' : ''}">
+                    <span class="investigation-info-label">${label}</span>
+                    <span class="investigation-info-value">${displayValue}</span>
+                </div>
+            `;
+        });
+
+        // Famille
+        if (person.famille && person.famille.length > 0) {
+            html += `
+                <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid var(--border-color);padding-top:12px;margin-top:4px;">
+                    <span class="investigation-info-label" style="color:var(--text-muted);font-weight:600;">Famille (${person.famille.length})</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+                        ${person.famille.map(m => `
+                            <span style="background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;padding:4px 12px;font-size:13px;color:var(--text-secondary);">
+                                ${m.prenom || ''} ${m.nom_famille || ''}
+                                ${m.lien ? ` · ${m.lien}` : ''}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Sources
+        if (person._sources && person._sources.length > 0) {
+            html += `
+                <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid var(--border-color);padding-top:12px;margin-top:4px;">
+                    <span class="investigation-info-label" style="color:var(--text-muted);font-weight:600;">Sources</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+                        ${person._sources.map(s => `
+                            <span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border:1px solid var(--border-color);padding:2px 10px;border-radius:12px;">${s}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        grid.innerHTML = html;
+    }
+
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// ============ FERMER INVESTIGATION ============
+function closeInvestigation() {
+    const overlay = document.getElementById('investigationOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// ============ BOUTONS INVESTIGATION ============
+document.getElementById('investigationBack')?.addEventListener('click', closeInvestigation);
+document.getElementById('investigationClose')?.addEventListener('click', closeInvestigation);
+
+document.getElementById('investigationAddFiche')?.addEventListener('click', function() {
+    if (!investigationData) {
+        showToast('Aucune donnee', 'error');
+        return;
+    }
+    if (fichesData.length === 0) {
+        showToast('Aucune fiche existante', 'warning');
+        return;
+    }
+    const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
+    showModal('Ajouter a une fiche', `
+        <div class="form-group">
+            <label>Selectionner une fiche</label>
+            <select id="ficheSelectInvestigation">
+                ${selectOptions}
+                <option value="new">+ Creer une nouvelle fiche</option>
+            </select>
+        </div>
+        <div id="newFicheNameContainerInvestigation" style="display:none;">
+            <div class="form-group">
+                <label>Nom de la nouvelle fiche</label>
+                <input type="text" id="newFicheNameInvestigation" placeholder="Nom de la fiche">
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);">Personne : ${investigationData.prenom || ''} ${investigationData.nom_famille || 'Inconnu'}</div>
+    `, 'Ajouter', async () => {
+        const select = document.getElementById('ficheSelectInvestigation');
+        if (!select) return;
+        const ficheId = select.value;
+        if (ficheId === 'new') {
+            const nameInput = document.getElementById('newFicheNameInvestigation');
+            const name = nameInput?.value?.trim();
+            if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
+            try {
+                const createResponse = await fetch(`${API_URL}/api/fiches`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                const createData = await createResponse.json();
+                if (createData.fiche) {
+                    await addPersonToFiche(createData.fiche.id, investigationData);
+                    loadFiches();
+                    showToast('Personne ajoutee !', 'success');
+                }
+            } catch (error) { showToast('Erreur', 'error'); }
+        } else {
+            await addPersonToFiche(parseInt(ficheId), investigationData);
+            loadFiches();
+            showToast('Personne ajoutee !', 'success');
+        }
+    });
+
+    document.getElementById('ficheSelectInvestigation')?.addEventListener('change', function() {
+        const container = document.getElementById('newFicheNameContainerInvestigation');
+        if (container) container.style.display = this.value === 'new' ? 'block' : 'none';
+    });
+});
+
+document.getElementById('investigationCopy')?.addEventListener('click', function() {
+    if (!investigationData) {
+        showToast('Aucune donnee', 'error');
+        return;
+    }
+    const person = investigationData;
+    let text = '=== Marauder Investigation ===\n\n';
+    Object.entries(person)
+        .filter(([key]) => !key.startsWith('_') && key !== 'famille')
+        .forEach(([key, value]) => {
+            if (!value) return;
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            let displayValue = value;
+            if (key === 'telephone' || key === 'mobile') displayValue = formatPhone(value);
+            text += `${label}: ${displayValue}\n`;
+        });
+    if (person.famille && person.famille.length > 0) {
+        text += '\n=== Famille ===\n';
+        person.famille.forEach(m => {
+            text += `${m.prenom || ''} ${m.nom_famille || ''}`;
+            if (m.lien) text += ` (${m.lien})`;
+            text += '\n';
+        });
+    }
+    if (person._sources) text += `\nSources: ${person._sources.join(', ')}`;
+    text += '\n\n--- by Marauder ---';
+    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
+});
+
+document.getElementById('investigationGraphe')?.addEventListener('click', function() {
+    if (!investigationData) {
+        showToast('Aucune donnee', 'error');
+        return;
+    }
+    if (typeof window.addPersonToGrapheWithFamily === 'function') {
+        window.addPersonToGrapheWithFamily(investigationData);
+        closeInvestigation();
+        const grapheLi = document.querySelector('[data-page="graphe"]');
+        if (grapheLi) grapheLi.click();
+    } else {
+        showToast('Module graphe indisponible', 'warning');
+    }
+});
 
 // ============ COPY ============
 function copyFullCard(index) {
@@ -614,25 +897,25 @@ function copyFullCard(index) {
             text += `${label}: ${displayValue}\n`;
         });
     if (person.famille && person.famille.length > 0) {
-        text += '\n=== Famille associée ===\n';
+        text += '\n=== Famille associee ===\n';
         person.famille.forEach(m => {
             text += `${m.prenom} ${m.nom_famille}`;
             if (m.date_naissance) text += ` (${m.date_naissance})`;
             if (m.email) text += ` - ${m.email}`;
             if (m.telephone) text += ` - ${formatPhone(m.telephone)}`;
-            text += ` - ${m.lien || 'Lié'}\n`;
+            text += ` - ${m.lien || 'Lie'}\n`;
         });
     }
     if (person._sources) text += `\nSources: ${person._sources.join(', ')}`;
     text += '\n\n--- by Marauder ---';
-    navigator.clipboard.writeText(text).then(() => showToast('Copié !', 'success')).catch(() => {
+    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success')).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast('Copié !', 'success');
+        showToast('Copie !', 'success');
     });
 }
 
@@ -652,14 +935,14 @@ function copyLookupCard(index) {
         });
     if (row._source_db) text += `\nSource: ${row._source_db}`;
     text += '\n\n--- by Marauder ---';
-    navigator.clipboard.writeText(text).then(() => showToast('Copié !', 'success')).catch(() => {
+    navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success')).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast('Copié !', 'success');
+        showToast('Copie !', 'success');
     });
 }
 
@@ -687,7 +970,7 @@ async function loadHistory() {
                 const prenom = query.prenom || '';
                 const displayName = `${prenom} ${nom}`.trim() || 'Recherche';
                 const resultCount = item.results_count || 0;
-                const resultText = resultCount === 0 ? 'Aucun résultat' : resultCount === 1 ? '1 résultat' : `${resultCount} résultats`;
+                const resultText = resultCount === 0 ? 'Aucun resultat' : resultCount === 1 ? '1 resultat' : `${resultCount} resultats`;
                 return `
                     <div class="history-item">
                         <div class="history-header">
@@ -746,9 +1029,9 @@ async function replaySearch(searchId) {
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 const searchPage = document.getElementById('page-search');
                 if (searchPage) searchPage.classList.add('active');
-                showToast('Recherche relancée !', 'success');
+                showToast('Recherche relancee !', 'success');
             } else {
-                showToast('Aucun résultat', 'warning');
+                showToast('Aucun resultat', 'warning');
             }
         }, 1500);
     } catch (error) {
@@ -787,15 +1070,15 @@ async function loadFiches() {
                         ${fiche.persons?.map(p => `<span class="fiche-person">${p.prenom || ''} ${p.nom_famille || 'Inconnu'}</span>`).join('') || 'Aucune personne'}
                     </div>
                     <div class="fiche-actions">
-                        <button class="fiche-btn" onclick="viewFiche(${index})">👁️ Voir</button>
-                        <button class="fiche-btn" onclick="editFiche(${index})">✏️ Modifier</button>
-                        <button class="fiche-btn danger" onclick="deleteFiche(${index})">🗑️ Supprimer</button>
-                        <button class="fiche-btn" onclick="exportFiche(${index})">📤 Exporter</button>
+                        <button class="fiche-btn" onclick="viewFiche(${index})">Voir</button>
+                        <button class="fiche-btn" onclick="editFiche(${index})">Modifier</button>
+                        <button class="fiche-btn danger" onclick="deleteFiche(${index})">Supprimer</button>
+                        <button class="fiche-btn" onclick="exportFiche(${index})">Exporter</button>
                     </div>
                 </div>
             `).join('');
         } else {
-            container.innerHTML = `<div class="empty-state"><p>Aucune fiche créée</p></div>`;
+            container.innerHTML = `<div class="empty-state"><p>Aucune fiche creee</p></div>`;
         }
     } catch (error) {
         container.innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Erreur de chargement</p></div>`;
@@ -804,13 +1087,13 @@ async function loadFiches() {
 
 // ============ CREATE FICHE ============
 document.getElementById('createFicheBtn')?.addEventListener('click', () => {
-    showModal('Créer une fiche', `
+    showModal('Creer une fiche', `
         <div class="form-group">
             <label>Nom de la fiche</label>
-            <input type="text" id="ficheNameInput" placeholder="Ex: Enquête Dupont">
+            <input type="text" id="ficheNameInput" placeholder="Ex: Enquete Dupont">
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Maximum 10 personnes par fiche</div>
-    `, 'Créer', async () => {
+    `, 'Creer', async () => {
         const name = document.getElementById('ficheNameInput')?.value?.trim();
         if (!name) { showToast('Veuillez donner un nom', 'warning'); return; }
         try {
@@ -823,14 +1106,14 @@ document.getElementById('createFicheBtn')?.addEventListener('click', () => {
                 body: JSON.stringify({ name })
             });
             if (response.ok) {
-                showToast('Fiche créée !', 'success');
+                showToast('Fiche creee !', 'success');
                 loadFiches();
             } else {
                 const data = await response.json();
                 showToast(data.error || 'Erreur', 'error');
             }
         } catch (error) {
-            showToast('Erreur réseau', 'error');
+            showToast('Erreur reseau', 'error');
         }
     });
 });
@@ -843,12 +1126,12 @@ function addToFiche(index) {
 
     const selectOptions = fichesData.map(f => `<option value="${f.id}">${f.name} (${f.persons?.length || 0}/10)</option>`).join('');
 
-    showModal('Ajouter à une fiche', `
+    showModal('Ajouter a une fiche', `
         <div class="form-group">
-            <label>Sélectionner une fiche</label>
+            <label>Selectionner une fiche</label>
             <select id="ficheSelect">
                 ${selectOptions}
-                <option value="new">+ Créer une nouvelle fiche</option>
+                <option value="new">+ Creer une nouvelle fiche</option>
             </select>
         </div>
         <div id="newFicheNameContainer" style="display:none;">
@@ -879,13 +1162,13 @@ function addToFiche(index) {
                 if (createData.fiche) {
                     await addPersonToFiche(createData.fiche.id, person);
                     loadFiches();
-                    showToast('Personne ajoutée !', 'success');
+                    showToast('Personne ajoutee !', 'success');
                 }
             } catch (error) { showToast('Erreur', 'error'); }
         } else {
             await addPersonToFiche(parseInt(ficheId), person);
             loadFiches();
-            showToast('Personne ajoutée !', 'success');
+            showToast('Personne ajoutee !', 'success');
         }
     });
 
@@ -909,7 +1192,7 @@ async function addPersonToFiche(ficheId, person) {
             const data = await response.json();
             showToast(data.error || 'Erreur', 'error');
         }
-    } catch (error) { showToast('Erreur réseau', 'error'); }
+    } catch (error) { showToast('Erreur reseau', 'error'); }
 }
 
 function viewFiche(index) {
@@ -949,7 +1232,7 @@ function editFiche(index) {
                 body: JSON.stringify({ name })
             });
             if (response.ok) {
-                showToast('Fiche modifiée !', 'success');
+                showToast('Fiche modifiee !', 'success');
                 loadFiches();
             }
         } catch (error) { showToast('Erreur', 'error'); }
@@ -961,7 +1244,7 @@ function deleteFiche(index) {
     if (!fiche) return;
     showModal('Confirmation', `
         <p style="color:var(--text-secondary);">Supprimer la fiche "<strong style="color:#ffffff;">${fiche.name}</strong>" ?</p>
-        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Cette action est irréversible.</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Cette action est irreversible.</p>
     `, 'Supprimer', async () => {
         try {
             const response = await fetch(`${API_URL}/api/fiches/${fiche.id}`, {
@@ -969,7 +1252,7 @@ function deleteFiche(index) {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
-                showToast('Fiche supprimée !', 'success');
+                showToast('Fiche supprimee !', 'success');
                 loadFiches();
             }
         } catch (error) { showToast('Erreur', 'error'); }
@@ -993,43 +1276,28 @@ function exportFiche(index) {
         text += '\n';
     });
     text += '\n--- by Marauder ---';
-    navigator.clipboard.writeText(text).then(() => showToast('Exporté !', 'success')).catch(() => {
+    navigator.clipboard.writeText(text).then(() => showToast('Exporte !', 'success')).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast('Exporté !', 'success');
+        showToast('Exporte !', 'success');
     });
 }
 
 // ============ ADD TO GRAPHE ============
 function addToGraphe(index) {
     const person = window._resultsData?.[index];
-    if (!person) { showToast('Personne introuvable', 'error'); return; }
-    const name = `${person.prenom || ''} ${person.nom_famille || 'Inconnu'}`.trim();
-    
-    if (window.grapheNodes) {
-        const container = document.getElementById('grapheContainer');
-        const cx = container ? container.offsetWidth / 2 : 400;
-        const cy = container ? container.offsetHeight / 2 : 300;
-        const newNode = {
-            id: Date.now(),
-            label: name,
-            prenom: person.prenom || '',
-            nom_famille: person.nom_famille || '',
-            role: '',
-            x: cx + (Math.random() - 0.5) * 100,
-            y: cy + (Math.random() - 0.5) * 100,
-            radius: 24,
-            color: ['#ffffff','#ef4444','#f59e0b','#22c55e','#06b6d4','#ec4899','#8b5cf6','#f97316'][Math.floor(Math.random() * 8)]
-        };
-        window.grapheNodes.push(newNode);
-        if (typeof window.renderGraphe === 'function') window.renderGraphe();
-        showToast(`"${name}" ajouté au graphe !`, 'success');
+    if (!person) {
+        showToast('Personne introuvable', 'error');
+        return;
+    }
+    if (typeof window.addPersonToGrapheWithFamily === 'function') {
+        window.addPersonToGrapheWithFamily(person);
     } else {
-        showToast('Graphe non disponible', 'warning');
+        showToast('Le graphe n est pas disponible', 'warning');
     }
 }
 
@@ -1048,9 +1316,9 @@ async function loadProfile() {
             container.innerHTML = `
                 <div class="profile-card">
                     <div class="profile-row"><span class="label">Nom d'utilisateur</span><span class="value">${data.user.username}</span></div>
-                    <div class="profile-row"><span class="label">Rôle</span><span class="value">${data.user.role}</span></div>
+                    <div class="profile-row"><span class="label">Role</span><span class="value">${data.user.role}</span></div>
                     <div class="profile-row"><span class="label">Membre depuis</span><span class="value">${new Date(data.user.created_at).toLocaleDateString()}</span></div>
-                    <div class="profile-row"><span class="label">Dernière connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
+                    <div class="profile-row"><span class="label">Derniere connexion</span><span class="value">${data.user.last_login ? new Date(data.user.last_login).toLocaleString() : 'Jamais'}</span></div>
                     <div class="profile-row"><span class="label">Total recherches</span><span class="value">${data.stats?.total_searches || 0}</span></div>
                 </div>
             `;
@@ -1062,11 +1330,11 @@ async function loadProfile() {
 
 // ============ GRAPHE BOUTONS ============
 document.getElementById('grapheAddPersonne')?.addEventListener('click', () => {
-    if (!window.grapheNodes) { showToast('Graphe non initialisé', 'warning'); return; }
+    if (!window.grapheNodes) { showToast('Graphe non initialise', 'warning'); return; }
     showModal('Ajouter une personne', `
-        <div class="form-group"><label>Prénom</label><input type="text" id="newNodePrenom" class="search-input"></div>
+        <div class="form-group"><label>Prenom</label><input type="text" id="newNodePrenom" class="search-input"></div>
         <div class="form-group"><label>Nom</label><input type="text" id="newNodeNom" class="search-input"></div>
-        <div class="form-group"><label>Rôle</label><input type="text" id="newNodeRole" class="search-input"></div>
+        <div class="form-group"><label>Role</label><input type="text" id="newNodeRole" class="search-input"></div>
     `, 'Ajouter', () => {
         const prenom = document.getElementById('newNodePrenom').value.trim();
         const nom = document.getElementById('newNodeNom').value.trim();
@@ -1095,10 +1363,10 @@ document.getElementById('grapheAddPersonne')?.addEventListener('click', () => {
                 btn.style.borderColor = 'var(--border-color)';
                 btn.style.color = 'var(--text-secondary)';
             }
-            showToast('Personnes attachées !', 'success');
+            showToast('Personnes attachees !', 'success');
         }
         if (typeof window.renderGraphe === 'function') window.renderGraphe();
-        showToast(`"${label}" ajouté !`, 'success');
+        showToast(`"${label}" ajoute !`, 'success');
     });
 });
 
@@ -1110,7 +1378,7 @@ document.getElementById('grapheAttacher')?.addEventListener('click', function() 
         this.style.background = 'rgba(255,255,255,0.05)';
         this.style.borderColor = 'var(--border-color)';
         this.style.color = 'var(--text-secondary)';
-        showToast('Mode attacher désactivé', 'info');
+        showToast('Mode attacher desactive', 'info');
         return;
     }
     if (nodes.length < 2) { showToast('Ajoutez au moins 2 personnes', 'warning'); return; }
@@ -1119,7 +1387,7 @@ document.getElementById('grapheAttacher')?.addEventListener('click', function() 
     this.style.background = 'rgba(255,255,255,0.15)';
     this.style.borderColor = '#ffffff';
     this.style.color = '#ffffff';
-    showToast('Cliquez sur une personne pour l\'attacher', 'info');
+    showToast('Cliquez sur une personne pour l attacher', 'info');
 });
 
 document.getElementById('grapheSauvegarder')?.addEventListener('click', () => {
@@ -1131,7 +1399,7 @@ document.getElementById('grapheSauvegarder')?.addEventListener('click', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(data)
-    }).then(r => r.ok ? showToast('Sauvegardé sur le serveur !', 'success') : showToast('Sauvegarde locale', 'info'))
+    }).then(r => r.ok ? showToast('Sauvegarde sur le serveur !', 'success') : showToast('Sauvegarde locale', 'info'))
       .catch(() => showToast('Sauvegarde locale', 'info'));
 });
 
@@ -1142,7 +1410,7 @@ document.getElementById('grapheEffacer')?.addEventListener('click', () => {
         if (window.grapheNodes) window.grapheNodes = [];
         if (window.grapheEdges) window.grapheEdges = [];
         if (typeof window.renderGraphe === 'function') window.renderGraphe();
-        showToast('Graphe effacé', 'info');
+        showToast('Graphe efface', 'info');
     });
 });
 
@@ -1162,7 +1430,7 @@ async function showGraphesModal() {
             try { const data = JSON.parse(saved); graphes.push({ id: 'local', name: 'Graphe local', nodes: data.nodes || [], edges: data.edges || [], created_at: new Date().toISOString(), isLocal: true }); } catch (e) {}
         }
         if (graphes.length === 0) {
-            list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegardé</div>';
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegarde</div>';
             return;
         }
         list.innerHTML = graphes.map((g, i) => `
@@ -1202,7 +1470,7 @@ async function loadGrapheFromList(index, isLocal) {
             if (window.grapheEdges) window.grapheEdges = data.edges || [];
             document.getElementById('graphesModal').style.display = 'none';
             if (typeof window.renderGraphe === 'function') window.renderGraphe();
-            showToast('Graphe chargé !', 'success');
+            showToast('Graphe charge !', 'success');
         }
     } catch (error) { showToast('Erreur de chargement', 'error'); }
 }
@@ -1215,7 +1483,7 @@ async function deleteGrapheFromList(grapheId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
-            showToast('Graphe supprimé !', 'success');
+            showToast('Graphe supprime !', 'success');
             showGraphesModal();
         }
     } catch (error) { showToast('Erreur', 'error'); }
@@ -1224,4 +1492,4 @@ async function deleteGrapheFromList(grapheId) {
 // ============ INIT ============
 verifyToken();
 loadProfile();
-console.log('✅ Dashboard chargé');
+console.log('Dashboard charge');

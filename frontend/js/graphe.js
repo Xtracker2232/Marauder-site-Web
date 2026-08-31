@@ -1,8 +1,19 @@
 // ========================================
+// FORMAT PHONE
+// ========================================
+function formatPhone(phone) {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+    }
+    return phone;
+}
+
+// ========================================
 // GRAPHE - Module autonome
 // ========================================
 
-// Variables globales exposées
 window.grapheNodes = window.grapheNodes || [];
 window.grapheEdges = window.grapheEdges || [];
 window.grapheZoom = 1;
@@ -27,11 +38,10 @@ let grapheAnimationId = null;
 
 const GRAPHE_COLORS = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6', '#f97316'];
 
-// ============ INITIALISATION ============
 function initGrapheModule() {
     grapheCanvas = document.getElementById('grapheCanvas');
     if (!grapheCanvas) {
-        console.error('❌ Canvas du graphe non trouvé');
+        console.error('Canvas du graphe non trouve');
         setTimeout(initGrapheModule, 300);
         return;
     }
@@ -39,7 +49,6 @@ function initGrapheModule() {
     grapheCtx = grapheCanvas.getContext('2d');
     resizeGraphe();
     
-    // Événements
     grapheCanvas.onmousedown = onGrapheMouseDown;
     grapheCanvas.onmousemove = onGrapheMouseMove;
     grapheCanvas.onmouseup = onGrapheMouseUp;
@@ -51,10 +60,9 @@ function initGrapheModule() {
     
     window.grapheIsInitialized = true;
     renderGraphe();
-    console.log('✅ Graphe initialisé avec', window.grapheNodes.length, 'nœuds');
+    console.log('Graphe initialise avec', window.grapheNodes.length, 'noeuds');
 }
 
-// ============ REDIMENSIONNEMENT ============
 function resizeGraphe() {
     const container = document.getElementById('grapheContainer');
     if (!container || !grapheCanvas) return;
@@ -69,7 +77,6 @@ function resizeGraphe() {
     }
 }
 
-// ============ RENDU ============
 function renderGraphe() {
     if (!grapheCtx || !grapheCanvas) return;
     
@@ -102,7 +109,7 @@ function renderGraphe() {
     grapheCtx.translate(window.graphePanX, window.graphePanY);
     grapheCtx.scale(window.grapheZoom, window.grapheZoom);
     
-    // Arêtes
+    // Arete
     window.grapheEdges.forEach(edge => {
         const from = window.grapheNodes.find(n => n.id === edge.from);
         const to = window.grapheNodes.find(n => n.id === edge.to);
@@ -115,7 +122,7 @@ function renderGraphe() {
         grapheCtx.stroke();
     });
     
-    // Nœuds
+    // Noeuds
     window.grapheNodes.forEach(node => {
         const r = node.radius || 24;
         const isSelected = window.grapheLinkMode && window.grapheLinkFrom === node.id;
@@ -134,7 +141,7 @@ function renderGraphe() {
         grapheCtx.textAlign = 'center';
         grapheCtx.textBaseline = 'top';
         let label = node.label || 'Personne';
-        if (label.length > 18) label = label.slice(0, 16) + '…';
+        if (label.length > 18) label = label.slice(0, 16) + '...';
         grapheCtx.fillText(label, node.x, node.y + r + 6 / window.grapheZoom);
         
         if (node.role) {
@@ -149,7 +156,6 @@ function renderGraphe() {
     grapheAnimationId = requestAnimationFrame(renderGraphe);
 }
 
-// ============ POSITION SOURIS ============
 function getGraphePos(e) {
     const rect = grapheCanvas.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -170,7 +176,6 @@ function getGrapheNode(x, y) {
     return null;
 }
 
-// ============ ÉVÉNEMENTS SOURIS ============
 function onGrapheMouseDown(e) {
     const pos = getGraphePos(e);
     const node = getGrapheNode(pos.x, pos.y);
@@ -186,7 +191,7 @@ function onGrapheMouseDown(e) {
     if (window.grapheLinkMode && node) {
         if (window.grapheLinkFrom === null) {
             window.grapheLinkFrom = node.id;
-            showToast('Sélectionnez la destination', 'info');
+            showToast('Selectionnez la destination', 'info');
             return;
         }
         if (window.grapheLinkFrom !== node.id) {
@@ -199,7 +204,7 @@ function onGrapheMouseDown(e) {
                 btn.style.borderColor = 'var(--border-color)';
                 btn.style.color = 'var(--text-secondary)';
             }
-            showToast('Personnes attachées !', 'success');
+            showToast('Personnes attachees !', 'success');
         }
         return;
     }
@@ -260,7 +265,6 @@ function onGrapheWheel(e) {
     window.graphePanY = pos.y - wy * window.grapheZoom;
 }
 
-// ============ MENU CONTEXTUEL ============
 function showGrapheContextMenu(x, y) {
     const menu = document.getElementById('grapheContextMenu');
     if (!menu) return;
@@ -276,7 +280,60 @@ function hideGrapheContextMenu() {
 
 document.addEventListener('click', hideGrapheContextMenu);
 
-// ============ ACTIONS MENU ============
+// ============ TOAST ============
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        ${message}
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(toast);
+    if (duration > 0) {
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(40px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+}
+
+// ============ MODAL ============
+function showModal(title, bodyHtml, confirmText, onConfirm) {
+    const overlay = document.getElementById('modalOverlay');
+    const titleEl = document.getElementById('modalTitle');
+    const bodyEl = document.getElementById('modalBody');
+    if (!overlay || !titleEl || !bodyEl) return;
+    titleEl.textContent = title;
+    bodyEl.innerHTML = bodyHtml;
+    overlay.classList.add('active');
+    const confirmBtn = document.getElementById('modalConfirm');
+    if (confirmBtn) {
+        confirmBtn.textContent = confirmText || 'Confirmer';
+        const newConfirm = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+        newConfirm.addEventListener('click', function() {
+            if (onConfirm) onConfirm();
+            closeModal();
+        });
+    }
+    const cancelBtn = document.getElementById('modalCancel');
+    if (cancelBtn) {
+        const newCancel = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+        newCancel.addEventListener('click', closeModal);
+    }
+}
+
+function closeModal() {
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+// ============ ACTIONS DU MENU ============
 document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
     item.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -291,7 +348,7 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
             case 'edit':
                 showModal('Modifier', `
                     <div class="form-group"><label>Nom</label><input type="text" id="editNodeName" value="${node.label || ''}" class="search-input"></div>
-                    <div class="form-group"><label>Rôle</label><input type="text" id="editNodeRole" value="${node.role || ''}" class="search-input"></div>
+                    <div class="form-group"><label>Role</label><input type="text" id="editNodeRole" value="${node.role || ''}" class="search-input"></div>
                 `, 'Sauvegarder', () => {
                     node.label = document.getElementById('editNodeName').value.trim() || 'Personne';
                     node.role = document.getElementById('editNodeRole').value.trim();
@@ -320,19 +377,31 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
                     btn.style.borderColor = '#ffffff';
                     btn.style.color = '#ffffff';
                 }
-                showToast('Cliquez sur une personne pour l\'attacher', 'info');
+                showToast('Cliquez sur une personne pour l attacher', 'info');
                 break;
             case 'detach':
                 const toRemove = window.grapheEdges.filter(e => e.from === node.id || e.to === node.id);
                 toRemove.forEach(e => { window.grapheEdges = window.grapheEdges.filter(ed => ed.id !== e.id); });
-                showToast('Personne détachée', 'info');
+                showToast('Personne detachee', 'info');
                 break;
             case 'delete':
                 showModal('Confirmation', `<p style="color:var(--text-secondary);">Supprimer "${node.label}" du graphe ?</p>`, 'Supprimer', () => {
                     window.grapheNodes = window.grapheNodes.filter(n => n.id !== node.id);
                     window.grapheEdges = window.grapheEdges.filter(e => e.from !== node.id && e.to !== node.id);
-                    showToast('Personne supprimée', 'info');
+                    showToast('Personne supprimee', 'info');
                 });
+                break;
+            case 'fiche':
+                showModal('Fiche de ' + node.label, `
+                    <div style="font-size:13px;color:var(--text-secondary);">
+                        ${node.prenom ? `<div><strong>Prenom</strong> ${node.prenom}</div>` : ''}
+                        ${node.nom_famille ? `<div><strong>Nom</strong> ${node.nom_famille}</div>` : ''}
+                        ${node.role ? `<div><strong>Role</strong> ${node.role}</div>` : ''}
+                        ${node.email ? `<div><strong>Email</strong> ${node.email}</div>` : ''}
+                        ${node.telephone ? `<div><strong>Telephone</strong> ${formatPhone(node.telephone)}</div>` : ''}
+                        ${node.adresse ? `<div><strong>Adresse</strong> ${node.adresse}</div>` : ''}
+                    </div>
+                `, 'Fermer', closeModal);
                 break;
         }
     });
@@ -340,16 +409,102 @@ document.querySelectorAll('#grapheContextMenu .menu-item').forEach(item => {
 
 function changeGrapheColor(nodeId, color) {
     const node = window.grapheNodes.find(n => n.id === nodeId);
-    if (node) { node.color = color; closeModal(); }
+    if (node) { 
+        node.color = color; 
+        closeModal();
+        if (typeof window.renderGraphe === 'function') {
+            window.renderGraphe();
+        }
+    }
 }
 
-// ============ EXPOSER AU GLOBAL ============
+// ============ AJOUTER UNE PERSONNE AVEC SA FAMILLE ============
+function addPersonToGrapheWithFamily(personData) {
+    if (!personData) {
+        showToast('Personne introuvable', 'error');
+        return;
+    }
+    
+    const name = `${personData.prenom || ''} ${personData.nom_famille || 'Inconnu'}`.trim();
+    const container = document.getElementById('grapheContainer');
+    const cx = container ? container.offsetWidth / 2 : 400;
+    const cy = container ? container.offsetHeight / 2 : 300;
+    
+    // Creer le noeud principal
+    const mainNode = {
+        id: Date.now(),
+        label: name,
+        prenom: personData.prenom || '',
+        nom_famille: personData.nom_famille || '',
+        role: '',
+        email: personData.email || '',
+        telephone: personData.telephone || '',
+        adresse: personData.adresse || '',
+        x: cx + (Math.random() - 0.5) * 50,
+        y: cy + (Math.random() - 0.5) * 50,
+        radius: 28,
+        color: '#ffffff',
+        isMain: true
+    };
+    
+    window.grapheNodes.push(mainNode);
+    
+    // Ajouter la famille
+    const famille = personData.famille || [];
+    if (famille.length > 0) {
+        const angleStep = (Math.PI * 2) / famille.length;
+        famille.forEach((member, index) => {
+            const angle = index * angleStep - Math.PI / 2;
+            const radius = 180 + Math.random() * 40;
+            const memberName = `${member.prenom || ''} ${member.nom_famille || 'Inconnu'}`.trim();
+            
+            const memberNode = {
+                id: Date.now() + index + 1,
+                label: memberName,
+                prenom: member.prenom || '',
+                nom_famille: member.nom_famille || '',
+                role: member.lien || 'Famille',
+                email: member.email || '',
+                telephone: member.telephone || '',
+                adresse: member.adresse || '',
+                x: mainNode.x + Math.cos(angle) * radius,
+                y: mainNode.y + Math.sin(angle) * radius,
+                radius: 24,
+                color: GRAPHE_COLORS[(index + 1) % GRAPHE_COLORS.length],
+                isMain: false
+            };
+            
+            window.grapheNodes.push(memberNode);
+            
+            // Lien entre la personne et le membre de la famille
+            window.grapheEdges.push({
+                id: Date.now() + index + 100,
+                from: mainNode.id,
+                to: memberNode.id,
+                label: member.lien || 'Famille'
+            });
+        });
+    }
+    
+    // Aller a la page du graphe
+    const grapheLi = document.querySelector('[data-page="graphe"]');
+    if (grapheLi) {
+        grapheLi.click();
+    }
+    
+    // Initialiser le graphe si besoin
+    if (typeof window.initGrapheModule === 'function') {
+        window.initGrapheModule();
+    }
+    
+    showToast(`"${name}" et sa famille ajoutes au graphe !`, 'success');
+}
+
+// ============ EXPOSER ============
 window.initGrapheModule = initGrapheModule;
 window.renderGraphe = renderGraphe;
 window.resizeGraphe = resizeGraphe;
-window.addGrapheNode = function(node) {
-    window.grapheNodes.push(node);
-    renderGraphe();
-};
+window.addPersonToGrapheWithFamily = addPersonToGrapheWithFamily;
+window.changeGrapheColor = changeGrapheColor;
 
-console.log('📦 Module graphe chargé');
+console.log('Module graphe charge');

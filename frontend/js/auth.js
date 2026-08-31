@@ -1,5 +1,6 @@
 const API_URL = window.location.origin;
 
+// Toggle login/register
 document.getElementById('showRegister').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('loginForm').style.display = 'none';
