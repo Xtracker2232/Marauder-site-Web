@@ -556,6 +556,8 @@ async function init() {
 
 init();
 
+init();
+
 // Exposer les fonctions globalement
 window.loadBlocklist = loadBlocklist;
 window.loadUsers = loadUsers;

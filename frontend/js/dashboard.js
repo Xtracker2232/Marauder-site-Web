@@ -143,6 +143,7 @@ document.querySelectorAll('.sidebar-nav li').forEach(item => {
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
         if (page === 'fiches') loadFiches();
+        if (page === 'tickets') loadTickets();
         if (page === 'graphe') {
             if (typeof window.initGrapheModule === 'function') {
                 window.initGrapheModule();
@@ -296,14 +297,11 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // ============================================
-        // PIVOT FAMILLE - Marauder fait les recherches
-        // ============================================
+        // PIVOT FAMILLE
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
 
-            // PIVOT 1 : ADRESSE + CODE POSTAL
             if (p.adresse && p.code_postal) {
                 const pivotKey = `adresse_${p.adresse}_${p.code_postal}`;
                 if (!pivotDone.has(pivotKey)) {
@@ -344,7 +342,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 }
             }
 
-            // PIVOT 2 : TÉLÉPHONE
             if (p.telephone && famille.length < 5) {
                 const phoneClean = p.telephone.replace(/\D/g, '');
                 if (phoneClean.length >= 8) {
@@ -387,7 +384,6 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 }
             }
 
-            // PIVOT 3 : EMAIL
             if (p.email && famille.length < 5) {
                 const pivotKey = `email_${p.email}`;
                 if (!pivotDone.has(pivotKey)) {
@@ -533,9 +529,7 @@ document.getElementById('searchBtnPro').addEventListener('click', async () => {
         });
         results = uniqueResults;
 
-        // ============================================
-        // PIVOT FAMILLE - Marauder fait les recherches
-        // ============================================
+        // PIVOT FAMILLE
         const pivotDone = new Set();
         for (let p of results.slice(0, 5)) {
             const famille = [];
@@ -926,10 +920,7 @@ function displayLookupResults(container, results) {
     window._lookupData = results;
 }
 
-// ========================================
 // ============ INVESTIGATION ============
-// ========================================
-
 let investigationData = null;
 
 function openInvestigation(index) {
@@ -1583,6 +1574,175 @@ function addToGraphe(index) {
         window.addPersonToGrapheWithFamily(person);
     } else {
         showToast('Le graphe n est pas disponible', 'warning');
+    }
+}
+
+// ============ TICKETS ============
+
+async function loadTickets() {
+    const container = document.getElementById('ticketsList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state">Chargement...</div>';
+
+    try {
+        const response = await fetch(`${API_URL}/api/tickets`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Erreur');
+        const data = await response.json();
+        const tickets = data.tickets || [];
+
+        if (tickets.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p>Aucun ticket</p>
+                    <p style="font-size:13px;color:var(--text-muted);">Créez un ticket pour contacter le support</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = tickets.map(ticket => {
+            const statusText = ticket.status === 'open' ? '🟢 Ouvert' : 
+                               ticket.status === 'in_progress' ? '🟡 En cours' : 
+                               '🔴 Fermé';
+            const date = new Date(ticket.created_at).toLocaleString('fr-FR');
+            const hasUnread = ticket.status === 'open' || ticket.status === 'in_progress';
+            return `
+                <div class="ticket-item" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;cursor:pointer;${hasUnread ? 'border-left:3px solid var(--warning);' : ''}" onclick="viewTicket(${ticket.id})">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <span style="font-weight:600;color:#ffffff;">${ticket.subject}</span>
+                            <span style="font-size:12px;color:var(--text-muted);margin-left:12px;">${date}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="font-size:12px;color:var(--text-muted);">${ticket.status}</span>
+                            <span style="font-size:12px;color:var(--text-muted);">💬 ${ticket.message?.length || 0} caractères</span>
+                            ${hasUnread ? '<span style="font-size:10px;color:var(--warning);">● Nouveau</span>' : ''}
+                        </div>
+                    </div>
+                    <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%;">
+                        ${ticket.message?.substring(0, 150) || ''}${ticket.message?.length > 150 ? '...' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erreur de chargement</div>';
+    }
+}
+
+// ============ OUVRIR UN TICKET ============
+document.getElementById('openTicketBtn')?.addEventListener('click', () => {
+    showModal('Nouveau ticket', `
+        <div class="form-group">
+            <label>Sujet</label>
+            <input type="text" id="ticketSubject" placeholder="Résumé de votre problème" class="search-input">
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="ticketMessage" rows="5" placeholder="Décrivez votre problème en détail..." style="width:100%;padding:12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
+        </div>
+    `, 'Envoyer', async () => {
+        const subject = document.getElementById('ticketSubject')?.value?.trim();
+        const message = document.getElementById('ticketMessage')?.value?.trim();
+        
+        if (!subject) { showToast('Veuillez entrer un sujet', 'warning'); return; }
+        if (!message) { showToast('Veuillez entrer un message', 'warning'); return; }
+        
+        try {
+            const response = await fetch(`${API_URL}/api/tickets`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ subject, message })
+            });
+            if (response.ok) {
+                showToast('Ticket créé !', 'success');
+                loadTickets();
+            } else {
+                const data = await response.json();
+                showToast(data.error || 'Erreur', 'error');
+            }
+        } catch (error) {
+            showToast('Erreur réseau', 'error');
+        }
+    });
+});
+
+// ============ VOIR UN TICKET ============
+async function viewTicket(ticketId) {
+    try {
+        const response = await fetch(`${API_URL}/api/tickets/${ticketId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Erreur');
+        const data = await response.json();
+        const ticket = data.ticket;
+        const messages = data.messages || [];
+
+        let messagesHtml = messages.map(m => `
+            <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid var(--border-color)'};">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">
+                    ${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}
+                </div>
+                <div style="font-size:13px;color:var(--text-secondary);">${m.message}</div>
+            </div>
+        `).join('');
+
+        if (messages.length === 0) {
+            messagesHtml = '<div style="color:var(--text-muted);font-size:13px;">Aucun message</div>';
+        }
+
+        showModal(`🎫 ${ticket.subject}`, `
+            <div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">
+                Status: ${ticket.status} · Créé le ${new Date(ticket.created_at).toLocaleString()}
+            </div>
+            <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">
+                ${messagesHtml}
+            </div>
+            ${ticket.status !== 'closed' ? `
+                <div style="display:flex;gap:10px;border-top:1px solid var(--border-color);padding-top:12px;">
+                    <input type="text" id="ticketReplyInput" placeholder="Votre réponse..." style="flex:1;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:'Inter',sans-serif;outline:none;">
+                    <button onclick="replyTicket(${ticketId})" class="btn-primary" style="width:auto;padding:10px 24px;">Répondre</button>
+                </div>
+            ` : '<div style="color:var(--text-muted);font-size:13px;border-top:1px solid var(--border-color);padding-top:12px;">Ce ticket est fermé</div>'}
+        `, 'Fermer', closeModal);
+
+    } catch (error) {
+        showToast('Erreur de chargement', 'error');
+    }
+}
+
+// ============ RÉPONDRE À UN TICKET ============
+async function replyTicket(ticketId) {
+    const input = document.getElementById('ticketReplyInput');
+    if (!input) return;
+    const message = input.value.trim();
+    if (!message) { showToast('Veuillez entrer un message', 'warning'); return; }
+
+    try {
+        const response = await fetch(`${API_URL}/api/tickets/${ticketId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ message })
+        });
+        if (response.ok) {
+            showToast('Message envoyé !', 'success');
+            viewTicket(ticketId);
+            loadTickets();
+        } else {
+            const data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur réseau', 'error');
     }
 }
 
