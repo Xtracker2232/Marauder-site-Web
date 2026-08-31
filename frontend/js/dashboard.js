@@ -1096,8 +1096,13 @@ async function loadFiches() {
 
     try {
         console.log('🔄 Chargement des fiches...');
+        
         const response = await fetch(`${API_URL}/api/fiches`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
         });
         
         console.log('📡 Statut:', response.status);
@@ -1106,7 +1111,7 @@ async function loadFiches() {
             console.error('❌ Erreur HTTP:', response.status);
             container.innerHTML = `
                 <div class="empty-state" style="color:var(--warning);">
-                    <p>Erreur ${response.status} - Vérifiez la console</p>
+                    <p>Erreur ${response.status}</p>
                 </div>
             `;
             return;
@@ -2001,34 +2006,20 @@ async function showGraphesModal() {
     
     try {
         const response = await fetch(`${API_URL}/api/graphes/all`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
         });
         
-        let graphes = [];
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.graphes && data.graphes.length > 0) {
-                graphes = data.graphes;
-            }
+        if (!response.ok) {
+            list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger);">Erreur ${response.status}</div>`;
+            return;
         }
         
-        if (graphes.length === 0) {
-            const saved = localStorage.getItem('marauder_graphe');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    graphes.push({
-                        id: 'local',
-                        name: 'Graphe local',
-                        nodes: data.nodes || [],
-                        edges: data.edges || [],
-                        created_at: new Date().toLocaleDateString(),
-                        isLocal: true
-                    });
-                } catch (e) {}
-            }
-        }
+        const data = await response.json();
+        const graphes = data.graphes || [];
         
         if (graphes.length === 0) {
             list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegardé</div>';
@@ -2038,18 +2029,19 @@ async function showGraphesModal() {
         list.innerHTML = graphes.map((g, index) => `
             <div class="graphe-item">
                 <div>
-                    <div class="graphe-name">${g.name || 'Sans nom'} ${g.isLocal ? '(local)' : ''}</div>
-                    <div class="graphe-meta">${g.nodes?.length || 0} personnes · ${g.created_at ? new Date(g.created_at).toLocaleDateString() : 'Date inconnue'}</div>
+                    <div class="graphe-name">${g.name || 'Sans nom'}</div>
+                    <div class="graphe-meta">${g.nodes?.length || 0} personnes · ${new Date(g.created_at).toLocaleDateString()}</div>
                 </div>
                 <div class="graphe-actions">
-                    <button onclick="loadGrapheFromList(${index}, ${!!g.id && !g.isLocal})">Charger</button>
-                    ${!g.isLocal ? `<button class="danger" onclick="deleteGrapheFromList(${g.id})">Supprimer</button>` : ''}
+                    <button onclick="loadGrapheFromList(${g.id})">Charger</button>
+                    <button class="danger" onclick="deleteGrapheFromList(${g.id})">Supprimer</button>
                 </div>
             </div>
         `).join('');
         
     } catch (error) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Erreur de chargement</div>';
+        console.error('❌ Erreur showGraphesModal:', error);
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">Erreur de chargement</div>';
     }
 }
 
@@ -2058,33 +2050,16 @@ document.getElementById('closeGraphesModal')?.addEventListener('click', () => {
     document.getElementById('graphesModal').classList.remove('active');
 });
 
-// Charger un graphe depuis la liste
-async function loadGrapheFromList(index, fromServer) {
+// Charger un graphe
+async function loadGrapheFromList(grapheId) {
     try {
-        let graphe;
-        
-        if (fromServer) {
-            const response = await fetch(`${API_URL}/api/graphes/all`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.graphes && data.graphes[index]) {
-                graphe = data.graphes[index];
-            }
-        } else {
-            const saved = localStorage.getItem('marauder_graphe');
-            if (saved) {
-                const data = JSON.parse(saved);
-                graphe = {
-                    nodes: data.nodes || [],
-                    edges: data.edges || []
-                };
-            }
-        }
-        
-        if (graphe) {
-            grapheNodes = graphe.nodes || [];
-            grapheEdges = graphe.edges || [];
+        const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.graphe) {
+            grapheNodes = data.graphe.nodes || [];
+            grapheEdges = data.graphe.edges || [];
             initGraphe();
             document.getElementById('graphesModal').classList.remove('active');
             showToast('Graphe chargé !', 'success');
@@ -2094,24 +2069,20 @@ async function loadGrapheFromList(index, fromServer) {
     }
 }
 
-// Supprimer un graphe depuis la liste
+// Supprimer un graphe
 async function deleteGrapheFromList(grapheId) {
     if (!confirm('Supprimer ce graphe ?')) return;
-    
     try {
         const response = await fetch(`${API_URL}/api/graphes/${grapheId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
         if (response.ok) {
             showToast('Graphe supprimé !', 'success');
             showGraphesModal();
-        } else {
-            showToast('Erreur de suppression', 'error');
         }
     } catch (error) {
-        showToast('Erreur réseau', 'error');
+        showToast('Erreur', 'error');
     }
 }
 
