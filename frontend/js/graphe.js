@@ -136,7 +136,7 @@ function renderGraphe() {
         grapheCtx.stroke();
         
         grapheCtx.fillStyle = '#ffffff';
-        grapheCtx.font = `${12 / window.grapheZoom}px Arial, sans-serif`;
+        grapheCtx.font = (12 / window.grapheZoom) + 'px Arial, sans-serif';
         grapheCtx.textAlign = 'center';
         grapheCtx.textBaseline = 'top';
         let label = node.label || 'Personne';
@@ -145,7 +145,7 @@ function renderGraphe() {
         
         if (node.role) {
             grapheCtx.fillStyle = 'rgba(255,255,255,0.35)';
-            grapheCtx.font = `${10 / window.grapheZoom}px Arial, sans-serif`;
+            grapheCtx.font = (10 / window.grapheZoom) + 'px Arial, sans-serif';
             grapheCtx.fillText(node.role, node.x, node.y + r + 22 / window.grapheZoom);
         }
     });
@@ -435,7 +435,6 @@ function addPersonToGrapheWithFamily(personData) {
     const cx = container ? container.offsetWidth / 2 : 400;
     const cy = container ? container.offsetHeight / 2 : 300;
     
-    // Creer le noeud principal
     const mainNode = {
         id: Date.now(),
         label: name.trim(),
@@ -454,7 +453,6 @@ function addPersonToGrapheWithFamily(personData) {
     
     window.grapheNodes.push(mainNode);
     
-    // Ajouter la famille
     const famille = personData.famille || [];
     if (famille.length > 0) {
         const angleStep = (Math.PI * 2) / famille.length;
@@ -481,7 +479,6 @@ function addPersonToGrapheWithFamily(personData) {
             
             window.grapheNodes.push(memberNode);
             
-            // Lien entre la personne et le membre de la famille
             window.grapheEdges.push({
                 id: Date.now() + index + 100,
                 from: mainNode.id,
@@ -491,7 +488,6 @@ function addPersonToGrapheWithFamily(personData) {
         });
     }
     
-    // Initialiser le graphe
     if (window.grapheIsInitialized) {
         renderGraphe();
     } else {

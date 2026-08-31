@@ -113,7 +113,6 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
         const target = document.getElementById('page-' + page);
         if (target) target.classList.add('active');
         
-        // Initialiser les pages
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
         if (page === 'fiches') loadFiches();
@@ -1067,6 +1066,7 @@ function openInvestigation(index) {
         showToast('Personne introuvable', 'error');
         return;
     }
+
     investigationData = data[index];
     const person = investigationData;
     const overlay = document.getElementById('investigationOverlay');
@@ -1078,56 +1078,12 @@ function openInvestigation(index) {
     const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
     document.getElementById('investigationCityLabel').textContent = ville;
 
+    // ============================================
+    // DÉPLACER LE POINT SUR LA CARTE
+    // ============================================
     const pin = document.getElementById('investigationMapPin');
     if (pin) {
-        const cities = {
-            'paris': { cx: 300, cy: 190 },
-            'lyon': { cx: 320, cy: 310 },
-            'marseille': { cx: 340, cy: 420 },
-            'toulouse': { cx: 260, cy: 380 },
-            'bordeaux': { cx: 190, cy: 360 },
-            'lille': { cx: 240, cy: 120 },
-            'nice': { cx: 390, cy: 390 },
-            'nantes': { cx: 170, cy: 280 },
-            'strasbourg': { cx: 400, cy: 180 },
-            'montpellier': { cx: 300, cy: 380 },
-            'rennes': { cx: 160, cy: 230 },
-            'grenoble': { cx: 350, cy: 330 },
-            'toulon': { cx: 360, cy: 410 },
-            'angers': { cx: 190, cy: 260 },
-            'dijon': { cx: 350, cy: 240 },
-            'le havre': { cx: 210, cy: 170 },
-            'reims': { cx: 320, cy: 160 },
-            'saint-etienne': { cx: 310, cy: 320 },
-            'limoges': { cx: 220, cy: 310 },
-            'clermont-ferrand': { cx: 270, cy: 290 },
-            'amiens': { cx: 260, cy: 140 },
-            'perpignan': { cx: 290, cy: 430 },
-            'caen': { cx: 190, cy: 190 },
-            'orleans': { cx: 270, cy: 230 },
-            'metz': { cx: 370, cy: 170 },
-            'besancon': { cx: 380, cy: 220 },
-            'mulhouse': { cx: 410, cy: 210 },
-            'valence': { cx: 330, cy: 340 },
-            'nimes': { cx: 290, cy: 370 },
-            'avignon': { cx: 310, cy: 400 },
-            'poitiers': { cx: 210, cy: 290 },
-            'la rochelle': { cx: 160, cy: 300 }
-        };
-        const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        let found = false;
-        for (const [key, pos] of Object.entries(cities)) {
-            if (cityKey.includes(key) || key.includes(cityKey)) {
-                pin.setAttribute('cx', pos.cx);
-                pin.setAttribute('cy', pos.cy);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            pin.setAttribute('cx', 300);
-            pin.setAttribute('cy', 300);
-        }
+        movePinOnMap(pin, ville);
     }
 
     const confidence = person._confidence || 0;
@@ -1138,6 +1094,7 @@ function openInvestigation(index) {
     const grid = document.getElementById('investigationInfoGrid');
     let html = '';
     const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
+    
     Object.entries(person)
         .filter(([key]) => !key.startsWith('_') && key !== 'famille')
         .forEach(([key, value]) => {
@@ -1153,6 +1110,7 @@ function openInvestigation(index) {
                 </div>
             `;
         });
+    
     if (person.famille && person.famille.length > 0) {
         html += `
             <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
@@ -1167,6 +1125,120 @@ function openInvestigation(index) {
 
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+// ============================================
+// DÉPLACER LE POINT SUR LA CARTE
+// ============================================
+function movePinOnMap(pin, ville) {
+    // Coordonnées des villes sur la carte (600x700)
+    const cityCoords = {
+        'paris': { cx: 280, cy: 170 },
+        'lyon': { cx: 320, cy: 300 },
+        'marseille': { cx: 340, cy: 420 },
+        'toulouse': { cx: 250, cy: 400 },
+        'bordeaux': { cx: 190, cy: 370 },
+        'lille': { cx: 240, cy: 110 },
+        'nice': { cx: 390, cy: 390 },
+        'nantes': { cx: 170, cy: 280 },
+        'strasbourg': { cx: 400, cy: 170 },
+        'montpellier': { cx: 290, cy: 390 },
+        'rennes': { cx: 160, cy: 230 },
+        'grenoble': { cx: 350, cy: 330 },
+        'toulon': { cx: 360, cy: 410 },
+        'angers': { cx: 190, cy: 260 },
+        'dijon': { cx: 350, cy: 240 },
+        'le havre': { cx: 210, cy: 170 },
+        'reims': { cx: 320, cy: 160 },
+        'saint-etienne': { cx: 310, cy: 320 },
+        'limoges': { cx: 220, cy: 310 },
+        'clermont-ferrand': { cx: 270, cy: 290 },
+        'amiens': { cx: 260, cy: 140 },
+        'perpignan': { cx: 290, cy: 430 },
+        'caen': { cx: 190, cy: 190 },
+        'orleans': { cx: 270, cy: 230 },
+        'metz': { cx: 370, cy: 170 },
+        'besancon': { cx: 380, cy: 220 },
+        'mulhouse': { cx: 410, cy: 210 },
+        'valence': { cx: 330, cy: 340 },
+        'nimes': { cx: 290, cy: 370 },
+        'avignon': { cx: 310, cy: 400 },
+        'poitiers': { cx: 210, cy: 290 },
+        'la rochelle': { cx: 160, cy: 300 },
+        'cherbourg': { cx: 160, cy: 150 },
+        'brest': { cx: 100, cy: 220 },
+        'lorient': { cx: 120, cy: 260 },
+        'quimper': { cx: 100, cy: 240 },
+        'annecy': { cx: 380, cy: 300 },
+        'chambery': { cx: 370, cy: 320 },
+        'pau': { cx: 190, cy: 400 },
+        'bayonne': { cx: 150, cy: 410 },
+        'biarritz': { cx: 150, cy: 420 },
+        'albi': { cx: 250, cy: 370 },
+        'carcassonne': { cx: 270, cy: 400 },
+        'beziers': { cx: 280, cy: 410 },
+        'sete': { cx: 300, cy: 410 },
+        'frejus': { cx: 370, cy: 420 },
+        'cannes': { cx: 380, cy: 430 },
+        'antibes': { cx: 385, cy: 435 },
+        'monaco': { cx: 395, cy: 440 }
+    };
+
+    // Normaliser le nom de la ville
+    const cityKey = ville.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    
+    let found = false;
+    
+    for (const [key, coords] of Object.entries(cityCoords)) {
+        if (cityKey === key || cityKey.includes(key) || key.includes(cityKey)) {
+            pin.setAttribute('cx', coords.cx);
+            pin.setAttribute('cy', coords.cy);
+            // Mettre à jour les cercles associés
+            const parent = pin.parentElement;
+            if (parent) {
+                const circles = parent.querySelectorAll('circle:not([id])');
+                circles.forEach((circle, idx) => {
+                    if (idx === 0) {
+                        circle.setAttribute('cx', coords.cx);
+                        circle.setAttribute('cy', coords.cy);
+                    } else if (idx === 1) {
+                        circle.setAttribute('cx', coords.cx);
+                        circle.setAttribute('cy', coords.cy);
+                    }
+                });
+                // Animation
+                const animCircles = parent.querySelectorAll('circle animate');
+                animCircles.forEach(anim => {
+                    anim.setAttribute('from', '22');
+                    anim.setAttribute('to', '40');
+                });
+            }
+            found = true;
+            break;
+        }
+    }
+    
+    // Si ville non trouvée, centrer sur Paris
+    if (!found) {
+        pin.setAttribute('cx', 280);
+        pin.setAttribute('cy', 170);
+        const parent = pin.parentElement;
+        if (parent) {
+            const circles = parent.querySelectorAll('circle:not([id])');
+            circles.forEach((circle, idx) => {
+                if (idx === 0) {
+                    circle.setAttribute('cx', 280);
+                    circle.setAttribute('cy', 170);
+                } else if (idx === 1) {
+                    circle.setAttribute('cx', 280);
+                    circle.setAttribute('cy', 170);
+                }
+            });
+        }
+    }
 }
 
 document.getElementById('investigationBack')?.addEventListener('click', function() {
@@ -1444,8 +1516,8 @@ document.getElementById('grapheAddPersonne').addEventListener('click', function(
                     const btn = document.getElementById('grapheAttacher');
                     if (btn) {
                         btn.style.background = 'rgba(255,255,255,0.05)';
-                        btn.style.borderColor = 'var(--border-color)';
-                        btn.style.color = 'var(--text-secondary)';
+                        btn.style.borderColor = '#2a2a2a';
+                        btn.style.color = '#a0a0a0';
                     }
                     showToast('Personnes attachees !', 'success');
                 }
@@ -1462,8 +1534,8 @@ document.getElementById('grapheAttacher').addEventListener('click', function() {
         window.grapheLinkMode = false;
         window.grapheLinkFrom = null;
         this.style.background = 'rgba(255,255,255,0.05)';
-        this.style.borderColor = 'var(--border-color)';
-        this.style.color = 'var(--text-secondary)';
+        this.style.borderColor = '#2a2a2a';
+        this.style.color = '#a0a0a0';
         showToast('Mode attacher desactive', 'info');
         return;
     }
