@@ -1559,7 +1559,6 @@ async function loadProfile() {
 // GRAPHE - MODULE COMPLET
 // ============================================
 
-// Variables globales du graphe
 window.grapheNodes = [];
 window.grapheEdges = [];
 let grapheZoom = 1;
@@ -1576,7 +1575,6 @@ let grapheLinkFrom = null;
 let grapheCanvas = null;
 let grapheCtx = null;
 
-// Initialiser le graphe
 function initGraphe() {
     grapheCanvas = document.getElementById('grapheCanvas');
     if (!grapheCanvas) {
@@ -1588,7 +1586,6 @@ function initGraphe() {
     grapheCtx = grapheCanvas.getContext('2d');
     resizeGraphe();
     
-    // Événements
     grapheCanvas.addEventListener('mousedown', onGrapheMouseDown);
     grapheCanvas.addEventListener('mousemove', onGrapheMouseMove);
     grapheCanvas.addEventListener('mouseup', onGrapheMouseUp);
@@ -1608,10 +1605,9 @@ function initGraphe() {
     
     window.addEventListener('resize', resizeGraphe);
     renderGraphe();
-    console.log('✅ Graphe initialise');
+    console.log('Graphe initialise');
 }
 
-// Redimensionner
 function resizeGraphe() {
     const container = document.getElementById('grapheContainer');
     if (!container || !grapheCanvas) return;
@@ -1626,7 +1622,6 @@ function resizeGraphe() {
     }
 }
 
-// Rendre le graphe
 function renderGraphe() {
     if (!grapheCtx || !grapheCanvas) return;
     
@@ -1636,7 +1631,6 @@ function renderGraphe() {
     
     grapheCtx.clearRect(0, 0, W, H);
     
-    // Grille
     const step = 40;
     const ox = ((grapheOffsetX % step) + step) % step;
     const oy = ((grapheOffsetY % step) + step) % step;
@@ -1659,7 +1653,6 @@ function renderGraphe() {
     grapheCtx.translate(grapheOffsetX, grapheOffsetY);
     grapheCtx.scale(grapheZoom, grapheZoom);
     
-    // Arêtes
     window.grapheEdges.forEach(edge => {
         const from = window.grapheNodes.find(n => n.id === edge.from);
         const to = window.grapheNodes.find(n => n.id === edge.to);
@@ -1672,7 +1665,6 @@ function renderGraphe() {
         grapheCtx.stroke();
     });
     
-    // Noeuds
     window.grapheNodes.forEach(node => {
         const r = node.radius || 24;
         const isSelected = grapheLinkMode && grapheLinkFrom === node.id;
@@ -1843,7 +1835,6 @@ function showGrapheContextMenu(x, y) {
     menu.style.display = 'block';
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
-    window.grapheContextNode = window.grapheContextNode || null;
 }
 
 function hideGrapheContextMenu() {
@@ -1852,7 +1843,6 @@ function hideGrapheContextMenu() {
     window.grapheContextNode = null;
 }
 
-// Menu contextuel actions
 document.addEventListener('click', function(e) {
     const menu = document.getElementById('grapheContextMenu');
     if (menu && menu.style.display === 'block') {
@@ -2022,7 +2012,6 @@ function addPersonToGrapheWithFamily(personData) {
 
 // ============ GRAPHE BOUTONS ============
 document.addEventListener('DOMContentLoaded', function() {
-    // Ajouter une personne
     document.getElementById('grapheAddPersonne')?.addEventListener('click', function() {
         const container = document.getElementById('grapheContainer');
         const rect = container.getBoundingClientRect();
@@ -2041,7 +2030,6 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('Personne ajoutee !', 'success');
     });
 
-    // Attacher
     document.getElementById('grapheAttacher')?.addEventListener('click', function() {
         if (window.grapheNodes.length < 2) {
             showToast('Ajoutez au moins 2 personnes', 'warning');
@@ -2064,7 +2052,6 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('Cliquez sur une personne source, puis sur la destination', 'info');
     });
 
-    // Sauvegarder
     document.getElementById('grapheSauvegarder')?.addEventListener('click', function() {
         try {
             localStorage.setItem('marauder_graphe', JSON.stringify({
@@ -2077,7 +2064,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Mes graphes
     document.getElementById('grapheMesGraphes')?.addEventListener('click', function() {
         const saved = localStorage.getItem('marauder_graphe');
         if (!saved) {
@@ -2095,7 +2081,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Effacer
     document.getElementById('grapheEffacer')?.addEventListener('click', function() {
         if (window.grapheNodes.length === 0) {
             showToast('Deja vide', 'info');
@@ -2110,7 +2095,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Exposer les fonctions
 window.initGraphe = initGraphe;
 window.renderGraphe = renderGraphe;
 window.addPersonToGrapheWithFamily = addPersonToGrapheWithFamily;
@@ -2264,7 +2248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             openCreateTicket();
         });
-        console.log('✅ Bouton ticket attache');
+        console.log('Bouton ticket attache');
     }
 });
 
@@ -2326,4 +2310,4 @@ verifyToken();
 loadProfile();
 initGraphe();
 
-console.log('✅ Dashboard charge');
+console.log('Dashboard charge');
