@@ -1057,63 +1057,63 @@ function addToGraphe(index) {
 }
 
 // ========================================
+// ============ API NOMINATIM ============
+// ========================================
+
+async function getCityCoordinates(ville) {
+    if (!ville) return null;
+    
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ville + ', France')}&format=json&limit=1`,
+            {
+                headers: {
+                    'User-Agent': 'Marauder-App/1.0'
+                }
+            }
+        );
+        
+        if (!response.ok) {
+            console.error('Erreur API:', response.status);
+            return null;
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            return {
+                lat: parseFloat(data[0].lat),
+                lng: parseFloat(data[0].lon)
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Erreur de géocodage:', error);
+        return null;
+    }
+}
+
+// ========================================
 // ============ CARTE AVEC IMAGE ============
 // ========================================
 
-// Coordonnées des villes sur l'image (en pourcentage)
-// À ajuster selon ta carte
-const cityPositions = {
-    'paris': { top: 24, left: 48 },
-    'lyon': { top: 42, left: 54 },
-    'marseille': { top: 58, left: 57 },
-    'toulouse': { top: 54, left: 43 },
-    'bordeaux': { top: 50, left: 32 },
-    'lille': { top: 16, left: 40 },
-    'nice': { top: 56, left: 66 },
-    'nantes': { top: 38, left: 28 },
-    'strasbourg': { top: 26, left: 68 },
-    'montpellier': { top: 56, left: 50 },
-    'rennes': { top: 34, left: 26 },
-    'grenoble': { top: 46, left: 60 },
-    'toulon': { top: 60, left: 62 },
-    'angers': { top: 40, left: 30 },
-    'dijon': { top: 36, left: 58 },
-    'le havre': { top: 26, left: 34 },
-    'reims': { top: 24, left: 52 },
-    'saint-etienne': { top: 46, left: 52 },
-    'limoges': { top: 46, left: 38 },
-    'clermont-ferrand': { top: 42, left: 44 },
-    'amiens': { top: 20, left: 42 },
-    'perpignan': { top: 62, left: 48 },
-    'caen': { top: 28, left: 30 },
-    'orleans': { top: 34, left: 44 },
-    'metz': { top: 26, left: 62 },
-    'besancon': { top: 32, left: 64 },
-    'mulhouse': { top: 30, left: 70 },
-    'valence': { top: 48, left: 56 },
-    'nimes': { top: 54, left: 50 },
-    'avignon': { top: 56, left: 54 },
-    'poitiers': { top: 44, left: 36 },
-    'la rochelle': { top: 46, left: 26 },
-    'brest': { top: 32, left: 16 },
-    'lorient': { top: 38, left: 18 },
-    'annecy': { top: 44, left: 64 },
-    'chambery': { top: 46, left: 62 },
-    'pau': { top: 56, left: 32 },
-    'bayonne': { top: 58, left: 26 },
-    'biarritz': { top: 60, left: 24 },
-    'albi': { top: 52, left: 42 },
-    'carcassonne': { top: 56, left: 46 },
-    'beziers': { top: 58, left: 48 },
-    'sete': { top: 60, left: 52 },
-    'frejus': { top: 60, left: 64 },
-    'cannes': { top: 62, left: 66 },
-    'antibes': { top: 63, left: 67 },
-    'monaco': { top: 64, left: 68 }
-};
+function gpsToPosition(lat, lng) {
+    // Bornes géographiques de la France
+    const MIN_LAT = 41.0;   // Sud
+    const MAX_LAT = 51.5;   // Nord
+    const MIN_LNG = -5.5;   // Ouest
+    const MAX_LNG = 9.0;    // Est
+    
+    const left = ((lng - MIN_LNG) / (MAX_LNG - MIN_LNG)) * 100;
+    const top = (1 - ((lat - MIN_LAT) / (MAX_LAT - MIN_LAT))) * 100;
+    
+    return {
+        top: Math.max(2, Math.min(98, top)),
+        left: Math.max(2, Math.min(98, left))
+    };
+}
 
-// ============ DÉPLACER LE POINT ============
-function movePinOnMap(ville) {
+async function movePinOnMap(ville) {
     const pin = document.getElementById('mapPin');
     if (!pin) return;
 
@@ -1122,21 +1122,27 @@ function movePinOnMap(ville) {
         return;
     }
 
-    const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    let found = false;
-    let pos = { top: 24, left: 48 }; // Paris par défaut
-
-    for (const [key, coords] of Object.entries(cityPositions)) {
-        if (cityKey === key || cityKey.includes(key) || key.includes(cityKey)) {
-            pos = coords;
-            found = true;
-            break;
+    try {
+        const coords = await getCityCoordinates(ville);
+        
+        if (coords) {
+            const pos = gpsToPosition(coords.lat, coords.lng);
+            pin.style.display = 'block';
+            pin.style.top = pos.top + '%';
+            pin.style.left = pos.left + '%';
+            console.log(`📍 ${ville} → ${pos.top}%, ${pos.left}%`);
+        } else {
+            pin.style.display = 'block';
+            pin.style.top = '24%';
+            pin.style.left = '48%';
+            console.log(`⚠️ Ville non trouvée: ${ville}, centré sur Paris`);
         }
+    } catch (error) {
+        console.error('Erreur:', error);
+        pin.style.display = 'block';
+        pin.style.top = '24%';
+        pin.style.left = '48%';
     }
-
-    pin.style.display = 'block';
-    pin.style.top = pos.top + '%';
-    pin.style.left = pos.left + '%';
 }
 
 // ============ INVESTIGATION ============
@@ -1161,11 +1167,9 @@ function openInvestigation(index) {
     document.getElementById('investigationCityLabel').textContent = ville;
 
     // ============================================
-    // DÉPLACER LE POINT SUR LA CARTE
+    // DÉPLACER LE POINT SUR LA CARTE (via API)
     // ============================================
-    setTimeout(() => {
-        movePinOnMap(ville);
-    }, 200);
+    movePinOnMap(ville);
 
     const confidence = person._confidence || 0;
     const confEl = document.getElementById('investigationConfidence');
