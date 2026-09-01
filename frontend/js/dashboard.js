@@ -1057,124 +1057,86 @@ function addToGraphe(index) {
 }
 
 // ========================================
-// ============ CARTE FRANCE (Leaflet) ============
+// ============ CARTE AVEC IMAGE ============
 // ========================================
 
-let franceMap = null;
-let mapMarker = null;
+// Coordonnées des villes sur l'image (en pourcentage)
+// À ajuster selon ta carte
+const cityPositions = {
+    'paris': { top: 24, left: 48 },
+    'lyon': { top: 42, left: 54 },
+    'marseille': { top: 58, left: 57 },
+    'toulouse': { top: 54, left: 43 },
+    'bordeaux': { top: 50, left: 32 },
+    'lille': { top: 16, left: 40 },
+    'nice': { top: 56, left: 66 },
+    'nantes': { top: 38, left: 28 },
+    'strasbourg': { top: 26, left: 68 },
+    'montpellier': { top: 56, left: 50 },
+    'rennes': { top: 34, left: 26 },
+    'grenoble': { top: 46, left: 60 },
+    'toulon': { top: 60, left: 62 },
+    'angers': { top: 40, left: 30 },
+    'dijon': { top: 36, left: 58 },
+    'le havre': { top: 26, left: 34 },
+    'reims': { top: 24, left: 52 },
+    'saint-etienne': { top: 46, left: 52 },
+    'limoges': { top: 46, left: 38 },
+    'clermont-ferrand': { top: 42, left: 44 },
+    'amiens': { top: 20, left: 42 },
+    'perpignan': { top: 62, left: 48 },
+    'caen': { top: 28, left: 30 },
+    'orleans': { top: 34, left: 44 },
+    'metz': { top: 26, left: 62 },
+    'besancon': { top: 32, left: 64 },
+    'mulhouse': { top: 30, left: 70 },
+    'valence': { top: 48, left: 56 },
+    'nimes': { top: 54, left: 50 },
+    'avignon': { top: 56, left: 54 },
+    'poitiers': { top: 44, left: 36 },
+    'la rochelle': { top: 46, left: 26 },
+    'brest': { top: 32, left: 16 },
+    'lorient': { top: 38, left: 18 },
+    'annecy': { top: 44, left: 64 },
+    'chambery': { top: 46, left: 62 },
+    'pau': { top: 56, left: 32 },
+    'bayonne': { top: 58, left: 26 },
+    'biarritz': { top: 60, left: 24 },
+    'albi': { top: 52, left: 42 },
+    'carcassonne': { top: 56, left: 46 },
+    'beziers': { top: 58, left: 48 },
+    'sete': { top: 60, left: 52 },
+    'frejus': { top: 60, left: 64 },
+    'cannes': { top: 62, left: 66 },
+    'antibes': { top: 63, left: 67 },
+    'monaco': { top: 64, left: 68 }
+};
 
-function initFranceMap(ville) {
-    const container = document.getElementById('franceMap');
-    if (!container) return;
-    
-    // Si la carte existe déjà, la détruire
-    if (franceMap) {
-        franceMap.remove();
-        franceMap = null;
-        mapMarker = null;
+// ============ DÉPLACER LE POINT ============
+function movePinOnMap(ville) {
+    const pin = document.getElementById('mapPin');
+    if (!pin) return;
+
+    if (!ville) {
+        pin.style.display = 'none';
+        return;
     }
-    
-    // Coordonnées des villes
-    const cityCoords = {
-        'paris': { lat: 48.8566, lng: 2.3522 },
-        'lyon': { lat: 45.7640, lng: 4.8357 },
-        'marseille': { lat: 43.2965, lng: 5.3698 },
-        'toulouse': { lat: 43.6045, lng: 1.4442 },
-        'bordeaux': { lat: 44.8378, lng: -0.5792 },
-        'lille': { lat: 50.6292, lng: 3.0573 },
-        'nice': { lat: 43.7102, lng: 7.2620 },
-        'nantes': { lat: 47.2184, lng: -1.5536 },
-        'strasbourg': { lat: 48.5734, lng: 7.7521 },
-        'montpellier': { lat: 43.6108, lng: 3.8767 },
-        'rennes': { lat: 48.1173, lng: -1.6778 },
-        'grenoble': { lat: 45.1885, lng: 5.7245 },
-        'toulon': { lat: 43.1242, lng: 5.9280 },
-        'angers': { lat: 47.4784, lng: -0.5632 },
-        'dijon': { lat: 47.3220, lng: 5.0415 },
-        'le havre': { lat: 49.4944, lng: 0.1079 },
-        'reims': { lat: 49.2583, lng: 4.0317 },
-        'saint-etienne': { lat: 45.4397, lng: 4.3872 },
-        'limoges': { lat: 45.8336, lng: 1.2611 },
-        'clermont-ferrand': { lat: 45.7772, lng: 3.0870 },
-        'amiens': { lat: 49.8941, lng: 2.2957 },
-        'perpignan': { lat: 42.6976, lng: 2.8954 },
-        'caen': { lat: 49.1829, lng: -0.3707 },
-        'orleans': { lat: 47.9029, lng: 1.9093 },
-        'metz': { lat: 49.1193, lng: 6.1757 },
-        'besancon': { lat: 47.2378, lng: 6.0241 },
-        'mulhouse': { lat: 47.7508, lng: 7.3359 },
-        'valence': { lat: 44.9332, lng: 4.8924 },
-        'nimes': { lat: 43.8367, lng: 4.3600 },
-        'avignon': { lat: 43.9493, lng: 4.8055 },
-        'poitiers': { lat: 46.5802, lng: 0.3404 },
-        'la rochelle': { lat: 46.1603, lng: -1.1511 },
-        'brest': { lat: 48.3904, lng: -4.4861 },
-        'lorient': { lat: 47.7500, lng: -3.3667 },
-        'annecy': { lat: 45.8992, lng: 6.1294 },
-        'chambery': { lat: 45.5667, lng: 5.9333 },
-        'pau': { lat: 43.2951, lng: -0.3708 },
-        'bayonne': { lat: 43.4929, lng: -1.4766 },
-        'biarritz': { lat: 43.4832, lng: -1.5586 },
-        'albi': { lat: 43.9280, lng: 2.1472 },
-        'carcassonne': { lat: 43.2133, lng: 2.3516 },
-        'beziers': { lat: 43.3462, lng: 3.2158 },
-        'sete': { lat: 43.4025, lng: 3.6962 },
-        'frejus': { lat: 43.4329, lng: 6.7353 },
-        'cannes': { lat: 43.5528, lng: 7.0174 },
-        'antibes': { lat: 43.5804, lng: 7.1251 },
-        'monaco': { lat: 43.7384, lng: 7.4246 }
-    };
 
-    // Déterminer les coordonnées
-    let lat = 46.5, lng = 2.5;
-    if (ville) {
-        const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        for (const [key, coords] of Object.entries(cityCoords)) {
-            if (cityKey === key || cityKey.includes(key) || key.includes(cityKey)) {
-                lat = coords.lat;
-                lng = coords.lng;
-                break;
-            }
+    const cityKey = ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let found = false;
+    let pos = { top: 24, left: 48 }; // Paris par défaut
+
+    for (const [key, coords] of Object.entries(cityPositions)) {
+        if (cityKey === key || cityKey.includes(key) || key.includes(cityKey)) {
+            pos = coords;
+            found = true;
+            break;
         }
     }
 
-    // Créer la carte
-    franceMap = L.map('franceMap', {
-        center: [lat, lng],
-        zoom: 7,
-        zoomControl: false,
-        attributionControl: false,
-        dragging: false,
-        scrollWheelZoom: false,
-        doubleClickZoom: false,
-        boxZoom: false,
-        keyboard: false
-    });
-
-    // Fond noir
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        attribution: ''
-    }).addTo(franceMap);
-
-    // Ajouter le marqueur
-    if (ville) {
-        // Marqueur personnalisé
-        const customIcon = L.divIcon({
-            className: 'custom-marker',
-            iconSize: [22, 22],
-            iconAnchor: [11, 11]
-        });
-        
-        mapMarker = L.marker([lat, lng], { icon: customIcon }).addTo(franceMap);
-    }
-
-    // Redimensionner après un court délai
-    setTimeout(() => {
-        if (franceMap) {
-            franceMap.invalidateSize();
-        }
-    }, 200);
+    pin.style.display = 'block';
+    pin.style.top = pos.top + '%';
+    pin.style.left = pos.left + '%';
 }
 
 // ============ INVESTIGATION ============
@@ -1199,10 +1161,10 @@ function openInvestigation(index) {
     document.getElementById('investigationCityLabel').textContent = ville;
 
     // ============================================
-    // INITIALISER LA CARTE
+    // DÉPLACER LE POINT SUR LA CARTE
     // ============================================
-    setTimeout(function() {
-        initFranceMap(ville);
+    setTimeout(() => {
+        movePinOnMap(ville);
     }, 200);
 
     const confidence = person._confidence || 0;
