@@ -89,3 +89,9 @@ if (homeMenuBtn && homeNavLinks) {
         }
     });
 }
+
+// ============ BOUTON DISCORD ============
+document.getElementById('discordBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.open('https://discord.gg/jf6QRZHaTB', '_blank');
+});
