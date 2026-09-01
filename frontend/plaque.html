@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Marauder - Recherche Plaque</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png?ex=6a967b3e&is=6a9529be&hm=73725b0a8477c3d60cad60b87ea9d91bfbb90672f606b199b78e5e797d1cdb7b&">
+    <style>
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; font-family: Arial, sans-serif; color: #ffffff; min-height: 100vh; }
+        body::before, body::after { display: none !important; }
+
+        /* ============================================
+           NAVIGATION
+           ============================================ */
+        .navbar { background: #111111; border-bottom: 1px solid #2a2a2a; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .navbar .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: #ffffff; text-decoration: none; }
+        .navbar .logo svg { width: 28px; height: 28px; color: #ffffff; }
+        .navbar .nav-links { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .navbar .nav-links a { color: #a0a0a0; text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        .navbar .nav-links a:hover { color: #ffffff; }
+        .navbar .nav-links .btn-back { padding: 8px 20px; background: #ffffff; border-radius: 8px; color: #000000 !important; font-weight: 600; }
+
+        /* ============================================
+           PAGE PLAQUE
+           ============================================ */
+        .plaque-page { padding: 40px; max-width: 1200px; margin: 0 auto; }
+        .plaque-header { text-align: center; margin-bottom: 40px; }
+        .plaque-header h1 { font-size: 36px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+        .plaque-header p { font-size: 16px; color: #a0a0a0; }
+
+        /* ============================================
+           RECHERCHE
+           ============================================ */
+        .search-box { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 600px; margin: 0 auto 32px; }
+        .search-box .form-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .search-box .form-group input { flex: 1; min-width: 200px; padding: 14px 18px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; color: #ffffff; font-size: 16px; font-family: Arial, sans-serif; outline: none; transition: border-color 0.2s; }
+        .search-box .form-group input:focus { border-color: #ffffff; }
+        .search-box .form-group input::placeholder { color: #6b6b6b; }
+        .search-box .form-group button { padding: 14px 32px; background: #ffffff; border: none; border-radius: 8px; color: #000000; font-size: 16px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
+        .search-box .form-group button:hover { background: #cccccc; }
+        .search-box .form-group button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ============================================
+           RÉSULTATS
+           ============================================ */
+        .results-container { display: none; }
+        .results-container.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-card { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; margin-bottom: 20px; }
+
+        /* ===== HEADER AVEC PHOTO ===== */
+        .vehicle-header { display: flex; align-items: center; gap: 24px; padding-bottom: 20px; border-bottom: 1px solid #2a2a2a; margin-bottom: 20px; flex-wrap: wrap; }
+        .vehicle-header .vehicle-image { width: 160px; height: 100px; border-radius: 8px; background: #1a1a1a; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #2a2a2a; }
+        .vehicle-header .vehicle-image img { width: 100%; height: 100%; object-fit: cover; }
+        .vehicle-header .vehicle-image .no-image { color: #6b6b6b; font-size: 12px; text-align: center; padding: 8px; }
+        .vehicle-header .vehicle-info .vehicle-title { font-size: 24px; font-weight: 700; color: #ffffff; }
+        .vehicle-header .vehicle-info .vehicle-plate { font-size: 14px; color: #a0a0a0; margin-top: 4px; }
+        .vehicle-header .vehicle-info .vehicle-badge { display: inline-block; padding: 2px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-top: 6px; background: rgba(255,255,255,0.05); border: 1px solid #2a2a2a; color: #a0a0a0; }
+
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+        .result-item { padding: 12px 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
+        .result-item .label { font-size: 11px; font-weight: 500; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .result-item .value { font-size: 15px; color: #ffffff; margin-top: 4px; word-break: break-all; }
+
+        .result-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; }
+        .result-section h3 { font-size: 16px; font-weight: 600; color: #ffffff; margin-bottom: 12px; }
+
+        /* ===== GALERIE PHOTOS ===== */
+        .gallery { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+        .gallery .gallery-item { width: 120px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #2a2a2a; background: #1a1a1a; flex-shrink: 0; }
+        .gallery .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery .gallery-item .no-image { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #6b6b6b; font-size: 11px; text-align: center; padding: 4px; }
+
+        /* ============================================
+           LOADING
+           ============================================ */
+        .loading { display: none; text-align: center; padding: 40px; }
+        .loading.active { display: block; }
+        .loading .spinner { width: 48px; height: 48px; border: 3px solid #2a2a2a; border-top-color: #ffffff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ============================================
+           ERREUR
+           ============================================ */
+        .error-message { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 20px; color: #ef4444; text-align: center; display: none; }
+        .error-message.active { display: block; }
+
+        /* ============================================
+           MOBILE
+           ============================================ */
+        @media (max-width: 768px) {
+            .navbar { padding: 12px 16px; flex-direction: column; }
+            .navbar .nav-links { justify-content: center; }
+            .plaque-page { padding: 20px 16px; }
+            .plaque-header h1 { font-size: 28px; }
+            .search-box .form-group { flex-direction: column; }
+            .search-box .form-group button { width: 100%; justify-content: center; }
+            .result-grid { grid-template-columns: 1fr; }
+            .result-card { padding: 16px; }
+            .vehicle-header { flex-direction: column; align-items: flex-start; }
+            .vehicle-header .vehicle-image { width: 100%; height: 120px; }
+            .vehicle-header .vehicle-info .vehicle-title { font-size: 18px; }
+            .gallery .gallery-item { width: 80px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============ NAVIGATION ============ -->
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Marauder
+        </a>
+        <div class="nav-links">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/cgu.html">CGU</a>
+            <a href="/" class="btn-back">Accueil</a>
+        </div>
+    </nav>
+
+    <!-- ============ PAGE PLAQUE ============ -->
+    <div class="plaque-page">
+
+        <div class="plaque-header">
+            <h1>🚗 Recherche par plaque</h1>
+            <p>Entrez une plaque d'immatriculation française pour obtenir toutes les informations du véhicule</p>
+        </div>
+
+        <!-- ============ RECHERCHE ============ -->
+        <div class="search-box">
+            <div class="form-group">
+                <input type="text" id="plateInput" placeholder="Ex: FH034DD ou AB-123-CD" maxlength="15" autofocus>
+                <button id="searchBtn">🔍 Rechercher</button>
+            </div>
+        </div>
+
+        <!-- ============ LOADING ============ -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color:#a0a0a0;">Recherche en cours...</p>
+        </div>
+
+        <!-- ============ ERREUR ============ -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- ============ RÉSULTATS ============ -->
+        <div class="results-container" id="resultsContainer"></div>
+
+    </div>
+
+    <!-- ============================================ SCRIPTS ============================================ -->
+    <script>
+        const API_URL = window.location.origin;
+
+        const plateInput = document.getElementById('plateInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // ============ RECHERCHE ============
+        async function searchPlate() {
+            let plate = plateInput.value.trim().toUpperCase().replace(/\s/g, '').replace(/-/g, '');
+
+            if (!plate) {
+                showError('Veuillez entrer une plaque d\'immatriculation.');
+                return;
+            }
+
+            searchBtn.disabled = true;
+            searchBtn.textContent = '⏳ Recherche...';
+            loading.classList.add('active');
+            resultsContainer.classList.remove('active');
+            resultsContainer.innerHTML = '';
+            errorMessage.classList.remove('active');
+
+            try {
+                const response = await fetch(`${API_URL}/api/plaque?plate=${plate}`);
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error(`Aucun véhicule trouvé pour la plaque **${plate}**`);
+                    } else if (response.status === 403) {
+                        throw new Error('Clé API invalide ou accès refusé.');
+                    } else {
+                        throw new Error(`Erreur ${response.status}`);
+                    }
+                }
+
+                const data = await response.json();
+
+                if (!data || data.error) {
+                    throw new Error(data.error || 'Erreur lors de la recherche');
+                }
+
+                displayResults(data, plate);
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 Rechercher';
+                loading.classList.remove('active');
+            }
+        }
+
+        // ============ AFFICHAGE RÉSULTATS AVEC PHOTOS ============
+        function displayResults(data, plate) {
+            // Construction des URLs des images
+            const brandImage = data.AWN_marque_image ? data.AWN_marque_image : null;
+            const modelImage = data.AWN_model_image ? data.AWN_model_image : null;
+
+            // Images supplémentaires (si disponibles dans l'API)
+            const extraImages = data.AWN_images || [];
+
+            let html = `
+                <div class="result-card">
+                    <div class="vehicle-header">
+                        <div class="vehicle-image">
+                            ${modelImage ? `<img src="${modelImage}" alt="${data.AWN_marque} ${data.AWN_modele}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>🚗<br>Image non disponible</div>'">` : 
+                            brandImage ? `<img src="${brandImage}" alt="${data.AWN_marque}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>🚗<br>Image non disponible</div>'">` :
+                            `<div class="no-image">🚗<br>Image non disponible</div>`}
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-title">${data.AWN_marque || '?'} ${data.AWN_modele || '?'}</div>
+                            <div class="vehicle-plate">🔹 ${data.AWN_immat || plate}</div>
+                            ${data.AWN_version ? `<div class="vehicle-badge">${data.AWN_version}</div>` : ''}
+                            ${data.AWN_energie ? `<div class="vehicle-badge" style="margin-left:6px;">${data.AWN_energie}</div>` : ''}
+                            ${data.AWN_puissance_chevaux ? `<div class="vehicle-badge" style="margin-left:6px;">${data.AWN_puissance_chevaux} ch</div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="result-grid">
+                        ${data.AWN_annee_de_debut_modele ? `
+                            <div class="result-item">
+                                <div class="label">Année</div>
+                                <div class="value">${data.AWN_annee_de_debut_modele}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_energie ? `
+                            <div class="result-item">
+                                <div class="label">Carburant</div>
+                                <div class="value">${data.AWN_energie}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_puissance_chevaux ? `
+                            <div class="result-item">
+                                <div class="label">Puissance</div>
+                                <div class="value">${data.AWN_puissance_chevaux} ch</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_puissance_fiscale ? `
+                            <div class="result-item">
+                                <div class="label">Puissance fiscale</div>
+                                <div class="value">${data.AWN_puissance_fiscale} CV</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_cylindre_capacite ? `
+                            <div class="result-item">
+                                <div class="label">Cylindrée</div>
+                                <div class="value">${data.AWN_cylindre_capacite} cm³</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_carrosserie ? `
+                            <div class="result-item">
+                                <div class="label">Carrosserie</div>
+                                <div class="value">${data.AWN_carrosserie}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_nbr_portes ? `
+                            <div class="result-item">
+                                <div class="label">Portes</div>
+                                <div class="value">${data.AWN_nbr_portes}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_nbr_de_places ? `
+                            <div class="result-item">
+                                <div class="label">Places</div>
+                                <div class="value">${data.AWN_nbr_de_places}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_type_boite_vites ? `
+                            <div class="result-item">
+                                <div class="label">Boîte de vitesses</div>
+                                <div class="value">${data.AWN_type_boite_vites}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_couleur ? `
+                            <div class="result-item">
+                                <div class="label">Couleur</div>
+                                <div class="value">${data.AWN_couleur}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_emission_co_2 ? `
+                            <div class="result-item">
+                                <div class="label">CO₂</div>
+                                <div class="value">${data.AWN_emission_co_2} g/km</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_env_class ? `
+                            <div class="result-item">
+                                <div class="label">Norme Euro</div>
+                                <div class="value">${data.AWN_env_class}</div>
+                            </div>
+                        ` : ''}
+                        ${data.AWN_date_mise_en_circulation ? `
+                            <div class="result-item">
+                                <div class="label">Mise en circulation</div>
+                                <div class="value">${data.AWN_date_mise_en_circulation}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${data.AWN_VIN || data.AWN_code_moteur || data.AWN_k_type ? `
+                        <div class="result-section">
+                            <h3>🔑 Identifiants</h3>
+                            <div class="result-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                                ${data.AWN_VIN ? `
+                                    <div class="result-item">
+                                        <div class="label">VIN</div>
+                                        <div class="value" style="font-size:13px;font-family:monospace;">${data.AWN_VIN}</div>
+                                    </div>
+                                ` : ''}
+                                ${data.AWN_code_moteur ? `
+                                    <div class="result-item">
+                                        <div class="label">Code moteur</div>
+                                        <div class="value">${data.AWN_code_moteur}</div>
+                                    </div>
+                                ` : ''}
+                                ${data.AWN_k_type ? `
+                                    <div class="result-item">
+                                        <div class="label">K-Type</div>
+                                        <div class="value">${data.AWN_k_type}</div>
+                                    </div>
+                                ` : ''}
+                                ${data.AWN_KBA ? `
+                                    <div class="result-item">
+                                        <div class="label">KBA</div>
+                                        <div class="value">${data.AWN_KBA}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${data.AWN_PTAC || data.AWN_PTRA || data.AWN_PV ? `
+                        <div class="result-section">
+                            <h3>📐 Poids</h3>
+                            <div class="result-grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
+                                ${data.AWN_PTAC ? `
+                                    <div class="result-item">
+                                        <div class="label">PTAC</div>
+                                        <div class="value">${data.AWN_PTAC} kg</div>
+                                    </div>
+                                ` : ''}
+                                ${data.AWN_PTRA ? `
+                                    <div class="result-item">
+                                        <div class="label">PTRA</div>
+                                        <div class="value">${data.AWN_PTRA} kg</div>
+                                    </div>
+                                ` : ''}
+                                ${data.AWN_PV ? `
+                                    <div class="result-item">
+                                        <div class="label">Poids à vide</div>
+                                        <div class="value">${data.AWN_PV} kg</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${data.AWN_pneus && data.AWN_pneus.length > 0 ? `
+                        <div class="result-section">
+                            <h3>🔘 Pneus compatibles</h3>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                ${data.AWN_pneus.slice(0, 6).map(p => `
+                                    <span style="background:rgba(255,255,255,0.05);border:1px solid #2a2a2a;border-radius:4px;padding:4px 12px;font-size:13px;color:#a0a0a0;">${p.label || p}</span>
+                                `).join('')}
+                                ${data.AWN_pneus.length > 6 ? `<span style="color:#6b6b6b;font-size:13px;">+${data.AWN_pneus.length - 6} autres</span>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #2a2a2a;text-align:center;font-size:12px;color:#6b6b6b;">
+                        Auto Ways Network · Données SIV · ${new Date().toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.classList.add('active');
+
+            // Charger l'image de la marque si l'image du modèle n'existe pas
+            if (!modelImage && brandImage) {
+                const img = resultsContainer.querySelector('.vehicle-image img');
+                if (img) {
+                    img.src = brandImage;
+                }
+            }
+        }
+
+        // ============ AFFICHAGE ERREUR ============
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.classList.add('active');
+            resultsContainer.classList.remove('active');
+            resultsContainer.innerHTML = '';
+        }
+
+        // ============ ÉVÉNEMENTS ============
+        searchBtn.addEventListener('click', searchPlate);
+
+        plateInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchPlate();
+            }
+        });
+
+        // ============ INIT ============
+        console.log('🔍 Page recherche plaque chargée');
+    </script>
+
+</body>
+</html>

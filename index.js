@@ -997,3 +997,91 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Marauder API running on port ${PORT}`);
 });
+
+// ============ ROUTE PLAQUE ============
+app.get('/plaque', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'plaque.html'));
+});
+
+// ============ API PLAQUE ============
+app.get('/api/plaque', async (req, res) => {
+    const plate = req.query.plate?.toUpperCase().replace(/\s/g, '').replace(/-/g, '');
+    
+    if (!plate) {
+        return res.status(400).json({ error: 'Plaque requise' });
+    }
+
+    try {
+        const response = await axios.get(
+            `https://app.auto-ways.net/api/v1/fr?plate=${plate}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${process.env.AUTO_WAYS_KEY}`,
+                    'Accept': 'application/json'
+                },
+                timeout: 15000
+            }
+        );
+
+        if (response.data && response.data.AWN_immat) {
+            return res.json(response.data);
+        } else {
+            return res.status(404).json({ error: 'Véhicule non trouvé' });
+        }
+
+    } catch (error) {
+        console.error('Erreur plaque:', error.message);
+        
+        if (error.response?.status === 403) {
+            return res.status(403).json({ error: 'Clé API invalide' });
+        }
+        if (error.response?.status === 404) {
+            return res.status(404).json({ error: 'Véhicule non trouvé' });
+        }
+        return res.status(500).json({ error: 'Erreur de recherche' });
+    }
+});
+
+// ============ ROUTE PLAQUE ============
+app.get('/plaque', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'plaque.html'));
+});
+
+// ============ API PLAQUE ============
+app.get('/api/plaque', async (req, res) => {
+    const plate = req.query.plate?.toUpperCase().replace(/\s/g, '').replace(/-/g, '');
+    
+    if (!plate) {
+        return res.status(400).json({ error: 'Plaque requise' });
+    }
+
+    try {
+        const response = await axios.get(
+            `https://app.auto-ways.net/api/v1/fr?plate=${plate}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${process.env.AUTO_WAYS_KEY}`,
+                    'Accept': 'application/json'
+                },
+                timeout: 15000
+            }
+        );
+
+        if (response.data && response.data.AWN_immat) {
+            return res.json(response.data);
+        } else {
+            return res.status(404).json({ error: 'Véhicule non trouvé' });
+        }
+
+    } catch (error) {
+        console.error('Erreur plaque:', error.message);
+        
+        if (error.response?.status === 403) {
+            return res.status(403).json({ error: 'Clé API invalide ou accès refusé' });
+        }
+        if (error.response?.status === 404) {
+            return res.status(404).json({ error: 'Véhicule non trouvé' });
+        }
+        return res.status(500).json({ error: 'Erreur de recherche' });
+    }
+});
