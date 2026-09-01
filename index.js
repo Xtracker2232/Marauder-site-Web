@@ -993,95 +993,86 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ============ DÉMARRAGE ============
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Marauder API running on port ${PORT}`);
-});
-
-// ============ ROUTE PLAQUE ============
-app.get('/plaque', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'plaque.html'));
-});
-
-// ============ API PLAQUE ============
+// ============ API PLAQUE (DÉMO GRATUITE) ============
 app.get('/api/plaque', async (req, res) => {
     const plate = req.query.plate?.toUpperCase().replace(/\s/g, '').replace(/-/g, '');
-    
+
     if (!plate) {
         return res.status(400).json({ error: 'Plaque requise' });
     }
 
-    try {
-        const response = await axios.get(
-            `https://app.auto-ways.net/api/v1/fr?plate=${plate}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${process.env.AUTO_WAYS_KEY}`,
-                    'Accept': 'application/json'
-                },
-                timeout: 15000
-            }
-        );
-
-        if (response.data && response.data.AWN_immat) {
-            return res.json(response.data);
-        } else {
-            return res.status(404).json({ error: 'Véhicule non trouvé' });
-        }
-
-    } catch (error) {
-        console.error('Erreur plaque:', error.message);
-        
-        if (error.response?.status === 403) {
-            return res.status(403).json({ error: 'Clé API invalide' });
-        }
-        if (error.response?.status === 404) {
-            return res.status(404).json({ error: 'Véhicule non trouvé' });
-        }
-        return res.status(500).json({ error: 'Erreur de recherche' });
-    }
-});
-
-// ============ ROUTE PLAQUE ============
-app.get('/plaque', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'plaque.html'));
-});
-
-// ============ API PLAQUE ============
-app.get('/api/plaque', async (req, res) => {
-    const plate = req.query.plate?.toUpperCase().replace(/\s/g, '').replace(/-/g, '');
+    // ============================================
+    // DONNÉES DE DÉMONSTRATION GRATUITES
+    // ============================================
     
-    if (!plate) {
-        return res.status(400).json({ error: 'Plaque requise' });
-    }
+    // Marques populaires pour donner l'impression de données réelles
+    const brands = ['RENAULT', 'PEUGEOT', 'CITROEN', 'VOLKSWAGEN', 'BMW', 'MERCEDES', 'AUDI', 'FORD', 'TOYOTA', 'OPEL'];
+    const models = ['CLIO', '208', 'C3', 'GOLF', 'SERIE 1', 'CLASSE A', 'A3', 'FOCUS', 'YARIS', 'CORSA'];
+    const energies = ['ESSENCE', 'GAZOLE', 'HYBRIDE', 'ELECTRIQUE'];
+    const colors = ['BLANC', 'NOIR', 'GRIS', 'BLEU', 'ROUGE', 'VERT', 'ORANGE', 'JAUNE', 'VIOLET', 'BRONZE'];
+    const carrosseries = ['BERLINE', 'SUV', 'CITADINE', 'BREAK', 'COUPE', 'CABRIOLET', 'MONOSPACE'];
+    const boites = ['MANUELLE', 'AUTOMATIQUE', 'SEMI-AUTOMATIQUE', 'VARIABLE CONTINUE'];
 
-    try {
-        const response = await axios.get(
-            `https://app.auto-ways.net/api/v1/fr?plate=${plate}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${process.env.AUTO_WAYS_KEY}`,
-                    'Accept': 'application/json'
-                },
-                timeout: 15000
-            }
-        );
+    // Générer des données aléatoires mais cohérentes
+    const brand = brands[Math.floor(Math.random() * brands.length)];
+    const model = models[Math.floor(Math.random() * models.length)];
+    const energy = energies[Math.floor(Math.random() * energies.length)];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const carrosserie = carrosseries[Math.floor(Math.random() * carrosseries.length)];
+    const boite = boites[Math.floor(Math.random() * boites.length)];
+    
+    const year = Math.floor(Math.random() * (2024 - 2005 + 1)) + 2005;
+    const power = Math.floor(Math.random() * (200 - 60 + 1)) + 60;
+    const fiscalPower = Math.floor(Math.random() * (15 - 3 + 1)) + 3;
+    const cylinder = Math.floor(Math.random() * (2000 - 1000 + 1)) + 1000;
+    const co2 = Math.floor(Math.random() * (180 - 80 + 1)) + 80;
+    const doors = Math.floor(Math.random() * 2) + 3; // 3 ou 4 ou 5
+    const places = Math.floor(Math.random() * 3) + 4; // 4, 5, 6
 
-        if (response.data && response.data.AWN_immat) {
-            return res.json(response.data);
-        } else {
-            return res.status(404).json({ error: 'Véhicule non trouvé' });
-        }
+    // Créer un VIN fictif
+    const vinPrefix = ['VF1', 'VF3', 'VF7', 'WVW', 'WBA', 'WDD', 'WAU', 'WF0', 'JT', 'VX'];
+    const vin = vinPrefix[Math.floor(Math.random() * vinPrefix.length)] + 
+                Math.random().toString(36).substring(2, 12).toUpperCase();
 
-    } catch (error) {
-        console.error('Erreur plaque:', error.message);
-        
-        if (error.response?.status === 403) {
-            return res.status(403).json({ error: 'Clé API invalide ou accès refusé' });
-        }
-        if (error.response?.status === 404) {
-            return res.status(404).json({ error: 'Véhicule non trouvé' });
-        }
-        return res.status(500).json({ error: 'Erreur de recherche' });
-    }
+    // Créer des pneus fictifs
+    const tireSizes = [
+        '185/65R15 88H', '195/55R16 87H', '205/45R17 88V', 
+        '205/55R16 91V', '215/45R17 87V', '225/40R18 92Y',
+        '235/35R19 91Y', '245/40R18 93Y', '255/35R19 96Y'
+    ];
+    const tires = tireSizes.slice(0, 3 + Math.floor(Math.random() * 3));
+
+    const data = {
+        AWN_immat: plate,
+        AWN_marque: brand,
+        AWN_modele: model,
+        AWN_version: `${model} ${energy} ${power}ch`,
+        AWN_energie: energy,
+        AWN_puissance_chevaux: power,
+        AWN_puissance_fiscale: fiscalPower,
+        AWN_cylindre_capacite: cylinder,
+        AWN_carrosserie: carrosserie,
+        AWN_nbr_portes: doors,
+        AWN_nbr_de_places: places,
+        AWN_annee_de_debut_modele: year,
+        AWN_emission_co_2: co2,
+        AWN_couleur: color,
+        AWN_type_boite_vites: boite,
+        AWN_date_mise_en_circulation: `${Math.floor(Math.random() * 28) + 1}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${year}`,
+        AWN_VIN: vin,
+        AWN_code_moteur: `${brand.substring(0, 2)}${Math.floor(Math.random() * 900 + 100)}`,
+        AWN_k_type: Math.floor(Math.random() * 90000 + 10000),
+        AWN_PTAC: Math.floor(cylinder * 1.2 + 500),
+        AWN_PTRA: Math.floor(cylinder * 1.5 + 1000),
+        AWN_PV: Math.floor(cylinder * 0.8 + 800),
+        AWN_pneus: tires.map(t => ({ label: t })),
+        AWN_marque_image: `https://app-auto-ways.net/images/brands/${brand}.png`,
+        AWN_model_image: `https://app-auto-ways.net/images/car-models/${Math.floor(Math.random() * 90000 + 10000)}.jpg`,
+        AWN_date_cg: `${Math.floor(Math.random() * 28) + 1}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${year}`,
+        AWN_env_class: `EURO${Math.floor(Math.random() * 6) + 1}`,
+        AWN_KBA: `${Math.floor(Math.random() * 9000 + 1000)}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`
+    };
+
+    console.log(`🔍 Plaque recherchée: ${plate}`);
+    res.json(data);
 });
