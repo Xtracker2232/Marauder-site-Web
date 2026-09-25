@@ -651,6 +651,26 @@
         </div>
     </div>
 
+    <!-- PANNEAU MAINTENANCE -->
+<div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:#fff;">🔧 Mode Maintenance</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#a0a0a0;font-size:14px;">
+            <input type="checkbox" id="maintenance-toggle" style="width:18px;height:18px;cursor:pointer;accent-color:#fff;">
+            <span>Activer la maintenance</span>
+        </label>
+    </div>
+    <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:12px;color:#a0a0a0;margin-bottom:6px;">Message personnalisé</label>
+        <input type="text" id="maintenance-message" placeholder="Mise à jour en cours..." style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:#a0a0a0;margin-bottom:6px;">Durée estimée (minutes)</label>
+        <input type="number" id="maintenance-eta" placeholder="30" min="0" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Arial;font-size:14px;outline:none;box-sizing:border-box;">
+    </div>
+    <button id="maintenance-save" style="padding:10px 24px;background:#fff;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:Arial;font-size:14px;">Enregistrer</button>
+</div>
+    
     <!-- TAB SEARCHES -->
     <div id="tab-searches" class="admin-tab-content">
         <div class="admin-table-wrap">
