@@ -20,7 +20,6 @@
             overflow: hidden;
         }
 
-        /* Grille de fond */
         body::before {
             content: '';
             position: fixed;
@@ -32,7 +31,6 @@
             pointer-events: none;
         }
 
-        /* Glow radial */
         body::after {
             content: '';
             position: fixed;
@@ -46,6 +44,12 @@
             z-index: 1;
             text-align: center;
             max-width: 600px;
+            animation: fadeUp 0.6s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .logo {
@@ -67,7 +71,6 @@
             font-weight: 800;
             letter-spacing: -6px;
             line-height: 1;
-            color: #ffffff;
             margin-bottom: 8px;
             background: linear-gradient(180deg, #ffffff 0%, #333333 100%);
             -webkit-background-clip: text;
@@ -158,16 +161,6 @@
 
         .footer a:hover {
             color: #ffffff;
-        }
-
-        /* Animation d'entrée */
-        .container {
-            animation: fadeUp 0.6s ease both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 480px) {
