@@ -37,9 +37,23 @@ if (!process.env.ADMIN_PASSWORD) {
 console.log('✅ Toutes les variables d\'environnement sont définies');
 
 // ============ MAINTENANCE ============
-let maintenanceMode = false;
-let maintenanceMessage = '';
-let maintenanceETA = 0;
+app.use((req, res, next) => {
+    // Ignorer les routes API et la page maintenance
+    if (req.path.startsWith('/api/') || req.path === '/maintenance') {
+        return next();
+    }
+    
+    // Vérifier si la maintenance est active
+    if (process.env.MAINTENANCE === 'ON') {
+        return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
+    }
+    next();
+});
+
+// Route dédiée pour la maintenance
+app.get('/maintenance', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
+});
 
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
