@@ -17,12 +17,158 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 40px 40px;
+            overflow: hidden;
+            position: relative;
         }
-        .container { max-width: 600px; text-align: center; }
+
+        /* ============================================
+           FOND : CADRILLAGE ANIMÉ
+           ============================================ */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 60px 60px; }
+        }
+
+        /* ============================================
+           FOND : HALOS ORANGE (ORBES)
+           ============================================ */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #f59e0b, transparent);
+            top: -150px;
+            left: -150px;
+            animation: orbFloat1 15s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #f59e0b, transparent);
+            bottom: -100px;
+            right: -100px;
+            animation: orbFloat2 18s ease-in-out infinite;
+        }
+
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #ffffff, transparent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.05;
+            animation: orbFloat3 12s ease-in-out infinite;
+        }
+
+        @keyframes orbFloat1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(100px, 50px) scale(1.1); }
+            66% { transform: translate(50px, 100px) scale(0.9); }
+        }
+
+        @keyframes orbFloat2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-80px, -60px) scale(1.15); }
+            66% { transform: translate(-40px, -120px) scale(0.95); }
+        }
+
+        @keyframes orbFloat3 {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.05; }
+            50% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.08; }
+        }
+
+        /* ============================================
+           FOND : PARTICULES FLOTTANTES
+           ============================================ */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(245, 158, 11, 0.4);
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           FOND : SCANLINE
+           ============================================ */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(255, 255, 255, 0.01) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 0;
+            pointer-events: none;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        /* ============================================
+           CONTAINER
+           ============================================ */
+        .container {
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
         .logo-box {
             width: 90px;
             height: 90px;
@@ -33,9 +179,38 @@
             background: #111111;
             border: 1px solid #2a2a2a;
             border-radius: 22px;
-            box-shadow: 0 0 60px rgba(245, 158, 11, 0.1);
+            position: relative;
+            animation: logoPulse 3s ease-in-out infinite;
         }
+
+        .logo-box::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 24px;
+            background: linear-gradient(45deg, rgba(245,158,11,0.4), transparent, rgba(245,158,11,0.4));
+            background-size: 300% 300%;
+            animation: borderGlow 4s ease-in-out infinite;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .logo-box svg { width: 50px; height: 50px; color: #ffffff; }
+
+        /* ============================================
+           BADGE
+           ============================================ */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -50,21 +225,53 @@
             letter-spacing: 1px;
             text-transform: uppercase;
             margin-bottom: 24px;
+            backdrop-filter: blur(4px);
         }
+
         .dot {
             width: 8px;
             height: 8px;
             background: #f59e0b;
             border-radius: 50%;
             box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
-            animation: pulse 1.5s ease-in-out infinite;
+            animation: dotPulse 1.5s ease-in-out infinite;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
         }
-        h1 { font-size: 48px; font-weight: 800; letter-spacing: -2px; margin-bottom: 16px; }
-        p { font-size: 17px; color: #a0a0a0; line-height: 1.7; margin-bottom: 40px; }
+
+        /* ============================================
+           TITRE
+           ============================================ */
+        h1 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleFade 4s ease-in-out infinite;
+        }
+
+        @keyframes titleFade {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        p {
+            font-size: 17px;
+            color: #a0a0a0;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+
+        /* ============================================
+           BOUTON
+           ============================================ */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -78,15 +285,40 @@
             font-weight: 600;
             transition: all 0.2s;
             margin-bottom: 48px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: btnShine 3s ease-in-out infinite;
+        }
+
+        @keyframes btnShine {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+
         .btn:hover { background: #cccccc; transform: translateY(-2px); }
         .btn svg { width: 20px; height: 20px; }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
         .footer {
             padding-top: 24px;
             border-top: 1px solid #2a2a2a;
             font-size: 13px;
             color: #6b6b6b;
+            position: relative;
         }
+
         .footer-logo {
             display: inline-flex;
             align-items: center;
@@ -95,6 +327,7 @@
             color: #ffffff;
             margin-bottom: 8px;
         }
+
         .footer-logo svg { width: 18px; height: 18px; opacity: 0.6; }
         .footer-text { color: #6b6b6b; font-size: 12px; }
         .footer-links {
@@ -104,19 +337,34 @@
             margin-top: 12px;
             flex-wrap: wrap;
         }
-        .footer-links a { color: #6b6b6b; text-decoration: none; font-size: 12px; }
+        .footer-links a { color: #6b6b6b; text-decoration: none; font-size: 12px; transition: color 0.2s; }
         .footer-links a:hover { color: #ffffff; }
         .footer-links span { color: #6b6b6b; font-size: 12px; }
+
+        /* ============================================
+           MOBILE
+           ============================================ */
         @media (max-width: 768px) {
             h1 { font-size: 34px; }
             p { font-size: 15px; }
             .logo-box { width: 72px; height: 72px; }
             .logo-box svg { width: 40px; height: 40px; }
             .btn { width: 100%; justify-content: center; }
+            .orb { opacity: 0.1; }
         }
     </style>
 </head>
 <body>
+
+    <!-- ============ ORBES ANIMÉS ============ -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- ============ PARTICULES ============ -->
+    <div class="particles" id="particles"></div>
+
+    <!-- ============ CONTENU ============ -->
     <div class="container">
         <div class="logo-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -163,5 +411,33 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================ SCRIPT PARTICULES ============================================ -->
+    <script>
+        // Générer les particules
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 30;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            particle.style.animationDelay = (Math.random() * 10) + 's';
+            particle.style.width = (Math.random() * 3 + 1) + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.opacity = Math.random() * 0.5 + 0.2;
+            
+            // Couleur aléatoire (orange ou blanc)
+            if (Math.random() > 0.5) {
+                particle.style.background = 'rgba(245, 158, 11, 0.5)';
+            } else {
+                particle.style.background = 'rgba(255, 255, 255, 0.3)';
+            }
+            
+            particlesContainer.appendChild(particle);
+        }
+    </script>
+
 </body>
 </html>
