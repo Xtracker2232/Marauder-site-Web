@@ -36,6 +36,11 @@ if (!process.env.ADMIN_PASSWORD) {
 
 console.log('✅ Toutes les variables d\'environnement sont définies');
 
+// ============ MAINTENANCE ============
+let maintenanceMode = false;
+let maintenanceMessage = '';
+let maintenanceETA = 0;
+
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -164,28 +169,77 @@ function isBlocked(person, blocklist) {
 }
 
 // ============ MIDDLEWARE ============
-const allowedOrigins = [
-    'https://marauder-site-web-production.up.railway.app',
-    'https://marauder.host',
-    'http://localhost:3000',
-    'http://localhost:8080'
-];
-
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-            callback(null, true);
-        } else {
-            callback(new Error('CORS non autorisé'));
-        }
-    },
-    credentials: true
+    origin: '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Gérer les preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'frontend')));
+
+// ============ MIDDLEWARE MAINTENANCE ============
+app.use((req, res, next) => {
+    // Toujours laisser passer ces routes
+    if (
+        req.path.startsWith('/api/admin') ||
+        req.path.startsWith('/api/auth') ||
+        req.path.startsWith('/api/maintenance') ||
+        req.path === '/maintenance.html' ||
+        req.path === '/admin.html' ||
+        req.path === '/login' ||
+        req.path === '/' ||
+        req.path === '/login.html' ||
+        req.path === '/index.html' ||
+        req.path === '/favicon.ico' ||
+        req.path.startsWith('/static') ||
+        req.path.endsWith('.js') ||
+        req.path.endsWith('.css') ||
+        req.path.endsWith('.png') ||
+        req.path.endsWith('.jpg') ||
+        req.path.endsWith('.svg') ||
+        req.path.endsWith('.ico')
+    ) {
+        return next();
+    }
+
+    // Si maintenance active
+    if (maintenanceMode) {
+        // Autoriser les admins
+        const auth = req.headers['authorization'] || '';
+        if (auth.startsWith('Bearer ')) {
+            try {
+                const decoded = jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
+                if (decoded && decoded.role === 'admin') {
+                    return next();
+                }
+            } catch (e) { /* token invalide, on continue */ }
+        }
+
+        // Si requête API → erreur JSON
+        if (req.path.startsWith('/api/')) {
+            return res.status(503).json({
+                error: 'Maintenance en cours',
+                message: maintenanceMessage || 'Le site est en maintenance',
+                eta: maintenanceETA
+            });
+        }
+
+        // Sinon → redirection vers page maintenance
+        const params = [];
+        if (maintenanceMessage) params.push('msg=' + encodeURIComponent(maintenanceMessage));
+        if (maintenanceETA > 0) params.push('eta=' + maintenanceETA);
+        const query = params.length > 0 ? '?' + params.join('&') : '';
+        return res.redirect('/maintenance.html' + query);
+    }
+
+    next();
+});
 
 // ============ RATE LIMITING ============
 const limiter = rateLimit({
@@ -300,10 +354,8 @@ app.get('/api/verify', authenticateToken, (req, res) => {
 // ============ ROUTES BRIXHUB AVEC BLOCKLIST ============
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
-        // Récupérer la blocklist
         const blocklist = await getBlocklist();
         
-        // Faire la recherche BrixHub
         const response = await axios.post(
             'https://api.brixhub.to/api/v1/search',
             req.body,
@@ -319,13 +371,11 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
         let results = response.data.data?.results || [];
         const totalBeforeFilter = results.length;
 
-        // Filtrer selon la blocklist
         if (blocklist.length > 0 && results.length > 0) {
             results = results.filter(person => !isBlocked(person, blocklist));
             console.log(`🔍 Blocklist: ${totalBeforeFilter} résultats → ${results.length} après filtrage`);
         }
 
-        // Sauvegarder dans l'historique
         try {
             await pool.query(
                 'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
@@ -335,7 +385,6 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             console.error('Erreur historique:', dbError.message);
         }
 
-        // Retourner les résultats filtrés
         res.json({
             data: { results: results },
             meta: { 
@@ -577,7 +626,6 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 });
 
 // ============ ROUTES ADMIN ============
-
 app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const result = await pool.query(
@@ -901,6 +949,38 @@ app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res)
     }
 });
 
+// ============ MAINTENANCE ADMIN ============
+app.post('/api/admin/maintenance', authenticateToken, requireAdmin, (req, res) => {
+    const { enabled, message, eta } = req.body;
+    maintenanceMode = enabled === true;
+    maintenanceMessage = message || '';
+    maintenanceETA = parseInt(eta) || 0;
+    
+    res.json({
+        success: true,
+        maintenance: maintenanceMode,
+        message: maintenanceMessage,
+        eta: maintenanceETA
+    });
+});
+
+app.get('/api/admin/maintenance/status', authenticateToken, requireAdmin, (req, res) => {
+    res.json({
+        enabled: maintenanceMode,
+        message: maintenanceMessage,
+        eta: maintenanceETA
+    });
+});
+
+// Route publique pour vérifier le statut
+app.get('/api/maintenance/status', (req, res) => {
+    res.json({
+        enabled: maintenanceMode,
+        message: maintenanceMessage,
+        eta: maintenanceETA
+    });
+});
+
 // ============ ROUTES TICKETS (USER) ============
 app.post('/api/tickets', authenticateToken, async (req, res) => {
     const { subject, message } = req.body;
@@ -987,111 +1067,16 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'l
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
 app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'cgu.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
+app.get('/maintenance.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html')));
 
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ============================================
-// API PLAQUE (DÉMO GRATUITE)
-// ============================================
-app.get('/api/plaque', async (req, res) => {
-    try {
-        const plate = req.query.plate?.toUpperCase().replace(/\s/g, '').replace(/-/g, '');
-
-        if (!plate) {
-            return res.status(400).json({ error: 'Plaque requise' });
-        }
-
-        // ============================================
-        // DONNÉES DE DÉMONSTRATION GRATUITES
-        // ============================================
-        
-        const brands = ['RENAULT', 'PEUGEOT', 'CITROEN', 'VOLKSWAGEN', 'BMW', 'MERCEDES', 'AUDI', 'FORD', 'TOYOTA', 'OPEL'];
-        const models = ['CLIO', '208', 'C3', 'GOLF', 'SERIE 1', 'CLASSE A', 'A3', 'FOCUS', 'YARIS', 'CORSA'];
-        const energies = ['ESSENCE', 'GAZOLE', 'HYBRIDE', 'ELECTRIQUE'];
-        const colors = ['BLANC', 'NOIR', 'GRIS', 'BLEU', 'ROUGE', 'VERT', 'ORANGE', 'JAUNE', 'VIOLET', 'BRONZE'];
-        const carrosseries = ['BERLINE', 'SUV', 'CITADINE', 'BREAK', 'COUPE', 'CABRIOLET', 'MONOSPACE'];
-        const boites = ['MANUELLE', 'AUTOMATIQUE', 'SEMI-AUTOMATIQUE', 'VARIABLE CONTINUE'];
-
-        const brand = brands[Math.floor(Math.random() * brands.length)];
-        const model = models[Math.floor(Math.random() * models.length)];
-        const energy = energies[Math.floor(Math.random() * energies.length)];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const carrosserie = carrosseries[Math.floor(Math.random() * carrosseries.length)];
-        const boite = boites[Math.floor(Math.random() * boites.length)];
-        
-        const year = Math.floor(Math.random() * (2024 - 2005 + 1)) + 2005;
-        const power = Math.floor(Math.random() * (200 - 60 + 1)) + 60;
-        const fiscalPower = Math.floor(Math.random() * (15 - 3 + 1)) + 3;
-        const cylinder = Math.floor(Math.random() * (2000 - 1000 + 1)) + 1000;
-        const co2 = Math.floor(Math.random() * (180 - 80 + 1)) + 80;
-        const doors = Math.floor(Math.random() * 2) + 3;
-        const places = Math.floor(Math.random() * 3) + 4;
-
-        const vinPrefix = ['VF1', 'VF3', 'VF7', 'WVW', 'WBA', 'WDD', 'WAU', 'WF0', 'JT', 'VX'];
-        const vin = vinPrefix[Math.floor(Math.random() * vinPrefix.length)] + 
-                    Math.random().toString(36).substring(2, 12).toUpperCase();
-
-        const tireSizes = [
-            '185/65R15 88H', '195/55R16 87H', '205/45R17 88V', 
-            '205/55R16 91V', '215/45R17 87V', '225/40R18 92Y',
-            '235/35R19 91Y', '245/40R18 93Y', '255/35R19 96Y'
-        ];
-        const tires = tireSizes.slice(0, 3 + Math.floor(Math.random() * 3));
-
-        const data = {
-            AWN_immat: plate,
-            AWN_marque: brand,
-            AWN_modele: model,
-            AWN_version: `${model} ${energy} ${power}ch`,
-            AWN_energie: energy,
-            AWN_puissance_chevaux: power,
-            AWN_puissance_fiscale: fiscalPower,
-            AWN_cylindre_capacite: cylinder,
-            AWN_carrosserie: carrosserie,
-            AWN_nbr_portes: doors,
-            AWN_nbr_de_places: places,
-            AWN_annee_de_debut_modele: year,
-            AWN_emission_co_2: co2,
-            AWN_couleur: color,
-            AWN_type_boite_vites: boite,
-            AWN_date_mise_en_circulation: `${Math.floor(Math.random() * 28) + 1}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${year}`,
-            AWN_VIN: vin,
-            AWN_code_moteur: `${brand.substring(0, 2)}${Math.floor(Math.random() * 900 + 100)}`,
-            AWN_k_type: Math.floor(Math.random() * 90000 + 10000),
-            AWN_PTAC: Math.floor(cylinder * 1.2 + 500),
-            AWN_PTRA: Math.floor(cylinder * 1.5 + 1000),
-            AWN_PV: Math.floor(cylinder * 0.8 + 800),
-            AWN_pneus: tires.map(t => ({ label: t })),
-            AWN_marque_image: `https://app-auto-ways.net/images/brands/${brand}.png`,
-            AWN_model_image: `https://app-auto-ways.net/images/car-models/${Math.floor(Math.random() * 90000 + 10000)}.jpg`,
-            AWN_date_cg: `${Math.floor(Math.random() * 28) + 1}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${year}`,
-            AWN_env_class: `EURO${Math.floor(Math.random() * 6) + 1}`,
-            AWN_KBA: `${Math.floor(Math.random() * 9000 + 1000)}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`
-        };
-
-        console.log(`🔍 Plaque recherchée: ${plate}`);
-        res.json(data);
-
-    } catch (error) {
-        console.error('Erreur plaque:', error);
-        res.status(500).json({ error: 'Erreur interne' });
-    }
-});
-
-// ============ ROUTES STATIQUES ============
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'login.html')));
-app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
-app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'cgu.html')));
-app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
-app.get('/plaque', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'plaque.html')));
-
-// ============ HEALTH CHECK ============
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// ============ 404 PERSONNALISÉ ============
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'frontend', '404.html'));
 });
 
 // ============ DÉMARRAGE ============
