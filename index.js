@@ -35,30 +35,7 @@ if (!process.env.ADMIN_PASSWORD) {
 }
 
 console.log('✅ Toutes les variables d\'environnement sont définies');
-
-// ============ MAINTENANCE ============
-app.use((req, res, next) => {
-    // Ignorer les routes API et la page maintenance
-    if (req.path.startsWith('/api/') || req.path === '/maintenance') {
-        return next();
-    }
-    
-    // Vérifier si la maintenance est active
-    if (process.env.MAINTENANCE === 'ON') {
-        return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
-    }
-    next();
-});
-
-// Route dédiée pour la maintenance
-app.get('/maintenance', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
-});
-
-// Route dédiée pour la maintenance
-app.get('/maintenance', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
-});
+console.log('🚧 Mode maintenance:', process.env.MAINTENANCE || 'OFF');
 
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
@@ -172,9 +149,7 @@ async function getBlocklist() {
 
 function isBlocked(person, blocklist) {
     if (!blocklist || blocklist.length === 0) return false;
-    
     const fieldsToCheck = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'nom_utilisateur', 'adresse_ip', 'steam_id', 'discord_id', 'nir', 'iban', 'nom_naissance', 'nom_affichage', 'societe', 'profession', 'fonction', 'siret', 'siren', 'bic', 'vin_plaque'];
-    
     for (let entry of blocklist) {
         const fieldValue = person[entry.type];
         if (fieldValue) {
@@ -188,76 +163,68 @@ function isBlocked(person, blocklist) {
 }
 
 // ============ MIDDLEWARE ============
-app.use(cors({
-    origin: '*',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+const allowedOrigins = [
+    'https://marauder-site-web-production.up.railway.app',
+    'https://marauder.host',
+    'http://localhost:3000',
+    'http://localhost:8080'
+];
 
-// Gérer les preflight requests
-app.options('*', cors());
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS non autorisé'));
+        }
+    },
+    credentials: true
+}));
 
 app.use(express.json());
 app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// ============ MIDDLEWARE MAINTENANCE ============
+// ============ FORCER HTTPS ============
 app.use((req, res, next) => {
-    // Toujours laisser passer ces routes
-    if (
-        req.path.startsWith('/api/admin') ||
-        req.path.startsWith('/api/auth') ||
-        req.path.startsWith('/api/maintenance') ||
-        req.path === '/maintenance.html' ||
-        req.path === '/admin.html' ||
-        req.path === '/login' ||
-        req.path === '/' ||
-        req.path === '/login.html' ||
-        req.path === '/index.html' ||
-        req.path === '/favicon.ico' ||
-        req.path.startsWith('/static') ||
-        req.path.endsWith('.js') ||
-        req.path.endsWith('.css') ||
-        req.path.endsWith('.png') ||
-        req.path.endsWith('.jpg') ||
-        req.path.endsWith('.svg') ||
-        req.path.endsWith('.ico')
-    ) {
+    const proto = req.headers['x-forwarded-proto'] || req.headers['cf-visitor'];
+    let isHttps = false;
+    if (typeof proto === 'string') {
+        try {
+            const cfVisitor = JSON.parse(proto);
+            isHttps = cfVisitor.scheme === 'https';
+        } catch (e) {
+            isHttps = proto === 'https';
+        }
+    }
+    if (!isHttps && process.env.NODE_ENV === 'production') {
+        return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+});
+
+// ============ MAINTENANCE ============
+app.use((req, res, next) => {
+    // Laisser passer les routes API
+    if (req.path.startsWith('/api/')) {
         return next();
     }
-
-    // Si maintenance active
-    if (maintenanceMode) {
-        // Autoriser les admins
-        const auth = req.headers['authorization'] || '';
-        if (auth.startsWith('Bearer ')) {
-            try {
-                const decoded = jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
-                if (decoded && decoded.role === 'admin') {
-                    return next();
-                }
-            } catch (e) { /* token invalide, on continue */ }
-        }
-
-        // Si requête API → erreur JSON
-        if (req.path.startsWith('/api/')) {
-            return res.status(503).json({
-                error: 'Maintenance en cours',
-                message: maintenanceMessage || 'Le site est en maintenance',
-                eta: maintenanceETA
-            });
-        }
-
-        // Sinon → redirection vers page maintenance
-        const params = [];
-        if (maintenanceMessage) params.push('msg=' + encodeURIComponent(maintenanceMessage));
-        if (maintenanceETA > 0) params.push('eta=' + maintenanceETA);
-        const query = params.length > 0 ? '?' + params.join('&') : '';
-        return res.redirect('/maintenance.html' + query);
+    // Laisser passer la page maintenance
+    if (req.path === '/maintenance') {
+        return next();
     }
-
+    // Vérifier si la maintenance est active
+    if (process.env.MAINTENANCE === 'ON') {
+        console.log('🚧 Maintenance activée pour:', req.path);
+        return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
+    }
     next();
+});
+
+// Route dédiée pour la maintenance
+app.get('/maintenance', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
 });
 
 // ============ RATE LIMITING ============
@@ -280,19 +247,15 @@ const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Token manquant' });
-    
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const result = await pool.query('SELECT banned FROM users WHERE id = $1', [decoded.id]);
-        
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Utilisateur introuvable' });
         }
-        
         if (result.rows[0].banned) {
             return res.status(403).json({ error: 'Ce compte a été banni' });
         }
-        
         req.user = decoded;
         next();
     } catch (error) {
@@ -322,11 +285,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (result.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
         const user = result.rows[0];
-        
         if (user.banned) {
             return res.status(403).json({ error: 'Ce compte a été banni' });
         }
-        
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
         await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
@@ -370,11 +331,10 @@ app.get('/api/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
-// ============ ROUTES BRIXHUB AVEC BLOCKLIST ============
+// ============ ROUTES BRIXHUB ============
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
         const blocklist = await getBlocklist();
-        
         const response = await axios.post(
             'https://api.brixhub.to/api/v1/search',
             req.body,
@@ -968,35 +928,12 @@ app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res)
     }
 });
 
-// ============ MAINTENANCE ADMIN ============
-app.post('/api/admin/maintenance', authenticateToken, requireAdmin, (req, res) => {
-    const { enabled, message, eta } = req.body;
-    maintenanceMode = enabled === true;
-    maintenanceMessage = message || '';
-    maintenanceETA = parseInt(eta) || 0;
-    
-    res.json({
-        success: true,
-        maintenance: maintenanceMode,
-        message: maintenanceMessage,
-        eta: maintenanceETA
-    });
-});
-
+// ============ API ADMIN MAINTENANCE STATUS ============
 app.get('/api/admin/maintenance/status', authenticateToken, requireAdmin, (req, res) => {
     res.json({
-        enabled: maintenanceMode,
-        message: maintenanceMessage,
-        eta: maintenanceETA
-    });
-});
-
-// Route publique pour vérifier le statut
-app.get('/api/maintenance/status', (req, res) => {
-    res.json({
-        enabled: maintenanceMode,
-        message: maintenanceMessage,
-        eta: maintenanceETA
+        enabled: process.env.MAINTENANCE === 'ON',
+        message: 'Maintenance en cours',
+        eta: 0
     });
 });
 
@@ -1086,16 +1023,10 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'l
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
 app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'cgu.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
-app.get('/maintenance.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html')));
 
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// ============ 404 PERSONNALISÉ ============
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, 'frontend', '404.html'));
 });
 
 // ============ DÉMARRAGE ============
