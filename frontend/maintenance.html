@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Marauder - Maintenance en cours</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .container { max-width: 600px; text-align: center; }
+        .logo-box {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #111111;
+            border: 1px solid #2a2a2a;
+            border-radius: 22px;
+            box-shadow: 0 0 60px rgba(245, 158, 11, 0.1);
+        }
+        .logo-box svg { width: 50px; height: 50px; color: #ffffff; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 24px;
+            color: #f59e0b;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #f59e0b;
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        h1 { font-size: 48px; font-weight: 800; letter-spacing: -2px; margin-bottom: 16px; }
+        p { font-size: 17px; color: #a0a0a0; line-height: 1.7; margin-bottom: 40px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: #ffffff;
+            border-radius: 10px;
+            color: #000000;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-bottom: 48px;
+        }
+        .btn:hover { background: #cccccc; transform: translateY(-2px); }
+        .btn svg { width: 20px; height: 20px; }
+        .footer {
+            padding-top: 24px;
+            border-top: 1px solid #2a2a2a;
+            font-size: 13px;
+            color: #6b6b6b;
+        }
+        .footer-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        .footer-logo svg { width: 18px; height: 18px; opacity: 0.6; }
+        .footer-text { color: #6b6b6b; font-size: 12px; }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .footer-links a { color: #6b6b6b; text-decoration: none; font-size: 12px; }
+        .footer-links a:hover { color: #ffffff; }
+        .footer-links span { color: #6b6b6b; font-size: 12px; }
+        @media (max-width: 768px) {
+            h1 { font-size: 34px; }
+            p { font-size: 15px; }
+            .logo-box { width: 72px; height: 72px; }
+            .logo-box svg { width: 40px; height: 40px; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+
+        <div class="badge">
+            <div class="dot"></div>
+            Maintenance en cours
+        </div>
+
+        <h1>Marauder</h1>
+        <p>
+            Le site est actuellement en maintenance.<br>
+            Nous revenons très bientôt !
+        </p>
+
+        <a href="https://discord.gg/jf6QRZHaTB" target="_blank" class="btn">
+            <svg viewBox="0 0 71 55" fill="currentColor">
+                <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
+            </svg>
+            Rejoindre le Discord
+        </a>
+
+        <div class="footer">
+            <div class="footer-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Marauder
+            </div>
+            <p class="footer-text">Plateforme OSINT / CSINT · Created by Index</p>
+            <div class="footer-links">
+                <a href="/cgu.html">CGU</a>
+                <span>·</span>
+                <a href="https://discord.gg/jf6QRZHaTB" target="_blank">Discord</a>
+                <span>·</span>
+                <span>© 2026 Marauder</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
