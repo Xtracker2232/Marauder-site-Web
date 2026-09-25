@@ -55,6 +55,11 @@ app.get('/maintenance', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
 });
 
+// Route dédiée pour la maintenance
+app.get('/maintenance', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
+});
+
 // ============ BASE DE DONNÉES ============
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
