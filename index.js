@@ -184,6 +184,31 @@ app.use(cors({
 
 app.use(express.json());
 app.set('trust proxy', 1);
+
+// ⚡ MAINTENANCE ICI (AVANT express.static)
+app.use((req, res, next) => {
+    // Laisser passer les routes API
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    // Laisser passer la page maintenance
+    if (req.path === '/maintenance') {
+        return next();
+    }
+    // Vérifier si la maintenance est active
+    if (process.env.MAINTENANCE === 'ON') {
+        console.log('🚧 Maintenance activée pour:', req.path);
+        return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
+    }
+    next();
+});
+
+// Route dédiée pour la maintenance
+app.get('/maintenance', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
+});
+
+// Ensuite le static
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============ FORCER HTTPS ============
