@@ -688,6 +688,19 @@ const RESULTS_PER_SEARCH = {
     enterprise: 100
 };
 
+// ============ MIDDLEWARE DEV API ============
+// Bloque toutes les routes API publiques si DEV_API=ON
+const requirePublicApi = (req, res, next) => {
+    if (process.env.DEV_API === 'ON') {
+        return res.status(403).json({ 
+            error: 'API en cours de développement',
+            message: 'L\'API Marauder est actuellement en développement. Rejoignez notre Discord pour être informé du lancement.',
+            discord: 'https://discord.gg/jf6QRZHaTB'
+        });
+    }
+    next();
+};
+
 // ============ ROUTES API KEYS ============
 
 // Lister les clés de l'utilisateur
@@ -1222,6 +1235,20 @@ app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend',
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
 app.get('/tarifs.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
 app.get('/tarifs', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
+
+// ============ ROUTES API PUBLIQUE (v1) ============
+// Protégées par DEV_API
+app.use('/api/v1', requirePublicApi);
+
+// Exemple de route (à remplacer plus tard par la vraie API)
+app.post('/api/v1/search', (req, res) => {
+    // Cette route sera accessible seulement si DEV_API=OFF
+    res.json({ message: 'API v1 opérationnelle', results: [] });
+});
+
+app.get('/api/v1/lookup/:type/:value', (req, res) => {
+    res.json({ message: 'API v1 opérationnelle', results: [] });
+});
 
 // ============ CONFIG PUBLIQUE ============
 app.get('/api/config', (req, res) => {
