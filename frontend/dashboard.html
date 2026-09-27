@@ -1896,24 +1896,30 @@ print(data)`
         };
 
         // Aller aux clés API (depuis le modal de remerciement)
-        window.goToApiKeys = function() {
-            document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-            const apiNav = document.querySelector('[data-page="api"]');
-            if (apiNav) apiNav.classList.add('active');
+window.goToApiKeys = function() {
+    document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+    const apiNav = document.querySelector('[data-page="api"]');
+    if (apiNav) apiNav.classList.add('active');
 
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const apiPage = document.getElementById('page-api');
-            if (apiPage) apiPage.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const apiPage = document.getElementById('page-api');
+    if (apiPage) apiPage.classList.add('active');
 
-            document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
-            const keysTab = document.querySelector('[data-api-tab="keys"]');
-            const keysContent = document.getElementById('api-tab-keys');
-            if (keysTab) keysTab.classList.add('active');
-            if (keysContent) keysContent.classList.add('active');
+    document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
+    const keysTab = document.querySelector('[data-api-tab="keys"]');
+    const keysContent = document.getElementById('api-tab-keys');
+    if (keysTab) keysTab.classList.add('active');
+    if (keysContent) keysContent.classList.add('active');
 
-            loadApiKeys();
-        };
+    // ⚡ AFFICHER L'OVERLAY DEV API si actif
+    const overlay = document.getElementById('apiDevOverlay');
+    if (overlay && devApiActive) {
+        overlay.classList.add('active');
+    }
+
+    loadApiKeys();
+};
 
         // ============ MODE DEV ============
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -2154,20 +2160,15 @@ print(data)`
             }
         };
 
-     // ============ CHECK DEV API ============
+// ============ CHECK DEV API ============
+let devApiActive = false;
+
 async function checkDevApi() {
     try {
         const res = await fetch('/api/config');
         const data = await res.json();
-        const overlay = document.getElementById('apiDevOverlay');
-
-        if (data.devApi === true) {
-            if (overlay) overlay.classList.add('active');
-            console.log('🔒 Mode DEV API activé');
-        } else {
-            if (overlay) overlay.classList.remove('active');
-            console.log('✅ Mode DEV API désactivé');
-        }
+        devApiActive = data.devApi === true;
+        console.log('🔒 Mode DEV API:', devApiActive ? 'ACTIVÉ' : 'DÉSACTIVÉ');
     } catch (err) {
         console.error('Erreur check dev api:', err);
     }
