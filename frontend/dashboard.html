@@ -368,6 +368,663 @@
             .investigation-actions { flex-direction: column; }
             .investigation-actions .btn-primary, .investigation-actions .btn-secondary { width: 100%; justify-content: center; }
         }
+        /* ============================================
+   API PAGE
+   ============================================ */
+.api-tabs {
+    background: #1e1e1e;
+    border-radius: 10px;
+    padding: 4px;
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+}
+.api-tab {
+    flex: 1;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #a0a0a0;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.api-tab:hover { color: #ffffff; }
+.api-tab.active { background: #ffffff; color: #000000; }
+.api-tab-content { display: none; }
+.api-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+.api-card {
+    background: #111111;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+.api-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.api-card-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.api-btn-primary {
+    padding: 10px 20px;
+    background: #ffffff;
+    border: none;
+    border-radius: 8px;
+    color: #000000;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.api-btn-primary:hover { background: #cccccc; }
+
+.api-keys-list { display: flex; flex-direction: column; gap: 12px; }
+.api-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b6b6b;
+}
+.api-empty-state svg {
+    width: 48px;
+    height: 48px;
+    color: #2a2a2a;
+    margin-bottom: 16px;
+}
+.api-empty-state p {
+    font-size: 16px;
+    font-weight: 600;
+    color: #a0a0a0;
+    margin-bottom: 4px;
+}
+.api-empty-state span { font-size: 13px; }
+
+.api-key-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.api-key-info { flex: 1; }
+.api-key-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+.api-key-value {
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    color: #a0a0a0;
+    background: rgba(255,255,255,0.03);
+    padding: 4px 12px;
+    border-radius: 4px;
+    display: inline-block;
+}
+.api-key-date {
+    font-size: 12px;
+    color: #6b6b6b;
+    margin-top: 6px;
+}
+.api-key-actions { display: flex; gap: 8px; }
+.api-key-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    color: #a0a0a0;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.api-key-btn:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+.api-key-btn.danger:hover { border-color: rgba(239,68,68,0.3); color: #ef4444; }
+
+.api-docs { max-width: 900px; }
+.doc-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #2a2a2a;
+}
+.doc-section:last-child { border-bottom: none; }
+.doc-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
+.doc-section p {
+    font-size: 14px;
+    color: #a0a0a0;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+.doc-section code {
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #ffffff;
+}
+.doc-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    font-size: 13px;
+    color: #a0a0a0;
+}
+.doc-info code {
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #ffffff;
+}
+
+.code-block {
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 12px;
+    color: #6b6b6b;
+}
+.code-copy {
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #a0a0a0;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.code-copy:hover { background: rgba(255,255,255,0.05); color: #ffffff; }
+.code-block pre {
+    padding: 16px;
+    margin: 0;
+    overflow-x: auto;
+}
+.code-block pre code {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #a0a0a0;
+    line-height: 1.6;
+}
+
+.endpoint {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+.endpoint-method {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+.endpoint-method.post { background: rgba(16,185,129,0.15); color: #10b981; }
+.endpoint-method.get { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.endpoint-path {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.limits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+.limit-card {
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    text-align: center;
+}
+.limit-card.featured {
+    border-color: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+}
+.limit-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+.limit-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+.limit-value span {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6b6b6b;
+}
+.limit-price {
+    font-size: 14px;
+    color: #a0a0a0;
+}
+
+.errors-table {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.error-row {
+    display: flex;
+    padding: 10px 16px;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 13px;
+}
+.error-row:last-child { border-bottom: none; }
+.error-code {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    color: #ffffff;
+    width: 60px;
+}
+.error-desc { color: #a0a0a0; }
+
+.code-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    margin-top: 12px;
+}
+.code-tab {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    color: #a0a0a0;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.code-tab:hover { color: #ffffff; }
+.code-tab.active { background: #ffffff; color: #000000; border-color: #ffffff; }
+
+.api-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.api-stat-card {
+    padding: 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    text-align: center;
+}
+.api-stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+.api-stat-label {
+    font-size: 13px;
+    color: #6b6b6b;
+}
+
+.api-usage-bar {
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    margin-bottom: 24px;
+}
+.usage-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #a0a0a0;
+    margin-bottom: 10px;
+}
+.usage-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.usage-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #22c55e);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.api-logs h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
+.logs-container {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    min-height: 150px;
+}
+.log-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #6b6b6b;
+    text-align: center;
+}
+.log-empty svg {
+    width: 40px;
+    height: 40px;
+    color: #2a2a2a;
+    margin-bottom: 12px;
+}
+.log-empty p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #a0a0a0;
+    margin-bottom: 4px;
+}
+.log-empty span { font-size: 12px; }
+
+.log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 13px;
+}
+.log-item:last-child { border-bottom: none; }
+.log-method {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+.log-method.post { background: rgba(16,185,129,0.15); color: #10b981; }
+.log-method.get { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.log-path {
+    font-family: 'Courier New', monospace;
+    color: #a0a0a0;
+    flex: 1;
+    margin: 0 12px;
+}
+.log-status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.log-status.ok { background: rgba(16,185,129,0.15); color: #10b981; }
+.log-status.error { background: rgba(239,68,68,0.15); color: #ef4444; }
+.log-date {
+    font-size: 11px;
+    color: #6b6b6b;
+    min-width: 140px;
+    text-align: right;
+}
+
+.api-key-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+.api-key-modal.active { display: flex; }
+.api-key-modal-content {
+    background: #111111;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+}
+.api-key-modal-content h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+.api-key-modal-content p {
+    font-size: 13px;
+    color: #a0a0a0;
+    margin-bottom: 16px;
+}
+.api-key-new-value {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.api-key-new-value input {
+    flex: 1;
+    padding: 12px 16px;
+    background: #1e1e1e;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #ffffff;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    outline: none;
+}
+.api-key-warning {
+    padding: 12px 16px;
+    background: rgba(245,158,11,0.05);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    color: #f59e0b;
+    font-size: 12px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+    .api-tab { font-size: 12px; padding: 8px 12px; }
+    .api-card { padding: 16px; }
+    .api-card-header { flex-direction: column; }
+    .limits-grid { grid-template-columns: 1fr 1fr; }
+    .api-stats-grid { grid-template-columns: 1fr 1fr; }
+    .log-date { display: none; }
+}
+/* ============================================
+   API - EN DÉVELOPPEMENT
+   ============================================ */
+#page-api {
+    position: relative;
+}
+
+.api-dev-overlay {
+    position: fixed;
+    top: 0;
+    left: 220px;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.api-dev-content {
+    text-align: center;
+    padding: 40px;
+    max-width: 500px;
+}
+
+.api-dev-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111111;
+    border: 1px solid #2a2a2a;
+    border-radius: 20px;
+    animation: pulseIcon 2s ease-in-out infinite;
+}
+
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.api-dev-icon svg {
+    width: 40px;
+    height: 40px;
+    color: #f59e0b;
+}
+
+.api-dev-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+}
+
+.api-dev-subtitle {
+    font-size: 16px;
+    color: #a0a0a0;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.api-dev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 24px;
+    color: #f59e0b;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.api-dev-dot {
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+    animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.api-dev-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 28px;
+    background: #ffffff;
+    border-radius: 10px;
+    color: #000000;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.api-dev-btn:hover {
+    background: #cccccc;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .api-dev-overlay {
+        left: 0;
+        padding: 20px;
+    }
+    .api-dev-title {
+        font-size: 24px;
+    }
+    .api-dev-subtitle {
+        font-size: 14px;
+    }
+    .api-dev-icon {
+        width: 60px;
+        height: 60px;
+    }
+    .api-dev-icon svg {
+        width: 30px;
+        height: 30px;
+    }
+}
     </style>
 </head>
 <body>
@@ -516,6 +1173,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <span>Recherche</span>
             </li>
+            <li data-page="api">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="16 18 22 12 16 6"/>
+        <polyline points="8 6 2 12 8 18"/>
+    </svg>
+    <span>API</span>
+</li>
             <li data-page="lookup">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <span>Lookup</span>
@@ -535,6 +1199,13 @@
             <li data-page="profile">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span>Profil</span>
+            </li>
+            <li data-page="api">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                </svg>
+                <span>API</span>
             </li>
             <li class="support-toggle" id="supportToggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
@@ -804,13 +1475,650 @@
             <div id="ticketsList" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE PROFIL ===== -->
-        <section id="page-profile" class="page">
-            <header class="page-header"><h2>Profil</h2></header>
-            <div id="profileInfo" class="profile-card"></div>
-        </section>
+<!-- ===== PAGE PROFIL ===== -->
+<section id="page-profile" class="page">
+    <header class="page-header"><h2>Profil</h2></header>
+    <div id="profileInfo" class="profile-card"></div>
+</section>
 
-    </main>
+<!-- ===== PAGE API ===== -->
+<section id="page-api" class="page">
+    <header class="page-header">
+        <h2>API Marauder</h2>
+    </header>
+    <!-- ===== OVERLAY EN DÉVELOPPEMENT ===== -->
+    <div class="api-dev-overlay">
+        <div class="api-dev-content">
+            <div class="api-dev-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                </svg>
+            </div>
+            <h2 class="api-dev-title">API Marauder</h2>
+            <p class="api-dev-subtitle">
+                Notre API est actuellement en cours de développement.<br>
+                Elle sera bientôt disponible pour tous les utilisateurs.
+            </p>
+            <div class="api-dev-badge">
+                <div class="api-dev-dot"></div>
+                En développement
+            </div>
+            <a href="https://discord.gg/jf6QRZHaTB" target="_blank" class="api-dev-btn">
+                <svg viewBox="0 0 71 55" fill="currentColor" width="20" height="20">
+                    <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
+                </svg>
+                Rejoindre le Discord
+            </a>
+        </div>
+    </div>
+    <!-- Tabs API -->
+    <div class="api-tabs">
+        <button class="api-tab active" data-api-tab="keys">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Clés API
+        </button>
+        <button class="api-tab" data-api-tab="docs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Documentation
+        </button>
+        <button class="api-tab" data-api-tab="stats">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Statistiques
+        </button>
+    </div>
+
+    <!-- ===== TAB KEYS ===== -->
+    <div id="api-tab-keys" class="api-tab-content active">
+        <div class="api-card">
+            <div class="api-card-header">
+                <div>
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align:middle;margin-right:8px;">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Vos clés API
+                    </h3>
+                    <p style="font-size:13px;color:#6b6b6b;margin-top:4px;">Gérez vos clés d'accès à l'API Marauder</p>
+                </div>
+                <button class="api-btn-primary" id="generateApiKeyBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Générer une clé
+                </button>
+            </div>
+
+            <div id="apiKeysList" class="api-keys-list">
+                <div class="api-empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <p>Aucune clé API</p>
+                    <span>Générez votre première clé pour commencer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB DOCS ===== -->
+    <div id="api-tab-docs" class="api-tab-content">
+        <div class="api-card">
+            <div class="api-card-header">
+                <div>
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align:middle;margin-right:8px;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Documentation
+                    </h3>
+                    <p style="font-size:13px;color:#6b6b6b;margin-top:4px;">Guide complet d'utilisation de l'API</p>
+                </div>
+            </div>
+
+            <div class="api-docs">
+                <!-- Introduction -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        Introduction
+                    </h4>
+                    <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique. Utilisez-la pour automatiser vos recherches, intégrer Marauder dans vos outils existants, ou créer vos propres applications.</p>
+                    <div class="doc-info">
+                        <span><strong>URL de base :</strong> <code>https://marauder.host/api/v1</code></span>
+                        <span><strong>Format :</strong> JSON</span>
+                        <span><strong>Authentification :</strong> Clé API</span>
+                    </div>
+                </div>
+
+                <!-- Authentification -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Authentification
+                    </h4>
+                    <p>Toutes les requêtes doivent inclure votre clé API dans le header <code>Authorization</code> :</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Header</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre><code>Authorization: Bearer marauder_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+                    </div>
+                </div>
+
+                <!-- Endpoint Search -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Recherche
+                    </h4>
+                    <p>Recherchez des personnes avec plus de 20 critères.</p>
+                    <div class="endpoint">
+                        <span class="endpoint-method post">POST</span>
+                        <span class="endpoint-path">/api/v1/search</span>
+                    </div>
+                    <p style="font-size:13px;color:#a0a0a0;">Paramètres (JSON) :</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Body</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre><code>{
+  "nom_famille": "Dupont",
+  "prenom": "Jean",
+  "email": "jean@example.com",
+  "telephone": "0612345678",
+  "ville": "Paris",
+  "flexible": true,
+  "per_page": 100
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Endpoint Lookup -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        Lookup
+                    </h4>
+                    <p>Recherche rapide par email, téléphone ou IBAN.</p>
+                    <div class="endpoint">
+                        <span class="endpoint-method get">GET</span>
+                        <span class="endpoint-path">/api/v1/lookup/:type/:value</span>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Exemple</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre><code>GET /api/v1/lookup/email/jean@example.com
+GET /api/v1/lookup/phone/0612345678
+GET /api/v1/lookup/iban/FR76...</code></pre>
+                    </div>
+                </div>
+
+                <!-- Rate Limits -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        Limites de requêtes
+                    </h4>
+                    <div class="limits-grid">
+                        <div class="limit-card">
+                            <div class="limit-name">Free</div>
+                            <div class="limit-value">100<span>/mois</span></div>
+                            <div class="limit-price">0€</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="limit-name">Starter</div>
+                            <div class="limit-value">1 000<span>/mois</span></div>
+                            <div class="limit-price">9€</div>
+                        </div>
+                        <div class="limit-card featured">
+                            <div class="limit-name">Pro</div>
+                            <div class="limit-value">10 000<span>/mois</span></div>
+                            <div class="limit-price">29€</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="limit-name">Enterprise</div>
+                            <div class="limit-value">Illimité</div>
+                            <div class="limit-price">Sur devis</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Codes d'erreur -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                        Codes d'erreur
+                    </h4>
+                    <div class="errors-table">
+                        <div class="error-row">
+                            <span class="error-code">200</span>
+                            <span class="error-desc">Succès</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">400</span>
+                            <span class="error-desc">Requête invalide</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">401</span>
+                            <span class="error-desc">Clé API manquante ou invalide</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">403</span>
+                            <span class="error-desc">Accès refusé</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">429</span>
+                            <span class="error-desc">Trop de requêtes</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">500</span>
+                            <span class="error-desc">Erreur serveur</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exemples -->
+                <div class="doc-section">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:8px;">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                        Exemples de code
+                    </h4>
+                    <div class="code-tabs">
+                        <button class="code-tab active" data-code="curl">cURL</button>
+                        <button class="code-tab" data-code="js">JavaScript</button>
+                        <button class="code-tab" data-code="python">Python</button>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span id="codeLangLabel">cURL</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre id="codeExample"><code>curl -X POST https://marauder.host/api/v1/search \
+  -H "Authorization: Bearer marauder_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB STATS ===== -->
+    <div id="api-tab-stats" class="api-tab-content">
+        <div class="api-card">
+            <div class="api-card-header">
+                <div>
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align:middle;margin-right:8px;">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        Statistiques API
+                    </h3>
+                    <p style="font-size:13px;color:#6b6b6b;margin-top:4px;">Utilisation de votre API</p>
+                </div>
+            </div>
+
+            <div class="api-stats-grid">
+                <div class="api-stat-card">
+                    <div class="api-stat-value">0</div>
+                    <div class="api-stat-label">Requêtes aujourd'hui</div>
+                </div>
+                <div class="api-stat-card">
+                    <div class="api-stat-value">0</div>
+                    <div class="api-stat-label">Requêtes ce mois</div>
+                </div>
+                <div class="api-stat-card">
+                    <div class="api-stat-value">100</div>
+                    <div class="api-stat-label">Limite mensuelle</div>
+                </div>
+                <div class="api-stat-card">
+                    <div class="api-stat-value">100</div>
+                    <div class="api-stat-label">Requêtes restantes</div>
+                </div>
+            </div>
+
+            <div class="api-usage-bar">
+                <div class="usage-label">
+                    <span>Utilisation ce mois</span>
+                    <span>0 / 100</span>
+                </div>
+                <div class="usage-bar-bg">
+                    <div class="usage-bar-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="api-logs">
+                <h4>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align:middle;margin-right:8px;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    Derniers logs
+                </h4>
+                <div class="logs-container">
+                    <div class="log-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <p>Aucun log pour le moment</p>
+                        <span>Les requêtes API apparaîtront ici</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- ===== PAGE API ===== -->
+<section id="page-api" class="page">
+    <header class="page-header">
+        <h2>API Marauder</h2>
+    </header>
+
+    <!-- Tabs API -->
+    <div class="api-tabs">
+        <button class="api-tab active" data-api-tab="keys">🔑 Clés API</button>
+        <button class="api-tab" data-api-tab="docs">📚 Documentation</button>
+        <button class="api-tab" data-api-tab="stats">📊 Statistiques</button>
+    </div>
+
+    <!-- ===== TAB KEYS ===== -->
+    <div id="api-tab-keys" class="api-tab-content active">
+        <div class="api-card">
+            <div class="api-card-header">
+                <div>
+                    <h3>🔑 Vos clés API</h3>
+                    <p style="font-size:13px;color:#6b6b6b;margin-top:4px;">Gérez vos clés d'accès à l'API Marauder</p>
+                </div>
+                <button class="api-btn-primary" id="generateApiKeyBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Générer une clé
+                </button>
+            </div>
+
+            <div id="apiKeysList" class="api-keys-list">
+                <div class="api-empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <p>Aucune clé API</p>
+                    <span>Générez votre première clé pour commencer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB DOCS ===== -->
+    <div id="api-tab-docs" class="api-tab-content">
+        <div class="api-card">
+            <div class="api-card-header">
+                <div>
+                    <h3>📚 Documentation</h3>
+                    <p style="font-size:13px;color:#6b6b6b;margin-top:4px;">Guide complet d'utilisation de l'API</p>
+                </div>
+            </div>
+
+            <div class="api-docs">
+                <!-- Introduction -->
+                <div class="doc-section">
+                    <h4>🚀 Introduction</h4>
+                    <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique. Utilisez-la pour automatiser vos recherches, intégrer Marauder dans vos outils existants, ou créer vos propres applications.</p>
+                    <div class="doc-info">
+                        <span><strong>URL de base :</strong> <code>https://marauder.host/api/v1</code></span>
+                        <span><strong>Format :</strong> JSON</span>
+                        <span><strong>Authentification :</strong> Clé API</span>
+                    </div>
+                </div>
+
+                <!-- Authentification -->
+                <div class="doc-section">
+                    <h4>🔐 Authentification</h4>
+                    <p>Toutes les requêtes doivent inclure votre clé API dans le header <code>Authorization</code> :</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Header</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre><code>Authorization: Bearer marauder_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+                    </div>
+                </div>
+
+                <!-- Endpoint Search -->
+                <div class="doc-section">
+                    <h4>🔍 Recherche</h4>
+                    <p>Recherchez des personnes avec plus de 20 critères.</p>
+                    <div class="endpoint">
+                        <span class="endpoint-method post">POST</span>
+                        <span class="endpoint-path">/api/v1/search</span>
+                    </div>
+                    <p style="font-size:13px;color:#a0a0a0;">Paramètres (JSON) :</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Body</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre><code>{
+  "nom_famille": "Dupont",
+  "prenom": "Jean",
+  "email": "jean@example.com",
+  "telephone": "0612345678",
+  "ville": "Paris",
+  "flexible": true,
+  "per_page": 100
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Endpoint Lookup -->
+                <div class="doc-section">
+                    <h4>⚡ Lookup</h4>
+                    <p>Recherche rapide par email, téléphone ou IBAN.</p>
+                    <div class="endpoint">
+                        <span class="endpoint-method get">GET</span>
+                        <span class="endpoint-path">/api/v1/lookup/:type/:value</span>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Exemple</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre><code>GET /api/v1/lookup/email/jean@example.com
+GET /api/v1/lookup/phone/0612345678
+GET /api/v1/lookup/iban/FR76...</code></pre>
+                    </div>
+                </div>
+
+                <!-- Rate Limits -->
+                <div class="doc-section">
+                    <h4>📊 Limites de requêtes</h4>
+                    <div class="limits-grid">
+                        <div class="limit-card">
+                            <div class="limit-name">Free</div>
+                            <div class="limit-value">100<span>/mois</span></div>
+                            <div class="limit-price">0€</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="limit-name">Starter</div>
+                            <div class="limit-value">1 000<span>/mois</span></div>
+                            <div class="limit-price">9€</div>
+                        </div>
+                        <div class="limit-card featured">
+                            <div class="limit-name">Pro</div>
+                            <div class="limit-value">10 000<span>/mois</span></div>
+                            <div class="limit-price">29€</div>
+                        </div>
+                        <div class="limit-card">
+                            <div class="limit-name">Enterprise</div>
+                            <div class="limit-value">Illimité</div>
+                            <div class="limit-price">Sur devis</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Codes d'erreur -->
+                <div class="doc-section">
+                    <h4>❌ Codes d'erreur</h4>
+                    <div class="errors-table">
+                        <div class="error-row">
+                            <span class="error-code">200</span>
+                            <span class="error-desc">Succès</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">400</span>
+                            <span class="error-desc">Requête invalide</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">401</span>
+                            <span class="error-desc">Clé API manquante ou invalide</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">403</span>
+                            <span class="error-desc">Accès refusé</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">429</span>
+                            <span class="error-desc">Trop de requêtes</span>
+                        </div>
+                        <div class="error-row">
+                            <span class="error-code">500</span>
+                            <span class="error-desc">Erreur serveur</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exemples -->
+                <div class="doc-section">
+                    <h4>💻 Exemples de code</h4>
+                    <div class="code-tabs">
+                        <button class="code-tab active" data-code="curl">cURL</button>
+                        <button class="code-tab" data-code="js">JavaScript</button>
+                        <button class="code-tab" data-code="python">Python</button>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span id="codeLangLabel">cURL</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre id="codeExample"><code>curl -X POST https://marauder.host/api/v1/search \
+  -H "Authorization: Bearer marauder_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB STATS ===== -->
+    <div id="api-tab-stats" class="api-tab-content">
+        <div class="api-card">
+            <div class="api-card-header">
+                <div>
+                    <h3>📊 Statistiques API</h3>
+                    <p style="font-size:13px;color:#6b6b6b;margin-top:4px;">Utilisation de votre API</p>
+                </div>
+            </div>
+
+            <div class="api-stats-grid">
+                <div class="api-stat-card">
+                    <div class="api-stat-value">0</div>
+                    <div class="api-stat-label">Requêtes aujourd'hui</div>
+                </div>
+                <div class="api-stat-card">
+                    <div class="api-stat-value">0</div>
+                    <div class="api-stat-label">Requêtes ce mois</div>
+                </div>
+                <div class="api-stat-card">
+                    <div class="api-stat-value">100</div>
+                    <div class="api-stat-label">Limite mensuelle</div>
+                </div>
+                <div class="api-stat-card">
+                    <div class="api-stat-value">100</div>
+                    <div class="api-stat-label">Requêtes restantes</div>
+                </div>
+            </div>
+
+            <div class="api-usage-bar">
+                <div class="usage-label">
+                    <span>Utilisation ce mois</span>
+                    <span>0 / 100</span>
+                </div>
+                <div class="usage-bar-bg">
+                    <div class="usage-bar-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="api-logs">
+                <h4>📋 Derniers logs</h4>
+                <div class="logs-container">
+                    <div class="log-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <p>Aucun log pour le moment</p>
+                        <span>Les requêtes API apparaîtront ici</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
 
     <div style="border-top:1px solid #2a2a2a;padding:16px 40px;margin-top:40px;text-align:center;background:#111111;margin-left:220px;">
         <a href="/cgu.html" style="color:#6b6b6b;text-decoration:none;">CGU</a> · <span style="color:#6b6b6b;">Created by Index</span>
@@ -819,5 +2127,366 @@
     <!-- ============================================ SCRIPTS ============================================ -->
     <script src="js/graphe.js"></script>
     <script src="js/dashboard.js"></script>
+<script>
+    // ============ API TABS ============
+    document.querySelectorAll('.api-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
+            const target = document.getElementById('api-tab-' + this.dataset.apiTab);
+            if (target) target.classList.add('active');
+        });
+    });
+
+    // ============ CODE TABS ============
+    const codeExamples = {
+        curl: `curl -X POST https://marauder.host/api/v1/search \\
+  -H "Authorization: Bearer marauder_xxx" \\
+  -H "Content-Type: application/json" \\
+  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'`,
+        js: `const response = await fetch('https://marauder.host/api/v1/search', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer marauder_xxx',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    nom_famille: 'Dupont',
+    prenom: 'Jean'
+  })
+});
+
+const data = await response.json();
+console.log(data);`,
+        python: `import requests
+
+response = requests.post(
+    'https://marauder.host/api/v1/search',
+    headers={
+        'Authorization': 'Bearer marauder_xxx',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'nom_famille': 'Dupont',
+        'prenom': 'Jean'
+    }
+)
+
+data = response.json()
+print(data)`
+    };
+
+    document.querySelectorAll('.code-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const lang = this.dataset.code;
+            const label = document.getElementById('codeLangLabel');
+            const code = document.getElementById('codeExample');
+            if (label) label.textContent = lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python';
+            if (code) code.innerHTML = '<code>' + codeExamples[lang].replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
+        });
+    });
+
+    // ============ COPY CODE ============
+    window.copyCode = function(btn) {
+        const codeBlock = btn.closest('.code-block');
+        const code = codeBlock.querySelector('code');
+        if (code) {
+            navigator.clipboard.writeText(code.textContent).then(() => {
+                btn.textContent = 'Copié !';
+                setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+            });
+        }
+    };
+
+    // ============ GENERATE API KEY ============
+    let apiKeys = JSON.parse(localStorage.getItem('marauder_api_keys') || '[]');
+
+    document.getElementById('generateApiKeyBtn')?.addEventListener('click', function() {
+        const key = 'marauder_' + Array.from({length: 32}, () => 
+            Math.floor(Math.random() * 16).toString(16)
+        ).join('');
+
+        apiKeys.push({
+            id: Date.now(),
+            name: 'Clé API #' + (apiKeys.length + 1),
+            key: key,
+            created: new Date().toLocaleDateString('fr-FR'),
+            lastUsed: 'Jamais'
+        });
+        localStorage.setItem('marauder_api_keys', JSON.stringify(apiKeys));
+
+        // Modal
+        const modal = document.createElement('div');
+        modal.className = 'api-key-modal active';
+        modal.innerHTML = `
+            <div class="api-key-modal-content">
+                <h3>🔑 Nouvelle clé API</h3>
+                <p>Voici votre nouvelle clé API. Copiez-la maintenant, elle ne sera plus affichée.</p>
+                <div class="api-key-new-value">
+                    <input type="text" value="${key}" readonly id="newKeyInput">
+                    <button class="api-btn-primary" onclick="copyNewKey()">Copier</button>
+                </div>
+                <div class="api-key-warning">
+                    ⚠️ Ne partagez jamais cette clé. Elle donne accès complet à votre API.
+                </div>
+                <button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J'ai copié ma clé</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        renderApiKeys();
+        showToast('Clé API générée !', 'success');
+    });
+
+    window.copyNewKey = function() {
+        const input = document.getElementById('newKeyInput');
+        if (input) {
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            showToast('Clé copiée !', 'success');
+        }
+    };
+
+    window.closeKeyModal = function() {
+        const modal = document.querySelector('.api-key-modal');
+        if (modal) modal.remove();
+    };
+
+    function renderApiKeys() {
+        const container = document.getElementById('apiKeysList');
+        if (!container) return;
+
+        if (apiKeys.length === 0) {
+            container.innerHTML = `
+                <div class="api-empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <p>Aucune clé API</p>
+                    <span>Générez votre première clé pour commencer</span>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = apiKeys.map(k => `
+            <div class="api-key-item">
+                <div class="api-key-info">
+                    <div class="api-key-name">${k.name}</div>
+                    <div class="api-key-value">${k.key.substring(0, 20)}...${k.key.substring(k.key.length - 8)}</div>
+                    <div class="api-key-date">Créée le ${k.created} · Dernière utilisation : ${k.lastUsed}</div>
+                </div>
+                <div class="api-key-actions">
+                    <button class="api-key-btn" onclick="copyApiKey('${k.key}')">Copier</button>
+                    <button class="api-key-btn danger" onclick="deleteApiKey(${k.id})">Supprimer</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.copyApiKey = function(key) {
+        navigator.clipboard.writeText(key);
+        showToast('Clé copiée !', 'success');
+    };
+
+    window.deleteApiKey = function(id) {
+        apiKeys = apiKeys.filter(k => k.id !== id);
+        localStorage.setItem('marauder_api_keys', JSON.stringify(apiKeys));
+        renderApiKeys();
+        showToast('Clé supprimée', 'info');
+    };
+
+    // Initialiser
+    renderApiKeys();
+</script>
+<script>
+    // ============ API TABS ============
+    document.querySelectorAll('.api-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
+            const target = document.getElementById('api-tab-' + this.dataset.apiTab);
+            if (target) target.classList.add('active');
+        });
+    });
+
+    // ============ CODE TABS ============
+    const codeExamples = {
+        curl: `curl -X POST https://marauder.host/api/v1/search \\
+  -H "Authorization: Bearer marauder_xxx" \\
+  -H "Content-Type: application/json" \\
+  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'`,
+        js: `const response = await fetch('https://marauder.host/api/v1/search', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer marauder_xxx',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    nom_famille: 'Dupont',
+    prenom: 'Jean'
+  })
+});
+
+const data = await response.json();
+console.log(data);`,
+        python: `import requests
+
+response = requests.post(
+    'https://marauder.host/api/v1/search',
+    headers={
+        'Authorization': 'Bearer marauder_xxx',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'nom_famille': 'Dupont',
+        'prenom': 'Jean'
+    }
+)
+
+data = response.json()
+print(data)`
+    };
+
+    document.querySelectorAll('.code-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const lang = this.dataset.code;
+            const label = document.getElementById('codeLangLabel');
+            const code = document.getElementById('codeExample');
+            if (label) label.textContent = lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python';
+            if (code) code.innerHTML = '<code>' + codeExamples[lang].replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
+        });
+    });
+
+    // ============ COPY CODE ============
+    window.copyCode = function(btn) {
+        const codeBlock = btn.closest('.code-block');
+        const code = codeBlock.querySelector('code');
+        if (code) {
+            navigator.clipboard.writeText(code.textContent).then(() => {
+                btn.textContent = 'Copié';
+                setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+            });
+        }
+    };
+
+    // ============ GENERATE API KEY ============
+    let apiKeys = JSON.parse(localStorage.getItem('marauder_api_keys') || '[]');
+
+    document.getElementById('generateApiKeyBtn')?.addEventListener('click', function() {
+        const key = 'marauder_' + Array.from({length: 32}, () => 
+            Math.floor(Math.random() * 16).toString(16)
+        ).join('');
+
+        apiKeys.push({
+            id: Date.now(),
+            name: 'Clé API #' + (apiKeys.length + 1),
+            key: key,
+            created: new Date().toLocaleDateString('fr-FR'),
+            lastUsed: 'Jamais'
+        });
+        localStorage.setItem('marauder_api_keys', JSON.stringify(apiKeys));
+
+        const modal = document.createElement('div');
+        modal.className = 'api-key-modal active';
+        modal.innerHTML = `
+            <div class="api-key-modal-content">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22" style="vertical-align:middle;margin-right:8px;">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Nouvelle clé API
+                </h3>
+                <p>Voici votre nouvelle clé API. Copiez-la maintenant, elle ne sera plus affichée.</p>
+                <div class="api-key-new-value">
+                    <input type="text" value="${key}" readonly id="newKeyInput">
+                    <button class="api-btn-primary" onclick="copyNewKey()">Copier</button>
+                </div>
+                <div class="api-key-warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:6px;">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Ne partagez jamais cette clé. Elle donne accès complet à votre API.
+                </div>
+                <button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J'ai copié ma clé</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        renderApiKeys();
+        showToast('Clé API générée', 'success');
+    });
+
+    window.copyNewKey = function() {
+        const input = document.getElementById('newKeyInput');
+        if (input) {
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            showToast('Clé copiée', 'success');
+        }
+    };
+
+    window.closeKeyModal = function() {
+        const modal = document.querySelector('.api-key-modal');
+        if (modal) modal.remove();
+    };
+
+    function renderApiKeys() {
+        const container = document.getElementById('apiKeysList');
+        if (!container) return;
+
+        if (apiKeys.length === 0) {
+            container.innerHTML = `
+                <div class="api-empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <p>Aucune clé API</p>
+                    <span>Générez votre première clé pour commencer</span>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = apiKeys.map(k => `
+            <div class="api-key-item">
+                <div class="api-key-info">
+                    <div class="api-key-name">${k.name}</div>
+                    <div class="api-key-value">${k.key.substring(0, 20)}...${k.key.substring(k.key.length - 8)}</div>
+                    <div class="api-key-date">Créée le ${k.created} · Dernière utilisation : ${k.lastUsed}</div>
+                </div>
+                <div class="api-key-actions">
+                    <button class="api-key-btn" onclick="copyApiKey('${k.key}')">Copier</button>
+                    <button class="api-key-btn danger" onclick="deleteApiKey(${k.id})">Supprimer</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.copyApiKey = function(key) {
+        navigator.clipboard.writeText(key);
+        showToast('Clé copiée', 'success');
+    };
+
+    window.deleteApiKey = function(id) {
+        apiKeys = apiKeys.filter(k => k.id !== id);
+        localStorage.setItem('marauder_api_keys', JSON.stringify(apiKeys));
+        renderApiKeys();
+        showToast('Clé supprimée', 'info');
+    };
+
+    renderApiKeys();
+</script>
 </body>
 </html>
