@@ -9,8 +9,30 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 require('dotenv').config();
 
+// ============================================
+// 1. INITIALISATION DE L'APP
+// ============================================
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// ============================================
+// 2. MIDDLEWARES GLOBAUX
+// ============================================
+app.use((req, res, next) => {
+    // Ne PAS parser le body du webhook Stripe (garder le raw)
+    if (req.originalUrl === '/api/stripe/webhook') {
+        return next();
+    }
+    express.json()(req, res, next);
+});
+app.use(express.urlencoded({ extended: true }));
+
+// ============================================
+// 3. STRIPE ROUTES
+// Le webhook gère lui-même son raw body via express.raw()
+// ============================================
+const stripeRoutes = require('./routes/stripe');
+app.use('/api/stripe', stripeRoutes);
 
 // ============ VÉRIFICATION DES VARIABLES ============
 if (!process.env.DATABASE_URL) {
@@ -115,6 +137,58 @@ const initDB = async () => {
         `);
         console.log('✅ Tables OK');
 
+        // ============ MIGRATION STRIPE ============
+        await client.query(`
+            ALTER TABLE users 
+            ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255),
+            ADD COLUMN IF NOT EXISTS plan VARCHAR(50) DEFAULT 'free',
+            ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50);
+
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                stripe_subscription_id VARCHAR(255) UNIQUE NOT NULL,
+                stripe_customer_id VARCHAR(255) NOT NULL,
+                stripe_price_id VARCHAR(255),
+                status VARCHAR(50) NOT NULL,
+                plan VARCHAR(50) NOT NULL,
+                current_period_start TIMESTAMP,
+                current_period_end TIMESTAMP,
+                cancel_at_period_end BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS payments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                stripe_payment_intent_id VARCHAR(255),
+                stripe_invoice_id VARCHAR(255),
+                amount INTEGER NOT NULL,
+                currency VARCHAR(10) DEFAULT 'eur',
+                status VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('✅ Migration Stripe OK');
+        // ============ MIGRATION API KEYS ============
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS api_keys (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                name VARCHAR(255) DEFAULT 'Ma clé API',
+                key_hash VARCHAR(255) NOT NULL UNIQUE,
+                key_preview VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_used TIMESTAMP,
+                revoked BOOLEAN DEFAULT FALSE
+            );
+            CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
+            CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
+        `);
+        console.log('✅ Migration API Keys OK');
+        // ============ ADMIN ============
         const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
@@ -134,6 +208,7 @@ const initDB = async () => {
         client.release();
     }
 };
+
 initDB();
 
 // ============ BLOCKLIST HELPER ============
@@ -162,7 +237,7 @@ function isBlocked(person, blocklist) {
     return false;
 }
 
-// ============ MIDDLEWARE ============
+// ============ MIDDLEWARE CORS ============
 const allowedOrigins = [
     'https://marauder-site-web-production.up.railway.app',
     'https://marauder.host',
@@ -182,20 +257,16 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json());
 app.set('trust proxy', 1);
 
 // ⚡ MAINTENANCE ICI (AVANT express.static)
 app.use((req, res, next) => {
-    // Laisser passer les routes API
     if (req.path.startsWith('/api/')) {
         return next();
     }
-    // Laisser passer la page maintenance
     if (req.path === '/maintenance') {
         return next();
     }
-    // Vérifier si la maintenance est active
     if (process.env.MAINTENANCE === 'ON') {
         console.log('🚧 Maintenance activée pour:', req.path);
         return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
@@ -227,29 +298,6 @@ app.use((req, res, next) => {
         return res.redirect('https://' + req.headers.host + req.url);
     }
     next();
-});
-
-// ============ MAINTENANCE ============
-app.use((req, res, next) => {
-    // Laisser passer les routes API
-    if (req.path.startsWith('/api/')) {
-        return next();
-    }
-    // Laisser passer la page maintenance
-    if (req.path === '/maintenance') {
-        return next();
-    }
-    // Vérifier si la maintenance est active
-    if (process.env.MAINTENANCE === 'ON') {
-        console.log('🚧 Maintenance activée pour:', req.path);
-        return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
-    }
-    next();
-});
-
-// Route dédiée pour la maintenance
-app.get('/maintenance', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
 });
 
 // ============ RATE LIMITING ============
@@ -618,7 +666,131 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Erreur' });
     }
 });
+// ============ LIMITES PAR PLAN ============
+const API_KEY_LIMITS = {
+    free: 1,
+    starter: 1,
+    pro: 3,
+    enterprise: Infinity
+};
 
+const SEARCH_LIMITS = {
+    free: 10,
+    starter: 500,
+    pro: 5000,
+    enterprise: Infinity
+};
+
+const RESULTS_PER_SEARCH = {
+    free: 10,
+    starter: 50,
+    pro: 100,
+    enterprise: 100
+};
+
+// ============ ROUTES API KEYS ============
+
+// Lister les clés de l'utilisateur
+app.get('/api/keys', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, name, key_preview, created_at, last_used FROM api_keys WHERE user_id = $1 AND revoked = FALSE ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json({ keys: result.rows });
+    } catch (error) {
+        console.error('List keys error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Info limites
+app.get('/api/keys/limits', authenticateToken, async (req, res) => {
+    try {
+        const userResult = await pool.query('SELECT plan FROM users WHERE id = $1', [req.user.id]);
+        const plan = userResult.rows[0]?.plan || 'free';
+        const maxKeys = API_KEY_LIMITS[plan] ?? 1;
+
+        const countResult = await pool.query(
+            'SELECT COUNT(*) FROM api_keys WHERE user_id = $1 AND revoked = FALSE',
+            [req.user.id]
+        );
+        const currentCount = parseInt(countResult.rows[0].count);
+
+        res.json({ plan, currentCount, maxKeys });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Générer une clé
+app.post('/api/keys', authenticateToken, async (req, res) => {
+    try {
+        const userResult = await pool.query('SELECT plan FROM users WHERE id = $1', [req.user.id]);
+        const plan = userResult.rows[0]?.plan || 'free';
+        const maxKeys = API_KEY_LIMITS[plan] ?? 1;
+
+        const countResult = await pool.query(
+            'SELECT COUNT(*) FROM api_keys WHERE user_id = $1 AND revoked = FALSE',
+            [req.user.id]
+        );
+        const currentCount = parseInt(countResult.rows[0].count);
+
+        if (currentCount >= maxKeys) {
+            return res.status(403).json({
+                error: `Limite atteinte pour le plan ${plan.toUpperCase()} (${maxKeys} clé${maxKeys > 1 ? 's' : ''} maximum)`,
+                currentCount,
+                maxKeys,
+                plan
+            });
+        }
+
+        const crypto = require('crypto');
+        const rawKey = 'marauder_' + crypto.randomBytes(24).toString('hex');
+        const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+        const keyPreview = rawKey.substring(0, 20) + '...' + rawKey.substring(rawKey.length - 8);
+        const name = req.body?.name || `Clé API #${currentCount + 1}`;
+
+        const result = await pool.query(
+            'INSERT INTO api_keys (user_id, name, key_hash, key_preview) VALUES ($1, $2, $3, $4) RETURNING id, name, key_preview, created_at',
+            [req.user.id, name, keyHash, keyPreview]
+        );
+
+        res.status(201).json({
+            key: {
+                id: result.rows[0].id,
+                name: result.rows[0].name,
+                key: rawKey,
+                preview: result.rows[0].key_preview,
+                created_at: result.rows[0].created_at
+            },
+            remaining: maxKeys - currentCount - 1,
+            maxKeys,
+            plan
+        });
+    } catch (error) {
+        console.error('Create key error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Révoquer une clé
+app.delete('/api/keys/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'UPDATE api_keys SET revoked = TRUE WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Clé non trouvée' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete key error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 // ============ ROUTES PROFIL ============
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
@@ -1048,10 +1220,46 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'l
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
 app.get('/cgu.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'cgu.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'admin.html')));
+app.get('/tarifs.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
+app.get('/tarifs', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
+
+// ============ CONFIG PUBLIQUE ============
+app.get('/api/config', (req, res) => {
+    res.json({
+        devApi: process.env.DEV_API === 'ON',
+        maintenance: process.env.MAINTENANCE === 'ON'
+    });
+});
+
+// ============ CONFIG PUBLIQUE ============
+app.get('/api/config', (req, res) => {
+    res.json({
+        devApi: process.env.DEV_API === 'ON',
+        maintenance: process.env.MAINTENANCE === 'ON'
+    });
+});
+
 
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ============ HANDLER D'ERREURS GLOBAL ============
+app.use((err, req, res, next) => {
+    console.error('❌ Erreur middleware:', err.message);
+    if (!res.headersSent) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('❌ Exception non catchée:', err.message);
+    console.error(err.stack);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('❌ Rejet non catché:', err);
 });
 
 // ============ DÉMARRAGE ============
