@@ -498,36 +498,30 @@
         .api-key-warning svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 
         /* ============================================
-           OVERLAY DEV API
+           OVERLAY DEV API — Plein écran (sauf sidebar)
            ============================================ */
-        .api-dev-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(10,10,10,0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            display: none;
+       .api-dev-overlay {
+    position: fixed;
+    top: 0;
+    left: 220px;
+    right: 0;
+    bottom: 0;
+    background: #0a0a0a;
+    display: none;
             align-items: center;
             justify-content: center;
-            z-index: 100;
-            border-radius: 16px;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 9998;
             padding: 20px;
             text-align: center;
         }
         .api-dev-overlay.active {
             display: flex;
-            animation: apiFadeUp 0.3s ease;
-        }
-        .api-dev-content {
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
         }
         .api-dev-icon {
-            width: 72px;
-            height: 72px;
+            width: 80px;
+            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -536,29 +530,14 @@
             border-radius: 20px;
             margin-bottom: 8px;
         }
-        .api-dev-icon svg {
-            width: 32px;
-            height: 32px;
-            color: #f59e0b;
-        }
-        .api-dev-title {
-            font-size: 22px;
-            font-weight: 800;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
-        .api-dev-subtitle {
-            font-size: 14px;
-            color: #a0a0a0;
-            line-height: 1.6;
-            margin: 0;
-        }
+        .api-dev-icon svg { width: 36px; height: 36px; color: #f59e0b; }
+        .api-dev-title { font-size: 28px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -0.5px; }
+        .api-dev-subtitle { font-size: 15px; color: #a0a0a0; line-height: 1.7; margin: 0; max-width: 480px; }
         .api-dev-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: rgba(245,158,11,0.08);
             border: 1px solid rgba(245,158,11,0.25);
             border-radius: 100px;
@@ -570,8 +549,7 @@
             margin-top: 8px;
         }
         .api-dev-dot {
-            width: 6px;
-            height: 6px;
+            width: 6px; height: 6px;
             background: #f59e0b;
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(245,158,11,0.8);
@@ -585,34 +563,31 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 24px;
+            padding: 14px 28px;
             background: #5865F2;
             color: #ffffff;
             border: none;
-            border-radius: 10px;
-            font-size: 13px;
+            border-radius: 12px;
+            font-size: 14px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.2s;
             text-decoration: none;
-            margin-top: 8px;
+            margin-top: 16px;
         }
-        .api-dev-btn:hover {
-            background: #4752c4;
-            transform: translateY(-1px);
-        }
-        .api-dev-btn svg { width: 18px; height: 18px; }
+        .api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
+        .api-dev-btn svg { width: 20px; height: 20px; }
 
-        .api-page-wrapper {
-            position: relative;
+        @media (max-width: 768px) {
+            .api-dev-overlay { left: 0; }
         }
 
 
         /* ============================================
         MODAL DE REMERCIEMENT
         ============================================ */
-         inset: 0; background: rgba(0,0,0,0.85); backdrop-fi.thanks-modal { position: fixed;lter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 99999; padding: 20px; }
+        .thanks-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 99999; padding: 20px; }
         .thanks-modal.active { display: flex; animation: thanksFadeIn 0.3s ease; }
         @keyframes thanksFadeIn { from { opacity: 0; } to { opacity: 1; } }
         .thanks-modal-content { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 20px; padding: 48px 40px; max-width: 500px; width: 100%; text-align: center; position: relative; box-shadow: 0 24px 80px rgba(0,0,0,0.8); animation: thanksSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -1152,33 +1127,7 @@
         <!-- ===== PAGE API ===== -->
         <section id="page-api" class="page">
             <div class="api-page-wrapper">
-        <!-- OVERLAY DEV API -->
-        <div id="apiDevOverlay" class="api-dev-overlay">
-            <div class="api-dev-content">
-                <div class="api-dev-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="16 18 22 12 16 6"/>
-                        <polyline points="8 6 2 12 8 18"/>
-                    </svg>
-                </div>
-                <h2 class="api-dev-title">API Marauder</h2>
-                <p class="api-dev-subtitle">
-                    Notre API est actuellement en cours de développement.<br>
-                    Elle sera bientôt disponible pour tous les utilisateurs.
-                </p>
-                <div class="api-dev-badge">
-                    <div class="api-dev-dot"></div>
-                    En développement
-                </div>
-                <a href="https://discord.gg/jf6QRZHaTB" target="_blank" class="api-dev-btn">
-                    <svg viewBox="0 0 71 55" fill="currentColor">
-                        <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
-                    </svg>
-                    Rejoindre le Discord
-                </a>
-            </div>
-        </div>
-
+      
                 <!-- HERO -->
                 <div class="api-hero">
                     <div class="api-hero-content">
@@ -1619,6 +1568,34 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
                     Plus tard
                 </button>
             </div>
+        </div>
+    </div>
+
+
+    <!-- ============ OVERLAY DEV API ============ -->
+    <div id="apiDevOverlay" class="api-dev-overlay">
+        <div class="api-dev-content">
+            <div class="api-dev-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                </svg>
+            </div>
+            <h2 class="api-dev-title">API Marauder</h2>
+            <p class="api-dev-subtitle">
+                Notre API est actuellement en cours de développement.<br>
+                Elle sera bientôt disponible pour tous les utilisateurs.
+            </p>
+            <div class="api-dev-badge">
+                <div class="api-dev-dot"></div>
+                En développement
+            </div>
+            <a href="https://discord.gg/jf6QRZHaTB" target="_blank" class="api-dev-btn">
+                <svg viewBox="0 0 71 55" fill="currentColor">
+                    <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
+                </svg>
+                Rejoindre le Discord
+            </a>
         </div>
     </div>
 
