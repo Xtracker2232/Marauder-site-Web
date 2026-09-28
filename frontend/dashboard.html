@@ -6,7 +6,6 @@
     <title>Marauder - Dashboard</title>
     <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
     <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
-    <script async src="https://atlos.io/packages/app/atlos.js"></script>
     <style>
         /* ============================================
         RESET & BASE
@@ -1415,7 +1414,7 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
                                 </svg>
                                 Derniers logs
                             </h4>
-                            <div class="logs-container">
+                            <div class="logs-container" id="logsContainer">
                                 <div class="log-empty">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -1534,7 +1533,9 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
     <script src="js/graphe.js" defer></script>
     <script src="js/dashboard.js" defer></script>
     <script>
-        // ============ SAFE TOAST (fallback si dashboard.js ne la définit pas) ============
+        // ============================================
+        // SHOW TOAST (fallback)
+        // ============================================
         window.showToast = window.showToast || function(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             if (!container) return;
@@ -1545,7 +1546,9 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
             setTimeout(() => toast.remove(), 5000);
         };
 
-        // ============ API TABS ============
+        // ============================================
+        // API TABS
+        // ============================================
         document.querySelectorAll('.api-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
@@ -1560,7 +1563,9 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
             });
         });
 
-        // ============ CODE TABS ============
+        // ============================================
+        // CODE TABS
+        // ============================================
         const codeExamples = {
             curl: `curl -X POST https://marauder.host/api/v1/search \\
 -H "Authorization: Bearer marauder_xxx" \\
@@ -1610,7 +1615,9 @@ print(data)`
             });
         });
 
-        // ============ COPY CODE ============
+        // ============================================
+        // COPY CODE
+        // ============================================
         window.copyCode = function(btn) {
             const codeBlock = btn.closest('.code-block');
             const code = codeBlock.querySelector('code');
@@ -1622,7 +1629,9 @@ print(data)`
             }
         };
 
-        // ============ API KEYS (SERVEUR) ============
+        // ============================================
+        // API KEYS
+        // ============================================
         let apiKeysCache = [];
         let apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
 
@@ -1829,7 +1838,9 @@ print(data)`
             if (modal) modal.remove();
         };
 
-        // Aller aux clés API (depuis le modal de remerciement)
+        // ============================================
+        // NAVIGATION API KEYS
+        // ============================================
         window.goToApiKeys = function() {
             document.querySelectorAll('.sidebar-nav > li').forEach(li => li.classList.remove('active'));
             const apiNav = document.querySelector('[data-page="api"]');
@@ -1855,13 +1866,17 @@ print(data)`
             loadApiKeys();
         };
 
-        // ============ MODE DEV ============
+        // ============================================
+        // MODE DEV
+        // ============================================
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             document.body.classList.add('dev-mode');
             console.log('🔧 Mode DEV activé');
         }
 
-        // ============ MODAL DE REMERCIEMENT ============
+        // ============================================
+        // MODAL DE REMERCIEMENT
+        // ============================================
         window.closeThanksModal = function() {
             const modal = document.getElementById('thanksModal');
             if (modal) modal.classList.remove('active');
@@ -1874,7 +1889,9 @@ print(data)`
             if (modal) modal.classList.add('active');
         };
 
-        // ============ DÉTECTION RETOUR PAIEMENT ============
+        // ============================================
+        // DÉTECTION RETOUR PAIEMENT
+        // ============================================
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const payment = urlParams.get('payment');
@@ -1889,7 +1906,9 @@ print(data)`
             }
         })();
 
-        // ============ ONGLET ABONNEMENT ============
+        // ============================================
+        // ONGLET ABONNEMENT
+        // ============================================
         async function loadSubscription() {
             const container = document.getElementById('subscriptionContent');
             if (!container) return;
@@ -2040,7 +2059,9 @@ print(data)`
             `;
         }
 
-        // ============ PAYMENT MODAL ============
+        // ============================================
+        // PAYMENT MODAL
+        // ============================================
         let selectedPlan = null;
 
         window.openPaymentModal = function(plan) {
@@ -2112,100 +2133,97 @@ print(data)`
             if (typeof window.subscribe === 'function') window.subscribe(plan);
         };
 
-        eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-            } catch (err) {
-                console.error('Crypto error:', err);
+        // ============================================
+        // ATLOS CRYPTO PAYMENT
+        // ============================================
+        window.payWithCrypto = function() {
+            if (!selectedPlan) {
+                if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
+                return;
+            }
+
+            const planToPay = selectedPlan;
+            closePaymentModal();
+
+            const prices = { starter: 9.99, pro: 29.99 };
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const userId = userData.id || 'anon';
+
+            if (typeof atlos === 'undefined' || !atlos.Pay) {
                 if (typeof showToast === 'function') {
-                    showToast('Erreur de connexion', 'error');
-                } else {
-                    alert('Erreur de connexion');
+                    showToast('Chargement du module de paiement... Réessayez dans 2 secondes.', 'warning', 4000);
                 }
+                setTimeout(function() {
+                    if (typeof atlos !== 'undefined' && atlos.Pay) {
+                        window.payWithCrypto();
+                    } else {
+                        if (typeof showToast === 'function') showToast('Erreur : module ATLOS introuvable. Rechargez la page.', 'error', 6000);
+                    }
+                }, 2000);
+                return;
             }
-        };window.payWithCrypto = function() {
-    if (!selectedPlan) {
-        if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
-        return;
-    }
 
-    const planToPay = selectedPlan;
-    closePaymentModal();
+            const orderId = userId + '_' + planToPay + '_' + Date.now();
 
-    const prices = { starter: 9.99, pro: 29.99 };
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = userData.id || 'anon';
+            fetch('/api/atlos/create-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({ plan: planToPay })
+            }).catch(function(e) { console.warn('Pre-create error:', e); });
 
-    if (typeof atlos === 'undefined' || !atlos.Pay) {
-        if (typeof showToast === 'function') {
-            showToast('Chargement du module de paiement... Réessayez dans 2 secondes.', 'warning', 4000);
-        }
-        setTimeout(function() {
-            if (typeof atlos !== 'undefined' && atlos.Pay) {
-                window.payWithCrypto();
-            } else {
-                if (typeof showToast === 'function') showToast('Erreur : module ATLOS introuvable. Rechargez la page.', 'error', 6000);
+            atlos.Pay({
+                merchantId: 'JGBWEIZDJC',
+                orderId: orderId,
+                orderAmount: prices[planToPay],
+                orderCurrency: 'USD',
+                onCompleted: function(completedOrderId) {
+                    if (typeof showToast === 'function') {
+                        showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
+                    }
+                    setTimeout(function() {
+                        checkAtlosStatus(completedOrderId || orderId);
+                    }, 3000);
+                },
+                onCanceled: function() {
+                    if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
+                }
+            });
+        };
+
+        window.checkAtlosStatus = async function(orderId) {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/atlos/status/' + encodeURIComponent(orderId), {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.status === 'paid' || data.status === 'confirmed') {
+                    if (typeof showToast === 'function') {
+                        showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 8000);
+                    }
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    setTimeout(function() {
+                        checkAtlosStatus(orderId);
+                    }, 5000);
+                }
+            } catch (err) {
+                console.error('ATLOS status error:', err);
+                setTimeout(function() {
+                    checkAtlosStatus(orderId);
+                }, 5000);
             }
-        }, 2000);
-        return;
-    }
+        };
 
-    const orderId = userId + '_' + planToPay + '_' + Date.now();
-
-    fetch('/api/atlos/create-payment', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-        },
-        body: JSON.stringify({ plan: planToPay })
-    }).catch(function(e) { console.warn('Pre-create error:', e); });
-
-    atlos.Pay({
-        merchantId: 'JGBWEIZDJC',
-        orderId: orderId,
-        orderAmount: prices[planToPay],
-        orderCurrency: 'USD',
-        onCompleted: function(completedOrderId) {
-            if (typeof showToast === 'function') {
-                showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
-            }
-            setTimeout(function() {
-                checkAtlosStatus(completedOrderId || orderId);
-            }, 3000);
-        },
-        onCanceled: function() {
-            if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
-        }
-    });
-};
-
-window.checkAtlosStatus = async function(orderId) {
-    try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/atlos/status/' + encodeURIComponent(orderId), {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-
-        if (data.status === 'paid' || data.status === 'confirmed') {
-            if (typeof showToast === 'function') {
-                showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 8000);
-            }
-            setTimeout(function() {
-                window.location.reload();
-            }, 3000);
-        } else {
-            setTimeout(function() {
-                checkAtlosStatus(orderId);
-            }, 5000);
-        }
-    } catch (err) {
-        console.error('ATLOS status error:', err);
-        setTimeout(function() {
-            checkAtlosStatus(orderId);
-        }, 5000);
-    }
-};
-
+        // ============================================
+        // CRYPTO MODAL (fallback)
+        // ============================================
         window.showCryptoPaymentModal = function(payment) {
             const existing = document.getElementById('cryptoPaymentModal');
             if (existing) existing.remove();
@@ -2250,6 +2268,9 @@ window.checkAtlosStatus = async function(orderId) {
             });
         };
 
+        // ============================================
+        // STRIPE
+        // ============================================
         window.openTarifs = function() {
             window.location.href = '/tarifs.html';
         };
@@ -2294,7 +2315,9 @@ window.checkAtlosStatus = async function(orderId) {
             }
         };
 
-        // ============ USAGE API ============
+        // ============================================
+        // USAGE API
+        // ============================================
         async function loadUsage() {
             const token = localStorage.getItem('token');
             if (!token) return;
@@ -2343,7 +2366,9 @@ window.checkAtlosStatus = async function(orderId) {
             }
         }
 
-        // ============ CHECK DEV API ============
+        // ============================================
+        // CHECK DEV API
+        // ============================================
         let devApiActive = false;
 
         async function checkDevApi() {
@@ -2357,7 +2382,9 @@ window.checkAtlosStatus = async function(orderId) {
             }
         }
 
-        // ============ LOGS ============
+        // ============================================
+        // LOGS
+        // ============================================
         async function loadLogs() {
             const container = document.getElementById('logsContainer');
             if (!container) return;
@@ -2385,98 +2412,9 @@ window.checkAtlosStatus = async function(orderId) {
             }
         }
 
-// ============================================
-// ATLOS CRYPTO PAYMENT
-// ============================================
-window.payWithCrypto = function() {
-    if (!selectedPlan) {
-        if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
-        return;
-    }
-
-    const planToPay = selectedPlan;
-    closePaymentModal();
-
-    const prices = { starter: 9.99, pro: 29.99 };
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = userData.id || 'anon';
-
-    // Vérifier que le SDK ATLOS est chargé
-    if (typeof atlos === 'undefined' || !atlos.Pay) {
-        if (typeof showToast === 'function') {
-            showToast('Chargement du module de paiement... Réessayez dans 2 secondes.', 'warning', 4000);
-        }
-        setTimeout(function() {
-            if (typeof atlos !== 'undefined' && atlos.Pay) {
-                window.payWithCrypto();
-            } else {
-                if (typeof showToast === 'function') showToast('Erreur : module ATLOS introuvable. Rechargez la page.', 'error', 6000);
-            }
-        }, 2000);
-        return;
-    }
-
-    const orderId = userId + '_' + planToPay + '_' + Date.now();
-
-    // Enregistrer l'ordre côté serveur
-    fetch('/api/atlos/create-payment', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-        },
-        body: JSON.stringify({ plan: planToPay })
-    }).catch(function(e) { console.warn('Pre-create error:', e); });
-
-    // Ouvrir la popup ATLOS
-    atlos.Pay({
-        merchantId: 'JGBWEIZDJC',
-        orderId: orderId,
-        orderAmount: prices[planToPay],
-        orderCurrency: 'USD',
-        onCompleted: function(completedOrderId) {
-            if (typeof showToast === 'function') {
-                showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
-            }
-            setTimeout(function() {
-                checkAtlosStatus(completedOrderId || orderId);
-            }, 3000);
-        },
-        onCanceled: function() {
-            if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
-        }
-    });
-};
-
-window.checkAtlosStatus = async function(orderId) {
-    try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/atlos/status/' + encodeURIComponent(orderId), {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-
-        if (data.status === 'paid' || data.status === 'confirmed') {
-            if (typeof showToast === 'function') {
-                showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 8000);
-            }
-            setTimeout(function() {
-                window.location.reload();
-            }, 3000);
-        } else {
-            setTimeout(function() {
-                checkAtlosStatus(orderId);
-            }, 5000);
-        }
-    } catch (err) {
-        console.error('ATLOS status error:', err);
-        setTimeout(function() {
-            checkAtlosStatus(orderId);
-        }, 5000);
-    }
-};
-
-        // ============ INIT ============
+        // ============================================
+        // INIT
+        // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             if (token) {
