@@ -15,15 +15,44 @@
         body::before, body::after { display: none !important; }
 
         /* ============================================
+        MODAL CONFIRM CUSTOM (remplace window.confirm)
+        ============================================ */
+        .mc-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 999999; padding: 20px;
+        }
+        .mc-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+        .mc-box {
+            background: #111111;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 440px; width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .mc-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .mc-text { font-size: 14px; color: #a0a0a0; line-height: 1.6; margin-bottom: 24px; }
+        .mc-actions { display: flex; gap: 10px; }
+        .mc-btn {
+            flex: 1; padding: 11px;
+            border-radius: 8px; font-size: 14px; font-weight: 600;
+            font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s;
+            border: none;
+        }
+        .mc-btn-primary { background: #ffffff; color: #000000; }
+        .mc-btn-primary:hover { background: #cccccc; }
+        .mc-btn-secondary { background: transparent; color: #a0a0a0; border: 1px solid #2a2a2a; }
+        .mc-btn-secondary:hover { background: rgba(255,255,255,0.05); color: #ffffff; }
+        .mc-btn-danger { background: #ef4444; color: #ffffff; }
+        .mc-btn-danger:hover { background: #dc2626; }
+
+        /* ============================================
         FIX ONGLET ABONNEMENT
         ============================================ */
         #subscriptionContent { display: block; width: 100%; overflow: hidden; }
-        #subscriptionContent .sub-current { display: block; width: 100%; box-sizing: border-box; }
-        #subscriptionContent .sub-current-header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; width: 100%; }
-        #subscriptionContent .sub-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; width: 100%; margin-bottom: 24px; }
-        #subscriptionContent .sub-actions { display: flex; gap: 12px; flex-wrap: wrap; width: 100%; }
-        #subscriptionContent .sub-plans { display: block; width: 100%; margin-top: 24px; }
-        #subscriptionContent .sub-plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; width: 100%; }
 
         /* ============================================
         SIDEBAR
@@ -274,7 +303,7 @@
         .investigation-map-container img { width: 100%; height: 100%; display: block; object-fit: contain; background: #151515; }
 
         #mapPin { position: absolute; pointer-events: none; z-index: 10; display: none; }
-        .pin-dot { width: 20px; height: 20px; background: #ffffff; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.2); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .pin-dot { width: 20px; height: 20px; background: #ffffff; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 40px rgba(255,255,255,0.6); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .pin-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); animation: pinPulse 1.5s ease-in-out infinite; }
         @keyframes pinPulse {
             0%, 100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.8; }
@@ -333,7 +362,7 @@
         }
 
         /* ============================================
-        API PAGE - DESIGN PRO
+        API PAGE
         ============================================ */
         .api-page-wrapper { display: flex; flex-direction: column; gap: 24px; }
 
@@ -367,7 +396,6 @@
         .api-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #ffffff; border: none; border-radius: 10px; color: #000000; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
         .api-btn-primary svg { width: 15px; height: 15px; stroke-width: 2.5; }
         .api-btn-primary:hover { background: #e5e5e5; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.1); }
-        .api-btn-primary:active { transform: translateY(0); }
 
         .api-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 72px 24px; text-align: center; }
         .api-empty-icon { width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.015); border: 1px solid #2a2a2a; border-radius: 20px; margin-bottom: 20px; }
@@ -444,7 +472,7 @@
         .api-usage-bar { padding: 20px 28px; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; background: rgba(255,255,255,0.01); }
         .usage-label { display: flex; justify-content: space-between; font-size: 13px; color: #a0a0a0; margin-bottom: 12px; font-weight: 500; }
         .usage-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; }
-        .usage-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 100px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .usage-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 100px; transition: width 0.4s; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
 
         .api-logs { padding: 24px 28px; }
         .api-logs h4 { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: #ffffff; margin: 0 0 16px 0; }
@@ -457,34 +485,19 @@
 
         .api-key-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
         .api-key-modal.active { display: flex; animation: apiFadeUp 0.25s ease; }
-        .api-key-modal-content { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 16px; padding: 32px; max-width: 520px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.8); }
+        .api-key-modal-content { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 520px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
         .api-key-modal-content h3 { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; color: #ffffff; margin: 0 0 8px 0; }
         .api-key-modal-content h3 svg { width: 20px; height: 20px; color: #10b981; }
         .api-key-modal-content p { font-size: 13px; color: #a0a0a0; margin: 0 0 20px 0; line-height: 1.6; }
         .api-key-new-value { display: flex; gap: 10px; margin-bottom: 16px; }
-        .api-key-new-value input { flex: 1; padding: 14px 16px; background: #050505; border: 1px solid #2a2a2a; border-radius: 10px; color: #ffffff; font-family: 'Courier New', monospace; font-size: 12px; outline: none; letter-spacing: 0.5px; }
+        .api-key-new-value input { flex: 1; padding: 14px 16px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; color: #ffffff; font-family: 'Courier New', monospace; font-size: 12px; outline: none; letter-spacing: 0.5px; }
         .api-key-warning { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; color: #f59e0b; font-size: 12px; margin-bottom: 20px; line-height: 1.6; }
         .api-key-warning svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 
         /* ============================================
-           OVERLAY DEV API — Plein écran (sauf sidebar)
-           ============================================ */
-        .api-dev-overlay {
-            position: fixed;
-            top: 0;
-            left: 220px;
-            right: 0;
-            bottom: 0;
-            background: #0a0a0a;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 9998;
-            padding: 20px;
-            text-align: center;
-        }
+        OVERLAY DEV API
+        ============================================ */
+        .api-dev-overlay { position: fixed; top: 0; left: 220px; right: 0; bottom: 0; background: #0a0a0a; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 9998; padding: 20px; text-align: center; }
         .api-dev-overlay.active { display: flex; }
         .api-dev-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; max-width: 560px; }
         .api-dev-icon { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; margin-bottom: 8px; }
@@ -498,9 +511,7 @@
         .api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
         .api-dev-btn svg { width: 20px; height: 20px; }
 
-        @media (max-width: 768px) {
-            .api-dev-overlay { left: 0; }
-        }
+        @media (max-width: 768px) { .api-dev-overlay { left: 0; } }
 
         /* ============================================
         MODAL DE REMERCIEMENT
@@ -508,20 +519,18 @@
         .thanks-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 99999; padding: 20px; }
         .thanks-modal.active { display: flex; animation: thanksFadeIn 0.3s ease; }
         @keyframes thanksFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .thanks-modal-content { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 20px; padding: 48px 40px; max-width: 500px; width: 100%; text-align: center; position: relative; box-shadow: 0 24px 80px rgba(0,0,0,0.8); animation: thanksSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .thanks-modal-content { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 40px 32px; max-width: 500px; width: 100%; text-align: center; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.6); animation: thanksSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes thanksSlideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .thanks-modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #2a2a2a; border-radius: 10px; color: #6b6b6b; cursor: pointer; transition: all 0.2s; }
+        .thanks-modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #2a2a2a; border-radius: 8px; color: #6b6b6b; cursor: pointer; transition: all 0.2s; }
         .thanks-modal-close:hover { background: rgba(255,255,255,0.05); color: #ffffff; border-color: rgba(255,255,255,0.15); }
         .thanks-modal-close svg { width: 16px; height: 16px; }
-        .thanks-modal-icon { width: 88px; height: 88px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 50%; animation: thanksIconPulse 2s ease-in-out infinite; }
-        @keyframes thanksIconPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.3); } 50% { transform: scale(1.05); box-shadow: 0 0 0 12px rgba(16,185,129,0); } }
+        .thanks-modal-icon { width: 88px; height: 88px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 50%; }
         .thanks-modal-icon svg { width: 42px; height: 42px; color: #10b981; stroke-width: 2.5; }
         .thanks-modal h2 { font-size: 26px; font-weight: 800; color: #ffffff; margin-bottom: 12px; letter-spacing: -0.5px; }
         .thanks-modal p { font-size: 15px; color: #a0a0a0; line-height: 1.6; margin-bottom: 8px; }
         .thanks-modal .plan-name { display: inline-block; padding: 6px 18px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 100px; color: #10b981; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 24px; }
-        .thanks-modal .thanks-modal-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 32px; background: #ffffff; color: #000000; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; width: 100%; }
-        .thanks-modal .thanks-modal-btn:hover { background: #e5e5e5; transform: translateY(-1px); }
-        .thanks-modal .thanks-modal-btn svg { flex-shrink: 0; }
+        .thanks-modal .thanks-modal-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 32px; background: #ffffff; color: #000000; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; width: 100%; }
+        .thanks-modal .thanks-modal-btn:hover { background: #cccccc; }
 
         /* ============================================
         ONGLET ABONNEMENT
@@ -547,11 +556,9 @@
         .sub-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; }
         .sub-btn svg { width: 15px; height: 15px; }
         .sub-btn.primary { background: #ffffff; color: #000000; }
-        .sub-btn.primary:hover { background: #e5e5e5; transform: translateY(-1px); }
+        .sub-btn.primary:hover { background: #cccccc; }
         .sub-btn.secondary { background: transparent; border: 1px solid #2a2a2a; color: #a0a0a0; }
         .sub-btn.secondary:hover { border-color: rgba(255,255,255,0.2); color: #ffffff; background: rgba(255,255,255,0.03); }
-        .sub-btn.danger { background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; }
-        .sub-btn.danger:hover { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
         .sub-plans { margin-top: 24px; }
         .sub-plans-title { font-size: 14px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
         .sub-plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
@@ -563,7 +570,7 @@
         .sub-plan-price span { font-size: 11px; font-weight: 400; color: #6b6b6b; }
         .sub-plan-btn { display: inline-block; padding: 8px 16px; margin-top: 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; font-family: inherit; width: 100%; }
         .sub-plan-btn.upgrade { background: #ffffff; color: #000000; }
-        .sub-plan-btn.upgrade:hover { background: #e5e5e5; }
+        .sub-plan-btn.upgrade:hover { background: #cccccc; }
         .sub-plan-btn.current-btn { background: transparent; color: #10b981; cursor: default; }
 
         /* ============================================
@@ -575,13 +582,13 @@
         .site-footer span { color:#6b6b6b; }
 
         /* ============================================
-           💳 CRYPTO MODAL
-           ============================================ */
+        💳 CRYPTO MODAL — Style du site
+        ============================================ */
         .crypto-modal {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -591,16 +598,16 @@
         .crypto-modal.active { display: flex; }
 
         .crypto-modal-box {
-            background: #0d0d0d;
+            background: #111111;
             border: 1px solid #2a2a2a;
-            border-radius: 20px;
+            border-radius: 12px;
             padding: 32px;
             max-width: 560px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
         }
 
         .crypto-modal-close {
@@ -611,30 +618,23 @@
             height: 36px;
             background: transparent;
             border: 1px solid #2a2a2a;
-            border-radius: 10px;
+            border-radius: 8px;
             color: #6b6b6b;
             cursor: pointer;
             font-size: 18px;
-            font-family: inherit;
+            font-family: Arial, sans-serif;
+            transition: all 0.2s;
         }
-        .crypto-modal-close:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .crypto-modal-close:hover { background: rgba(255,255,255,0.05); color: #ffffff; }
 
         .crypto-modal-step { display: none; }
         .crypto-modal-step.active { display: block; animation: fadeIn 0.3s ease; }
 
         .crypto-modal-header { text-align: center; margin-bottom: 24px; }
-        .crypto-modal-icon {
-            width: 64px; height: 64px;
-            margin: 0 auto 16px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(247,147,26,0.08);
-            border: 1px solid rgba(247,147,26,0.25);
-            border-radius: 16px;
-        }
-        .crypto-modal-icon svg { width: 32px; height: 32px; }
-        .crypto-modal-header h2 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .crypto-modal-header h2 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .crypto-modal-header p { font-size: 13px; color: #a0a0a0; }
 
+        /* Grille des cryptos */
         .crypto-modal-coins {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -642,200 +642,104 @@
             margin-bottom: 20px;
         }
         .crypto-modal-coin {
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-            padding: 14px 8px;
-            background: rgba(255,255,255,0.02);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 16px 8px;
+            background: #1e1e1e;
             border: 1px solid #2a2a2a;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
-            color: #fff;
-            font-family: inherit;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
         }
-        .crypto-modal-coin:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .crypto-modal-coin:hover {
+            border-color: rgba(255,255,255,0.2);
+            background: #222222;
+            transform: translateY(-2px);
+        }
         .crypto-modal-coin.selected {
-            border-color: #f7931a;
-            background: rgba(247,147,26,0.08);
-            box-shadow: 0 0 0 3px rgba(247,147,26,0.1);
+            border-color: #ffffff;
+            background: #222222;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
         }
         .crypto-modal-coin-logo {
-            width: 36px; height: 36px;
+            width: 40px; height: 40px;
             display: flex; align-items: center; justify-content: center;
             border-radius: 50%;
-            font-weight: 800;
-            font-size: 14px;
-            color: #fff;
+            overflow: hidden;
         }
-        .crypto-modal-coin-name { font-size: 12px; font-weight: 700; }
-        .crypto-modal-coin-network { font-size: 10px; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .crypto-modal-coin-logo svg {
+            width: 40px; height: 40px;
+            display: block;
+        }
+        .crypto-modal-coin-name { font-size: 13px; font-weight: 600; color: #ffffff; }
+        .crypto-modal-coin-network {
+            font-size: 10px;
+            color: #6b6b6b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
         .crypto-modal-btn {
             width: 100%;
             padding: 14px;
-            background: #f7931a;
-            color: #000;
+            background: #ffffff;
+            color: #000000;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 700;
-            font-family: inherit;
+            font-weight: 600;
+            font-family: Arial, sans-serif;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s;
         }
-        .crypto-modal-btn:hover:not(:disabled) { background: #ff9f2e; }
+        .crypto-modal-btn:hover:not(:disabled) { background: #cccccc; }
         .crypto-modal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .crypto-modal-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .crypto-modal-status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
+        /* Statut */
+        .crypto-modal-status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .crypto-modal-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .crypto-modal-status-badge.waiting { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
         .crypto-modal-status-badge.confirming { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
         .crypto-modal-status-badge.confirmed { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
         .crypto-modal-status-badge.expired { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
-        .crypto-modal-status-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            box-shadow: 0 0 8px currentColor;
-            animation: pulse 1.5s infinite;
-        }
-        .crypto-modal-timer {
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            color: #a0a0a0;
-            font-weight: 600;
-        }
+        .crypto-modal-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; animation: pulse 1.5s infinite; }
+        .crypto-modal-timer { font-family: 'Courier New', monospace; font-size: 13px; color: #a0a0a0; font-weight: 600; }
         .crypto-modal-timer.warning { color: #f59e0b; }
         .crypto-modal-timer.danger { color: #ef4444; }
 
-        .crypto-modal-amount {
-            background: linear-gradient(135deg, rgba(247,147,26,0.08), rgba(247,147,26,0.02));
-            border: 1px solid rgba(247,147,26,0.25);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .crypto-modal-amount-label { font-size: 10px; color: #a0a0a0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; }
-        .crypto-modal-amount-value {
-            font-size: 22px;
-            font-weight: 800;
-            color: #f7931a;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-        }
-        .crypto-modal-amount-fiat { font-size: 12px; color: #6b6b6b; margin-top: 4px; }
+        /* Montant */
+        .crypto-modal-amount { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 10px; padding: 18px; text-align: center; margin-bottom: 16px; }
+        .crypto-modal-amount-label { font-size: 11px; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; font-weight: 600; }
+        .crypto-modal-amount-value { font-size: 24px; font-weight: 700; color: #ffffff; font-family: 'Courier New', monospace; word-break: break-all; }
+        .crypto-modal-amount-fiat { font-size: 12px; color: #6b6b6b; margin-top: 6px; }
 
-        .crypto-modal-address {
-            background: #050505;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            padding: 14px;
-            margin-bottom: 16px;
-        }
-        .crypto-modal-address-label { font-size: 10px; color: #a0a0a0; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.8px; }
-        .crypto-modal-address-value {
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            color: #fff;
-            word-break: break-all;
-            padding: 10px;
-            background: #000;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            user-select: all;
-            line-height: 1.5;
-        }
-        .crypto-modal-copy {
-            width: 100%;
-            padding: 10px;
-            background: #fff;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .crypto-modal-copy:hover { background: #e5e5e5; }
-        .crypto-modal-copy.copied { background: #10b981; color: #fff; }
+        /* Adresse */
+        .crypto-modal-address { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .crypto-modal-address-label { font-size: 11px; color: #6b6b6b; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.8px; }
+        .crypto-modal-address-value { font-family: 'Courier New', monospace; font-size: 12px; color: #ffffff; word-break: break-all; padding: 12px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; margin-bottom: 10px; user-select: all; line-height: 1.5; }
+        .crypto-modal-copy { width: 100%; padding: 10px; background: #ffffff; color: #000000; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; }
+        .crypto-modal-copy:hover { background: #cccccc; }
+        .crypto-modal-copy.copied { background: #10b981; color: #ffffff; }
 
-        .crypto-modal-qr {
-            display: flex;
-            justify-content: center;
-            padding: 16px;
-            background: #fff;
-            border-radius: 12px;
-            margin-bottom: 16px;
-        }
+        /* QR */
+        .crypto-modal-qr { display: flex; justify-content: center; padding: 16px; background: #ffffff; border-radius: 10px; margin-bottom: 16px; }
         .crypto-modal-qr img { width: 160px; height: 160px; display: block; }
 
-        .crypto-modal-progress {
-            margin-bottom: 16px;
-        }
-        .crypto-modal-progress-bar {
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 100px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        .crypto-modal-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f7931a, #ff9f2e);
-            border-radius: 100px;
-            transition: width 0.5s;
-            width: 0%;
-            box-shadow: 0 0 15px rgba(247,147,26,0.4);
-        }
-        .crypto-modal-progress-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #6b6b6b;
-            font-weight: 600;
-        }
+        /* Progression */
+        .crypto-modal-progress { margin-bottom: 16px; }
+        .crypto-modal-progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; margin-bottom: 8px; }
+        .crypto-modal-progress-fill { height: 100%; background: #ffffff; border-radius: 100px; transition: width 0.5s; width: 0%; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        .crypto-modal-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: #6b6b6b; font-weight: 600; }
 
-        .crypto-modal-info {
-            padding: 14px;
-            background: rgba(16,185,129,0.05);
-            border: 1px solid rgba(16,185,129,0.2);
-            border-radius: 10px;
-            color: #a0a0a0;
-            font-size: 12px;
-            line-height: 1.5;
-            text-align: center;
-        }
+        /* Info */
+        .crypto-modal-info { padding: 14px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; color: #a0a0a0; font-size: 12px; line-height: 1.5; text-align: center; }
         .crypto-modal-info strong { color: #10b981; }
 
+        /* Confirmé */
         .crypto-modal-confirmed { text-align: center; padding: 20px 0; }
-        .crypto-modal-confirmed-icon {
-            width: 80px; height: 80px;
-            margin: 0 auto 20px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(16,185,129,0.1);
-            border: 2px solid rgba(16,185,129,0.3);
-            border-radius: 50%;
-            color: #10b981;
-            font-size: 40px;
-            font-weight: 700;
-        }
-        .crypto-modal-confirmed h2 { font-size: 22px; color: #fff; margin-bottom: 8px; }
+        .crypto-modal-confirmed-icon { width: 80px; height: 80px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: rgba(16,185,129,0.1); border: 2px solid rgba(16,185,129,0.3); border-radius: 50%; color: #10b981; font-size: 40px; font-weight: 700; }
+        .crypto-modal-confirmed h2 { font-size: 22px; color: #ffffff; margin-bottom: 8px; }
         .crypto-modal-confirmed p { font-size: 14px; color: #a0a0a0; margin-bottom: 24px; line-height: 1.6; }
 
         @media (max-width: 600px) {
@@ -847,6 +751,18 @@
     </style>
 </head>
 <body>
+
+    <!-- ============ MODAL CONFIRM CUSTOM ============ -->
+    <div id="confirmModal" class="mc-overlay">
+        <div class="mc-box">
+            <div class="mc-title" id="mcTitle">Confirmation</div>
+            <div class="mc-text" id="mcText">Êtes-vous sûr ?</div>
+            <div class="mc-actions">
+                <button class="mc-btn mc-btn-secondary" id="mcCancel">Annuler</button>
+                <button class="mc-btn mc-btn-primary" id="mcConfirm">Confirmer</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ============ OVERLAY DE RECHERCHE ============ -->
     <div id="searchOverlay" class="search-loading">
@@ -868,9 +784,7 @@
             <span class="dot">.</span>
             <span class="dot">.</span>
         </div>
-        <div class="neon-bar-container">
-            <div class="neon-bar"></div>
-        </div>
+        <div class="neon-bar-container"><div class="neon-bar"></div></div>
         <div class="loading-text">Analyse en cours</div>
     </div>
 
@@ -908,9 +822,7 @@
         <div class="modal" style="max-width:600px;">
             <h3>Mes graphes sauvegardes</h3>
             <div id="graphesList" style="margin-top:16px;max-height:400px;overflow-y:auto;"></div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="closeGraphesModal">Fermer</button>
-            </div>
+            <div class="modal-actions"><button class="btn-secondary" id="closeGraphesModal">Fermer</button></div>
         </div>
     </div>
 
@@ -919,35 +831,27 @@
         <div class="investigation-container">
             <div class="investigation-header">
                 <button id="investigationBack" class="investigation-back">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                        <polyline points="15 18 9 12 15 6"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
                     Retour
                 </button>
                 <div class="investigation-title">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <span id="investigationName">Investigation</span>
                 </div>
                 <div style="width:80px;"></div>
             </div>
-
             <div class="investigation-body">
                 <div class="investigation-map-col">
                     <div class="investigation-map-wrapper">
                         <div class="investigation-city-label" id="investigationCityLabel">Paris</div>
                         <div class="investigation-map-container" id="investigationMapContainer">
                             <img id="franceMapImage" src="img/france-map.webp" alt="Carte de France" style="width:100%;height:100%;display:block;object-fit:contain;background:#151515;">
-                            <div id="mapPin" class="map-pin">
-                                <div class="pin-dot"></div>
-                                <div class="pin-ring"></div>
-                            </div>
+                            <div id="mapPin" class="map-pin"><div class="pin-dot"></div><div class="pin-ring"></div></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="investigation-info-col">
                     <div class="investigation-info-header">
                         <h3>Informations complètes</h3>
@@ -973,21 +877,11 @@
             <!-- Étape 1 : choix de la crypto -->
             <div id="cryptoModalStep1" class="crypto-modal-step active">
                 <div class="crypto-modal-header">
-                    <div class="crypto-modal-icon">
-                        <svg viewBox="0 0 32 32" fill="currentColor">
-                            <circle cx="16" cy="16" r="16" fill="#f7931a"/>
-                            <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/>
-                        </svg>
-                    </div>
                     <h2>Paiement Crypto</h2>
                     <p>Choisissez votre crypto-monnaie</p>
                 </div>
-
                 <div class="crypto-modal-coins" id="cryptoModalCoins"></div>
-
-                <button class="crypto-modal-btn" id="cryptoModalContinue" disabled onclick="confirmCryptoModalChoice()">
-                    Continuer
-                </button>
+                <button class="crypto-modal-btn" id="cryptoModalContinue" disabled onclick="confirmCryptoModalChoice()">Continuer</button>
             </div>
 
             <!-- Étape 2 : paiement -->
@@ -1014,9 +908,7 @@
                 <div class="crypto-modal-address">
                     <div class="crypto-modal-address-label">Adresse de réception</div>
                     <div class="crypto-modal-address-value" id="cryptoModalAddress">—</div>
-                    <button class="crypto-modal-copy" id="cryptoModalCopyBtn" onclick="copyCryptoModalAddress()">
-                        Copier l'adresse
-                    </button>
+                    <button class="crypto-modal-copy" id="cryptoModalCopyBtn" onclick="copyCryptoModalAddress()">Copier l'adresse</button>
                 </div>
 
                 <div class="crypto-modal-qr" id="cryptoModalQrBox" style="display:none;">
@@ -1024,9 +916,7 @@
                 </div>
 
                 <div class="crypto-modal-progress">
-                    <div class="crypto-modal-progress-bar">
-                        <div class="crypto-modal-progress-fill" id="cryptoModalProgressFill"></div>
-                    </div>
+                    <div class="crypto-modal-progress-bar"><div class="crypto-modal-progress-fill" id="cryptoModalProgressFill"></div></div>
                     <div class="crypto-modal-progress-label">
                         <span>Progression</span>
                         <span id="cryptoModalProgressText">0%</span>
@@ -1035,7 +925,7 @@
 
                 <div class="crypto-modal-info">
                     ✅ <strong>Vous pouvez fermer cette fenêtre.</strong><br>
-                    Le paiement sera détecté automatiquement. Votre abonnement sera activé dès confirmation de la blockchain.
+                    Le paiement sera détecté automatiquement. Votre abonnement sera activé dès confirmation.
                 </div>
             </div>
 
@@ -1072,69 +962,29 @@
             <span>Marauder</span>
         </div>
         <ul class="sidebar-nav">
-            <li class="active" data-page="search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <span>Recherche</span>
-            </li>
-            <li data-page="lookup">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <span>Lookup</span>
-            </li>
-            <li data-page="history">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>Historique</span>
-            </li>
-            <li data-page="fiches">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span>Fiches</span>
-            </li>
-            <li data-page="graphe">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/><line x1="12" x2="12" y1="3" y2="9"/><line x1="12" x2="12" y1="15" y2="21"/></svg>
-                <span>Graphe</span>
-            </li>
-            <li data-page="profile">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span>Profil</span>
-            </li>
-            <li data-page="api">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="16 18 22 12 16 6"/>
-                    <polyline points="8 6 2 12 8 18"/>
-                </svg>
-                <span>API</span>
-            </li>
+            <li class="active" data-page="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Recherche</span></li>
+            <li data-page="lookup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><span>Lookup</span></li>
+            <li data-page="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Historique</span></li>
+            <li data-page="fiches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Fiches</span></li>
+            <li data-page="graphe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/><line x1="12" x2="12" y1="3" y2="9"/><line x1="12" x2="12" y1="15" y2="21"/></svg><span>Graphe</span></li>
+            <li data-page="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profil</span></li>
+            <li data-page="api"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>API</span></li>
             <li class="support-toggle" id="supportToggle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span>Support</span>
-                <svg class="support-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
+                <svg class="support-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
             </li>
             <ul class="support-submenu" id="supportSubmenu">
                 <li data-page="discord" onclick="window.open('https://discord.gg/jf6QRZHaTB', '_blank')">
-                    <svg viewBox="0 0 71 55" fill="currentColor" stroke="none" width="18" height="18">
-                        <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
-                    </svg>
+                    <svg viewBox="0 0 71 55" fill="currentColor" stroke="none" width="18" height="18"><path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/></svg>
                     <span>Discord</span>
                 </li>
-                <li data-page="tickets">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <rect x="2" y="4" width="20" height="16" rx="2"/>
-                        <path d="M22 7L12 13L2 7"/>
-                    </svg>
-                    <span>Tickets</span>
-                </li>
+                <li data-page="tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7L12 13L2 7"/></svg><span>Tickets</span></li>
             </ul>
         </ul>
         <div class="sidebar-footer">
             <button id="logoutBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 <span>Deconnexion</span>
             </button>
         </div>
@@ -1143,13 +993,11 @@
     <!-- ============ MAIN CONTENT ============ -->
     <main class="main-content">
 
-        <!-- ===== PAGE RECHERCHE ===== -->
+        <!-- PAGE RECHERCHE -->
         <section id="page-search" class="page active">
             <header class="page-header">
                 <h2>Recherche</h2>
-                <div class="user-info">
-                    <span id="usernameDisplay">Admin</span>
-                </div>
+                <div class="user-info"><span id="usernameDisplay">Admin</span></div>
             </header>
 
             <div class="search-tabs">
@@ -1157,15 +1005,10 @@
                 <button class="search-tab" data-tab="pro">Recherche Pro</button>
             </div>
 
-            <!-- ===== TAB FRENCH ===== -->
+            <!-- TAB FRENCH -->
             <div id="tab-french" class="search-tab-content active">
                 <div class="section">
-                    <div class="section-header" data-section="identity">
-                        <h3>Identite</h3>
-                        <svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="identity"><h3>Identite</h3><svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body open">
                         <div class="form-grid">
                             <div class="form-group"><label>Nom</label><input type="text" id="searchNom" placeholder="Dupont"></div>
@@ -1176,12 +1019,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="birth">
-                        <h3>Naissance</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="birth"><h3>Naissance</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>Jour</label><input type="number" id="searchJour" placeholder="15"></div>
@@ -1194,12 +1032,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="contact">
-                        <h3>Contact</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="contact"><h3>Contact</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>Email</label><input type="email" id="searchEmail" placeholder="jean@example.com"></div>
@@ -1210,12 +1043,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="location">
-                        <h3>Localisation</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="location"><h3>Localisation</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>Adresse</label><input type="text" id="searchAdresse" placeholder="10 rue de la Paix"></div>
@@ -1225,12 +1053,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="fivem">
-                        <h3>FiveM / GTA RP</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="fivem"><h3>FiveM / GTA RP</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>Steam ID</label><input type="text" id="searchSteam" placeholder="steam:110000..."></div>
@@ -1243,12 +1066,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="advanced">
-                        <h3>Champs avances</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="advanced"><h3>Champs avances</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>NIR (Secu)</label><input type="text" id="searchNir" placeholder="1234567890123"></div>
@@ -1264,15 +1082,10 @@
                 </div>
             </div>
 
-            <!-- ===== TAB PRO ===== -->
+            <!-- TAB PRO -->
             <div id="tab-pro" class="search-tab-content">
                 <div class="section">
-                    <div class="section-header" data-section="identity">
-                        <h3>Identite Pro</h3>
-                        <svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="identity"><h3>Identite Pro</h3><svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body open">
                         <div class="form-grid">
                             <div class="form-group"><label>Nom</label><input type="text" id="searchNomPro" placeholder="Dupont"></div>
@@ -1285,12 +1098,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="contact">
-                        <h3>Contact</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="contact"><h3>Contact</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>Email</label><input type="email" id="searchEmailPro" placeholder="jean@entreprise.com"></div>
@@ -1300,12 +1108,7 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-header" data-section="pro-identifiants">
-                        <h3>Identifiants uniques</h3>
-                        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
+                    <div class="section-header" data-section="pro-identifiants"><h3>Identifiants uniques</h3><svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group"><label>SIRET</label><input type="text" id="searchSiret" placeholder="12345678901234"></div>
@@ -1326,7 +1129,7 @@
             <div id="searchResults" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE LOOKUP ===== -->
+        <!-- PAGE LOOKUP -->
         <section id="page-lookup" class="page">
             <header class="page-header"><h2>Lookup</h2></header>
             <div class="lookup-form">
@@ -1337,20 +1140,20 @@
             <div id="lookupResults" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE HISTORIQUE ===== -->
+        <!-- PAGE HISTORIQUE -->
         <section id="page-history" class="page">
             <header class="page-header"><h2>Historique</h2></header>
             <div id="historyList" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE FICHES ===== -->
+        <!-- PAGE FICHES -->
         <section id="page-fiches" class="page">
             <header class="page-header"><h2>Fiches</h2></header>
             <button id="createFicheBtn" class="btn-primary" style="width:auto;padding:10px 24px;">Creer une fiche</button>
             <div id="fichesList" class="results-container" style="margin-top:20px;"></div>
         </section>
 
-        <!-- ===== PAGE GRAPHE ===== -->
+        <!-- PAGE GRAPHE -->
         <section id="page-graphe" class="page">
             <header class="page-header"><h2>Graphe de connexions</h2></header>
             <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
@@ -1360,28 +1163,24 @@
                 <button id="grapheMesGraphes" class="btn-secondary">Mes graphes</button>
                 <button id="grapheEffacer" class="btn-secondary" style="color:#ef4444;">Effacer</button>
             </div>
-            <div id="grapheContainer">
-                <canvas id="grapheCanvas"></canvas>
-            </div>
+            <div id="grapheContainer"><canvas id="grapheCanvas"></canvas></div>
         </section>
 
-        <!-- ===== PAGE TICKETS ===== -->
+        <!-- PAGE TICKETS -->
         <section id="page-tickets" class="page">
             <header class="page-header"><h2>Tickets</h2><button id="openTicketBtn" class="btn-primary" style="width:auto;padding:10px 24px;">Nouveau ticket</button></header>
             <div id="ticketsList" class="results-container"></div>
         </section>
 
-        <!-- ===== PAGE PROFIL ===== -->
+        <!-- PAGE PROFIL -->
         <section id="page-profile" class="page">
             <header class="page-header"><h2>Profil</h2></header>
             <div id="profileInfo" class="profile-card"></div>
         </section>
 
-        <!-- ===== PAGE API ===== -->
+        <!-- PAGE API -->
         <section id="page-api" class="page">
             <div class="api-page-wrapper">
-
-                <!-- HERO -->
                 <div class="api-hero">
                     <div class="api-hero-content">
                         <div class="api-hero-left">
@@ -1399,64 +1198,39 @@
                     </div>
                 </div>
 
-                <!-- TABS -->
                 <div class="api-tabs">
                     <button class="api-tab active" data-api-tab="keys">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         Clés API
                     </button>
                     <button class="api-tab" data-api-tab="docs">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         Documentation
                     </button>
                     <button class="api-tab" data-api-tab="stats">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <line x1="18" y1="20" x2="18" y2="10"/>
-                            <line x1="12" y1="20" x2="12" y2="4"/>
-                            <line x1="6" y1="20" x2="6" y2="14"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                         Statistiques
                     </button>
                     <button class="api-tab" data-api-tab="subscription">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <line x1="12" y1="1" x2="12" y2="23"/>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                         Mon abonnement
                     </button>
                 </div>
 
-                <!-- TAB KEYS -->
                 <div id="api-tab-keys" class="api-tab-content active">
                     <div class="api-card">
                         <div class="api-card-header">
                             <div class="api-card-header-info">
                                 <div class="api-card-header-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 </div>
-                                <div class="api-card-header-text">
-                                    <h3>Vos clés API</h3>
-                                    <p>Gérez vos clés d'accès à l'API Marauder</p>
-                                </div>
+                                <div class="api-card-header-text"><h3>Vos clés API</h3><p>Gérez vos clés d'accès à l'API Marauder</p></div>
                             </div>
                         </div>
-
                         <div id="apiKeysList" class="api-keys-list">
                             <div class="api-empty-state">
                                 <div class="api-empty-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 </div>
                                 <p>Aucune clé API</p>
                                 <span>Générez votre première clé pour commencer</span>
@@ -1465,322 +1239,77 @@
                     </div>
                 </div>
 
-                <!-- TAB DOCS -->
                 <div id="api-tab-docs" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
                             <div class="api-card-header-info">
                                 <div class="api-card-header-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 </div>
-                                <div class="api-card-header-text">
-                                    <h3>Documentation</h3>
-                                    <p>Guide complet d'utilisation de l'API</p>
-                                </div>
+                                <div class="api-card-header-text"><h3>Documentation</h3><p>Guide complet d'utilisation de l'API</p></div>
                             </div>
                         </div>
-
                         <div class="api-docs">
                             <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <line x1="12" y1="16" x2="12" y2="12"/>
-                                            <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                        </svg>
-                                    </span>
-                                    Introduction
-                                </h4>
-                                <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique. Utilisez-la pour automatiser vos recherches, intégrer Marauder dans vos outils existants, ou créer vos propres applications.</p>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>Introduction</h4>
+                                <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique.</p>
                                 <div class="doc-info">
                                     <span><strong>URL de base :</strong> <code>https://marauder.host/api/v1</code></span>
                                     <span><strong>Format :</strong> JSON</span>
                                     <span><strong>Authentification :</strong> Clé API</span>
                                 </div>
                             </div>
-
-                            <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                        </svg>
-                                    </span>
-                                    Authentification
-                                </h4>
-                                <p>Toutes les requêtes doivent inclure votre clé API dans le header <code>Authorization</code> :</p>
-                                <div class="code-block">
-                                    <div class="code-header">
-                                        <span>Header</span>
-                                        <button class="code-copy" onclick="copyCode(this)">Copier</button>
-                                    </div>
-                                    <pre><code>Authorization: Bearer marauder_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="11" cy="11" r="8"/>
-                                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                        </svg>
-                                    </span>
-                                    Recherche
-                                </h4>
-                                <p>Recherchez des personnes avec plus de 20 critères.</p>
-                                <div class="endpoint">
-                                    <span class="endpoint-method post">POST</span>
-                                    <span class="endpoint-path">/api/v1/search</span>
-                                </div>
-                                <p style="font-size:13px;color:#a0a0a0;">Paramètres (JSON) :</p>
-                                <div class="code-block">
-                                    <div class="code-header">
-                                        <span>Body</span>
-                                        <button class="code-copy" onclick="copyCode(this)">Copier</button>
-                                    </div>
-                                    <pre><code>{
-    "nom_famille": "Dupont",
-    "prenom": "Jean",
-    "email": "jean@example.com",
-    "telephone": "0612345678",
-    "ville": "Paris",
-    "flexible": true,
-    "per_page": 100
-}</code></pre>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                                        </svg>
-                                    </span>
-                                    Lookup
-                                </h4>
-                                <p>Recherche rapide par email, téléphone ou IBAN.</p>
-                                <div class="endpoint">
-                                    <span class="endpoint-method get">GET</span>
-                                    <span class="endpoint-path">/api/v1/lookup/:type/:value</span>
-                                </div>
-                                <div class="code-block">
-                                    <div class="code-header">
-                                        <span>Exemple</span>
-                                        <button class="code-copy" onclick="copyCode(this)">Copier</button>
-                                    </div>
-                                    <pre><code>GET /api/v1/lookup/email/jean@example.com
-GET /api/v1/lookup/phone/0612345678
-GET /api/v1/lookup/iban/FR76...</code></pre>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="20" x2="18" y2="10"/>
-                                            <line x1="12" y1="20" x2="12" y2="4"/>
-                                            <line x1="6" y1="20" x2="6" y2="14"/>
-                                        </svg>
-                                    </span>
-                                    Limites de requêtes
-                                </h4>
-                                <div class="limits-grid">
-                                    <div class="limit-card">
-                                        <div class="limit-name">Free</div>
-                                        <div class="limit-value">10<span>/mois</span></div>
-                                        <div class="limit-price">0€</div>
-                                    </div>
-                                    <div class="limit-card">
-                                        <div class="limit-name">Starter</div>
-                                        <div class="limit-value">1 000<span>/mois</span></div>
-                                        <div class="limit-price">9,99€</div>
-                                    </div>
-                                    <div class="limit-card featured">
-                                        <div class="limit-name">Pro</div>
-                                        <div class="limit-value">10 000<span>/mois</span></div>
-                                        <div class="limit-price">29,99€</div>
-                                    </div>
-                                    <div class="limit-card">
-                                        <div class="limit-name">Enterprise</div>
-                                        <div class="limit-value">Illimité</div>
-                                        <div class="limit-price">Sur devis</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <line x1="15" y1="9" x2="9" y2="15"/>
-                                            <line x1="9" y1="9" x2="15" y2="15"/>
-                                        </svg>
-                                    </span>
-                                    Codes d'erreur
-                                </h4>
-                                <div class="errors-table">
-                                    <div class="error-row">
-                                        <span class="error-code">200</span>
-                                        <span class="error-desc">Succès</span>
-                                    </div>
-                                    <div class="error-row">
-                                        <span class="error-code">400</span>
-                                        <span class="error-desc">Requête invalide</span>
-                                    </div>
-                                    <div class="error-row">
-                                        <span class="error-code">401</span>
-                                        <span class="error-desc">Clé API manquante ou invalide</span>
-                                    </div>
-                                    <div class="error-row">
-                                        <span class="error-code">403</span>
-                                        <span class="error-desc">Accès refusé</span>
-                                    </div>
-                                    <div class="error-row">
-                                        <span class="error-code">429</span>
-                                        <span class="error-desc">Trop de requêtes</span>
-                                    </div>
-                                    <div class="error-row">
-                                        <span class="error-code">500</span>
-                                        <span class="error-desc">Erreur serveur</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4>
-                                    <span class="doc-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="16 18 22 12 16 6"/>
-                                            <polyline points="8 6 2 12 8 18"/>
-                                        </svg>
-                                    </span>
-                                    Exemples de code
-                                </h4>
-                                <div class="code-tabs">
-                                    <button class="code-tab active" data-code="curl">cURL</button>
-                                    <button class="code-tab" data-code="js">JavaScript</button>
-                                    <button class="code-tab" data-code="python">Python</button>
-                                </div>
-                                <div class="code-block">
-                                    <div class="code-header">
-                                        <span id="codeLangLabel">cURL</span>
-                                        <button class="code-copy" onclick="copyCode(this)">Copier</button>
-                                    </div>
-                                    <pre id="codeExample"><code>curl -X POST https://marauder.host/api/v1/search \
--H "Authorization: Bearer marauder_xxx" \
--H "Content-Type: application/json" \
--d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB STATS -->
                 <div id="api-tab-stats" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
                             <div class="api-card-header-info">
                                 <div class="api-card-header-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="18" y1="20" x2="18" y2="10"/>
-                                        <line x1="12" y1="20" x2="12" y2="4"/>
-                                        <line x1="6" y1="20" x2="6" y2="14"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                                 </div>
-                                <div class="api-card-header-text">
-                                    <h3>Statistiques API</h3>
-                                    <p>Utilisation de votre API</p>
-                                </div>
+                                <div class="api-card-header-text"><h3>Statistiques API</h3><p>Utilisation de votre API</p></div>
                             </div>
                         </div>
-
                         <div class="api-stats-grid">
-                            <div class="api-stat-card">
-                                <div class="api-stat-value" data-stat="today">0</div>
-                                <div class="api-stat-label">Requêtes aujourd'hui</div>
-                            </div>
-                            <div class="api-stat-card">
-                                <div class="api-stat-value" data-stat="month">0</div>
-                                <div class="api-stat-label">Requêtes ce mois</div>
-                            </div>
-                            <div class="api-stat-card">
-                                <div class="api-stat-value" data-stat="limit">10</div>
-                                <div class="api-stat-label">Limite mensuelle</div>
-                            </div>
-                            <div class="api-stat-card">
-                                <div class="api-stat-value" data-stat="remaining">10</div>
-                                <div class="api-stat-label">Requêtes restantes</div>
-                            </div>
+                            <div class="api-stat-card"><div class="api-stat-value" data-stat="today">0</div><div class="api-stat-label">Requêtes aujourd'hui</div></div>
+                            <div class="api-stat-card"><div class="api-stat-value" data-stat="month">0</div><div class="api-stat-label">Requêtes ce mois</div></div>
+                            <div class="api-stat-card"><div class="api-stat-value" data-stat="limit">10</div><div class="api-stat-label">Limite mensuelle</div></div>
+                            <div class="api-stat-card"><div class="api-stat-value" data-stat="remaining">10</div><div class="api-stat-label">Requêtes restantes</div></div>
                         </div>
-
                         <div class="api-usage-bar">
-                            <div class="usage-label">
-                                <span>Utilisation ce mois</span>
-                                <span id="usageCount">0 / 10</span>
-                            </div>
-                            <div class="usage-bar-bg">
-                                <div class="usage-bar-fill" id="usageBarFill" style="width: 0%;"></div>
-                            </div>
+                            <div class="usage-label"><span>Utilisation ce mois</span><span id="usageCount">0 / 10</span></div>
+                            <div class="usage-bar-bg"><div class="usage-bar-fill" id="usageBarFill" style="width: 0%;"></div></div>
                         </div>
-
                         <div class="api-logs">
-                            <h4>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                                Derniers logs
-                            </h4>
+                            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Derniers logs</h4>
                             <div class="logs-container" id="logsContainer">
                                 <div class="log-empty">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                    </svg>
-                                    <p>Aucun log pour le moment</p>
-                                    <span>Les requêtes API apparaîtront ici</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <p>Aucun log pour le moment</p><span>Les requêtes API apparaîtront ici</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB ABONNEMENT -->
                 <div id="api-tab-subscription" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
                             <div class="api-card-header-info">
                                 <div class="api-card-header-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="12" y1="1" x2="12" y2="23"/>
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                                 </div>
-                                <div class="api-card-header-text">
-                                    <h3>Mon abonnement</h3>
-                                    <p>Gérez votre plan et votre facturation</p>
-                                </div>
+                                <div class="api-card-header-text"><h3>Mon abonnement</h3><p>Gérez votre plan et votre facturation</p></div>
                             </div>
                         </div>
-
                         <div id="subscriptionContent" style="padding: 28px;">
-                            <div style="text-align:center; padding:40px; color:#6b6b6b;">
-                                Chargement...
-                            </div>
+                            <div style="text-align:center; padding:40px; color:#6b6b6b;">Chargement...</div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </section>
 
@@ -1790,36 +1319,21 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
     <div id="thanksModal" class="thanks-modal">
         <div class="thanks-modal-content">
             <button class="thanks-modal-close" onclick="closeThanksModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
-
             <div class="thanks-modal-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
-
             <h2>Merci pour votre confiance !</h2>
             <p>Votre abonnement a été activé avec succès.</p>
             <div class="plan-name" id="thanksPlan">PRO</div>
-            <p style="font-size:13px; color:#6b6b6b; margin-bottom:28px;">
-                Vous avez maintenant accès à toutes les fonctionnalités de votre plan.
-            </p>
+            <p style="font-size:13px; color:#6b6b6b; margin-bottom:28px;">Vous avez maintenant accès à toutes les fonctionnalités de votre plan.</p>
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <button class="thanks-modal-btn" onclick="closeThanksModal(); goToApiKeys();" style="flex:1;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     Générer ma clé API
                 </button>
-                <button class="thanks-modal-btn" onclick="closeThanksModal()" style="flex:1; background:transparent; color:#a0a0a0; border:1px solid #2a2a2a;">
-                    Plus tard
-                </button>
+                <button class="thanks-modal-btn" onclick="closeThanksModal()" style="flex:1; background:transparent; color:#a0a0a0; border:1px solid #2a2a2a;">Plus tard</button>
             </div>
         </div>
     </div>
@@ -1828,24 +1342,13 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
     <div id="apiDevOverlay" class="api-dev-overlay">
         <div class="api-dev-content">
             <div class="api-dev-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="16 18 22 12 16 6"/>
-                    <polyline points="8 6 2 12 8 18"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </div>
             <h2 class="api-dev-title">API Marauder</h2>
-            <p class="api-dev-subtitle">
-                Notre API est actuellement en cours de développement.<br>
-                Elle sera bientôt disponible pour tous les utilisateurs.
-            </p>
-            <div class="api-dev-badge">
-                <div class="api-dev-dot"></div>
-                En développement
-            </div>
+            <p class="api-dev-subtitle">Notre API est actuellement en cours de développement.<br>Elle sera bientôt disponible pour tous les utilisateurs.</p>
+            <div class="api-dev-badge"><div class="api-dev-dot"></div>En développement</div>
             <a href="https://discord.gg/jf6QRZHaTB" target="_blank" class="api-dev-btn">
-                <svg viewBox="0 0 71 55" fill="currentColor">
-                    <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
-                </svg>
+                <svg viewBox="0 0 71 55" fill="currentColor"><path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/></svg>
                 Rejoindre le Discord
             </a>
         </div>
@@ -1860,6 +1363,45 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
     <script src="js/graphe.js" defer></script>
     <script src="js/dashboard.js" defer></script>
     <script>
+        // ============================================
+        // CONFIRM CUSTOM (remplace window.confirm)
+        // ============================================
+        window.customConfirm = function(title, text, onConfirm, options) {
+            options = options || {};
+            const confirmText = options.confirmText || 'Confirmer';
+            const cancelText = options.cancelText || 'Annuler';
+            const danger = options.danger === true;
+
+            const overlay = document.getElementById('confirmModal');
+            const titleEl = document.getElementById('mcTitle');
+            const textEl = document.getElementById('mcText');
+            const cancelBtn = document.getElementById('mcCancel');
+            const confirmBtn = document.getElementById('mcConfirm');
+
+            titleEl.textContent = title || 'Confirmation';
+            textEl.textContent = text || 'Êtes-vous sûr ?';
+            cancelBtn.textContent = cancelText;
+            confirmBtn.textContent = confirmText;
+            confirmBtn.className = 'mc-btn ' + (danger ? 'mc-btn-danger' : 'mc-btn-primary');
+
+            overlay.classList.add('active');
+
+            const cleanup = () => {
+                overlay.classList.remove('active');
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+
+            const handleConfirm = () => {
+                cleanup();
+                if (onConfirm) onConfirm();
+            };
+            const handleCancel = () => cleanup();
+
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+        };
+
         // ============================================
         // SHOW TOAST (fallback)
         // ============================================
@@ -1891,72 +1433,6 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
         });
 
         // ============================================
-        // CODE TABS
-        // ============================================
-        const codeExamples = {
-            curl: `curl -X POST https://marauder.host/api/v1/search \\
--H "Authorization: Bearer marauder_xxx" \\
--H "Content-Type: application/json" \\
--d '{"nom_famille": "Dupont", "prenom": "Jean"}'`,
-            js: `const response = await fetch('https://marauder.host/api/v1/search', {
-    method: 'POST',
-    headers: {
-        'Authorization': 'Bearer marauder_xxx',
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        nom_famille: 'Dupont',
-        prenom: 'Jean'
-    })
-});
-
-const data = await response.json();
-console.log(data);`,
-            python: `import requests
-
-response = requests.post(
-    'https://marauder.host/api/v1/search',
-    headers={
-        'Authorization': 'Bearer marauder_xxx',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'nom_famille': 'Dupont',
-        'prenom': 'Jean'
-    }
-)
-
-data = response.json()
-print(data)`
-        };
-
-        document.querySelectorAll('.code-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                const lang = this.dataset.code;
-                const label = document.getElementById('codeLangLabel');
-                const code = document.getElementById('codeExample');
-                if (label) label.textContent = lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python';
-                if (code) code.innerHTML = '<code>' + codeExamples[lang].replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
-            });
-        });
-
-        // ============================================
-        // COPY CODE
-        // ============================================
-        window.copyCode = function(btn) {
-            const codeBlock = btn.closest('.code-block');
-            const code = codeBlock.querySelector('code');
-            if (code) {
-                navigator.clipboard.writeText(code.textContent).then(() => {
-                    btn.textContent = 'Copié !';
-                    setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
-                });
-            }
-        };
-
-        // ============================================
         // API KEYS
         // ============================================
         let apiKeysCache = [];
@@ -1965,17 +1441,14 @@ print(data)`
         async function loadApiKeys() {
             const token = localStorage.getItem('token');
             if (!token) return;
-
             try {
                 const [keysRes, limitsRes] = await Promise.all([
                     fetch('/api/keys', { headers: { 'Authorization': `Bearer ${token}` } }),
                     fetch('/api/keys/limits', { headers: { 'Authorization': `Bearer ${token}` } })
                 ]);
-
                 const keysData = await keysRes.json();
                 apiKeyLimits = await limitsRes.json();
                 apiKeysCache = keysData.keys || [];
-
                 renderApiKeys();
             } catch (err) {
                 console.error('Erreur chargement clés:', err);
@@ -1993,18 +1466,12 @@ print(data)`
                 container.innerHTML = `
                     <div class="api-empty-state">
                         <div class="api-empty-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         </div>
                         <p>Aucune clé API</p>
                         <span>Plan ${plan.toUpperCase()} · ${maxDisplay} clé${maxKeys > 1 ? 's' : ''} disponible${maxKeys > 1 ? 's' : ''}</span>
                         <button class="api-btn-primary" onclick="generateApiKey()" style="margin-top:16px;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Générer une clé
                         </button>
                     </div>
@@ -2021,15 +1488,10 @@ print(data)`
                     </div>
                     ${canAdd ? `
                         <button class="api-btn-primary" onclick="generateApiKey()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Générer
                         </button>
-                    ` : `
-                        <span style="font-size:12px; color:#f59e0b; padding:6px 12px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:100px;">Limite atteinte</span>
-                    `}
+                    ` : `<span style="font-size:12px; color:#f59e0b; padding:6px 12px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:100px;">Limite atteinte</span>`}
                 </div>
             `;
 
@@ -2040,27 +1502,18 @@ print(data)`
                     <div class="api-key-item">
                         <div class="api-key-info">
                             <div class="api-key-name">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                </svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 ${k.name}
                             </div>
                             <div class="api-key-value">${k.key_preview}</div>
                             <div class="api-key-date">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <polyline points="12 6 12 12 16 14"/>
-                                </svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                 Créée le ${createdDate} · Dernière utilisation : ${lastUsed}
                             </div>
                         </div>
                         <div class="api-key-actions">
                             <button class="api-key-btn danger" onclick="revokeApiKey(${k.id})">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 Révoquer
                             </button>
                         </div>
@@ -2074,33 +1527,23 @@ print(data)`
         window.generateApiKey = async function() {
             const token = localStorage.getItem('token');
             if (!token) return;
-
             try {
                 const res = await fetch('/api/keys', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({})
                 });
-
                 const data = await res.json();
-
                 if (!res.ok) {
                     window.showToast(data.error || 'Erreur lors de la génération', 'error');
                     return;
                 }
-
                 const modal = document.createElement('div');
                 modal.className = 'api-key-modal active';
                 modal.innerHTML = `
                     <div class="api-key-modal-content">
                         <h3>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             Nouvelle clé API
                         </h3>
                         <p>Voici votre nouvelle clé API. <strong>Copiez-la maintenant</strong>, elle ne sera plus jamais affichée.</p>
@@ -2109,20 +1552,14 @@ print(data)`
                             <button class="api-btn-primary" onclick="copyNewKey()">Copier</button>
                         </div>
                         <div class="api-key-warning">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                <line x1="12" y1="9" x2="12" y2="13"/>
-                                <line x1="12" y1="17" x2="12.01" y2="17"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <span>Ne partagez jamais cette clé. Elle donne accès complet à votre API.</span>
                         </div>
                         <button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J'ai copié ma clé</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
-
                 window.showToast(`Clé générée · ${data.remaining} restante${data.remaining > 1 ? 's' : ''}`, 'success');
-
                 await loadApiKeys();
             } catch (err) {
                 console.error(err);
@@ -2131,24 +1568,23 @@ print(data)`
         };
 
         window.revokeApiKey = async function(id) {
-            if (!confirm('Voulez-vous vraiment révoquer cette clé ? Cette action est irréversible.')) return;
-
-            const token = localStorage.getItem('token');
-            try {
-                const res = await fetch(`/api/keys/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (res.ok) {
-                    window.showToast('Clé révoquée', 'success');
-                    await loadApiKeys();
-                } else {
-                    window.showToast('Erreur lors de la révocation', 'error');
+            customConfirm('Révoquer la clé', 'Voulez-vous vraiment révoquer cette clé ? Cette action est irréversible.', async function() {
+                const token = localStorage.getItem('token');
+                try {
+                    const res = await fetch(`/api/keys/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        window.showToast('Clé révoquée', 'success');
+                        await loadApiKeys();
+                    } else {
+                        window.showToast('Erreur lors de la révocation', 'error');
+                    }
+                } catch (err) {
+                    window.showToast('Erreur de connexion', 'error');
                 }
-            } catch (err) {
-                window.showToast('Erreur de connexion', 'error');
-            }
+            }, { confirmText: 'Révoquer', danger: true });
         };
 
         window.copyNewKey = function() {
@@ -2172,34 +1608,17 @@ print(data)`
             document.querySelectorAll('.sidebar-nav > li').forEach(li => li.classList.remove('active'));
             const apiNav = document.querySelector('[data-page="api"]');
             if (apiNav) apiNav.classList.add('active');
-
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const apiPage = document.getElementById('page-api');
             if (apiPage) apiPage.classList.add('active');
-
             document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
             const keysTab = document.querySelector('[data-api-tab="keys"]');
             const keysContent = document.getElementById('api-tab-keys');
             if (keysTab) keysTab.classList.add('active');
             if (keysContent) keysContent.classList.add('active');
-
-            const overlay = document.getElementById('apiDevOverlay');
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            if (overlay && devApiActive && !isLocalhost) {
-                overlay.classList.add('active');
-            }
-
             loadApiKeys();
         };
-
-        // ============================================
-        // MODE DEV
-        // ============================================
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            document.body.classList.add('dev-mode');
-            console.log('🔧 Mode DEV activé');
-        }
 
         // ============================================
         // MODAL DE REMERCIEMENT
@@ -2217,18 +1636,16 @@ print(data)`
         };
 
         // ============================================
-        // DÉTECTION RETOUR PAIEMENT
+        // DÉTECTION RETOUR PAIEMENT STRIPE
         // ============================================
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const payment = urlParams.get('payment');
             const plan = urlParams.get('plan');
-
             if (payment === 'success') {
                 setTimeout(() => window.openThanksModal(plan || 'pro'), 300);
                 window.history.replaceState({}, '', '/dashboard.html');
             } else if (payment === 'cancel') {
-                console.log('Paiement annulé');
                 window.history.replaceState({}, '', '/dashboard.html');
             }
         })();
@@ -2239,40 +1656,27 @@ print(data)`
         async function loadSubscription() {
             const container = document.getElementById('subscriptionContent');
             if (!container) return;
-
             const token = localStorage.getItem('token');
             if (!token) {
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b6b6b;">Veuillez vous connecter</div>';
                 return;
             }
-
             try {
-                const res = await fetch('/api/stripe/status', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await fetch('/api/stripe/status', { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
-
                 const plan = data.plan || 'free';
                 const active = data.active === true;
                 const status = data.status || 'inactive';
                 const periodEnd = data.currentPeriodEnd;
                 const cancelAtEnd = data.cancelAtPeriodEnd;
-
                 const planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
                 const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
 
                 let statusBadgeClass = 'inactive';
                 let statusText = 'Inactif';
-                if (active) {
-                    statusBadgeClass = 'active';
-                    statusText = 'Actif';
-                } else if (status === 'past_due') {
-                    statusBadgeClass = 'past_due';
-                    statusText = 'Paiement en retard';
-                } else if (status === 'canceled') {
-                    statusBadgeClass = 'canceled';
-                    statusText = 'Annulé';
-                }
+                if (active) { statusBadgeClass = 'active'; statusText = 'Actif'; }
+                else if (status === 'past_due') { statusBadgeClass = 'past_due'; statusText = 'Paiement en retard'; }
+                else if (status === 'canceled') { statusBadgeClass = 'canceled'; statusText = 'Annulé'; }
 
                 let periodEndStr = '—';
                 if (periodEnd) {
@@ -2282,11 +1686,7 @@ print(data)`
 
                 let cancelWarning = '';
                 if (cancelAtEnd) {
-                    cancelWarning = `
-                        <div style="padding:14px 18px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:10px; color:#f59e0b; font-size:13px; margin-bottom:20px;">
-                            ⚠️ Votre abonnement sera annulé à la fin de la période en cours (${periodEndStr}).
-                        </div>
-                    `;
+                    cancelWarning = `<div style="padding:14px 18px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:10px; color:#f59e0b; font-size:13px; margin-bottom:20px;">⚠️ Votre abonnement sera annulé à la fin de la période en cours (${periodEndStr}).</div>`;
                 }
 
                 container.innerHTML = `
@@ -2294,60 +1694,35 @@ print(data)`
                         <div class="sub-current-header">
                             <div class="sub-current-plan">
                                 <div class="sub-current-plan-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="12" y1="1" x2="12" y2="23"/>
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                                 </div>
                                 <div class="sub-current-plan-text">
                                     <h4>Plan ${planLabels[plan] || 'Free'}</h4>
                                     <span>${planPrices[plan] || '0€'} / mois</span>
                                 </div>
                             </div>
-                            <div class="sub-status-badge ${statusBadgeClass}">
-                                <span class="sub-status-dot"></span>
-                                ${statusText}
-                            </div>
+                            <div class="sub-status-badge ${statusBadgeClass}"><span class="sub-status-dot"></span>${statusText}</div>
                         </div>
-
                         ${cancelWarning}
-
                         <div class="sub-details">
-                            <div class="sub-detail-item">
-                                <div class="sub-detail-label">Plan actuel</div>
-                                <div class="sub-detail-value">${planLabels[plan] || 'Free'}</div>
-                            </div>
-                            <div class="sub-detail-item">
-                                <div class="sub-detail-label">Statut</div>
-                                <div class="sub-detail-value">${statusText}</div>
-                            </div>
-                            <div class="sub-detail-item">
-                                <div class="sub-detail-label">Prochaine facture</div>
-                                <div class="sub-detail-value">${periodEndStr}</div>
-                            </div>
+                            <div class="sub-detail-item"><div class="sub-detail-label">Plan actuel</div><div class="sub-detail-value">${planLabels[plan] || 'Free'}</div></div>
+                            <div class="sub-detail-item"><div class="sub-detail-label">Statut</div><div class="sub-detail-value">${statusText}</div></div>
+                            <div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">${periodEndStr}</div></div>
                         </div>
-
                         <div class="sub-actions">
                             ${plan === 'free' ? `
                                 <button class="sub-btn primary" onclick="openTarifs()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="12" y1="5" x2="12" y2="19"/>
-                                        <line x1="5" y1="12" x2="19" y2="12"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                     Choisir un plan
                                 </button>
                             ` : `
                                 <button class="sub-btn primary" onclick="openPortal()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                     Gérer mon abonnement
                                 </button>
                             `}
                         </div>
                     </div>
-
                     <div class="sub-plans">
                         <div class="sub-plans-title">Tous les plans</div>
                         <div class="sub-plans-grid">
@@ -2368,22 +1743,15 @@ print(data)`
             const isCurrent = planKey === currentPlan;
             const names = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
             let btn = '';
-            if (isCurrent) {
-                btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
-            } else if (subscribeKey && subscribeKey !== '0') {
-                btn = `<button class="sub-plan-btn upgrade" onclick="openPaymentModal('${subscribeKey}')">Choisir</button>`;
-            } else if (subscribeKey === '0') {
-                btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
-            } else {
-                btn = `<button class="sub-plan-btn upgrade" onclick="window.open('https://discord.gg/jf6QRZHaTB','_blank')">Nous contacter</button>`;
-            }
-            return `
-                <div class="sub-plan-card ${isCurrent ? 'current' : ''}">
-                    <div class="sub-plan-name">${names[planKey]}</div>
-                    <div class="sub-plan-price">${price}${price !== 'Sur devis' ? '<span>/mois</span>' : ''}</div>
-                    ${btn}
-                </div>
-            `;
+            if (isCurrent) btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
+            else if (subscribeKey && subscribeKey !== '0') btn = `<button class="sub-plan-btn upgrade" onclick="openPaymentModal('${subscribeKey}')">Choisir</button>`;
+            else if (subscribeKey === '0') btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
+            else btn = `<button class="sub-plan-btn upgrade" onclick="window.open('https://discord.gg/jf6QRZHaTB','_blank')">Nous contacter</button>`;
+            return `<div class="sub-plan-card ${isCurrent ? 'current' : ''}">
+                <div class="sub-plan-name">${names[planKey]}</div>
+                <div class="sub-plan-price">${price}${price !== 'Sur devis' ? '<span>/mois</span>' : ''}</div>
+                ${btn}
+            </div>`;
         }
 
         // ============================================
@@ -2403,75 +1771,73 @@ print(data)`
             modal.id = 'paymentModalDash';
             modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
             modal.innerHTML = `
-                <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
-                    <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+                <div style="background:#111111;border:1px solid #2a2a2a;border-radius:12px;padding:32px;max-width:520px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.6);position:relative;">
+                    <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:8px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
                     <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Choisir un moyen de paiement</h2>
-                    <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">
-                        Abonnement <strong style="color:#fff;">${names[plan]}</strong> — ${prices[plan]} / mois
-                    </p>
-                    <button onclick="payWithCard('${plan}')" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="5" width="20" height="14" rx="2"/>
-                            <line x1="2" y1="10" x2="22" y2="10"/>
-                        </svg>
-                        <div>
-                            <div style="font-weight:700;">Carte bancaire</div>
-                            <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
-                        </div>
+                    <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">Abonnement <strong style="color:#fff;">${names[plan]}</strong> — ${prices[plan]} / mois</p>
+                    <button onclick="payWithCard('${plan}')" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        <div><div style="font-weight:700;">Carte bancaire</div><div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div></div>
                         <span style="margin-left:auto;font-size:20px;">→</span>
                     </button>
-                    <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
-                        <svg width="28" height="28" viewBox="0 0 32 32">
-                            <circle cx="16" cy="16" r="16" fill="#f7931a"/>
-                            <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/>
-                        </svg>
-                        <div>
-                            <div style="font-weight:700;">Crypto-monnaie</div>
-                            <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC</div>
-                        </div>
+                    <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
+                        <svg width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#f7931a"/><path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/></svg>
+                        <div><div style="font-weight:700;">Crypto-monnaie</div><div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC, LTC, TRX, BNB</div></div>
                         <span style="margin-left:auto;font-size:20px;">→</span>
-                    </button>
-                    <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
-                        <svg width="28" height="28" viewBox="0 0 24 24">
-                            <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
-                            <path fill="#009cde" d="M19.55 5.804a6.93 6.93 0 0 0-.189-.089c-.028.179-.056.36-.089.539-.984 5.35-4.329 7.599-9.228 7.599h-1.617a.762.762 0 0 0-.755.649l-.879 5.571-.249 1.579a.404.404 0 0 0 .399.469h3.542c.322 0 .596-.234.646-.552l.026-.134.501-3.18.032-.175a.652.652 0 0 1 .645-.553h.406c2.637 0 4.702-.957 5.323-3.727.244-1.155.132-2.117-.477-2.794a3.19 3.19 0 0 0-.375-.337l.017-.021z"/>
-                        </svg>
-                        <div>
-                            <div style="font-weight:700;">PayPal</div>
-                            <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
-                        </div>
                     </button>
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) closePaymentModal();
-            });
+            modal.addEventListener('click', function(e) { if (e.target === this) closePaymentModal(); });
         };
 
         window.closePaymentModal = function() {
             const m = document.getElementById('paymentModalDash');
             if (m) m.remove();
-            selectedPlan = null;
         };
 
         window.payWithCard = function(plan) {
+            const planToPay = plan || selectedPlan;
             closePaymentModal();
-            if (typeof window.subscribe === 'function') window.subscribe(plan);
+            if (typeof window.subscribe === 'function') window.subscribe(planToPay);
         };
 
         // ============================================
-        // 💳 CRYPTO MODAL — Aligné sur le backend NOWPayments
+        // 💳 CRYPTO MODAL — Logos SVG officiels
         // ============================================
         const CRYPTO_COINS = [
-            { id: 'btc',        name: 'Bitcoin',  network: 'BTC',     symbol: 'BTC',    color: '#f7931a', logoText: '₿', payCurrency: 'btc' },
-            { id: 'eth',        name: 'Ethereum', network: 'ERC20',   symbol: 'ETH',    color: '#627eea', logoText: 'Ξ', payCurrency: 'eth' },
-            { id: 'usdt_trc20', name: 'USDT',     network: 'TRC20',   symbol: 'USDT',   color: '#26a17b', logoText: '₮', payCurrency: 'usdttrc20' },
-            { id: 'usdt_erc20', name: 'USDT',     network: 'ERC20',   symbol: 'USDT',   color: '#26a17b', logoText: '₮', payCurrency: 'usdterc20' },
-            { id: 'usdc',       name: 'USDC',     network: 'ERC20',   symbol: 'USDC',   color: '#2775ca', logoText: '$', payCurrency: 'usdc' },
-            { id: 'ltc',        name: 'Litecoin', network: 'LTC',     symbol: 'LTC',    color: '#a6a9aa', logoText: 'Ł', payCurrency: 'ltc' },
-            { id: 'trx',        name: 'Tron',     network: 'TRC20',   symbol: 'TRX',    color: '#ef0027', logoText: '♦', payCurrency: 'trx' },
-            { id: 'bnb',        name: 'BNB',      network: 'BSC',     symbol: 'BNB',    color: '#f3ba2f', logoText: 'B', payCurrency: 'bnbbsc' }
+            {
+                id: 'btc', name: 'Bitcoin', network: 'BTC', symbol: 'BTC', payCurrency: 'btc',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#f7931a"/><path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/></svg>'
+            },
+            {
+                id: 'eth', name: 'Ethereum', network: 'ERC20', symbol: 'ETH', payCurrency: 'eth',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" fill-opacity=".602" d="M16.5 4v8.87l7.5 3.35z"/><path fill="#fff" d="M16.5 4L9 16.22l7.5-3.35z"/><path fill="#fff" fill-opacity=".602" d="M16.5 21.97v6.02L24 17.6z"/><path fill="#fff" d="M16.5 27.99v-6.02L9 17.6z"/><path fill="#fff" fill-opacity=".2" d="M16.5 20.57l7.5-4.35-7.5-3.35z"/><path fill="#fff" fill-opacity=".602" d="M9 16.22l7.5 4.35v-7.7z"/></svg>'
+            },
+            {
+                id: 'usdt_trc20', name: 'USDT', network: 'TRC20', symbol: 'USDT', payCurrency: 'usdttrc20',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#26a17b"/><path fill="#fff" d="M17.92 13.86v-2.4h4.86V7.92H9.22v3.54h4.86v2.4c-3.95.18-6.92.96-6.92 1.9 0 .94 2.97 1.72 6.92 1.9v6.8h3.84v-6.8c3.94-.18 6.9-.96 6.9-1.9 0-.94-2.96-1.72-6.9-1.9zm0 3.22v0c-.1.01-.6.04-1.72.04-.89 0-1.52-.03-1.74-.04-3.48-.15-6.08-.76-6.08-1.49 0-.73 2.6-1.34 6.08-1.5v2.38c.23.02.88.05 1.76.05 1.07 0 1.6-.04 1.7-.05v-2.38c3.47.16 6.06.77 6.06 1.5 0 .73-2.59 1.34-6.06 1.49z"/></svg>'
+            },
+            {
+                id: 'usdt_erc20', name: 'USDT', network: 'ERC20', symbol: 'USDT', payCurrency: 'usdterc20',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#26a17b"/><path fill="#fff" d="M17.92 13.86v-2.4h4.86V7.92H9.22v3.54h4.86v2.4c-3.95.18-6.92.96-6.92 1.9 0 .94 2.97 1.72 6.92 1.9v6.8h3.84v-6.8c3.94-.18 6.9-.96 6.9-1.9 0-.94-2.96-1.72-6.9-1.9zm0 3.22v0c-.1.01-.6.04-1.72.04-.89 0-1.52-.03-1.74-.04-3.48-.15-6.08-.76-6.08-1.49 0-.73 2.6-1.34 6.08-1.5v2.38c.23.02.88.05 1.76.05 1.07 0 1.6-.04 1.7-.05v-2.38c3.47.16 6.06.77 6.06 1.5 0 .73-2.59 1.34-6.06 1.49z"/></svg>'
+            },
+            {
+                id: 'usdc', name: 'USDC', network: 'ERC20', symbol: 'USDC', payCurrency: 'usdc',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#2775ca"/><path fill="#fff" d="M20.5 18.6c0-1.9-1.1-2.5-3.4-2.8-1.6-.2-1.9-.6-1.9-1.3s.5-1.1 1.6-1.1c1 0 1.5.3 1.7 1.2 0 .1.1.2.2.2h.9c.1 0 .2-.1.2-.2v-.1c-.2-1.3-1-2.1-2.3-2.3v-1.1c0-.1-.1-.2-.2-.2h-.8c-.1 0-.2.1-.2.2v1.1c-1.6.2-2.6 1.1-2.6 2.5 0 1.8 1.1 2.5 3.4 2.8 1.6.2 2 .5 2 1.4 0 .8-.7 1.4-1.7 1.4-1.3 0-1.8-.5-2-1.5 0-.1-.1-.2-.2-.2h-1c-.1 0-.2.1-.2.2v.1c.2 1.4 1.1 2.3 2.8 2.5v1.1c0 .1.1.2.2.2h.8c.1 0 .2-.1.2-.2v-1.1c1.8-.3 2.8-1.3 2.8-2.8z"/><path fill="#fff" d="M12.6 25.3c-5.1-1.9-7.8-7.5-6-12.6 1-2.7 3-4.7 5.7-5.7.1 0 .2-.2.2-.3v-.7c0-.1 0-.2-.1-.2-.1 0-.2 0-.3.1-5.9 1.9-9.2 8.2-7.3 14.1 1.1 3.5 3.8 6.2 7.3 7.3.1 0 .2 0 .3-.1 0-.1.1-.1.1-.2v-.7c0-.1 0-.2-.1-.3-.1 0-.1-.1-.1-.1z"/><path fill="#fff" d="M19.7 6.6c-.1 0-.2 0-.3.1 0 .1-.1.1-.1.2v.7c0 .1 0 .2.1.3 0 .1.1.1.2.2 5.1 1.9 7.8 7.5 6 12.6-1 2.7-3 4.7-5.7 5.7-.1 0-.2.2-.2.3v.7c0 .1 0 .2.1.2.1 0 .2 0 .3-.1 5.9-1.9 9.2-8.2 7.3-14.1-1.1-3.5-3.8-6.2-7.3-7.3-.1-.1-.2-.1-.4-.2z"/></svg>'
+            },
+            {
+                id: 'ltc', name: 'Litecoin', network: 'LTC', symbol: 'LTC', payCurrency: 'ltc',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#a6a9aa"/><path fill="#fff" d="M16.6 6.6c-4.9 0-8.9 4-8.9 8.9 0 1.1.2 2.2.6 3.2L7 21.5c-.1.3.1.7.4.8l1.6.5 4-6.4 1.5.6-2.3 3.7 1 .4 5.6-3.5c.3-.2.5-.6.5-.9l-.2-1.4c1.9-1.5 3.1-3.9 3.1-6.5 0-4.9-3.9-8.8-8.8-8.8h-6.8z"/></svg>'
+            },
+            {
+                id: 'trx', name: 'Tron', network: 'TRC20', symbol: 'TRX', payCurrency: 'trx',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#ef0027"/><path fill="#fff" d="M8.5 8.5l6.4 15.4L23.6 11.1 8.5 8.5zm6.1 3.8l5.5 1.8-3.7 5.7-1.8-7.5zm-3.4-.9l6.1.6 1.9 7.7-8-8.3zm7.5 5.1l3.9-6 1.8 6.8-5.7-.8z"/></svg>'
+            },
+            {
+                id: 'bnb', name: 'BNB', network: 'BSC', symbol: 'BNB', payCurrency: 'bnbbsc',
+                svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#f3ba2f"/><path fill="#fff" d="M12.1 14.2L16 10.3l3.9 3.9 2.3-2.3L16 5.7 9.8 11.9zM5.7 16l2.3-2.3L10.3 16l-2.3 2.3zm6.4 1.8L16 21.7l3.9-3.9 2.3 2.2L16 26.3l-6.2-6.2-.1-.1zm11.6-1.8L21.4 13.7 23.7 11.4 26 13.7l-2.3 2.3zM16 13.5l-2.5 2.5 2.5 2.5 2.5-2.5z"/></svg>'
+            }
         ];
 
         let cryptoModalSelected = null;
@@ -2485,7 +1851,7 @@ print(data)`
             if (!grid) return;
             grid.innerHTML = CRYPTO_COINS.map(c => `
                 <button class="crypto-modal-coin" data-coin-id="${c.id}" onclick="selectCryptoModalCoin('${c.id}')">
-                    <div class="crypto-modal-coin-logo" style="background:${c.color};">${c.logoText}</div>
+                    <div class="crypto-modal-coin-logo">${c.svg}</div>
                     <div class="crypto-modal-coin-name">${c.name}</div>
                     <div class="crypto-modal-coin-network">${c.network}</div>
                 </button>
@@ -2506,7 +1872,6 @@ print(data)`
                 if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
                 return;
             }
-
             const modal = document.getElementById('cryptoModal');
             if (modal) modal.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -2602,8 +1967,6 @@ print(data)`
                 setTimeout(() => {
                     if (btn) { btn.classList.remove('copied'); btn.textContent = 'Copier l\'adresse'; }
                 }, 2000);
-            }).catch(() => {
-                if (typeof showToast === 'function') showToast('Erreur de copie', 'error');
             });
         };
 
@@ -2653,7 +2016,6 @@ print(data)`
                         headers: { 'Authorization': 'Bearer ' + token }
                     });
                     const data = await res.json();
-
                     const st = data.payment_status;
 
                     if (st === 'finished' || st === 'confirmed') {
@@ -2681,27 +2043,21 @@ print(data)`
 
         window.finishCryptoModal = function() {
             closeCryptoModal();
-            if (typeof window.openThanksModal === 'function') {
-                window.openThanksModal(selectedPlan || 'pro');
-            }
-            if (typeof window.loadSubscription === 'function') {
-                setTimeout(() => window.loadSubscription(), 500);
-            }
+            if (typeof window.openThanksModal === 'function') window.openThanksModal(selectedPlan || 'pro');
+            if (typeof window.loadSubscription === 'function') setTimeout(() => window.loadSubscription(), 500);
         };
 
-      window.payWithCrypto = function() {
-    const planToPay = selectedPlan;  // Sauvegarder AVANT de fermer
-    closePaymentModal();
-    selectedPlan = planToPay;         // Restaurer APRÈS
-    window.openCryptoModal();
-};
+        window.payWithCrypto = function() {
+            const planToPay = selectedPlan;
+            closePaymentModal();
+            selectedPlan = planToPay;
+            window.openCryptoModal();
+        };
 
         // ============================================
         // STRIPE
         // ============================================
-        window.openTarifs = function() {
-            window.location.href = '/tarifs.html';
-        };
+        window.openTarifs = function() { window.location.href = '/tarifs.html'; };
 
         window.openPortal = async function() {
             const token = localStorage.getItem('token');
@@ -2713,15 +2069,7 @@ print(data)`
                 const data = await res.json();
                 if (data.url) window.location.href = data.url;
                 else alert(data.error || 'Erreur');
-            } catch (err) {
-                alert('Erreur de connexion');
-            }
-        };
-
-        window.cancelSubscription = function() {
-            if (confirm('Voulez-vous vraiment résilier votre abonnement ? Il restera actif jusqu\'à la fin de la période en cours.')) {
-                window.openPortal();
-            }
+            } catch (err) { alert('Erreur de connexion'); }
         };
 
         window.subscribe = async function(plan) {
@@ -2729,18 +2077,13 @@ print(data)`
             try {
                 const res = await fetch('/api/stripe/create-checkout', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ plan })
                 });
                 const data = await res.json();
                 if (data.url) window.location.href = data.url;
                 else alert(data.error || 'Erreur');
-            } catch (err) {
-                alert('Erreur de connexion');
-            }
+            } catch (err) { alert('Erreur de connexion'); }
         };
 
         // ============================================
@@ -2749,95 +2092,26 @@ print(data)`
         async function loadUsage() {
             const token = localStorage.getItem('token');
             if (!token) return;
-
             try {
-                const res = await fetch('/api/usage', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-
-                if (!res.ok) {
-                    console.error('Erreur /api/usage:', res.status);
-                    return;
-                }
-
+                const res = await fetch('/api/usage', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!res.ok) return;
                 const data = await res.json();
-                console.log('📊 Usage reçu:', data);
-
                 const setStat = (key, value) => {
                     const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
                     if (el) el.textContent = value;
                 };
-
                 setStat('today', data.today);
                 setStat('month', data.month);
                 setStat('limit', data.limit);
                 setStat('remaining', data.remaining);
-
                 const usageCount = document.getElementById('usageCount');
                 const usageBar = document.getElementById('usageBarFill');
-
-                if (usageCount) {
-                    usageCount.textContent = data.month + ' / ' + data.limit;
-                }
-
+                if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
                 if (usageBar) {
-                    if (data.limit === '∞') {
-                        usageBar.style.width = '0%';
-                    } else {
-                        const pct = Math.min(100, (data.month / data.limit) * 100);
-                        usageBar.style.width = pct + '%';
-                    }
+                    if (data.limit === '∞') usageBar.style.width = '0%';
+                    else usageBar.style.width = Math.min(100, (data.month / data.limit) * 100) + '%';
                 }
-
-            } catch (err) {
-                console.error('Erreur loadUsage:', err);
-            }
-        }
-
-        // ============================================
-        // CHECK DEV API
-        // ============================================
-        let devApiActive = false;
-
-        async function checkDevApi() {
-            try {
-                const res = await fetch('/api/config');
-                const data = await res.json();
-                devApiActive = data.devApi === true;
-                console.log('🔒 Mode DEV API:', devApiActive ? 'ACTIVÉ' : 'DÉSACTIVÉ');
-            } catch (err) {
-                console.error('Erreur check dev api:', err);
-            }
-        }
-
-        // ============================================
-        // LOGS
-        // ============================================
-        async function loadLogs() {
-            const container = document.getElementById('logsContainer');
-            if (!container) return;
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/logs', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await res.json();
-                const logs = data.logs || [];
-                if (logs.length === 0) {
-                    container.innerHTML = '<div class="log-empty"><p>Aucun log pour le moment</p><span>Les requêtes API apparaîtront ici</span></div>';
-                    return;
-                }
-                container.innerHTML = logs.map(log => {
-                    const date = new Date(log.created_at).toLocaleString('fr-FR');
-                    const statusColor = log.status_code >= 400 ? '#ef4444' : '#10b981';
-                    return '<div style="padding:12px 16px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
-                        '<div><span style="color:#fff;font-weight:600;font-family:monospace;">' + log.method + '</span><span style="color:#a0a0a0;margin-left:8px;font-family:monospace;">' + log.endpoint + '</span></div>' +
-                        '<div style="display:flex;align-items:center;gap:12px;"><span style="color:' + statusColor + ';font-weight:600;">' + log.status_code + '</span><span style="color:#6b6b6b;font-size:11px;">' + log.response_time_ms + 'ms</span><span style="color:#6b6b6b;font-size:11px;">' + date + '</span></div>' +
-                    '</div>';
-                }).join('');
-            } catch (err) {
-                console.error('Erreur logs:', err);
-            }
+            } catch (err) { console.error('Erreur loadUsage:', err); }
         }
 
         // ============================================
@@ -2845,12 +2119,8 @@ print(data)`
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
-            if (token) {
-                loadApiKeys();
-            }
-            await checkDevApi();
+            if (token) loadApiKeys();
 
-            // Vérifier si un paiement crypto est en attente au retour
             const pendingPaymentId = localStorage.getItem('pending_crypto_order');
             if (pendingPaymentId) {
                 setTimeout(async () => {
@@ -2863,14 +2133,10 @@ print(data)`
                         const st = data.payment_status;
                         if (st === 'finished' || st === 'confirmed') {
                             localStorage.removeItem('pending_crypto_order');
-                            if (typeof showToast === 'function') {
-                                showToast('✅ Paiement crypto confirmé ! Votre abonnement est actif.', 'success', 8000);
-                            }
+                            if (typeof showToast === 'function') showToast('✅ Paiement crypto confirmé ! Votre abonnement est actif.', 'success', 8000);
                             setTimeout(() => window.location.reload(), 3000);
                         }
-                    } catch (e) {
-                        console.error('Status check error:', e);
-                    }
+                    } catch (e) { console.error('Status check error:', e); }
                 }, 2000);
             }
         });
