@@ -575,13 +575,17 @@
     transition: all 0.2s;
     text-decoration: none;
     margin-top: 16px;
-}
 .api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
 .api-dev-btn svg { width: 20px; height: 20px; }
 
 /* Quand DEV_API=ON, on cache tout le contenu de la page API */
 body.dev-api-on #page-api .api-page-wrapper {
     display: none;
+}
+
+/* Afficher l'overlay UNIQUEMENT dans la page API */
+body.dev-api-on #apiDevOverlay {
+    display: flex;
 }
 
 @media (max-width: 768px) {
