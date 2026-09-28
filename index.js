@@ -331,7 +331,7 @@ async function getMonthlySearchCount(userId) {
 
 // Body parser (sauf webhook Stripe)
 app.use((req, res, next) => {
-    if (req.originalUrl === '/api/stripe/webhook') {
+    if (req.originalUrl === '/api/stripe/webhook' || req.originalUrl === '/api/crypto/webhook') {
         return next();
     }
     express.json()(req, res, next);
@@ -863,6 +863,144 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
         res.json({ message: 'Supprimé' });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
+    }
+});
+
+// ============ ROUTES CRYPTO (NOWPayments) ============
+
+// Créer un paiement crypto
+app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
+    try {
+        const { plan } = req.body;
+        if (!['starter', 'pro'].includes(plan)) {
+            return res.status(400).json({ error: 'Plan invalide' });
+        }
+
+        const prices = { starter: 9.99, pro: 29.99 };
+        const amount = prices[plan];
+        const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+
+        const response = await axios.post(
+            'https://api.nowpayments.io/v1/payment',
+            {
+                price_amount: amount,
+                price_currency: 'eur',
+                pay_currency: 'usdttrc20',
+                order_id: `${req.user.id}_${plan}_${Date.now()}`,
+                order_description: `Abonnement Marauder ${plan.toUpperCase()}`,
+                ipn_callback_url: `${baseUrl}/api/crypto/webhook`
+            },
+            {
+                headers: {
+                    'x-api-key': process.env.NOWPAYMENTS_API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            payment_id: response.data.payment_id,
+            pay_address: response.data.pay_address,
+            pay_amount: response.data.pay_amount,
+            pay_currency: response.data.pay_currency,
+            price_amount: response.data.price_amount,
+            price_currency: response.data.price_currency,
+            expiration_estimate_date: response.data.expiration_estimate_date
+        });
+    } catch (error) {
+        console.error('Crypto payment error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Erreur création paiement crypto' });
+    }
+});
+
+// Webhook NOWPayments (IPN)
+app.post('/api/crypto/webhook', express.json(), async (req, res) => {
+    try {
+        const signature = req.headers['x-nowpayments-sig'];
+        if (!signature) {
+            return res.status(400).json({ error: 'Signature manquante' });
+        }
+
+        // Vérification HMAC SHA-512
+        const hmac = crypto.createHmac('sha512', process.env.NOWPAYMENTS_IPN_SECRET);
+        const sortedBody = JSON.stringify(req.body, Object.keys(req.body).sort());
+        hmac.update(sortedBody);
+        const computedSignature = hmac.digest('hex');
+
+        if (computedSignature !== signature) {
+            console.error('❌ Signature invalide');
+            return res.status(401).json({ error: 'Signature invalide' });
+        }
+
+        const payment = req.body;
+        console.log(`🪙 Crypto payment ${payment.payment_id} → ${payment.payment_status}`);
+
+        if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
+            const orderParts = (payment.order_id || '').split('_');
+            const userId = parseInt(orderParts[0]);
+            const plan = orderParts[1];
+
+            if (userId && plan) {
+                await pool.query(
+                    'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
+                    [plan, 'active', userId]
+                );
+                console.log(`✅ User ${userId} → plan ${plan} (crypto)`);
+            }
+        }
+
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Crypto webhook error:', error);
+        res.status(400).json({ error: 'Webhook invalide' });
+    }
+});
+
+
+// Webhook NOWPayments (IPN)
+app.post('/api/crypto/webhook', express.json(), async (req, res) => {
+    try {
+        // Vérifier la signature
+        const signature = req.headers['x-nowpayments-sig'];
+        if (!signature) {
+            return res.status(400).json({ error: 'Signature manquante' });
+        }
+
+        // Vérification HMAC SHA-512
+        const crypto = require('crypto');
+        const hmac = crypto.createHmac('sha512', process.env.NOWPAYMENTS_IPN_SECRET);
+        const sortedBody = JSON.stringify(req.body, Object.keys(req.body).sort());
+        hmac.update(sortedBody);
+        const computedSignature = hmac.digest('hex');
+
+        if (computedSignature !== signature) {
+            console.error('❌ Signature invalide');
+            return res.status(401).json({ error: 'Signature invalide' });
+        }
+
+        // Traiter le paiement
+        const payment = req.body;
+        console.log(`🪙 Crypto payment ${payment.payment_id} → ${payment.payment_status}`);
+
+        if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
+            const orderParts = (payment.order_id || '').split('_');
+            const userId = parseInt(orderParts[0]);
+            const plan = orderParts[1];
+
+            if (userId && plan) {
+                await pool.query(
+                    'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
+                    [plan, 'active', userId]
+                );
+                console.log(`✅ User ${userId} → plan ${plan} (crypto)`);
+            }
+        }
+
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Crypto webhook error:', error);
+        res.status(400).json({ error: 'Webhook invalide' });
     }
 });
 

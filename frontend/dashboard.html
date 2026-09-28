@@ -1532,7 +1532,7 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
     <!-- ============================================ SCRIPTS ============================================ -->
     <script src="js/graphe.js" defer></script>
     <script src="js/dashboard.js" defer></script>
-    <script defer>
+    <script>
         // ============ SAFE TOAST (fallback si dashboard.js ne la définit pas) ============
         window.showToast = window.showToast || function(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -2040,96 +2040,162 @@ print(data)`
         }
 
         // ============ PAYMENT MODAL ============
-let selectedPlan = null;
+        let selectedPlan = null;
 
-function openPaymentModal(plan) {
-    selectedPlan = plan;
-    
-    const prices = { starter: '9,99€', pro: '29,99€' };
-    const names = { starter: 'Starter', pro: 'Pro' };
-    
-    // Supprimer une éventuelle modale existante
-    const existing = document.getElementById('paymentModalDash');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.id = 'paymentModalDash';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
-    modal.innerHTML = `
-        <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
-            <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+        window.openPaymentModal = function(plan) {
+            selectedPlan = plan;
+            const existing = document.getElementById('paymentModalDash');
+            if (existing) existing.remove();
 
-            <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;letter-spacing:-0.3px;">Choisir un moyen de paiement</h2>
-            <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">
-                Abonnement <strong style="color:#fff;">${names[plan]}</strong> — ${prices[plan]} / mois
-            </p>
+            const prices = { starter: '9,99€', pro: '29,99€' };
+            const names = { starter: 'Starter', pro: 'Pro' };
 
-            <button onclick="payWithCard('${plan}')" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-                    <rect x="2" y="5" width="20" height="14" rx="2"/>
-                    <line x1="2" y1="10" x2="22" y2="10"/>
-                </svg>
-                <div>
-                    <div style="font-weight:700;">Carte bancaire</div>
-                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
+            const modal = document.createElement('div');
+            modal.id = 'paymentModalDash';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+            modal.innerHTML = `
+                <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
+                    <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+                    <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Choisir un moyen de paiement</h2>
+                    <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">
+                        Abonnement <strong style="color:#fff;">${names[plan]}</strong> — ${prices[plan]} / mois
+                    </p>
+                    <button onclick="payWithCard('${plan}')" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/>
+                            <line x1="2" y1="10" x2="22" y2="10"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight:700;">Carte bancaire</div>
+                            <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
+                        </div>
+                        <span style="margin-left:auto;font-size:20px;">→</span>
+                    </button>
+                    <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
+                        <svg width="28" height="28" viewBox="0 0 32 32">
+                            <circle cx="16" cy="16" r="16" fill="#f7931a"/>
+                            <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight:700;">Crypto-monnaie</div>
+                            <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC</div>
+                        </div>
+                        <span style="margin-left:auto;font-size:20px;">→</span>
+                    </button>
+                    <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
+                        <svg width="28" height="28" viewBox="0 0 24 24">
+                            <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
+                            <path fill="#009cde" d="M19.55 5.804a6.93 6.93 0 0 0-.189-.089c-.028.179-.056.36-.089.539-.984 5.35-4.329 7.599-9.228 7.599h-1.617a.762.762 0 0 0-.755.649l-.879 5.571-.249 1.579a.404.404 0 0 0 .399.469h3.542c.322 0 .596-.234.646-.552l.026-.134.501-3.18.032-.175a.652.652 0 0 1 .645-.553h.406c2.637 0 4.702-.957 5.323-3.727.244-1.155.132-2.117-.477-2.794a3.19 3.19 0 0 0-.375-.337l.017-.021z"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight:700;">PayPal</div>
+                            <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
+                        </div>
+                    </button>
                 </div>
-                <span style="margin-left:auto;font-size:20px;">→</span>
-            </button>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closePaymentModal();
+            });
+        };
 
-            <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
-                <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0;">
-    <circle cx="16" cy="16" r="16" fill="#f7931a"/>
-    <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2zm-3.7 5.2c-.5 2-3.9.9-5 .6l.9-3.6c1.1.3 4.6.8 4.1 3zm.5-5.3c-.5 1.8-3.3.9-4.2.7l.8-3.3c.9.2 3.9.6 3.4 2.6z"/>
-</svg>
-                <div>
-                    <div style="font-weight:700;">Crypto-monnaie</div>
-                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC</div>
+        window.closePaymentModal = function() {
+            const m = document.getElementById('paymentModalDash');
+            if (m) m.remove();
+            selectedPlan = null;
+        };
+
+        window.payWithCard = function(plan) {
+            closePaymentModal();
+            if (typeof window.subscribe === 'function') window.subscribe(plan);
+        };
+
+        window.payWithCrypto = async function() {
+            if (!selectedPlan) {
+                if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
+                return;
+            }
+
+            const planToPay = selectedPlan;
+            closePaymentModal();
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/crypto/create-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ plan: planToPay })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    if (typeof showToast === 'function') {
+                        showToast(data.error || 'Erreur crypto', 'error');
+                    } else {
+                        alert(data.error || 'Erreur crypto');
+                    }
+                    return;
+                }
+
+                showCryptoPaymentModal(data);
+            } catch (err) {
+                console.error('Crypto error:', err);
+                if (typeof showToast === 'function') {
+                    showToast('Erreur de connexion', 'error');
+                } else {
+                    alert('Erreur de connexion');
+                }
+            }
+        };
+
+        window.showCryptoPaymentModal = function(payment) {
+            const existing = document.getElementById('cryptoPaymentModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'cryptoPaymentModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+            modal.innerHTML = `
+                <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;text-align:center;">
+                    <button onclick="closeCryptoModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+                    <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Paiement Crypto</h2>
+                    <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">
+                        Envoyez exactement <strong style="color:#f59e0b;">${payment.pay_amount} ${(payment.pay_currency || '').toUpperCase()}</strong><br>
+                        (${payment.price_amount} ${(payment.price_currency || '').toUpperCase()})
+                    </p>
+                    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
+                        <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;margin-bottom:8px;">Adresse de paiement</div>
+                        <div style="font-family:'Courier New',monospace;font-size:13px;color:#fff;word-break:break-all;background:#050505;padding:12px;border-radius:8px;">
+                            ${payment.pay_address}
+                        </div>
+                        <button onclick="copyCryptoAddress('${payment.pay_address}')" style="margin-top:12px;padding:10px 20px;background:#fff;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Copier l'adresse</button>
+                    </div>
+                    <div style="font-size:12px;color:#6b6b6b;line-height:1.6;">
+                        ⚠️ Envoyez uniquement ${(payment.pay_currency || '').toUpperCase()} sur cette adresse.
+                    </div>
                 </div>
-                <span style="margin-left:auto;font-size:20px;">→</span>
-            </button>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closeCryptoModal();
+            });
+        };
 
-            <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
-                <svg width="28" height="28" viewBox="0 0 24 24" style="flex-shrink:0;">
-    <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
-    <path fill="#009cde" d="M19.55 5.804a6.93 6.93 0 0 0-.189-.089c-.028.179-.056.36-.089.539-.984 5.35-4.329 7.599-9.228 7.599h-1.617a.762.762 0 0 0-.755.649l-.879 5.571-.249 1.579a.404.404 0 0 0 .399.469h3.542c.322 0 .596-.234.646-.552l.026-.134.501-3.18.032-.175a.652.652 0 0 1 .645-.553h.406c2.637 0 4.702-.957 5.323-3.727.244-1.155.132-2.117-.477-2.794a3.19 3.19 0 0 0-.375-.337l.017-.021z"/>
-</svg>
-                <div>
-                    <div style="font-weight:700;">PayPal</div>
-                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
-                </div>
-            </button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) closePaymentModal();
-    });
-}
+        window.closeCryptoModal = function() {
+            const m = document.getElementById('cryptoPaymentModal');
+            if (m) m.remove();
+        };
 
-function closePaymentModal() {
-    const m = document.getElementById('paymentModalDash');
-    if (m) m.remove();
-    selectedPlan = null;
-}
-
-function payWithCard(plan) {
-    closePaymentModal();
-    subscribe(plan);
-}
-
-function payWithCrypto() {
-    if (typeof showToast === 'function') {
-        showToast('🪙 Le paiement en crypto sera bientôt disponible !', 'info', 5000);
-    } else {
-        alert('🪙 Le paiement en crypto sera bientôt disponible !');
-    }
-}
-
-window.openPaymentModal = openPaymentModal;
-window.closePaymentModal = closePaymentModal;
-window.payWithCard = payWithCard;
-window.payWithCrypto = payWithCrypto;
+        window.copyCryptoAddress = function(addr) {
+            navigator.clipboard.writeText(addr).then(function() {
+                if (typeof showToast === 'function') showToast('Adresse copiée !', 'success');
+            });
+        };
 
         window.openTarifs = function() {
             window.location.href = '/tarifs.html';
@@ -2177,54 +2243,52 @@ window.payWithCrypto = payWithCrypto;
 
         // ============ USAGE API ============
         async function loadUsage() {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-    try {
-        const res = await fetch('/api/usage', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
+            try {
+                const res = await fetch('/api/usage', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
 
-        if (!res.ok) {
-            console.error('Erreur /api/usage:', res.status);
-            return;
-        }
+                if (!res.ok) {
+                    console.error('Erreur /api/usage:', res.status);
+                    return;
+                }
 
-        const data = await res.json();
-        console.log('📊 Usage reçu:', data);
+                const data = await res.json();
+                console.log('📊 Usage reçu:', data);
 
-        // Mettre à jour les 4 cartes
-        const setStat = (key, value) => {
-            const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
-            if (el) el.textContent = value;
-        };
+                const setStat = (key, value) => {
+                    const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
+                    if (el) el.textContent = value;
+                };
 
-        setStat('today', data.today);
-        setStat('month', data.month);
-        setStat('limit', data.limit);
-        setStat('remaining', data.remaining);
+                setStat('today', data.today);
+                setStat('month', data.month);
+                setStat('limit', data.limit);
+                setStat('remaining', data.remaining);
 
-        // Mettre à jour la barre
-        const usageCount = document.getElementById('usageCount');
-        const usageBar = document.getElementById('usageBarFill');
+                const usageCount = document.getElementById('usageCount');
+                const usageBar = document.getElementById('usageBarFill');
 
-        if (usageCount) {
-            usageCount.textContent = data.month + ' / ' + data.limit;
-        }
+                if (usageCount) {
+                    usageCount.textContent = data.month + ' / ' + data.limit;
+                }
 
-        if (usageBar) {
-            if (data.limit === '∞') {
-                usageBar.style.width = '0%';
-            } else {
-                const pct = Math.min(100, (data.month / data.limit) * 100);
-                usageBar.style.width = pct + '%';
+                if (usageBar) {
+                    if (data.limit === '∞') {
+                        usageBar.style.width = '0%';
+                    } else {
+                        const pct = Math.min(100, (data.month / data.limit) * 100);
+                        usageBar.style.width = pct + '%';
+                    }
+                }
+
+            } catch (err) {
+                console.error('Erreur loadUsage:', err);
             }
         }
-
-    } catch (err) {
-        console.error('Erreur loadUsage:', err);
-    }
-}
 
         // ============ CHECK DEV API ============
         let devApiActive = false;
@@ -2239,6 +2303,340 @@ window.payWithCrypto = payWithCrypto;
                 console.error('Erreur check dev api:', err);
             }
         }
+
+        // ============ LOGS ============
+        async function loadLogs() {
+            const container = document.getElementById('logsContainer');
+            if (!container) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/logs', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                const logs = data.logs || [];
+                if (logs.length === 0) {
+                    container.innerHTML = '<div class="log-empty"><p>Aucun log pour le moment</p><span>Les requêtes API apparaîtront ici</span></div>';
+                    return;
+                }
+                container.innerHTML = logs.map(log => {
+                    const date = new Date(log.created_at).toLocaleString('fr-FR');
+                    const statusColor = log.status_code >= 400 ? '#ef4444' : '#10b981';
+                    return '<div style="padding:12px 16px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
+                        '<div><span style="color:#fff;font-weight:600;font-family:monospace;">' + log.method + '</span><span style="color:#a0a0a0;margin-left:8px;font-family:monospace;">' + log.endpoint + '</span></div>' +
+                        '<div style="display:flex;align-items:center;gap:12px;"><span style="color:' + statusColor + ';font-weight:600;">' + log.status_code + '</span><span style="color:#6b6b6b;font-size:11px;">' + log.response_time_ms + 'ms</span><span style="color:#6b6b6b;font-size:11px;">' + date + '</span></div>' +
+                    '</div>';
+                }).join('');
+            } catch (err) {
+                console.error('Erreur logs:', err);
+            }
+        }
+
+// ============================================
+// CRYPTO PAYMENT - Choix + Page dédiée + Statut temps réel
+// ============================================
+
+window.payWithCrypto = function() {
+    if (!selectedPlan) {
+        if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
+        return;
+    }
+    const planToPay = selectedPlan;
+    closePaymentModal();
+    showCryptoChoiceModal(planToPay);
+};
+
+window.showCryptoChoiceModal = function(plan) {
+    const existing = document.getElementById('cryptoChoiceModal');
+    if (existing) existing.remove();
+
+    const cryptos = [
+        { id: 'usdttrc20', name: 'USDT (TRC20)', network: 'TRON · Frais bas', color: '#26A17B', icon: '₮' },
+        { id: 'usdterc20', name: 'USDT (ERC20)', network: 'Ethereum', color: '#627EEA', icon: '₮' },
+        { id: 'btc', name: 'Bitcoin', network: 'Bitcoin', color: '#F7931A', icon: '₿' },
+        { id: 'eth', name: 'Ethereum', network: 'Ethereum', color: '#627EEA', icon: 'Ξ' },
+        { id: 'usdc', name: 'USD Coin', network: 'Ethereum', color: '#2775CA', icon: '$' },
+        { id: 'ltc', name: 'Litecoin', network: 'Litecoin', color: '#345D9D', icon: 'Ł' },
+        { id: 'trx', name: 'TRON', network: 'TRON', color: '#EF0027', icon: '◈' },
+        { id: 'bnbbsc', name: 'BNB (BSC)', network: 'Binance Smart Chain', color: '#F3BA2F', icon: '⬢' }
+    ];
+
+    const modal = document.createElement('div');
+    modal.id = 'cryptoChoiceModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+    modal.innerHTML = `
+        <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:560px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;max-height:85vh;overflow-y:auto;">
+            <button onclick="closeCryptoChoiceModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+            <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Choisir une crypto-monnaie</h2>
+            <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">Sélectionnez la crypto avec laquelle vous souhaitez payer</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
+                ${cryptos.map(c => `
+                    <button onclick="createCryptoPayment('${plan}', '${c.id}')" style="padding:16px;background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;border-radius:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;font-family:inherit;transition:all 0.2s;" onmouseover="this.style.borderColor='${c.color}';this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.borderColor='#2a2a2a';this.style.background='rgba(255,255,255,0.02)'">
+                        <div style="width:44px;height:44px;background:${c.color};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;color:#fff;font-weight:700;">${c.icon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:14px;font-weight:600;color:#ffffff;">${c.name}</div>
+                            <div style="font-size:11px;color:#6b6b6b;margin-top:2px;">${c.network}</div>
+                        </div>
+                        <span style="color:#6b6b6b;font-size:18px;">→</span>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) { if (e.target === this) closeCryptoChoiceModal(); });
+};
+
+window.closeCryptoChoiceModal = function() {
+    const m = document.getElementById('cryptoChoiceModal');
+    if (m) m.remove();
+};
+
+window.createCryptoPayment = async function(plan, payCurrency) {
+    closeCryptoChoiceModal();
+    showCryptoLoadingModal();
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/crypto/create-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ plan: plan, pay_currency: payCurrency })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            closeCryptoLoadingModal();
+            if (typeof showToast === 'function') showToast(data.error || 'Erreur crypto', 'error');
+            return;
+        }
+        closeCryptoLoadingModal();
+        showCryptoPaymentPage(data);
+    } catch (err) {
+        console.error('Crypto error:', err);
+        closeCryptoLoadingModal();
+        if (typeof showToast === 'function') showToast('Erreur de connexion', 'error');
+    }
+};
+
+window.showCryptoLoadingModal = function() {
+    const existing = document.getElementById('cryptoLoadingModal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'cryptoLoadingModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+    modal.innerHTML = '<div style="text-align:center;"><div style="width:60px;height:60px;border:3px solid #2a2a2a;border-top-color:#f59e0b;border-radius:50%;animation:cryptospin 1s linear infinite;margin:0 auto 20px;"></div><p style="color:#a0a0a0;font-size:14px;">Génération de l\'adresse de paiement...</p></div><style>@keyframes cryptospin { to { transform: rotate(360deg); } }</style>';
+    document.body.appendChild(modal);
+};
+
+window.closeCryptoLoadingModal = function() {
+    const m = document.getElementById('cryptoLoadingModal');
+    if (m) m.remove();
+};
+
+window.showCryptoPaymentPage = function(payment) {
+    const existing = document.getElementById('cryptoPaymentPage');
+    if (existing) existing.remove();
+
+    const currencyNames = {
+        btc: 'Bitcoin (BTC)',
+        eth: 'Ethereum (ETH)',
+        usdttrc20: 'USDT (TRC20)',
+        usdterc20: 'USDT (ERC20)',
+        usdc: 'USD Coin (USDC)',
+        ltc: 'Litecoin (LTC)',
+        trx: 'TRON (TRX)',
+        bnbbsc: 'BNB (BSC)'
+    };
+
+    const currencyName = currencyNames[payment.pay_currency] || payment.pay_currency.toUpperCase();
+
+    const page = document.createElement('div');
+    page.id = 'cryptoPaymentPage';
+    page.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99999;overflow-y:auto;padding:20px;';
+    page.innerHTML = `
+        <div style="max-width:640px;margin:0 auto;padding:40px 20px;">
+            <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;box-shadow:0 24px 80px rgba(0,0,0,0.8);">
+                <div style="text-align:center;margin-bottom:32px;">
+                    <div style="width:64px;height:64px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </div>
+                    <h1 style="font-size:24px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Paiement en ${currencyName}</h1>
+                    <p style="font-size:14px;color:#a0a0a0;margin:0;">Envoyez le montant exact ci-dessous</p>
+                </div>
+
+                <!-- STATUS BADGE avec animation -->
+<div id="cryptoStatusBadge" style="padding:20px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+        <div id="cryptoStatusDot" style="width:10px;height:10px;background:#f59e0b;border-radius:50%;animation:cryptopulse 1.5s ease-in-out infinite;box-shadow:0 0 12px #f59e0b;flex-shrink:0;"></div>
+        <div style="flex:1;">
+            <div id="cryptoStatusText" style="font-size:14px;font-weight:600;color:#f59e0b;">En attente de votre paiement</div>
+            <div id="cryptoStatusSub" style="font-size:11px;color:#6b6b6b;margin-top:3px;">Vérification automatique toutes les 5 secondes</div>
+        </div>
+    </div>
+    <div style="width:100%;height:3px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
+        <div id="cryptoProgressBar" style="height:100%;width:40%;background:linear-gradient(90deg, transparent, #f59e0b, transparent);border-radius:100px;animation:cryptoslide 1.8s ease-in-out infinite;"></div>
+    </div>
+    <div id="cryptoLoaderText" style="font-size:11px;color:#6b6b6b;text-align:center;margin-top:10px;letter-spacing:1px;text-transform:uppercase;animation:cryptofadetext 2s ease-in-out infinite;">
+        Analyse de la blockchain...
+    </div>
+</div>
+
+                <div style="background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px;">
+                    <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Montant à envoyer</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                        <div style="font-family:'Courier New',monospace;font-size:22px;font-weight:700;color:#f59e0b;word-break:break-all;">${payment.pay_amount} ${payment.pay_currency.toUpperCase()}</div>
+                        <button onclick="copyCryptoText('${payment.pay_amount}', this)" style="padding:8px 16px;background:#ffffff;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap;">Copier</button>
+                    </div>
+                    <div style="font-size:12px;color:#6b6b6b;margin-top:8px;">≈ ${payment.price_amount} ${payment.price_currency.toUpperCase()}</div>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px;">
+                    <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Adresse de réception</div>
+                    <div style="font-family:'Courier New',monospace;font-size:13px;color:#ffffff;word-break:break-all;background:#050505;padding:14px;border-radius:8px;margin-bottom:12px;">${payment.pay_address}</div>
+                    <button onclick="copyCryptoText('${payment.pay_address}', this)" style="width:100%;padding:12px;background:#ffffff;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Copier l'adresse</button>
+                </div>
+
+                <div style="padding:16px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.2);border-radius:12px;margin-bottom:24px;">
+                    <div style="font-size:12px;color:#93c5fd;line-height:1.6;">
+                        ⚠️ <strong>Important :</strong><br>
+                        • Envoyez <strong>uniquement ${payment.pay_currency.toUpperCase()}</strong> sur cette adresse<br>
+                        • Le montant doit être <strong>exactement</strong> celui indiqué<br>
+                        • Le paiement sera détecté automatiquement sous 1-5 min<br>
+                        • Ne fermez pas cette page tant que ce n'est pas confirmé
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <button onclick="checkCryptoStatus('${payment.payment_id}')" style="flex:1;padding:12px;background:transparent;color:#a0a0a0;border:1px solid #2a2a2a;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Vérifier maintenant</button>
+                    <button onclick="closeCryptoPaymentPage()" style="flex:1;padding:12px;background:transparent;color:#a0a0a0;border:1px solid #2a2a2a;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Fermer</button>
+                </div>
+
+                <div style="text-align:center;margin-top:24px;font-size:11px;color:#6b6b6b;">Paiement sécurisé par NOWPayments</div>
+            </div>
+        </div>
+        <style>
+            @keyframes cryptopulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+            @keyframes cryptoslide {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(150%); }
+    100% { transform: translateX(250%); }
+}
+@keyframes cryptofadetext {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+        </style>
+    `;
+    document.body.appendChild(page);
+    startCryptoPolling(payment.payment_id);
+};
+
+window.closeCryptoPaymentPage = function() {
+    if (window._cryptoPollingInterval) {
+        clearInterval(window._cryptoPollingInterval);
+        window._cryptoPollingInterval = null;
+    }
+    const p = document.getElementById('cryptoPaymentPage');
+    if (p) p.remove();
+};
+
+window.copyCryptoText = function(text, btn) {
+    navigator.clipboard.writeText(text).then(function() {
+        const original = btn.textContent;
+        btn.textContent = '✓ Copié !';
+        setTimeout(function() { btn.textContent = original; }, 2000);
+    });
+};
+
+window.checkCryptoStatus = async function(paymentId) {
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/crypto/status/' + paymentId, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (!res.ok) return;
+        updateCryptoStatusUI(data.payment_status, data);
+    } catch (err) {
+        console.error('Status check error:', err);
+    }
+};
+
+window.startCryptoPolling = function(paymentId) {
+    if (window._cryptoPollingInterval) clearInterval(window._cryptoPollingInterval);
+    checkCryptoStatus(paymentId);
+    window._cryptoPollingInterval = setInterval(function() {
+        checkCryptoStatus(paymentId);
+    }, 5000);
+};
+
+window.updateCryptoStatusUI = function(status, data) {
+    const badge = document.getElementById('cryptoStatusBadge');
+    const dot = document.getElementById('cryptoStatusDot');
+    const text = document.getElementById('cryptoStatusText');
+    const sub = document.getElementById('cryptoStatusSub');
+    if (!badge || !dot || !text || !sub) return;
+    // Mettre à jour le loader
+    const loaderText = document.getElementById('cryptoLoaderText');
+    const progressBar = document.getElementById('cryptoProgressBar');
+    
+    if (loaderText) {
+        const loaderTexts = {
+            waiting: 'Analyse de la blockchain...',
+            confirming: 'Confirmation en cours...',
+            confirmed: 'Vérification finale...',
+            sending: 'Traitement du paiement...',
+            finished: '✓ Paiement confirmé',
+            failed: '❌ Paiement échoué',
+            expired: '⌛ Paiement expiré',
+            partially_paid: '⚠️ Paiement partiel détecté'
+        };
+        loaderText.textContent = loaderTexts[status] || 'Analyse en cours...';
+    }
+    
+    if (progressBar) {
+        if (status === 'finished' || status === 'failed' || status === 'expired') {
+            progressBar.style.animation = 'none';
+            progressBar.style.width = status === 'finished' ? '100%' : '0%';
+            progressBar.style.background = status === 'finished' 
+                ? 'linear-gradient(90deg, #10b981, #22c55e)' 
+                : 'linear-gradient(90deg, #ef4444, #dc2626)';
+        } else {
+            progressBar.style.animation = 'cryptoslide 1.8s ease-in-out infinite';
+            progressBar.style.width = '40%';
+            progressBar.style.background = 'linear-gradient(90deg, transparent, #f59e0b, transparent)';
+        }
+    }
+
+    const configs = {
+        waiting:          { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)', color: '#f59e0b', text: 'En attente de votre paiement', sub: 'Vérification automatique toutes les 5 secondes', pulse: true },
+        confirming:       { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.3)', color: '#3b82f6', text: '⏳ Paiement détecté, confirmation en cours...', sub: 'Cela peut prendre 1 à 5 minutes', pulse: true },
+        confirmed:        { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.3)', color: '#3b82f6', text: '⏳ Paiement confirmé par le réseau', sub: 'Finalisation en cours...', pulse: true },
+        sending:          { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.3)', color: '#3b82f6', text: '⏳ Traitement du paiement...', sub: 'Encore quelques secondes', pulse: true },
+        finished:         { bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.3)', color: '#10b981', text: '✅ Paiement reçu !', sub: 'Votre abonnement a été activé', pulse: false },
+        failed:           { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.3)', color: '#ef4444', text: '❌ Paiement échoué', sub: 'Le montant reçu est insuffisant', pulse: false },
+        expired:          { bg: 'rgba(107,107,107,0.08)', border: 'rgba(107,107,107,0.3)', color: '#a0a0a0', text: '⌛ Paiement expiré', sub: 'Veuillez recommencer', pulse: false },
+        partially_paid:   { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)', color: '#f59e0b', text: '⚠️ Paiement partiel', sub: 'Montant reçu insuffisant, envoyez le reste', pulse: true }
+    };
+
+    const cfg = configs[status] || configs.waiting;
+    badge.style.background = cfg.bg;
+    badge.style.borderColor = cfg.border;
+    dot.style.background = cfg.color;
+    dot.style.boxShadow = '0 0 12px ' + cfg.color;
+    dot.style.animation = cfg.pulse ? 'cryptopulse 1.5s ease-in-out infinite' : 'none';
+    text.style.color = cfg.color;
+    text.textContent = cfg.text;
+    sub.textContent = cfg.sub;
+
+    if (status === 'finished') {
+        if (window._cryptoPollingInterval) {
+            clearInterval(window._cryptoPollingInterval);
+            window._cryptoPollingInterval = null;
+        }
+        if (typeof showToast === 'function') showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 6000);
+        setTimeout(function() { window.location.reload(); }, 3000);
+    }
+};
 
         // ============ INIT ============
         document.addEventListener('DOMContentLoaded', async () => {
