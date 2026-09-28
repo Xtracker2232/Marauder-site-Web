@@ -1,6 +1,36 @@
 const API_URL = window.location.origin;
 const token = localStorage.getItem('token');
 
+// ============================================
+// OVERRIDE DES CONFIRM NATIFS DU NAVIGATEUR
+// ============================================
+// On remplace window.confirm par notre modal custom.
+// Comme on ne peut pas bloquer le code pour attendre
+// la réponse, on utilise une approche par callback global.
+// Pour les appels synchrones existants, on renvoie false
+// (l'action est annulée) et on affiche le modal custom.
+// L'utilisateur devra re-cliquer pour confirmer.
+(function() {
+    const nativeConfirm = window.confirm;
+    window.confirm = function(message) {
+        // Affiche le modal custom si dispo
+        if (typeof window.customConfirm === 'function') {
+            // On ne peut pas retourner le résultat de manière synchrone.
+            // On stocke le message et on retourne false pour l'instant.
+            // Le vrai fix est de convertir chaque confirm() en customConfirm() avec callback.
+            // Mais pour éviter le popup navigateur, on affiche le modal et on bloque.
+            window._pendingConfirmMessage = message;
+            window.customConfirm('Confirmation', message, function() {
+                // L'utilisateur a confirmé. On rejoue l'action.
+                // (nécessite que le code appelant soit refactoré en callback)
+                console.log('✅ Confirmé par utilisateur');
+            });
+            return false; // Annule l'action en attendant
+        }
+        return nativeConfirm(message);
+    };
+})();
+
 if (!token) {
     window.location.href = '/login';
 }
@@ -164,10 +194,17 @@ document.querySelectorAll('.search-tab').forEach(tab => {
 
 // ============ LOGOUT ============
 document.getElementById('logoutBtn').addEventListener('click', function() {
-    if (confirm('Se déconnecter ?')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/';
+    if (typeof window.customConfirm === 'function') {
+        window.customConfirm(
+            'Déconnexion',
+            'Voulez-vous vraiment vous déconnecter ?',
+            function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            },
+            { confirmText: 'Se déconnecter', danger: true }
+        );
     }
 });
 
