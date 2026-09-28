@@ -53,30 +53,10 @@ const pool = new Pool({
 // 4. LIMITES PAR PLAN (source unique de vérité)
 // ============================================
 const PLAN_LIMITS = {
-    free: {
-        apiKeys: 1,
-        searchesPerMonth: 10,
-        resultsPerSearch: 10,
-        fiches: 10
-    },
-    starter: {
-        apiKeys: 1,
-        searchesPerMonth: 1000,
-        resultsPerSearch: 50,
-        fiches: 50
-    },
-    pro: {
-        apiKeys: 3,
-        searchesPerMonth: 10000,
-        resultsPerSearch: 100,
-        fiches: 100
-    },
-    enterprise: {
-        apiKeys: Infinity,
-        searchesPerMonth: Infinity,
-        resultsPerSearch: 100,
-        fiches: Infinity
-    }
+    free:       { apiKeys: 1,        searchesPerMonth: 10,     resultsPerSearch: 10,  fiches: 10 },
+    starter:    { apiKeys: 1,        searchesPerMonth: 1000,   resultsPerSearch: 50,  fiches: 50 },
+    pro:        { apiKeys: 3,        searchesPerMonth: 10000,  resultsPerSearch: 100, fiches: 100 },
+    enterprise: { apiKeys: Infinity, searchesPerMonth: Infinity, resultsPerSearch: 100, fiches: Infinity }
 };
 
 function getPlanLimits(plan) {
@@ -105,7 +85,6 @@ async function getUserLimits(userId) {
 const initDB = async () => {
     const client = await pool.connect();
     try {
-        // Tables de base
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -174,7 +153,6 @@ const initDB = async () => {
         `);
         console.log('✅ Tables OK');
 
-        // Migration Stripe
         await client.query(`
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255),
@@ -210,7 +188,6 @@ const initDB = async () => {
         `);
         console.log('✅ Migration Stripe OK');
 
-        // Migration API Keys
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_keys (
                 id SERIAL PRIMARY KEY,
@@ -227,7 +204,6 @@ const initDB = async () => {
         `);
         console.log('✅ Migration API Keys OK');
 
-        // Migration API Logs
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_logs (
                 id SERIAL PRIMARY KEY,
@@ -245,14 +221,12 @@ const initDB = async () => {
         `);
         console.log('✅ Migration API Logs OK');
 
-        // Migration Custom Quota
         await client.query(`
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS custom_quota INTEGER DEFAULT 0;
         `);
         console.log('✅ Migration Custom Quota OK');
 
-        // Admin
         const result = await client.query(
             'SELECT COUNT(*) FROM users WHERE username = $1',
             [process.env.ADMIN_USERNAME]
@@ -328,19 +302,15 @@ async function getMonthlySearchCount(userId) {
 // ============================================
 // 7. MIDDLEWARES GLOBAUX
 // ============================================
-
-// Body parser (sauf webhook Stripe)
 app.use((req, res, next) => {
     if (req.originalUrl === '/api/stripe/webhook' 
-    || req.originalUrl === '/api/crypto/webhook' 
-    || req.originalUrl.startsWith('/api/card2crypto/callback')) {
+    || req.originalUrl === '/api/crypto/webhook') {
         return next();
     }
     express.json()(req, res, next);
 });
 app.use(express.urlencoded({ extended: true }));
 
-// CORS
 const allowedOrigins = [
     'https://marauder-site-web-production.up.railway.app',
     'https://marauder.host',
@@ -363,7 +333,7 @@ app.use(cors({
 app.set('trust proxy', 1);
 
 // ============================================
-// 8. STRIPE ROUTES (avant le reste)
+// 8. STRIPE ROUTES
 // ============================================
 const stripeRoutes = require('./routes/stripe');
 app.use('/api/stripe', stripeRoutes);
@@ -391,7 +361,7 @@ app.get('/maintenance', (req, res) => {
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============================================
-// 11. FORCER HTTPS (prod uniquement)
+// 11. FORCER HTTPS
 // ============================================
 app.use((req, res, next) => {
     const proto = req.headers['x-forwarded-proto'] || req.headers['cf-visitor'];
@@ -427,7 +397,6 @@ const loginLimiter = rateLimit({
     message: 'Trop de tentatives de connexion, réessayez dans 15 minutes'
 });
 
-// Exclure les routes critiques du rate limit global
 const RATE_LIMIT_EXEMPT = [
     '/api/login',
     '/api/register',
@@ -553,13 +522,12 @@ app.get('/api/verify', authenticateToken, (req, res) => {
 });
 
 // ============================================
-// 15. ROUTES BRIXHUB (avec limites)
+// 15. ROUTES BRIXHUB
 // ============================================
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
         const limits = await getUserLimits(req.user.id);
 
-        // Vérif limite
         if (limits.searchesPerMonth !== Infinity) {
             const used = await getMonthlySearchCount(req.user.id);
             if (used >= limits.searchesPerMonth) {
@@ -572,7 +540,6 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             }
         }
 
-        // Forcer per_page
         const query = { ...req.body };
         query.per_page = Math.min(query.per_page || limits.resultsPerSearch, limits.resultsPerSearch);
 
@@ -868,160 +835,20 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ ROUTES CARD2CRYPTO (Crypto no-KYC) ============
-
-const CARD2CRYPTO_WALLET = '0x480Be9ecB3122fFFBc0917C34fb05B6E524E732a';
-const CARD2CRYPTO_CALLBACK_BASE = process.env.BASE_URL || 'http://localhost:8080';
-
-// Créer un paiement Card2Crypto
-app.post('/api/card2crypto/create-payment', authenticateToken, async (req, res) => {
-    try {
-        const { plan } = req.body;
-        if (!['starter', 'pro'].includes(plan)) {
-            return res.status(400).json({ error: 'Plan invalide' });
-        }
-
-        const prices = { starter: 9.99, pro: 29.99 };
-        const amount = prices[plan];
-
-        // Créer un order_id unique pour tracker
-        const orderId = `${req.user.id}_${plan}_${Date.now()}`;
-
-        // Callback URL avec orderId unique (obligatoire pour Card2Crypto)
-        const callbackUrl = `${CARD2CRYPTO_CALLBACK_BASE}/api/card2crypto/callback?order_id=${orderId}`;
-
-        // ÉTAPE 1 : Créer le wallet temporaire
-        const walletResponse = await axios.get('https://api.card2crypto.org/control/wallet.php', {
-            params: {
-                address: CARD2CRYPTO_WALLET,
-                callback: callbackUrl
-            },
-            timeout: 15000
-        });
-
-        if (!walletResponse.data || !walletResponse.data.address_in) {
-            console.error('Card2Crypto wallet error:', walletResponse.data);
-            return res.status(500).json({ error: 'Erreur création wallet' });
-        }
-
-        const encryptedAddress = walletResponse.data.address_in;
-
-        // Enregistrer le paiement en DB
-        try {
-            await pool.query(
-                `INSERT INTO payments (user_id, stripe_payment_intent_id, amount, currency, status)
-                 VALUES ($1, $2, $3, $4, $5)`,
-                [req.user.id, 'c2c_' + orderId, Math.round(amount * 100), 'usd', 'pending']
-            );
-        } catch (dbErr) {
-            console.error('DB insert error:', dbErr.message);
-        }
-
-        // Construire l'URL de paiement
-        const paymentUrl = `https://pay.card2crypto.org/pay.php?` +
-            `address=${encodeURIComponent(encryptedAddress)}` +
-            `&amount=${amount}` +
-            `&email=${encodeURIComponent(req.user.username + '@marauder.host')}` +
-            `&currency=USD`;
-
-        console.log(`🪙 Card2Crypto payment créé : ${orderId} → ${amount} USD`);
-
-        res.json({
-            success: true,
-            order_id: orderId,
-            payment_url: paymentUrl,
-            amount: amount,
-            currency: 'USD'
-        });
-    } catch (error) {
-        console.error('Card2Crypto create error:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Erreur création paiement crypto' });
-    }
-});
-
-// Callback Card2Crypto (webhook GET)
-app.get('/api/card2crypto/callback', async (req, res) => {
-    try {
-        const { order_id, value_coin, ...otherParams } = req.query;
-
-        console.log('📩 Card2Crypto callback reçu:', { order_id, value_coin, ...otherParams });
-
-        if (!order_id) {
-            return res.status(400).send('order_id manquant');
-        }
-
-        // Extraire userId et plan
-        const parts = order_id.split('_');
-        const userId = parseInt(parts[0]);
-        const plan = parts[1];
-
-        if (!userId || !plan) {
-            console.error('❌ order_id invalide:', order_id);
-            return res.status(400).send('order_id invalide');
-        }
-
-        // Mettre à jour le plan de l'utilisateur
-        await pool.query(
-            'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
-            [plan, 'active', userId]
-        );
-
-        // Mettre à jour le paiement en DB
-        await pool.query(
-            `UPDATE payments 
-             SET status = 'succeeded' 
-             WHERE stripe_payment_intent_id = $1`,
-            ['c2c_' + order_id]
-        );
-
-        console.log(`✅ User ${userId} → plan ${plan} (Card2Crypto, ${value_coin} USDC reçus)`);
-
-        // Card2Crypto attend un 200 OK en réponse
-        res.status(200).send('OK');
-    } catch (error) {
-        console.error('Card2Crypto callback error:', error);
-        res.status(500).send('Erreur serveur');
-    }
-});
-
-// Vérifier le statut d'un paiement
-app.get('/api/card2crypto/status/:orderId', authenticateToken, async (req, res) => {
-    try {
-        const { orderId } = req.params;
-
-        const result = await pool.query(
-            `SELECT * FROM payments 
-             WHERE user_id = $1 
-             AND stripe_payment_intent_id = $2`,
-            [req.user.id, 'c2c_' + orderId]
-        );
-
-        if (result.rows.length === 0) {
-            return res.json({ status: 'not_found' });
-        }
-
-        const payment = result.rows[0];
-
-        if (payment.status === 'succeeded') {
-            return res.json({ status: 'confirmed' });
-        }
-
-        res.json({ status: 'waiting' });
-    } catch (error) {
-        console.error('Card2Crypto status error:', error);
-        res.status(500).json({ error: 'Erreur vérification' });
-    }
-});
-
-// ============ ROUTES CRYPTO (NOWPayments) ============
+// ============================================
+// 19. ROUTES CRYPTO (NOWPayments)
+// ============================================
 
 // Créer un paiement crypto
 app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
     try {
-        const { plan } = req.body;
+        const { plan, pay_currency } = req.body;
         if (!['starter', 'pro'].includes(plan)) {
             return res.status(400).json({ error: 'Plan invalide' });
         }
+
+        const validCurrencies = ['btc', 'eth', 'usdttrc20', 'usdterc20', 'usdc', 'ltc', 'trx', 'bnbbsc'];
+        const chosenCurrency = validCurrencies.includes(pay_currency) ? pay_currency : 'usdttrc20';
 
         const prices = { starter: 9.99, pro: 29.99 };
         const amount = prices[plan];
@@ -1032,7 +859,7 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
             {
                 price_amount: amount,
                 price_currency: 'eur',
-                pay_currency: 'usdttrc20',
+                pay_currency: chosenCurrency,
                 order_id: `${req.user.id}_${plan}_${Date.now()}`,
                 order_description: `Abonnement Marauder ${plan.toUpperCase()}`,
                 ipn_callback_url: `${baseUrl}/api/crypto/webhook`
@@ -1061,61 +888,45 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
     }
 });
 
-// Webhook NOWPayments (IPN)
-app.post('/api/crypto/webhook', express.json(), async (req, res) => {
+// Vérifier le statut d'un paiement crypto
+app.get('/api/crypto/status/:payment_id', authenticateToken, async (req, res) => {
     try {
-        const signature = req.headers['x-nowpayments-sig'];
-        if (!signature) {
-            return res.status(400).json({ error: 'Signature manquante' });
-        }
+        const { payment_id } = req.params;
 
-        // Vérification HMAC SHA-512
-        const hmac = crypto.createHmac('sha512', process.env.NOWPAYMENTS_IPN_SECRET);
-        const sortedBody = JSON.stringify(req.body, Object.keys(req.body).sort());
-        hmac.update(sortedBody);
-        const computedSignature = hmac.digest('hex');
-
-        if (computedSignature !== signature) {
-            console.error('❌ Signature invalide');
-            return res.status(401).json({ error: 'Signature invalide' });
-        }
-
-        const payment = req.body;
-        console.log(`🪙 Crypto payment ${payment.payment_id} → ${payment.payment_status}`);
-
-        if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
-            const orderParts = (payment.order_id || '').split('_');
-            const userId = parseInt(orderParts[0]);
-            const plan = orderParts[1];
-
-            if (userId && plan) {
-                await pool.query(
-                    'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
-                    [plan, 'active', userId]
-                );
-                console.log(`✅ User ${userId} → plan ${plan} (crypto)`);
+        const response = await axios.get(
+            `https://api.nowpayments.io/v1/payment/${payment_id}`,
+            {
+                headers: {
+                    'x-api-key': process.env.NOWPAYMENTS_API_KEY
+                }
             }
-        }
+        );
 
-        res.json({ ok: true });
+        res.json({
+            success: true,
+            payment_status: response.data.payment_status,
+            pay_amount: response.data.pay_amount,
+            actually_paid: response.data.actually_paid,
+            pay_currency: response.data.pay_currency,
+            pay_address: response.data.pay_address,
+            order_id: response.data.order_id,
+            price_amount: response.data.price_amount,
+            price_currency: response.data.price_currency
+        });
     } catch (error) {
-        console.error('Crypto webhook error:', error);
-        res.status(400).json({ error: 'Webhook invalide' });
+        console.error('Crypto status error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Erreur vérification statut' });
     }
 });
 
-
 // Webhook NOWPayments (IPN)
 app.post('/api/crypto/webhook', express.json(), async (req, res) => {
     try {
-        // Vérifier la signature
         const signature = req.headers['x-nowpayments-sig'];
         if (!signature) {
             return res.status(400).json({ error: 'Signature manquante' });
         }
 
-        // Vérification HMAC SHA-512
-        const crypto = require('crypto');
         const hmac = crypto.createHmac('sha512', process.env.NOWPAYMENTS_IPN_SECRET);
         const sortedBody = JSON.stringify(req.body, Object.keys(req.body).sort());
         hmac.update(sortedBody);
@@ -1126,7 +937,6 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
             return res.status(401).json({ error: 'Signature invalide' });
         }
 
-        // Traiter le paiement
         const payment = req.body;
         console.log(`🪙 Crypto payment ${payment.payment_id} → ${payment.payment_status}`);
 
@@ -1152,7 +962,7 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
 });
 
 // ============================================
-// 19. ROUTE USAGE
+// 20. ROUTE USAGE
 // ============================================
 app.get('/api/usage', authenticateToken, async (req, res) => {
     try {
@@ -1192,18 +1002,12 @@ app.get('/api/usage', authenticateToken, async (req, res) => {
 });
 
 // ============================================
-// 20. ROUTE LOGS API
+// 21. ROUTE LOGS API
 // ============================================
 app.get('/api/logs', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT 
-                'api' as type,
-                endpoint,
-                method,
-                status_code,
-                response_time_ms,
-                created_at
+            `SELECT 'api' as type, endpoint, method, status_code, response_time_ms, created_at
              FROM api_logs
              WHERE user_id = $1
              ORDER BY created_at DESC
@@ -1218,7 +1022,7 @@ app.get('/api/logs', authenticateToken, async (req, res) => {
 });
 
 // ============================================
-// 21. ROUTES API KEYS
+// 22. ROUTES API KEYS
 // ============================================
 app.get('/api/keys', authenticateToken, async (req, res) => {
     try {
@@ -1318,7 +1122,7 @@ app.delete('/api/keys/:id', authenticateToken, async (req, res) => {
 });
 
 // ============================================
-// 22. ROUTE PROFIL
+// 23. ROUTE PROFIL
 // ============================================
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
@@ -1333,7 +1137,7 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 });
 
 // ============================================
-// 23. ROUTES ADMIN
+// 24. ROUTES ADMIN
 // ============================================
 app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) => {
     try {
@@ -1487,7 +1291,6 @@ app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (re
     }
 });
 
-// Attribuer un quota custom
 app.post('/api/admin/users/:id/quota', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { custom_quota } = req.body;
@@ -1662,7 +1465,6 @@ app.get('/api/admin/maintenance/status', authenticateToken, requireAdmin, (req, 
     });
 });
 
-// ============ API MAINTENANCE TOGGLE ============
 app.get('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, res) => {
     res.json({
         enabled: process.env.API_MAINTENANCE === 'ON'
@@ -1677,7 +1479,7 @@ app.post('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, re
 });
 
 // ============================================
-// 24. ROUTES TICKETS (USER)
+// 25. ROUTES TICKETS (USER)
 // ============================================
 app.post('/api/tickets', authenticateToken, async (req, res) => {
     const { subject, message } = req.body;
@@ -1751,7 +1553,7 @@ app.post('/api/tickets/:id/messages', authenticateToken, async (req, res) => {
 });
 
 // ============================================
-// 25. ROUTES STATIQUES
+// 26. ROUTES STATIQUES
 // ============================================
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'login.html')));
@@ -1762,13 +1564,13 @@ app.get('/tarifs.html', (req, res) => res.sendFile(path.join(__dirname, 'fronten
 app.get('/tarifs', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
 
 // ============================================
-// 26. ROUTES API PUBLIQUE v1
+// 27. ROUTES API PUBLIQUE v1
 // ============================================
 const apiV1Routes = require('./routes/api-v1');
 app.use('/api/v1', apiV1Routes);
 
 // ============================================
-// 27. CONFIG PUBLIQUE
+// 28. CONFIG PUBLIQUE
 // ============================================
 app.get('/api/config', (req, res) => {
     res.json({
@@ -1778,14 +1580,14 @@ app.get('/api/config', (req, res) => {
 });
 
 // ============================================
-// 28. HEALTH CHECK
+// 29. HEALTH CHECK
 // ============================================
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // ============================================
-// 29. HANDLER D'ERREURS GLOBAL
+// 30. HANDLER D'ERREURS GLOBAL
 // ============================================
 app.use((err, req, res, next) => {
     console.error('❌ Erreur middleware:', err.message);
@@ -1804,7 +1606,7 @@ process.on('unhandledRejection', (err) => {
 });
 
 // ============================================
-// 30. DÉMARRAGE (après initDB)
+// 31. DÉMARRAGE
 // ============================================
 (async () => {
     await initDB();
