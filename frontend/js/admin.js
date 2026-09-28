@@ -1,9 +1,22 @@
+// ============================================
+// ADMIN PANEL - admin.js
+// ============================================
 const API_URL = window.location.origin;
 const token = localStorage.getItem('token');
 
 if (!token) {
     window.location.href = '/login';
 }
+
+// ============================================
+// PLAN LIMITS (source unique, synchro avec index.js)
+// ============================================
+var PLAN_LIMITS = {
+    free: 10,
+    starter: 1000,
+    pro: 10000,
+    enterprise: Infinity
+};
 
 // ============ TOAST ============
 function showToast(message, type, duration) {
@@ -109,10 +122,113 @@ async function loadStats() {
     }
 }
 
-// ============ USERS ============
+// ============================================
+// API MAINTENANCE
+// ============================================
+async function loadApiMaintenance() {
+    try {
+        var response = await fetch(API_URL + '/api/admin/api-maintenance', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!response.ok) return;
+        var data = await response.json();
+        updateApiMaintenanceUI(data.enabled);
+    } catch (error) {
+        console.error('Erreur maintenance:', error);
+    }
+}
+
+function updateApiMaintenanceUI(enabled) {
+    var badge = document.getElementById('apiMaintenanceBadge');
+    var btn = document.getElementById('apiMaintenanceBtn');
+    if (badge) {
+        if (enabled) {
+            badge.textContent = '🔴 EN MAINTENANCE';
+            badge.style.background = 'rgba(239,68,68,0.15)';
+            badge.style.color = '#ef4444';
+            badge.style.borderColor = 'rgba(239,68,68,0.3)';
+        } else {
+            badge.textContent = '🟢 EN LIGNE';
+            badge.style.background = 'rgba(16,185,129,0.15)';
+            badge.style.color = '#10b981';
+            badge.style.borderColor = 'rgba(16,185,129,0.3)';
+        }
+    }
+    if (btn) {
+        btn.textContent = enabled ? 'Désactiver la maintenance' : 'Activer la maintenance';
+        btn.style.background = enabled ? '#ef4444' : '#ffffff';
+        btn.style.color = enabled ? '#ffffff' : '#000000';
+    }
+}
+
+async function toggleApiMaintenance() {
+    var badge = document.getElementById('apiMaintenanceBadge');
+    var currentState = badge && badge.textContent.includes('EN MAINTENANCE');
+    var newState = !currentState;
+
+    if (!confirm(newState ? 'Activer la maintenance de l\'API ? Les utilisateurs ne pourront plus l\'utiliser.' : 'Désactiver la maintenance ?')) return;
+
+    try {
+        var response = await fetch(API_URL + '/api/admin/api-maintenance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ enabled: newState })
+        });
+        if (response.ok) {
+            showToast(newState ? '🔴 API en maintenance' : '🟢 API de nouveau en ligne', 'success');
+            updateApiMaintenanceUI(newState);
+        }
+    } catch (error) {
+        showToast('Erreur', 'error');
+    }
+}
+
+// ============================================
+// USERS
+// ============================================
 var usersPage = 1;
 var usersTotal = 0;
 var usersSearch = '';
+
+function getUserLimitText(u) {
+    var used = u.search_count || 0;
+    var customQuota = u.custom_quota || 0;
+    var plan = u.plan || 'free';
+
+    if (customQuota > 0) {
+        return '<span style="color:#f59e0b;font-weight:600;">' + used + ' / ' + customQuota + ' <span style="font-size:10px;">(custom)</span></span>';
+    }
+    var limit = PLAN_LIMITS[plan] || 10;
+    if (limit === Infinity) {
+        return '<span style="color:#10b981;font-weight:600;">' + used + ' / ∞</span>';
+    }
+    var pct = (used / limit) * 100;
+    var color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#a0a0a0';
+    return '<span style="color:' + color + ';font-weight:600;">' + used + ' / ' + limit + '</span>';
+}
+
+function getPlanBadge(plan, customQuota) {
+    if (customQuota > 0) {
+        return '<span style="background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">CUSTOM</span>';
+    }
+    var colors = {
+        free: 'rgba(107,107,107,0.15)',
+        starter: 'rgba(59,130,246,0.15)',
+        pro: 'rgba(139,92,246,0.15)',
+        enterprise: 'rgba(16,185,129,0.15)'
+    };
+    var textColors = {
+        free: '#a0a0a0',
+        starter: '#3b82f6',
+        pro: '#8b5cf6',
+        enterprise: '#10b981'
+    };
+    var p = plan || 'free';
+    return '<span style="background:' + colors[p] + ';color:' + textColors[p] + ';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;text-transform:uppercase;">' + p + '</span>';
+}
 
 async function loadUsers(page, search) {
     page = page || 1;
@@ -120,7 +236,7 @@ async function loadUsers(page, search) {
     usersPage = page;
     usersSearch = search;
     var tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
     try {
         var url = API_URL + '/api/admin/users?page=' + page + '&limit=20&search=' + encodeURIComponent(search);
         var response = await fetch(url, {
@@ -135,18 +251,21 @@ async function loadUsers(page, search) {
                 var isAdmin = u.role === 'admin';
                 var statusClass = u.banned ? 'banned' : 'active';
                 var statusText = u.banned ? 'Banni' : 'Actif';
+                var usernameEscaped = u.username.replace(/'/g, "\\'");
                 html += '<tr>' +
                     '<td><span class="clickable" onclick="viewUser(' + u.id + ')">' + u.username + '</span></td>' +
-                    '<td><span class="badge-role ' + u.role + '">' + u.role + '</span></td>' +
+                    '<td>' + getPlanBadge(u.plan, u.custom_quota) + '</td>' +
                     '<td><span class="badge-status ' + statusClass + '">' + statusText + '</span></td>' +
+                    '<td style="font-size:12px;">' + getUserLimitText(u) + '</td>' +
                     '<td>' + (u.search_count || 0) + '</td>' +
                     '<td>' + (u.fiche_count || 0) + '</td>' +
-                    '<td>' + (u.reg_ip || '-') + '</td>' +
+                    '<td style="font-size:11px;color:var(--text-muted);">' + (u.reg_ip || '-') + '</td>' +
                     '<td><div class="admin-actions">';
                 if (!isAdmin) {
                     html += '<button class="primary" onclick="viewUser(' + u.id + ')">Voir</button>';
+                    html += '<button class="primary" onclick="openQuotaModal(' + u.id + ', \'' + usernameEscaped + '\', ' + (u.custom_quota || 0) + ', \'' + (u.plan || 'free') + '\')">Requêtes</button>';
                     html += '<button class="' + (u.banned ? 'success' : 'danger') + '" onclick="toggleBan(' + u.id + ', ' + (!u.banned) + ')">' + (u.banned ? 'Debannir' : 'Bannir') + '</button>';
-                    html += '<button class="danger" onclick="deleteUser(' + u.id + ')">Supprimer</button>';
+                    html += '<button class="danger" onclick="deleteUser(' + u.id + ')">Sup.</button>';
                 } else {
                     html += '<span style="color:var(--text-muted);font-size:11px;">Protege</span>';
                 }
@@ -154,11 +273,11 @@ async function loadUsers(page, search) {
             });
             tbody.innerHTML = html;
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Aucun utilisateur trouve</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">Aucun utilisateur trouve</td></tr>';
         }
         updatePagination('users', page, usersTotal);
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
     }
 }
 
@@ -192,6 +311,72 @@ function updatePagination(type, page, total) {
     if (next) next.disabled = page >= totalPages;
 }
 
+// ============================================
+// QUOTA CUSTOM
+// ============================================
+function openQuotaModal(userId, username, currentQuota, plan) {
+    var planLimit = PLAN_LIMITS[plan] || 10;
+    var planLimitText = planLimit === Infinity ? '∞' : planLimit;
+
+    var html = '<div style="margin-bottom:16px;">' +
+        '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Utilisateur</div>' +
+        '<div style="font-size:16px;font-weight:600;color:#ffffff;">' + username + '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Plan actuel : <strong style="color:#fff;text-transform:uppercase;">' + plan + '</strong> (' + planLimitText + ' req/mois)</div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-bottom:16px;">' +
+        '<label style="display:block;font-size:13px;color:var(--text-secondary);margin-bottom:6px;">Requêtes par mois (custom quota)</label>' +
+        '<input type="number" id="quotaInput" value="' + (currentQuota || 0) + '" min="0" placeholder="Ex: 20000" ' +
+        'style="width:100%;padding:14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:#fff;font-size:16px;font-family:\'Inter\',sans-serif;outline:none;box-sizing:border-box;">' +
+        '<div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6;">' +
+        '• <strong style="color:#fff;">0</strong> → retire le quota custom (utilise le plan: ' + planLimitText + ')' +
+        '<br>• <strong style="color:#fff;">20000</strong> → force 20 000 requêtes/mois' +
+        '<br>• Effet immédiat après validation' +
+        '</div>' +
+        '</div>' +
+        '<div style="font-size:13px;color:var(--text-muted);padding:14px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid var(--border-color);margin-bottom:20px;">' +
+        'Quota actuel : <strong style="color:#ffffff;font-size:15px;">' + (currentQuota > 0 ? currentQuota : planLimitText) + '</strong>' +
+        (currentQuota > 0 ? ' <span style="color:#f59e0b;font-size:11px;">(CUSTOM)</span>' : ' <span style="font-size:11px;">(plan ' + plan + ')</span>') +
+        '</div>' +
+        '<div class="modal-actions">' +
+        '<button class="btn-primary" onclick="saveQuota(' + userId + ')">Valider</button>' +
+        '<button class="btn-secondary" onclick="closeModal()">Annuler</button>' +
+        '</div>';
+
+    showModal('Attribuer un quota', html);
+}
+
+async function saveQuota(userId) {
+    var input = document.getElementById('quotaInput');
+    if (!input) return;
+    var quota = parseInt(input.value) || 0;
+    if (quota < 0) {
+        showToast('Quota invalide', 'error');
+        return;
+    }
+
+    try {
+        var response = await fetch(API_URL + '/api/admin/users/' + userId + '/quota', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ custom_quota: quota })
+        });
+
+        if (response.ok) {
+            showToast(quota === 0 ? 'Quota custom retiré' : 'Quota : ' + quota + ' req/mois', 'success');
+            closeModal();
+            loadUsers(usersPage, usersSearch);
+        } else {
+            var data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur reseau', 'error');
+    }
+}
+
 // ============ VIEW USER ============
 async function viewUser(userId) {
     try {
@@ -204,16 +389,26 @@ async function viewUser(userId) {
         var ips = data.ips || [];
         var searches = data.recent_searches || [];
         var isProtected = user.username === 'Admin';
+        var planLimit = PLAN_LIMITS[user.plan || 'free'] || 10;
+        var planLimitText = planLimit === Infinity ? '∞' : planLimit;
+        var usedCount = user.search_count || 0;
+        var effectiveLimit = user.custom_quota > 0 ? user.custom_quota : planLimit;
+        var effectiveLimitText = effectiveLimit === Infinity ? '∞' : effectiveLimit;
+
         var html = '<div class="user-detail-modal"><div class="info-grid">' +
             '<div class="info-item"><span class="label">Nom d\'utilisateur</span><span class="value highlight">' + user.username + '</span></div>' +
             '<div class="info-item"><span class="label">Role</span><span class="value">' + user.role + '</span></div>' +
+            '<div class="info-item"><span class="label">Plan</span><span class="value">' + getPlanBadge(user.plan, user.custom_quota) + '</span></div>' +
             '<div class="info-item"><span class="label">Status</span><span class="value' + (user.banned ? ' style=color:var(--danger);' : '') + '">' + (user.banned ? 'Banni' : 'Actif') + '</span></div>' +
+            '<div class="info-item"><span class="label">Quota</span><span class="value">' + usedCount + ' / ' + effectiveLimitText + (user.custom_quota > 0 ? ' <span style="color:#f59e0b;font-size:10px;">(custom)</span>' : '') + '</span></div>' +
+            '<div class="info-item"><span class="label">Recherches totales</span><span class="value">' + usedCount + '</span></div>' +
+            '<div class="info-item"><span class="label">Fiches</span><span class="value">' + (user.fiche_count || 0) + '</span></div>' +
+            '<div class="info-item"><span class="label">Graphes</span><span class="value">' + (user.graphe_count || 0) + '</span></div>' +
             '<div class="info-item"><span class="label">IP d\'inscription</span><span class="value">' + (user.reg_ip || '-') + '</span></div>' +
-            '<div class="info-item"><span class="label">Nombre de recherches</span><span class="value">' + (user.search_count || 0) + '</span></div>' +
-            '<div class="info-item"><span class="label">Nombre de fiches</span><span class="value">' + (user.fiche_count || 0) + '</span></div>' +
             '<div class="info-item"><span class="label">Membre depuis</span><span class="value">' + new Date(user.created_at).toLocaleDateString() + '</span></div>' +
             '<div class="info-item"><span class="label">Derniere connexion</span><span class="value">' + (user.last_login ? new Date(user.last_login).toLocaleString() : 'Jamais') + '</span></div>' +
             '</div>';
+
         if (ips.length > 0) {
             html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">IPs liees (' + ips.length + ')</div>';
             ips.forEach(function(ip) {
@@ -221,6 +416,7 @@ async function viewUser(userId) {
             });
             html += '</div>';
         }
+
         if (searches.length > 0) {
             html += '<div style="margin-top:12px;border-top:1px solid var(--border-color);padding-top:12px;"><div style="font-weight:600;color:#ffffff;margin-bottom:6px;">Dernieres recherches</div>';
             searches.forEach(function(s) {
@@ -229,12 +425,15 @@ async function viewUser(userId) {
             });
             html += '</div>';
         }
+
         if (isProtected) {
             html += '<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:var(--warning);font-size:13px;text-align:center;">Ce compte admin est protege</div>';
         }
-        html += '<div class="modal-actions" style="margin-top:16px;">';
+
+        html += '<div class="modal-actions" style="margin-top:16px;flex-wrap:wrap;">';
         if (!isProtected) {
-            html += '<button class="btn-primary" onclick="closeModal();toggleBan(' + user.id + ', ' + (!user.banned) + ')">' + (user.banned ? 'Debannir' : 'Bannir') + '</button>';
+            html += '<button class="btn-primary" onclick="closeModal();openQuotaModal(' + user.id + ', \'' + user.username.replace(/'/g, "\\'") + '\', ' + (user.custom_quota || 0) + ', \'' + (user.plan || 'free') + '\')">Requêtes</button>';
+            html += '<button class="btn-secondary" onclick="closeModal();toggleBan(' + user.id + ', ' + (!user.banned) + ')">' + (user.banned ? 'Debannir' : 'Bannir') + '</button>';
             html += '<button class="btn-secondary" style="color:var(--danger);border-color:rgba(239,68,68,0.3);" onclick="closeModal();deleteUser(' + user.id + ')">Supprimer</button>';
         }
         html += '<button class="btn-secondary" onclick="closeModal()">Fermer</button></div></div>';
@@ -336,10 +535,7 @@ document.getElementById('searchesNextPage').addEventListener('click', function()
 // ============ BLOCKLIST ============
 async function loadBlocklist() {
     var tbody = document.getElementById('blocklistTableBody');
-    if (!tbody) {
-        console.error('blocklistTableBody non trouve');
-        return;
-    }
+    if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
     try {
         var response = await fetch(API_URL + '/api/admin/blocklist', {
@@ -362,7 +558,6 @@ async function loadBlocklist() {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune entree dans la blocklist</td></tr>';
         }
     } catch (error) {
-        console.error('Blocklist error:', error);
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
     }
 }
@@ -552,10 +747,12 @@ async function init() {
     if (!isAdmin) return;
     loadStats();
     loadBlocklist();
+    loadApiMaintenance();
 }
 
 init();
 
+// ============ EXPOSE GLOBAL ============
 window.loadBlocklist = loadBlocklist;
 window.loadUsers = loadUsers;
 window.loadStats = loadStats;
@@ -568,3 +765,6 @@ window.deleteBlocklistItem = deleteBlocklistItem;
 window.replyTicket = replyTicket;
 window.changeTicketStatus = changeTicketStatus;
 window.closeModal = closeModal;
+window.openQuotaModal = openQuotaModal;
+window.saveQuota = saveQuota;
+window.toggleApiMaintenance = toggleApiMaintenance;

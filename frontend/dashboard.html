@@ -15,6 +15,17 @@
         body::before, body::after { display: none !important; }
 
         /* ============================================
+        FIX ONGLET ABONNEMENT
+        ============================================ */
+        #subscriptionContent { display: block; width: 100%; overflow: hidden; }
+        #subscriptionContent .sub-current { display: block; width: 100%; box-sizing: border-box; }
+        #subscriptionContent .sub-current-header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; width: 100%; }
+        #subscriptionContent .sub-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; width: 100%; margin-bottom: 24px; }
+        #subscriptionContent .sub-actions { display: flex; gap: 12px; flex-wrap: wrap; width: 100%; }
+        #subscriptionContent .sub-plans { display: block; width: 100%; margin-top: 24px; }
+        #subscriptionContent .sub-plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; width: 100%; }
+
+        /* ============================================
         SIDEBAR
         ============================================ */
         .sidebar { width: 220px; background: #111111; border-right: 1px solid #2a2a2a; position: fixed; top: 0; left: 0; bottom: 0; padding: 16px 12px; overflow-y: auto; z-index: 1000; transition: transform 0.3s ease; }
@@ -22,19 +33,21 @@
         .sidebar-header .logo { width: 28px; height: 28px; color: #ffffff; }
         .sidebar-header span { font-size: 18px; font-weight: 800; color: #ffffff; }
         .sidebar-nav { list-style: none; }
-        .sidebar-nav li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px; cursor: pointer; color: #a0a0a0; font-size: 13px; font-weight: 500; transition: all 0.2s; }
-        .sidebar-nav li:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
-        .sidebar-nav li.active { background: rgba(255,255,255,0.05); color: #ffffff; }
-        .sidebar-nav li svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
-        
-        .support-toggle { display: flex !important; align-items: center !important; gap: 12px !important; padding: 10px 12px !important; border-radius: 6px !important; cursor: pointer !important; color: #a0a0a0 !important; font-size: 13px !important; font-weight: 500 !important; transition: all 0.2s !important; margin-top: 4px !important; }
-        .support-toggle:hover { background: rgba(255,255,255,0.03) !important; color: #ffffff !important; }
-        .support-toggle svg { width: 18px !important; height: 18px !important; flex-shrink: 0 !important; }
-        .support-arrow { margin-left: auto !important; transition: transform 0.3s ease !important; }
-        .support-submenu { padding-left: 36px !important; list-style: none !important; margin-top: 4px !important; }
-        .support-submenu li { display: flex !important; align-items: center !important; gap: 12px !important; padding: 8px 12px !important; border-radius: 6px !important; cursor: pointer !important; color: #a0a0a0 !important; font-size: 13px !important; font-weight: 500 !important; transition: all 0.2s !important; }
-        .support-submenu li:hover { background: rgba(255,255,255,0.03) !important; color: #ffffff !important; }
-        .support-submenu li svg { width: 18px !important; height: 18px !important; flex-shrink: 0 !important; }
+        .sidebar-nav > li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px; cursor: pointer; color: #a0a0a0; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .sidebar-nav > li:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+        .sidebar-nav > li.active { background: rgba(255,255,255,0.05); color: #ffffff; }
+        .sidebar-nav > li svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        .support-toggle { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px; cursor: pointer; color: #a0a0a0; font-size: 13px; font-weight: 500; transition: all 0.2s; margin-top: 4px; }
+        .support-toggle:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+        .support-toggle svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .support-arrow { margin-left: auto; transition: transform 0.3s ease; }
+        .support-arrow.open { transform: rotate(180deg); }
+        .support-submenu { padding-left: 36px; list-style: none; margin-top: 4px; display: none; }
+        .support-submenu.open { display: block; }
+        .support-submenu li { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: #a0a0a0; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .support-submenu li:hover { background: rgba(255,255,255,0.03); color: #ffffff; }
+        .support-submenu li svg { width: 18px; height: 18px; flex-shrink: 0; }
 
         .sidebar-footer { padding-top: 12px; border-top: 1px solid #2a2a2a; margin-top: 12px; }
         .sidebar-footer button { width: 100%; padding: 8px 12px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #a0a0a0; font-size: 12px; font-family: Arial, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
@@ -256,61 +269,16 @@
         .investigation-map-col { display: flex; flex-direction: column; }
         .investigation-map-wrapper { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; flex: 1; }
         .investigation-city-label { text-align: center; font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 16px; letter-spacing: 0.5px; }
-        
-        .investigation-map-container {
-            width: 100%;
-            height: 520px;
-            position: relative;
-            background: #151515;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .investigation-map-container img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: contain;
-            background: #151515;
-        }
 
-        #mapPin {
-            position: absolute;
-            pointer-events: none;
-            z-index: 10;
-            display: none;
-        }
-        .pin-dot {
-            width: 20px;
-            height: 20px;
-            background: #ffffff;
-            border-radius: 50%;
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.2);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .pin-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.15);
-            animation: pinPulse 1.5s ease-in-out infinite;
-        }
+        .investigation-map-container { width: 100%; height: 520px; position: relative; background: #151515; border-radius: 8px; overflow: hidden; }
+        .investigation-map-container img { width: 100%; height: 100%; display: block; object-fit: contain; background: #151515; }
+
+        #mapPin { position: absolute; pointer-events: none; z-index: 10; display: none; }
+        .pin-dot { width: 20px; height: 20px; background: #ffffff; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(255,255,255,0.2); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .pin-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); animation: pinPulse 1.5s ease-in-out infinite; }
         @keyframes pinPulse {
-            0%, 100% { 
-                transform: translate(-50%, -50%) scale(0.6); 
-                opacity: 0.8; 
-            }
-            50% { 
-                transform: translate(-50%, -50%) scale(1.8); 
-                opacity: 0; 
-            }
+            0%, 100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.8; }
+            50% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
         }
 
         .investigation-info-col { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; max-height: 700px; }
@@ -361,6 +329,7 @@
             .investigation-info-grid { grid-template-columns: 1fr; }
             .investigation-actions { flex-direction: column; }
             .investigation-actions .btn-primary, .investigation-actions .btn-secondary { width: 100%; justify-content: center; }
+            .site-footer { margin-left: 0 !important; padding: 16px 20px !important; }
         }
 
         /* ============================================
@@ -446,13 +415,13 @@
         .endpoint-path { font-family: 'Courier New', monospace; font-size: 13px; color: #ffffff; }
 
         .limits-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-top: 16px; }
-        .limit-card { padding: 22px 18px; background: rgba(255,255,255,0.02); border: 1px solid #2a2a2a; border-radius: 12px; text-align: center; transition: all 0.25s ease; }
+        .limit-card { padding: 20px 14px; background: rgba(255,255,255,0.02); border: 1px solid #2a2a2a; border-radius: 12px; text-align: center; transition: all 0.25s ease; }
         .limit-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-3px); background: rgba(255,255,255,0.03); }
         .limit-card.featured { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); box-shadow: 0 0 40px rgba(255,255,255,0.04); position: relative; }
         .limit-card.featured::before { content: 'POPULAIRE'; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: #ffffff; color: #000000; font-size: 9px; font-weight: 800; letter-spacing: 1px; padding: 3px 10px; border-radius: 100px; }
         .limit-name { font-size: 12px; font-weight: 700; color: #a0a0a0; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .limit-value { font-size: 24px; font-weight: 700; color: #ffffff; margin-bottom: 6px; letter-spacing: -0.8px; }
-        .limit-value span { font-size: 12px; font-weight: 400; color: #6b6b6b; }
+        .limit-value { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 6px; letter-spacing: -0.5px; line-height: 1.2; white-space: nowrap; }
+        .limit-value span { font-size: 11px; font-weight: 400; color: #6b6b6b; }
         .limit-price { font-size: 13px; color: #a0a0a0; font-weight: 600; }
 
         .errors-table { background: rgba(255,255,255,0.02); border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; margin-top: 12px; }
@@ -497,101 +466,41 @@
         .api-key-warning { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; color: #f59e0b; font-size: 12px; margin-bottom: 20px; line-height: 1.6; }
         .api-key-warning svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 
-/* ============================================
-   OVERLAY DEV API — Fond noir + message
-   ============================================ */
-.api-dev-overlay {
-    position: fixed;
-    top: 0;
-    left: 220px;
-    right: 0;
-    bottom: 0;
-    background: #0a0a0a;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
-    z-index: 9998;
-    padding: 20px;
-    text-align: center;
-}
-.api-dev-overlay.active {
-    display: flex;
-}
-.api-dev-icon {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(245,158,11,0.08);
-    border: 1px solid rgba(245,158,11,0.2);
-    border-radius: 20px;
-    margin-bottom: 8px;
-}
-.api-dev-icon svg { width: 36px; height: 36px; color: #f59e0b; }
-.api-dev-title { font-size: 28px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -0.5px; }
-.api-dev-subtitle { font-size: 15px; color: #a0a0a0; line-height: 1.7; margin: 0; max-width: 480px; }
-.api-dev-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: rgba(245,158,11,0.08);
-    border: 1px solid rgba(245,158,11,0.25);
-    border-radius: 100px;
-    color: #f59e0b;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 8px;
-}
-.api-dev-dot {
-    width: 6px; height: 6px;
-    background: #f59e0b;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(245,158,11,0.8);
-    animation: apiPulse 1.8s ease-in-out infinite;
-}
-@keyframes apiPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.85); }
-}
-.api-dev-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 28px;
-    background: #5865F2;
-    color: #ffffff;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    margin-top: 16px;
-.api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
-.api-dev-btn svg { width: 20px; height: 20px; }
+        /* ============================================
+           OVERLAY DEV API — Plein écran (sauf sidebar)
+           ============================================ */
+        .api-dev-overlay {
+            position: fixed;
+            top: 0;
+            left: 220px;
+            right: 0;
+            bottom: 0;
+            background: #0a0a0a;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 9998;
+            padding: 20px;
+            text-align: center;
+        }
+        .api-dev-overlay.active { display: flex; }
+        .api-dev-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; max-width: 560px; }
+        .api-dev-icon { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; margin-bottom: 8px; }
+        .api-dev-icon svg { width: 36px; height: 36px; color: #f59e0b; }
+        .api-dev-title { font-size: 28px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -0.5px; }
+        .api-dev-subtitle { font-size: 15px; color: #a0a0a0; line-height: 1.7; margin: 0; max-width: 480px; }
+        .api-dev-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 100px; color: #f59e0b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+        .api-dev-dot { width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; box-shadow: 0 0 10px rgba(245,158,11,0.8); animation: apiPulse 1.8s ease-in-out infinite; }
+        @keyframes apiPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+        .api-dev-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: #5865F2; color: #ffffff; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; margin-top: 16px; }
+        .api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
+        .api-dev-btn svg { width: 20px; height: 20px; }
 
-/* Quand DEV_API=ON, on cache tout le contenu de la page API */
-body.dev-api-on #page-api .api-page-wrapper {
-    display: none;
-}
-
-/* Afficher l'overlay UNIQUEMENT dans la page API */
-body.dev-api-on #apiDevOverlay {
-    display: flex;
-}
-
-@media (max-width: 768px) {
-    .api-dev-overlay { left: 0; }
-}
-
+        @media (max-width: 768px) {
+            .api-dev-overlay { left: 0; }
+        }
 
         /* ============================================
         MODAL DE REMERCIEMENT
@@ -650,12 +559,20 @@ body.dev-api-on #apiDevOverlay {
         .sub-plan-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
         .sub-plan-card.current { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.03); }
         .sub-plan-name { font-size: 13px; font-weight: 700; color: #a0a0a0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .sub-plan-price { font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-bottom: 4px; }
-        .sub-plan-price span { font-size: 12px; font-weight: 400; color: #6b6b6b; }
+        .sub-plan-price { font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 4px; white-space: nowrap; }
+        .sub-plan-price span { font-size: 11px; font-weight: 400; color: #6b6b6b; }
         .sub-plan-btn { display: inline-block; padding: 8px 16px; margin-top: 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; font-family: inherit; width: 100%; }
         .sub-plan-btn.upgrade { background: #ffffff; color: #000000; }
         .sub-plan-btn.upgrade:hover { background: #e5e5e5; }
         .sub-plan-btn.current-btn { background: transparent; color: #10b981; cursor: default; }
+
+        /* ============================================
+        FOOTER
+        ============================================ */
+        .site-footer { border-top:1px solid #2a2a2a; padding:16px 40px; margin-top:40px; text-align:center; background:#111111; margin-left:220px; }
+        .site-footer a { color:#6b6b6b; text-decoration:none; }
+        .site-footer a:hover { color: #a0a0a0; }
+        .site-footer span { color:#6b6b6b; }
 
         @media (max-width: 768px) {
             .api-hero { padding: 24px 20px; }
@@ -864,18 +781,18 @@ body.dev-api-on #apiDevOverlay {
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
                 <span>Support</span>
-                <svg class="support-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-left:auto;transition:transform 0.3s;">
+                <svg class="support-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                     <polyline points="6 9 12 15 18 9"/>
                 </svg>
             </li>
-            <ul class="support-submenu" id="supportSubmenu" style="display:none;list-style:none;padding-left:36px;margin-top:4px;">
-                <li data-page="discord" onclick="window.open('https://discord.gg/jf6QRZHaTB', '_blank')" style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:6px;cursor:pointer;color:#a0a0a0;font-size:13px;font-weight:500;transition:all 0.2s;">
+            <ul class="support-submenu" id="supportSubmenu">
+                <li data-page="discord" onclick="window.open('https://discord.gg/jf6QRZHaTB', '_blank')">
                     <svg viewBox="0 0 71 55" fill="currentColor" stroke="none" width="18" height="18">
                         <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.4154C45.5603 0.3984 45.468 0.4401 45.4205 0.5259C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4176 32.7345 3.4176 27.3892 4.2216C26.9051 3.0834 26.1952 1.6353 25.5709 0.5259C25.5234 0.4423 25.4311 0.4006 25.3387 0.4154C20.2649 1.2916 15.4122 2.8214 10.8869 4.8978C10.8405 4.9215 10.8001 4.9551 10.7698 4.9968C1.5577 18.0321 -0.8683 30.6837 0.2987 43.1565C0.3036 43.2029 0.3245 43.2466 0.3576 43.2802C4.7899 46.4532 9.8345 48.5478 14.9246 49.8359C15.017 49.8602 15.1093 49.8213 15.1568 49.7403C16.2919 48.0607 17.2692 46.2825 18.0955 44.4239C18.143 44.3285 18.1093 44.2186 18.017 44.1672C16.3777 43.346 14.9143 42.4018 13.5241 41.3516C13.4224 41.2751 13.4154 41.1298 13.5095 41.0454C13.5736 40.9932 13.6376 40.9409 13.6979 40.8886C13.8188 40.7899 13.9445 40.6884 14.0646 40.5905C14.1428 40.5264 14.2519 40.5256 14.3312 40.5881C20.8548 43.4092 28.1712 44.8553 35.4438 44.8553C42.7164 44.8553 50.0328 43.4092 56.5564 40.5881C56.6357 40.5256 56.7448 40.5264 56.8231 40.5905C56.9431 40.6884 57.0689 40.7899 57.1898 40.8886C57.2501 40.9409 57.3141 40.9932 57.3782 41.0454C57.4723 41.1298 57.4653 41.2751 57.3636 41.3516C55.9734 42.407 54.5101 43.346 52.8708 44.1672C52.7785 44.2186 52.7448 44.3285 52.7923 44.4239C53.6255 46.2825 54.6028 48.0607 55.731 49.7403C55.7785 49.8213 55.8708 49.8602 55.9632 49.8359C61.0533 48.5478 66.0979 46.4532 70.5302 43.2802C70.5633 43.2466 70.5842 43.2029 70.5891 43.1565C72.0078 28.7562 68.4813 16.2234 60.1183 4.9968C60.088 4.9551 60.0476 4.9215 60.0012 4.8978H60.1045Z"/>
                     </svg>
                     <span>Discord</span>
                 </li>
-                <li data-page="tickets" style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:6px;cursor:pointer;color:#a0a0a0;font-size:13px;font-weight:500;transition:all 0.2s;">
+                <li data-page="tickets">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                         <rect x="2" y="4" width="20" height="16" rx="2"/>
                         <path d="M22 7L12 13L2 7"/>
@@ -1356,13 +1273,13 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
                                     </div>
                                     <div class="limit-card">
                                         <div class="limit-name">Starter</div>
-                                        <div class="limit-value">500<span>/mois</span></div>
-                                        <div class="limit-price">9€</div>
+                                        <div class="limit-value">1 000<span>/mois</span></div>
+                                        <div class="limit-price">9,99€</div>
                                     </div>
                                     <div class="limit-card featured">
                                         <div class="limit-name">Pro</div>
-                                        <div class="limit-value">5 000<span>/mois</span></div>
-                                        <div class="limit-price">29€</div>
+                                        <div class="limit-value">10 000<span>/mois</span></div>
+                                        <div class="limit-price">29,99€</div>
                                     </div>
                                     <div class="limit-card">
                                         <div class="limit-name">Enterprise</div>
@@ -1462,19 +1379,19 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
 
                         <div class="api-stats-grid">
                             <div class="api-stat-card">
-                                <div class="api-stat-value">0</div>
+                                <div class="api-stat-value" data-stat="today">0</div>
                                 <div class="api-stat-label">Requêtes aujourd'hui</div>
                             </div>
                             <div class="api-stat-card">
-                                <div class="api-stat-value">0</div>
+                                <div class="api-stat-value" data-stat="month">0</div>
                                 <div class="api-stat-label">Requêtes ce mois</div>
                             </div>
                             <div class="api-stat-card">
-                                <div class="api-stat-value">10</div>
+                                <div class="api-stat-value" data-stat="limit">10</div>
                                 <div class="api-stat-label">Limite mensuelle</div>
                             </div>
                             <div class="api-stat-card">
-                                <div class="api-stat-value">10</div>
+                                <div class="api-stat-value" data-stat="remaining">10</div>
                                 <div class="api-stat-label">Requêtes restantes</div>
                             </div>
                         </div>
@@ -1482,10 +1399,10 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
                         <div class="api-usage-bar">
                             <div class="usage-label">
                                 <span>Utilisation ce mois</span>
-                                <span>0 / 10</span>
+                                <span id="usageCount">0 / 10</span>
                             </div>
                             <div class="usage-bar-bg">
-                                <div class="usage-bar-fill" style="width: 0%;"></div>
+                                <div class="usage-bar-fill" id="usageBarFill" style="width: 0%;"></div>
                             </div>
                         </div>
 
@@ -1580,7 +1497,6 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
         </div>
     </div>
 
-
     <!-- ============ OVERLAY DEV API ============ -->
     <div id="apiDevOverlay" class="api-dev-overlay">
         <div class="api-dev-content">
@@ -1609,14 +1525,25 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
     </div>
 
     <!-- ============ FOOTER ============ -->
-    <div style="border-top:1px solid #2a2a2a;padding:16px 40px;margin-top:40px;text-align:center;background:#111111;margin-left:220px;">
-        <a href="/cgu.html" style="color:#6b6b6b;text-decoration:none;">CGU</a> · <span style="color:#6b6b6b;">Created by Index</span>
-    </div>
+    <footer class="site-footer">
+        <a href="/cgu.html">CGU</a> · <span>Created by Index</span>
+    </footer>
 
     <!-- ============================================ SCRIPTS ============================================ -->
-    <script src="js/graphe.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script>
+    <script src="js/graphe.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+    <script defer>
+        // ============ SAFE TOAST (fallback si dashboard.js ne la définit pas) ============
+        window.showToast = window.showToast || function(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (type || '');
+            toast.innerHTML = '<button class="toast-close" onclick="this.parentElement.remove()">&times;</button>' + message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
         // ============ API TABS ============
         document.querySelectorAll('.api-tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -1626,12 +1553,9 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
                 const target = document.getElementById('api-tab-' + this.dataset.apiTab);
                 if (target) target.classList.add('active');
 
-                if (this.dataset.apiTab === 'subscription') {
-                    loadSubscription();
-                }
-                if (this.dataset.apiTab === 'keys') {
-                    loadApiKeys();
-                }
+                if (this.dataset.apiTab === 'subscription') loadSubscription();
+                if (this.dataset.apiTab === 'keys') loadApiKeys();
+                if (this.dataset.apiTab === 'stats') loadUsage();
             });
         });
 
@@ -1827,7 +1751,7 @@ print(data)`
                 const data = await res.json();
 
                 if (!res.ok) {
-                    showToast(data.error || 'Erreur lors de la génération', 'error');
+                    window.showToast(data.error || 'Erreur lors de la génération', 'error');
                     return;
                 }
 
@@ -1860,12 +1784,12 @@ print(data)`
                 `;
                 document.body.appendChild(modal);
 
-                showToast(`Clé générée · ${data.remaining} restante${data.remaining > 1 ? 's' : ''}`, 'success');
+                window.showToast(`Clé générée · ${data.remaining} restante${data.remaining > 1 ? 's' : ''}`, 'success');
 
                 await loadApiKeys();
             } catch (err) {
                 console.error(err);
-                showToast('Erreur de connexion', 'error');
+                window.showToast('Erreur de connexion', 'error');
             }
         };
 
@@ -1880,13 +1804,13 @@ print(data)`
                 });
 
                 if (res.ok) {
-                    showToast('Clé révoquée', 'success');
+                    window.showToast('Clé révoquée', 'success');
                     await loadApiKeys();
                 } else {
-                    showToast('Erreur lors de la révocation', 'error');
+                    window.showToast('Erreur lors de la révocation', 'error');
                 }
             } catch (err) {
-                showToast('Erreur de connexion', 'error');
+                window.showToast('Erreur de connexion', 'error');
             }
         };
 
@@ -1895,7 +1819,7 @@ print(data)`
             if (input) {
                 input.select();
                 navigator.clipboard.writeText(input.value);
-                showToast('Clé copiée', 'success');
+                window.showToast('Clé copiée', 'success');
             }
         };
 
@@ -1905,30 +1829,30 @@ print(data)`
         };
 
         // Aller aux clés API (depuis le modal de remerciement)
-window.goToApiKeys = function() {
-    document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-    const apiNav = document.querySelector('[data-page="api"]');
-    if (apiNav) apiNav.classList.add('active');
+        window.goToApiKeys = function() {
+            document.querySelectorAll('.sidebar-nav > li').forEach(li => li.classList.remove('active'));
+            const apiNav = document.querySelector('[data-page="api"]');
+            if (apiNav) apiNav.classList.add('active');
 
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const apiPage = document.getElementById('page-api');
-    if (apiPage) apiPage.classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const apiPage = document.getElementById('page-api');
+            if (apiPage) apiPage.classList.add('active');
 
-    document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
-    const keysTab = document.querySelector('[data-api-tab="keys"]');
-    const keysContent = document.getElementById('api-tab-keys');
-    if (keysTab) keysTab.classList.add('active');
-    if (keysContent) keysContent.classList.add('active');
+            document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
+            const keysTab = document.querySelector('[data-api-tab="keys"]');
+            const keysContent = document.getElementById('api-tab-keys');
+            if (keysTab) keysTab.classList.add('active');
+            if (keysContent) keysContent.classList.add('active');
 
-    // ⚡ AFFICHER L'OVERLAY DEV API si actif
-    const overlay = document.getElementById('apiDevOverlay');
-    if (overlay && devApiActive) {
-        overlay.classList.add('active');
-    }
+            const overlay = document.getElementById('apiDevOverlay');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (overlay && devApiActive && !isLocalhost) {
+                overlay.classList.add('active');
+            }
 
-    loadApiKeys();
-};
+            loadApiKeys();
+        };
 
         // ============ MODE DEV ============
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -1945,9 +1869,7 @@ window.goToApiKeys = function() {
         window.openThanksModal = function(plan) {
             const modal = document.getElementById('thanksModal');
             const planEl = document.getElementById('thanksPlan');
-            if (planEl && plan) {
-                planEl.textContent = plan.toUpperCase();
-            }
+            if (planEl && plan) planEl.textContent = plan.toUpperCase();
             if (modal) modal.classList.add('active');
         };
 
@@ -1958,7 +1880,7 @@ window.goToApiKeys = function() {
             const plan = urlParams.get('plan');
 
             if (payment === 'success') {
-                setTimeout(() => openThanksModal(plan || 'pro'), 300);
+                setTimeout(() => window.openThanksModal(plan || 'pro'), 300);
                 window.history.replaceState({}, '', '/dashboard.html');
             } else if (payment === 'cancel') {
                 console.log('Paiement annulé');
@@ -1989,7 +1911,7 @@ window.goToApiKeys = function() {
                 const periodEnd = data.currentPeriodEnd;
                 const cancelAtEnd = data.cancelAtPeriodEnd;
 
-                const planPrices = { free: '0€', starter: '9€', pro: '29€', enterprise: 'Sur devis' };
+                const planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
                 const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
 
                 let statusBadgeClass = 'inactive';
@@ -2075,14 +1997,6 @@ window.goToApiKeys = function() {
                                     </svg>
                                     Gérer mon abonnement
                                 </button>
-                                <button class="sub-btn danger" onclick="cancelSubscription()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="15" y1="9" x2="9" y2="15"/>
-                                        <line x1="9" y1="9" x2="15" y2="15"/>
-                                    </svg>
-                                    Résilier l'abonnement
-                                </button>
                             `}
                         </div>
                     </div>
@@ -2091,8 +2005,8 @@ window.goToApiKeys = function() {
                         <div class="sub-plans-title">Tous les plans</div>
                         <div class="sub-plans-grid">
                             ${renderPlanCard('free', plan, '0€', '0')}
-                            ${renderPlanCard('starter', plan, '9€', 'starter')}
-                            ${renderPlanCard('pro', plan, '29€', 'pro')}
+                            ${renderPlanCard('starter', plan, '9,99€', 'starter')}
+                            ${renderPlanCard('pro', plan, '29,99€', 'pro')}
                             ${renderPlanCard('enterprise', plan, 'Sur devis', null)}
                         </div>
                     </div>
@@ -2146,7 +2060,7 @@ window.goToApiKeys = function() {
 
         window.cancelSubscription = function() {
             if (confirm('Voulez-vous vraiment résilier votre abonnement ? Il restera actif jusqu\'à la fin de la période en cours.')) {
-                openPortal();
+                window.openPortal();
             }
         };
 
@@ -2169,55 +2083,79 @@ window.goToApiKeys = function() {
             }
         };
 
-// ============ CHECK DEV API ============
-let devApiActive = false;
-
-async function checkDevApi() {
-    try {
-        const res = await fetch('/api/config');
-        const data = await res.json();
-        const overlay = document.getElementById('apiDevOverlay');
-        
-        if (data.devApi === true) {
-            // Active le mode DEV API
-            document.body.classList.add('dev-api-on');
-            if (overlay) overlay.classList.add('active');
-            console.log('🔒 Mode DEV API activé');
-        } else {
-            // Désactive le mode DEV API
-            document.body.classList.remove('dev-api-on');
-            if (overlay) overlay.classList.remove('active');
-            console.log('✅ Mode DEV API désactivé');
-        }
-    } catch (err) {
-        console.error('Erreur check dev api:', err);
-    }
-}
-
-// ============ MASQUER L'OVERLAY HORS DE LA PAGE API ============
-function updateOverlayVisibility() {
-    const overlay = document.getElementById('apiDevOverlay');
-    const apiPage = document.getElementById('page-api');
-    if (!overlay) return;
-
-    // Overlay visible SEULEMENT si :
-    // - DEV_API = ON
-    // - Et on est sur la page API
-    if (document.body.classList.contains('dev-api-on') && apiPage && apiPage.classList.contains('active')) {
-        overlay.classList.add('active');
-    } else {
-        overlay.classList.remove('active');
-    }
-}
-
-// ============ INIT ============
-document.addEventListener('DOMContentLoaded', () => {
+        // ============ USAGE API ============
+        async function loadUsage() {
     const token = localStorage.getItem('token');
-    if (token) {
-        loadApiKeys();
+    if (!token) return;
+
+    try {
+        const res = await fetch('/api/usage', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!res.ok) {
+            console.error('Erreur /api/usage:', res.status);
+            return;
+        }
+
+        const data = await res.json();
+        console.log('📊 Usage reçu:', data);
+
+        // Mettre à jour les 4 cartes
+        const setStat = (key, value) => {
+            const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
+            if (el) el.textContent = value;
+        };
+
+        setStat('today', data.today);
+        setStat('month', data.month);
+        setStat('limit', data.limit);
+        setStat('remaining', data.remaining);
+
+        // Mettre à jour la barre
+        const usageCount = document.getElementById('usageCount');
+        const usageBar = document.getElementById('usageBarFill');
+
+        if (usageCount) {
+            usageCount.textContent = data.month + ' / ' + data.limit;
+        }
+
+        if (usageBar) {
+            if (data.limit === '∞') {
+                usageBar.style.width = '0%';
+            } else {
+                const pct = Math.min(100, (data.month / data.limit) * 100);
+                usageBar.style.width = pct + '%';
+            }
+        }
+
+    } catch (err) {
+        console.error('Erreur loadUsage:', err);
     }
-    checkDevApi();
-});
+}
+
+        // ============ CHECK DEV API ============
+        let devApiActive = false;
+
+        async function checkDevApi() {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+                devApiActive = data.devApi === true;
+                console.log('🔒 Mode DEV API:', devApiActive ? 'ACTIVÉ' : 'DÉSACTIVÉ');
+            } catch (err) {
+                console.error('Erreur check dev api:', err);
+            }
+        }
+
+        // ============ INIT ============
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                loadApiKeys();
+            }
+            await checkDevApi();
+        });
     </script>
 </body>
 </html>

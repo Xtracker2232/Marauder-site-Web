@@ -12,14 +12,14 @@ const PLANS = {
     },
     starter: {
         name: 'Starter',
-        price: 900,
-        limits: { api: 500, search: 500, fiches: 25 },
+        price: 999,
+        limits: { api: 1000, search: 1000, fiches: 25 },
         stripePriceId: process.env.STRIPE_PRICE_STARTER
     },
     pro: {
         name: 'Pro',
-        price: 2900,
-        limits: { api: 5000, search: 5000, fiches: 100 },
+        price: 2999,
+        limits: { api: 10000, search: 10000, fiches: 100 },
         stripePriceId: process.env.STRIPE_PRICE_PRO
     },
     enterprise: {

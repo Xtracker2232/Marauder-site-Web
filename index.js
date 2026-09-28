@@ -1,8 +1,12 @@
+// ============================================
+// MARAUDER API - index.js
+// ============================================
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const crypto = require('crypto');
 const { Pool } = require('pg');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
@@ -10,65 +14,98 @@ const { body, validationResult } = require('express-validator');
 require('dotenv').config();
 
 // ============================================
-// 1. INITIALISATION DE L'APP
+// 1. INITIALISATION
 // ============================================
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // ============================================
-// 2. MIDDLEWARES GLOBAUX
+// 2. VÉRIFICATION DES VARIABLES D'ENV
 // ============================================
-app.use((req, res, next) => {
-    // Ne PAS parser le body du webhook Stripe (garder le raw)
-    if (req.originalUrl === '/api/stripe/webhook') {
-        return next();
+const REQUIRED_ENV = [
+    'DATABASE_URL',
+    'JWT_SECRET',
+    'BRIX_API_KEY',
+    'ADMIN_USERNAME',
+    'ADMIN_PASSWORD'
+];
+
+for (const envVar of REQUIRED_ENV) {
+    if (!process.env[envVar]) {
+        console.error(`❌ ${envVar} non défini`);
+        process.exit(1);
     }
-    express.json()(req, res, next);
-});
-app.use(express.urlencoded({ extended: true }));
-
-// ============================================
-// 3. STRIPE ROUTES
-// Le webhook gère lui-même son raw body via express.raw()
-// ============================================
-const stripeRoutes = require('./routes/stripe');
-app.use('/api/stripe', stripeRoutes);
-
-// ============ VÉRIFICATION DES VARIABLES ============
-if (!process.env.DATABASE_URL) {
-    console.error('❌ DATABASE_URL non défini');
-    process.exit(1);
-}
-if (!process.env.JWT_SECRET) {
-    console.error('❌ JWT_SECRET non défini');
-    process.exit(1);
-}
-if (!process.env.BRIX_API_KEY) {
-    console.error('❌ BRIX_API_KEY non défini');
-    process.exit(1);
-}
-if (!process.env.ADMIN_USERNAME) {
-    console.error('❌ ADMIN_USERNAME non défini');
-    process.exit(1);
-}
-if (!process.env.ADMIN_PASSWORD) {
-    console.error('❌ ADMIN_PASSWORD non défini');
-    process.exit(1);
 }
 
 console.log('✅ Toutes les variables d\'environnement sont définies');
 console.log('🚧 Mode maintenance:', process.env.MAINTENANCE || 'OFF');
+console.log('🔒 Mode DEV API:', process.env.DEV_API || 'OFF');
 
-// ============ BASE DE DONNÉES ============
+// ============================================
+// 3. BASE DE DONNÉES
+// ============================================
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
 });
 
-// ============ CRÉATION DES TABLES ============
+// ============================================
+// 4. LIMITES PAR PLAN (source unique de vérité)
+// ============================================
+const PLAN_LIMITS = {
+    free: {
+        apiKeys: 1,
+        searchesPerMonth: 10,
+        resultsPerSearch: 10,
+        fiches: 10
+    },
+    starter: {
+        apiKeys: 1,
+        searchesPerMonth: 1000,
+        resultsPerSearch: 50,
+        fiches: 50
+    },
+    pro: {
+        apiKeys: 3,
+        searchesPerMonth: 10000,
+        resultsPerSearch: 100,
+        fiches: 100
+    },
+    enterprise: {
+        apiKeys: Infinity,
+        searchesPerMonth: Infinity,
+        resultsPerSearch: 100,
+        fiches: Infinity
+    }
+};
+
+function getPlanLimits(plan) {
+    return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+}
+
+async function getUserLimits(userId) {
+    const result = await pool.query(
+        'SELECT plan, custom_quota FROM users WHERE id = $1',
+        [userId]
+    );
+    const user = result.rows[0];
+    if (!user) return PLAN_LIMITS.free;
+
+    const planLimits = getPlanLimits(user.plan);
+    return {
+        ...planLimits,
+        searchesPerMonth: user.custom_quota > 0 ? user.custom_quota : planLimits.searchesPerMonth,
+        hasCustomQuota: user.custom_quota > 0
+    };
+}
+
+// ============================================
+// 5. CRÉATION DES TABLES + MIGRATIONS
+// ============================================
 const initDB = async () => {
     const client = await pool.connect();
     try {
+        // Tables de base
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -137,7 +174,7 @@ const initDB = async () => {
         `);
         console.log('✅ Tables OK');
 
-        // ============ MIGRATION STRIPE ============
+        // Migration Stripe
         await client.query(`
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255),
@@ -172,7 +209,8 @@ const initDB = async () => {
             );
         `);
         console.log('✅ Migration Stripe OK');
-        // ============ MIGRATION API KEYS ============
+
+        // Migration API Keys
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_keys (
                 id SERIAL PRIMARY KEY,
@@ -188,8 +226,37 @@ const initDB = async () => {
             CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
         `);
         console.log('✅ Migration API Keys OK');
-        // ============ ADMIN ============
-        const result = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', [process.env.ADMIN_USERNAME]);
+
+        // Migration API Logs
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS api_logs (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                api_key_id INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
+                endpoint VARCHAR(255) NOT NULL,
+                method VARCHAR(10) NOT NULL,
+                status_code INTEGER,
+                response_time_ms INTEGER,
+                ip TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_api_logs_user ON api_logs(user_id);
+            CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_logs(created_at);
+        `);
+        console.log('✅ Migration API Logs OK');
+
+        // Migration Custom Quota
+        await client.query(`
+            ALTER TABLE users 
+            ADD COLUMN IF NOT EXISTS custom_quota INTEGER DEFAULT 0;
+        `);
+        console.log('✅ Migration Custom Quota OK');
+
+        // Admin
+        const result = await client.query(
+            'SELECT COUNT(*) FROM users WHERE username = $1',
+            [process.env.ADMIN_USERNAME]
+        );
         if (parseInt(result.rows[0].count) === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
             await client.query(
@@ -209,9 +276,9 @@ const initDB = async () => {
     }
 };
 
-initDB();
-
-// ============ BLOCKLIST HELPER ============
+// ============================================
+// 6. HELPERS
+// ============================================
 async function getBlocklist() {
     try {
         const result = await pool.query('SELECT type, value FROM blocklist');
@@ -224,12 +291,17 @@ async function getBlocklist() {
 
 function isBlocked(person, blocklist) {
     if (!blocklist || blocklist.length === 0) return false;
-    const fieldsToCheck = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'nom_utilisateur', 'adresse_ip', 'steam_id', 'discord_id', 'nir', 'iban', 'nom_naissance', 'nom_affichage', 'societe', 'profession', 'fonction', 'siret', 'siren', 'bic', 'vin_plaque'];
+    const fieldsToCheck = [
+        'nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'ville',
+        'code_postal', 'nom_utilisateur', 'adresse_ip', 'steam_id', 'discord_id',
+        'nir', 'iban', 'nom_naissance', 'nom_affichage', 'societe', 'profession',
+        'fonction', 'siret', 'siren', 'bic', 'vin_plaque'
+    ];
     for (let entry of blocklist) {
         const fieldValue = person[entry.type];
-        if (fieldValue) {
+        if (fieldValue && typeof fieldValue === 'string') {
             if (fieldValue.toLowerCase().includes(entry.value.toLowerCase())) {
-                console.log(`🚫 Bloqué: ${entry.type}=${entry.value} trouvé dans ${fieldValue}`);
+                console.log(`🚫 Bloqué: ${entry.type}=${entry.value}`);
                 return true;
             }
         }
@@ -237,7 +309,36 @@ function isBlocked(person, blocklist) {
     return false;
 }
 
-// ============ MIDDLEWARE CORS ============
+async function getMonthlySearchCount(userId) {
+    const result = await pool.query(
+        `SELECT 
+            (SELECT COUNT(*) FROM search_history 
+             WHERE user_id = $1 
+             AND created_at >= date_trunc('month', CURRENT_DATE))
+            +
+            (SELECT COUNT(*) FROM api_logs 
+             WHERE user_id = $1 
+             AND created_at >= date_trunc('month', CURRENT_DATE))
+         AS total`,
+        [userId]
+    );
+    return parseInt(result.rows[0].total) || 0;
+}
+
+// ============================================
+// 7. MIDDLEWARES GLOBAUX
+// ============================================
+
+// Body parser (sauf webhook Stripe)
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/stripe/webhook') {
+        return next();
+    }
+    express.json()(req, res, next);
+});
+app.use(express.urlencoded({ extended: true }));
+
+// CORS
 const allowedOrigins = [
     'https://marauder-site-web-production.up.railway.app',
     'https://marauder.host',
@@ -259,14 +360,18 @@ app.use(cors({
 
 app.set('trust proxy', 1);
 
-// ⚡ MAINTENANCE ICI (AVANT express.static)
+// ============================================
+// 8. STRIPE ROUTES (avant le reste)
+// ============================================
+const stripeRoutes = require('./routes/stripe');
+app.use('/api/stripe', stripeRoutes);
+
+// ============================================
+// 9. MAINTENANCE
+// ============================================
 app.use((req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-        return next();
-    }
-    if (req.path === '/maintenance') {
-        return next();
-    }
+    if (req.path.startsWith('/api/')) return next();
+    if (req.path === '/maintenance') return next();
     if (process.env.MAINTENANCE === 'ON') {
         console.log('🚧 Maintenance activée pour:', req.path);
         return res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
@@ -274,15 +379,18 @@ app.use((req, res, next) => {
     next();
 });
 
-// Route dédiée pour la maintenance
 app.get('/maintenance', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'maintenance.html'));
 });
 
-// Ensuite le static
+// ============================================
+// 10. FICHIERS STATIQUES
+// ============================================
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// ============ FORCER HTTPS ============
+// ============================================
+// 11. FORCER HTTPS (prod uniquement)
+// ============================================
 app.use((req, res, next) => {
     const proto = req.headers['x-forwarded-proto'] || req.headers['cf-visitor'];
     let isHttps = false;
@@ -300,11 +408,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// ============ RATE LIMITING ============
+// ============================================
+// 12. RATE LIMITING
+// ============================================
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Trop de requêtes, réessayez plus tard'
+    max: 2000,
+    message: 'Trop de requêtes, réessayez plus tard',
+    standardHeaders: true,
+    legacyHeaders: false
 });
 
 const loginLimiter = rateLimit({
@@ -313,28 +425,60 @@ const loginLimiter = rateLimit({
     message: 'Trop de tentatives de connexion, réessayez dans 15 minutes'
 });
 
-app.use('/api/', limiter);
+// Exclure les routes critiques du rate limit global
+const RATE_LIMIT_EXEMPT = [
+    '/api/login',
+    '/api/register',
+    '/api/verify',
+    '/api/me',
+    '/api/usage',
+    '/api/logs',
+    '/api/keys',
+    '/api/keys/limits',
+    '/api/config',
+    '/api/health',
+    '/api/stripe/webhook'
+];
 
-// ============ AUTH ============
+app.use('/api/', (req, res, next) => {
+    if (RATE_LIMIT_EXEMPT.some(p => req.path === p || req.path.startsWith(p + '/'))) {
+        return next();
+    }
+    return limiter(req, res, next);
+});
+
+// ============================================
+// 13. AUTH MIDDLEWARES
+// ============================================
 const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Token manquant' });
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const result = await pool.query('SELECT banned FROM users WHERE id = $1', [decoded.id]);
+        const result = await pool.query(
+            'SELECT id, username, role, banned, plan, custom_quota FROM users WHERE id = $1',
+            [decoded.id]
+        );
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Utilisateur introuvable' });
         }
         if (result.rows[0].banned) {
             return res.status(403).json({ error: 'Ce compte a été banni' });
         }
-        req.user = decoded;
+        req.user = {
+            id: result.rows[0].id,
+            username: result.rows[0].username,
+            role: result.rows[0].role,
+            plan: result.rows[0].plan || 'free',
+            custom_quota: result.rows[0].custom_quota || 0
+        };
         next();
     } catch (error) {
         if (error.name === 'JsonWebTokenError') {
             return res.status(403).json({ error: 'Token invalide' });
         }
+        console.error('Auth error:', error);
         return res.status(500).json({ error: 'Erreur serveur' });
     }
 };
@@ -351,16 +495,16 @@ const requireAdmin = async (req, res, next) => {
     }
 };
 
-// ============ ROUTES AUTH ============
+// ============================================
+// 14. ROUTES AUTH
+// ============================================
 app.post('/api/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (result.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
         const user = result.rows[0];
-        if (user.banned) {
-            return res.status(403).json({ error: 'Ce compte a été banni' });
-        }
+        if (user.banned) return res.status(403).json({ error: 'Ce compte a été banni' });
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
         await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
@@ -371,6 +515,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         );
         res.json({ success: true, token, user: { id: user.id, username: user.username, role: user.role } });
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -380,9 +525,7 @@ app.post('/api/register',
     body('password').isLength({ min: 8 }),
     async (req, res) => {
         const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
+        if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
         const { username, password } = req.body;
         try {
             const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || 'unknown';
@@ -391,7 +534,10 @@ app.post('/api/register',
                 'INSERT INTO users (username, password_hash, reg_ip) VALUES ($1, $2, $3) RETURNING id, username, role',
                 [username, hashed, ip]
             );
-            await pool.query('INSERT INTO ip_used (ip, user_id) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING', [ip, result.rows[0].id]);
+            await pool.query(
+                'INSERT INTO ip_used (ip, user_id) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING',
+                [ip, result.rows[0].id]
+            );
             res.status(201).json({ success: true, user: result.rows[0] });
         } catch (error) {
             if (error.code === '23505') return res.status(400).json({ error: 'Nom déjà utilisé' });
@@ -404,13 +550,34 @@ app.get('/api/verify', authenticateToken, (req, res) => {
     res.json({ valid: true, user: req.user });
 });
 
-// ============ ROUTES BRIXHUB ============
+// ============================================
+// 15. ROUTES BRIXHUB (avec limites)
+// ============================================
 app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
+        const limits = await getUserLimits(req.user.id);
+
+        // Vérif limite
+        if (limits.searchesPerMonth !== Infinity) {
+            const used = await getMonthlySearchCount(req.user.id);
+            if (used >= limits.searchesPerMonth) {
+                return res.status(429).json({
+                    error: 'quota_exceeded',
+                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois pour le plan ${req.user.plan.toUpperCase()})`,
+                    used: used,
+                    limit: limits.searchesPerMonth
+                });
+            }
+        }
+
+        // Forcer per_page
+        const query = { ...req.body };
+        query.per_page = Math.min(query.per_page || limits.resultsPerSearch, limits.resultsPerSearch);
+
         const blocklist = await getBlocklist();
         const response = await axios.post(
             'https://api.brixhub.to/api/v1/search',
-            req.body,
+            query,
             {
                 headers: {
                     'X-API-Key': process.env.BRIX_API_KEY,
@@ -425,13 +592,12 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
 
         if (blocklist.length > 0 && results.length > 0) {
             results = results.filter(person => !isBlocked(person, blocklist));
-            console.log(`🔍 Blocklist: ${totalBeforeFilter} résultats → ${results.length} après filtrage`);
         }
 
         try {
             await pool.query(
                 'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
-                [req.user.id, req.body, results.length]
+                [req.user.id, query, results.length]
             );
         } catch (dbError) {
             console.error('Erreur historique:', dbError.message);
@@ -439,10 +605,11 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
 
         res.json({
             data: { results: results },
-            meta: { 
-                total: results.length, 
+            meta: {
+                total: results.length,
                 filtered: totalBeforeFilter !== results.length,
                 total_before_filter: totalBeforeFilter,
+                plan_limit: limits.resultsPerSearch,
                 took_ms: response.data.meta?.took_ms || 0
             }
         });
@@ -459,6 +626,20 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         return res.status(400).json({ error: 'Type invalide' });
     }
     try {
+        const limits = await getUserLimits(req.user.id);
+
+        if (limits.searchesPerMonth !== Infinity) {
+            const used = await getMonthlySearchCount(req.user.id);
+            if (used >= limits.searchesPerMonth) {
+                return res.status(429).json({
+                    error: 'quota_exceeded',
+                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
+                    used: used,
+                    limit: limits.searchesPerMonth
+                });
+            }
+        }
+
         const blocklist = await getBlocklist();
         const response = await axios.get(
             `https://api.brixhub.to/api/v1/lookup/${type}/${encodeURIComponent(value)}`,
@@ -467,12 +648,21 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
                 timeout: 10000
             }
         );
-        
+
         let results = response.data.data?.results || [];
         if (blocklist.length > 0 && results.length > 0) {
             results = results.filter(row => !isBlocked(row, blocklist));
         }
-        
+
+        try {
+            await pool.query(
+                'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
+                [req.user.id, { type: 'lookup', lookup_type: type, value: value }, results.length]
+            );
+        } catch (dbError) {
+            console.error('Erreur historique lookup:', dbError.message);
+        }
+
         res.json({
             data: { results: results },
             meta: { filtered: true }
@@ -483,7 +673,9 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
     }
 });
 
-// ============ ROUTES HISTORIQUE ============
+// ============================================
+// 16. ROUTES HISTORIQUE
+// ============================================
 app.get('/api/history', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
@@ -503,15 +695,14 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
             'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
         );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Recherche non trouvée' });
-        }
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Recherche non trouvée' });
+
         let query = result.rows[0].query;
-        if (typeof query === 'string') {
-            query = JSON.parse(query);
-        }
-        query.per_page = 100;
-        
+        if (typeof query === 'string') query = JSON.parse(query);
+
+        const limits = await getUserLimits(req.user.id);
+        query.per_page = limits.resultsPerSearch;
+
         const blocklist = await getBlocklist();
         const response = await axios.post(
             'https://api.brixhub.to/api/v1/search',
@@ -524,12 +715,12 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
                 timeout: 10000
             }
         );
-        
+
         let results = response.data.data?.results || [];
         if (blocklist.length > 0 && results.length > 0) {
             results = results.filter(person => !isBlocked(person, blocklist));
         }
-        
+
         res.json({
             results: results,
             total: results.length,
@@ -540,7 +731,9 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ ROUTES FICHES ============
+// ============================================
+// 17. ROUTES FICHES
+// ============================================
 app.get('/api/fiches', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM fiches WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
@@ -571,8 +764,12 @@ app.post('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
     try {
         const fiche = await pool.query('SELECT * FROM fiches WHERE id = $1 AND user_id = $2', [id, req.user.id]);
         if (fiche.rows.length === 0) return res.status(404).json({ error: 'Fiche non trouvée' });
+
+        const limits = await getUserLimits(req.user.id);
         let persons = fiche.rows[0].persons || [];
-        if (persons.length >= 10) return res.status(400).json({ error: 'Max 10 personnes' });
+        if (persons.length >= limits.fiches) {
+            return res.status(400).json({ error: `Max ${limits.fiches} personnes par fiche` });
+        }
         persons.push(person);
         const result = await pool.query(
             'UPDATE fiches SET persons = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
@@ -611,7 +808,9 @@ app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ ROUTES GRAPHES ============
+// ============================================
+// 18. ROUTES GRAPHES
+// ============================================
 app.post('/api/graphes', authenticateToken, async (req, res) => {
     const { name, nodes, edges } = req.body;
     try {
@@ -666,44 +865,76 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Erreur' });
     }
 });
-// ============ LIMITES PAR PLAN ============
-const API_KEY_LIMITS = {
-    free: 1,
-    starter: 1,
-    pro: 3,
-    enterprise: Infinity
-};
 
-const SEARCH_LIMITS = {
-    free: 10,
-    starter: 500,
-    pro: 5000,
-    enterprise: Infinity
-};
+// ============================================
+// 19. ROUTE USAGE
+// ============================================
+app.get('/api/usage', authenticateToken, async (req, res) => {
+    try {
+        const limits = await getUserLimits(req.user.id);
+        const monthCount = await getMonthlySearchCount(req.user.id);
 
-const RESULTS_PER_SEARCH = {
-    free: 10,
-    starter: 50,
-    pro: 100,
-    enterprise: 100
-};
+        const todayResult = await pool.query(
+            `SELECT 
+                (SELECT COUNT(*) FROM search_history 
+                 WHERE user_id = $1 
+                 AND DATE(created_at) = CURRENT_DATE)
+                +
+                (SELECT COUNT(*) FROM api_logs 
+                 WHERE user_id = $1 
+                 AND DATE(created_at) = CURRENT_DATE)
+             AS total`,
+            [req.user.id]
+        );
+        const todayCount = parseInt(todayResult.rows[0].total) || 0;
 
-// ============ MIDDLEWARE DEV API ============
-// Bloque toutes les routes API publiques si DEV_API=ON
-const requirePublicApi = (req, res, next) => {
-    if (process.env.DEV_API === 'ON') {
-        return res.status(403).json({ 
-            error: 'API en cours de développement',
-            message: 'L\'API Marauder est actuellement en développement. Rejoignez notre Discord pour être informé du lancement.',
-            discord: 'https://discord.gg/jf6QRZHaTB'
+        const limit = limits.searchesPerMonth;
+        const remaining = limit === Infinity ? '∞' : Math.max(0, limit - monthCount);
+
+        res.json({
+            plan: req.user.plan || 'free',
+            hasCustomQuota: limits.hasCustomQuota,
+            today: todayCount,
+            month: monthCount,
+            limit: limit === Infinity ? '∞' : limit,
+            remaining: remaining,
+            resultsPerSearch: limits.resultsPerSearch
         });
+    } catch (error) {
+        console.error('Usage error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
-    next();
-};
+});
 
-// ============ ROUTES API KEYS ============
+// ============================================
+// 20. ROUTE LOGS API
+// ============================================
+app.get('/api/logs', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT 
+                'api' as type,
+                endpoint,
+                method,
+                status_code,
+                response_time_ms,
+                created_at
+             FROM api_logs
+             WHERE user_id = $1
+             ORDER BY created_at DESC
+             LIMIT 20`,
+            [req.user.id]
+        );
+        res.json({ logs: result.rows });
+    } catch (error) {
+        console.error('Logs error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 
-// Lister les clés de l'utilisateur
+// ============================================
+// 21. ROUTES API KEYS
+// ============================================
 app.get('/api/keys', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
@@ -717,31 +948,29 @@ app.get('/api/keys', authenticateToken, async (req, res) => {
     }
 });
 
-// Info limites
 app.get('/api/keys/limits', authenticateToken, async (req, res) => {
     try {
-        const userResult = await pool.query('SELECT plan FROM users WHERE id = $1', [req.user.id]);
-        const plan = userResult.rows[0]?.plan || 'free';
-        const maxKeys = API_KEY_LIMITS[plan] ?? 1;
-
+        const limits = await getUserLimits(req.user.id);
         const countResult = await pool.query(
             'SELECT COUNT(*) FROM api_keys WHERE user_id = $1 AND revoked = FALSE',
             [req.user.id]
         );
         const currentCount = parseInt(countResult.rows[0].count);
 
-        res.json({ plan, currentCount, maxKeys });
+        res.json({
+            plan: req.user.plan || 'free',
+            currentCount: currentCount,
+            maxKeys: limits.apiKeys
+        });
     } catch (error) {
+        console.error('Limits error:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
-// Générer une clé
 app.post('/api/keys', authenticateToken, async (req, res) => {
     try {
-        const userResult = await pool.query('SELECT plan FROM users WHERE id = $1', [req.user.id]);
-        const plan = userResult.rows[0]?.plan || 'free';
-        const maxKeys = API_KEY_LIMITS[plan] ?? 1;
+        const limits = await getUserLimits(req.user.id);
 
         const countResult = await pool.query(
             'SELECT COUNT(*) FROM api_keys WHERE user_id = $1 AND revoked = FALSE',
@@ -749,16 +978,15 @@ app.post('/api/keys', authenticateToken, async (req, res) => {
         );
         const currentCount = parseInt(countResult.rows[0].count);
 
-        if (currentCount >= maxKeys) {
+        if (currentCount >= limits.apiKeys) {
             return res.status(403).json({
-                error: `Limite atteinte pour le plan ${plan.toUpperCase()} (${maxKeys} clé${maxKeys > 1 ? 's' : ''} maximum)`,
-                currentCount,
-                maxKeys,
-                plan
+                error: `Limite atteinte pour le plan ${req.user.plan.toUpperCase()} (${limits.apiKeys} clé${limits.apiKeys > 1 ? 's' : ''} maximum)`,
+                currentCount: currentCount,
+                maxKeys: limits.apiKeys,
+                plan: req.user.plan
             });
         }
 
-        const crypto = require('crypto');
         const rawKey = 'marauder_' + crypto.randomBytes(24).toString('hex');
         const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
         const keyPreview = rawKey.substring(0, 20) + '...' + rawKey.substring(rawKey.length - 8);
@@ -777,9 +1005,9 @@ app.post('/api/keys', authenticateToken, async (req, res) => {
                 preview: result.rows[0].key_preview,
                 created_at: result.rows[0].created_at
             },
-            remaining: maxKeys - currentCount - 1,
-            maxKeys,
-            plan
+            remaining: limits.apiKeys - currentCount - 1,
+            maxKeys: limits.apiKeys,
+            plan: req.user.plan
         });
     } catch (error) {
         console.error('Create key error:', error);
@@ -787,7 +1015,6 @@ app.post('/api/keys', authenticateToken, async (req, res) => {
     }
 });
 
-// Révoquer une clé
 app.delete('/api/keys/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
@@ -804,17 +1031,25 @@ app.delete('/api/keys/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
-// ============ ROUTES PROFIL ============
+
+// ============================================
+// 22. ROUTE PROFIL
+// ============================================
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, username, role, created_at, last_login FROM users WHERE id = $1', [req.user.id]);
+        const result = await pool.query(
+            'SELECT id, username, role, created_at, last_login, plan FROM users WHERE id = $1',
+            [req.user.id]
+        );
         res.json({ user: result.rows[0] });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
     }
 });
 
-// ============ ROUTES ADMIN ============
+// ============================================
+// 23. ROUTES ADMIN
+// ============================================
 app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const result = await pool.query(
@@ -822,11 +1057,7 @@ app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) =>
             [req.user.id]
         );
         const isProtected = result.rows[0]?.username === process.env.ADMIN_USERNAME;
-        res.json({
-            isAdmin: true,
-            isProtected: isProtected,
-            user: result.rows[0]
-        });
+        res.json({ isAdmin: true, isProtected: isProtected, user: result.rows[0] });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
     }
@@ -861,7 +1092,7 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
     try {
         let query = `
             SELECT 
-                u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip,
+                u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip, u.plan, u.custom_quota,
                 (SELECT COUNT(*) FROM search_history WHERE user_id = u.id) as search_count,
                 (SELECT COUNT(*) FROM fiches WHERE user_id = u.id) as fiche_count,
                 (SELECT COUNT(*) FROM ip_used WHERE ip = u.reg_ip) as ip_count
@@ -876,6 +1107,7 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
         query += ` ORDER BY u.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
         params.push(limit, offset);
         const result = await pool.query(query, params);
+
         let countQuery = 'SELECT COUNT(*) FROM users WHERE username != $1';
         const countParams = [process.env.ADMIN_USERNAME];
         if (search) {
@@ -883,6 +1115,7 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
             countParams.push(`%${search}%`);
         }
         const countResult = await pool.query(countQuery, countParams);
+
         res.json({
             users: result.rows,
             total: parseInt(countResult.rows[0].count),
@@ -904,26 +1137,21 @@ app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
         }
         const result = await pool.query(`
             SELECT 
-                u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip,
+                u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip, u.plan, u.custom_quota,
                 (SELECT COUNT(*) FROM search_history WHERE user_id = u.id) as search_count,
                 (SELECT COUNT(*) FROM fiches WHERE user_id = u.id) as fiche_count,
                 (SELECT COUNT(*) FROM graphes WHERE user_id = u.id) as graphe_count
             FROM users u
             WHERE u.id = $1
         `, [id]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Utilisateur non trouvé' });
-        }
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
         const ips = await pool.query('SELECT ip, created_at FROM ip_used WHERE user_id = $1', [id]);
         const searches = await pool.query(
             'SELECT id, query, results_count, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
             [id]
         );
-        res.json({
-            user: result.rows[0],
-            ips: ips.rows,
-            recent_searches: searches.rows
-        });
+        res.json({ user: result.rows[0], ips: ips.rows, recent_searches: searches.rows });
     } catch (error) {
         console.error('User detail error:', error);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -974,6 +1202,19 @@ app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (re
     }
 });
 
+// Attribuer un quota custom
+app.post('/api/admin/users/:id/quota', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { custom_quota } = req.body;
+    try {
+        const quota = parseInt(custom_quota) || 0;
+        await pool.query('UPDATE users SET custom_quota = $1 WHERE id = $2', [quota, id]);
+        res.json({ success: true, custom_quota: quota });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 app.get('/api/admin/ips/:ip', authenticateToken, requireAdmin, async (req, res) => {
     const { ip } = req.params;
     try {
@@ -999,9 +1240,7 @@ app.get('/api/admin/blocklist', authenticateToken, requireAdmin, async (req, res
 
 app.post('/api/admin/blocklist', authenticateToken, requireAdmin, async (req, res) => {
     const { type, value, reason } = req.body;
-    if (!type || !value) {
-        return res.status(400).json({ error: 'Type et valeur requis' });
-    }
+    if (!type || !value) return res.status(400).json({ error: 'Type et valeur requis' });
     try {
         const result = await pool.query(
             'INSERT INTO blocklist (type, value, reason, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
@@ -1053,9 +1292,8 @@ app.get('/api/admin/tickets/:id', authenticateToken, requireAdmin, async (req, r
             JOIN users u ON t.user_id = u.id 
             WHERE t.id = $1
         `, [id]);
-        if (ticketResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Ticket non trouvé' });
-        }
+        if (ticketResult.rows.length === 0) return res.status(404).json({ error: 'Ticket non trouvé' });
+
         const messages = await pool.query(`
             SELECT tm.*, u.username, u.role 
             FROM ticket_messages tm 
@@ -1072,17 +1310,12 @@ app.get('/api/admin/tickets/:id', authenticateToken, requireAdmin, async (req, r
 app.post('/api/admin/tickets/:id/reply', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { message } = req.body;
-    if (!message) {
-        return res.status(400).json({ error: 'Message requis' });
-    }
+    if (!message) return res.status(400).json({ error: 'Message requis' });
     try {
         const ticketCheck = await pool.query('SELECT * FROM tickets WHERE id = $1', [id]);
-        if (ticketCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'Ticket non trouvé' });
-        }
-        if (ticketCheck.rows[0].status === 'closed') {
-            return res.status(400).json({ error: 'Ce ticket est fermé' });
-        }
+        if (ticketCheck.rows.length === 0) return res.status(404).json({ error: 'Ticket non trouvé' });
+        if (ticketCheck.rows[0].status === 'closed') return res.status(400).json({ error: 'Ce ticket est fermé' });
+
         await pool.query(
             'INSERT INTO ticket_messages (ticket_id, user_id, message, is_admin) VALUES ($1, $2, $3, $4)',
             [id, req.user.id, message, true]
@@ -1101,9 +1334,7 @@ app.patch('/api/admin/tickets/:id/status', authenticateToken, requireAdmin, asyn
     const { id } = req.params;
     const { status } = req.body;
     const validStatus = ['open', 'in_progress', 'closed'];
-    if (!validStatus.includes(status)) {
-        return res.status(400).json({ error: 'Statut invalide' });
-    }
+    if (!validStatus.includes(status)) return res.status(400).json({ error: 'Statut invalide' });
     try {
         await pool.query(
             'UPDATE tickets SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
@@ -1138,7 +1369,6 @@ app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res)
     }
 });
 
-// ============ API ADMIN MAINTENANCE STATUS ============
 app.get('/api/admin/maintenance/status', authenticateToken, requireAdmin, (req, res) => {
     res.json({
         enabled: process.env.MAINTENANCE === 'ON',
@@ -1147,12 +1377,26 @@ app.get('/api/admin/maintenance/status', authenticateToken, requireAdmin, (req, 
     });
 });
 
-// ============ ROUTES TICKETS (USER) ============
+// ============ API MAINTENANCE TOGGLE ============
+app.get('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, res) => {
+    res.json({
+        enabled: process.env.API_MAINTENANCE === 'ON'
+    });
+});
+
+app.post('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, res) => {
+    const { enabled } = req.body;
+    process.env.API_MAINTENANCE = enabled ? 'ON' : 'OFF';
+    console.log(`🔒 API Maintenance: ${process.env.API_MAINTENANCE}`);
+    res.json({ success: true, enabled: process.env.API_MAINTENANCE === 'ON' });
+});
+
+// ============================================
+// 24. ROUTES TICKETS (USER)
+// ============================================
 app.post('/api/tickets', authenticateToken, async (req, res) => {
     const { subject, message } = req.body;
-    if (!subject || !message) {
-        return res.status(400).json({ error: 'Sujet et message requis' });
-    }
+    if (!subject || !message) return res.status(400).json({ error: 'Sujet et message requis' });
     try {
         const result = await pool.query(
             'INSERT INTO tickets (user_id, subject, message) VALUES ($1, $2, $3) RETURNING *',
@@ -1183,9 +1427,8 @@ app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
             'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
         );
-        if (ticketResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Ticket non trouvé' });
-        }
+        if (ticketResult.rows.length === 0) return res.status(404).json({ error: 'Ticket non trouvé' });
+
         const messages = await pool.query(
             'SELECT * FROM ticket_messages WHERE ticket_id = $1 ORDER BY created_at ASC',
             [id]
@@ -1199,20 +1442,15 @@ app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
 app.post('/api/tickets/:id/messages', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { message } = req.body;
-    if (!message) {
-        return res.status(400).json({ error: 'Message requis' });
-    }
+    if (!message) return res.status(400).json({ error: 'Message requis' });
     try {
         const ticketCheck = await pool.query(
             'SELECT * FROM tickets WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
         );
-        if (ticketCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'Ticket non trouvé' });
-        }
-        if (ticketCheck.rows[0].status === 'closed') {
-            return res.status(400).json({ error: 'Ce ticket est fermé' });
-        }
+        if (ticketCheck.rows.length === 0) return res.status(404).json({ error: 'Ticket non trouvé' });
+        if (ticketCheck.rows[0].status === 'closed') return res.status(400).json({ error: 'Ce ticket est fermé' });
+
         const result = await pool.query(
             'INSERT INTO ticket_messages (ticket_id, user_id, message) VALUES ($1, $2, $3) RETURNING *',
             [id, req.user.id, message]
@@ -1227,7 +1465,9 @@ app.post('/api/tickets/:id/messages', authenticateToken, async (req, res) => {
     }
 });
 
-// ============ ROUTES STATIQUES ============
+// ============================================
+// 25. ROUTES STATIQUES
+// ============================================
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'login.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html')));
@@ -1236,21 +1476,15 @@ app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend
 app.get('/tarifs.html', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
 app.get('/tarifs', (req, res) => res.sendFile(path.join(__dirname, 'frontend', 'tarifs.html')));
 
-// ============ ROUTES API PUBLIQUE (v1) ============
-// Protégées par DEV_API
-app.use('/api/v1', requirePublicApi);
+// ============================================
+// 26. ROUTES API PUBLIQUE v1
+// ============================================
+const apiV1Routes = require('./routes/api-v1');
+app.use('/api/v1', apiV1Routes);
 
-// Exemple de route (à remplacer plus tard par la vraie API)
-app.post('/api/v1/search', (req, res) => {
-    // Cette route sera accessible seulement si DEV_API=OFF
-    res.json({ message: 'API v1 opérationnelle', results: [] });
-});
-
-app.get('/api/v1/lookup/:type/:value', (req, res) => {
-    res.json({ message: 'API v1 opérationnelle', results: [] });
-});
-
-// ============ CONFIG PUBLIQUE ============
+// ============================================
+// 27. CONFIG PUBLIQUE
+// ============================================
 app.get('/api/config', (req, res) => {
     res.json({
         devApi: process.env.DEV_API === 'ON',
@@ -1258,21 +1492,16 @@ app.get('/api/config', (req, res) => {
     });
 });
 
-// ============ CONFIG PUBLIQUE ============
-app.get('/api/config', (req, res) => {
-    res.json({
-        devApi: process.env.DEV_API === 'ON',
-        maintenance: process.env.MAINTENANCE === 'ON'
-    });
-});
-
-
-// ============ HEALTH CHECK ============
+// ============================================
+// 28. HEALTH CHECK
+// ============================================
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ============ HANDLER D'ERREURS GLOBAL ============
+// ============================================
+// 29. HANDLER D'ERREURS GLOBAL
+// ============================================
 app.use((err, req, res, next) => {
     console.error('❌ Erreur middleware:', err.message);
     if (!res.headersSent) {
@@ -1289,7 +1518,12 @@ process.on('unhandledRejection', (err) => {
     console.error('❌ Rejet non catché:', err);
 });
 
-// ============ DÉMARRAGE ============
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Marauder API running on port ${PORT}`);
-});
+// ============================================
+// 30. DÉMARRAGE (après initDB)
+// ============================================
+(async () => {
+    await initDB();
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Marauder API running on port ${PORT}`);
+    });
+})();

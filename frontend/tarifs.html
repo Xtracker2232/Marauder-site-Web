@@ -80,6 +80,32 @@
             .plan-price { font-size: 40px; }
             .plans { grid-template-columns: 1fr; }
         }
+
+/* ============================================
+   FIX TAILLE DES PRIX (9,99€/mois ne doit pas déborder)
+   ============================================ */
+.limit-value,
+.plan-price,
+.sub-plan-price {
+    font-size: 22px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    letter-spacing: -0.5px !important;
+}
+.limit-value span,
+.plan-price span,
+.sub-plan-price span {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: #6b6b6b !important;
+    letter-spacing: 0 !important;
+}
+
+/* Pour les cartes limit-card */
+.limit-card {
+    padding: 20px 14px !important;
+}
+
     </style>
 </head>
 <body>
@@ -127,7 +153,7 @@
             <!-- STARTER -->
             <div class="plan" data-plan="starter">
                 <div class="plan-name">Starter</div>
-                <div class="plan-price">9€<span>/mois</span></div>
+                <div class="plan-price">9,99€<span>/mois</span></div>
                 <div class="plan-desc">Pour les investigations régulières et les petits projets</div>
                 <ul class="plan-features">
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 1 000 requêtes API / mois</li>
@@ -142,7 +168,7 @@
             <!-- PRO -->
             <div class="plan featured" data-plan="pro">
                 <div class="plan-name">Pro</div>
-                <div class="plan-price">29€<span>/mois</span></div>
+                <div class="plan-price">29,99€<span>/mois</span></div>
                 <div class="plan-desc">Pour les professionnels de l'investigation</div>
                 <ul class="plan-features">
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 10 000 requêtes API / mois</li>
