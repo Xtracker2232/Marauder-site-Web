@@ -227,6 +227,31 @@ const initDB = async () => {
         `);
         console.log('✅ Migration Custom Quota OK');
 
+        // ============================================
+        // 💳 TABLE CRYPTO PAYMENTS (NOUVELLE)
+        // ============================================
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS crypto_payments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                order_id VARCHAR(255) UNIQUE NOT NULL,
+                payment_id VARCHAR(255),
+                plan VARCHAR(50) NOT NULL,
+                pay_currency VARCHAR(50) NOT NULL,
+                pay_amount NUMERIC,
+                pay_address TEXT,
+                price_amount NUMERIC,
+                price_currency VARCHAR(10) DEFAULT 'eur',
+                payment_status VARCHAR(50) DEFAULT 'waiting',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
+            CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
+            CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
+        `);
+        console.log('✅ Migration Crypto Payments OK');
+
         const result = await client.query(
             'SELECT COUNT(*) FROM users WHERE username = $1',
             [process.env.ADMIN_USERNAME]
@@ -408,7 +433,8 @@ const RATE_LIMIT_EXEMPT = [
     '/api/keys/limits',
     '/api/config',
     '/api/health',
-    '/api/stripe/webhook'
+    '/api/stripe/webhook',
+    '/api/crypto/webhook'
 ];
 
 app.use('/api/', (req, res, next) => {
@@ -854,13 +880,17 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
         const amount = prices[plan];
         const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
 
+        // Générer un order_id unique
+        const orderId = `${req.user.id}_${plan}_${Date.now()}`;
+
+        // Appel NOWPayments
         const response = await axios.post(
             'https://api.nowpayments.io/v1/payment',
             {
                 price_amount: amount,
                 price_currency: 'eur',
                 pay_currency: chosenCurrency,
-                order_id: `${req.user.id}_${plan}_${Date.now()}`,
+                order_id: orderId,
                 order_description: `Abonnement Marauder ${plan.toUpperCase()}`,
                 ipn_callback_url: `${baseUrl}/api/crypto/webhook`
             },
@@ -872,15 +902,39 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
             }
         );
 
+        const np = response.data;
+
+        // Sauvegarder en DB
+        await pool.query(
+            `INSERT INTO crypto_payments 
+             (user_id, order_id, payment_id, plan, pay_currency, pay_amount, pay_address, price_amount, price_currency, payment_status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [
+                req.user.id,
+                orderId,
+                String(np.payment_id),
+                plan,
+                chosenCurrency,
+                np.pay_amount,
+                np.pay_address,
+                np.price_amount,
+                np.price_currency,
+                np.payment_status || 'waiting'
+            ]
+        );
+
+        console.log(`🪙 Crypto payment créé: order=${orderId} payment_id=${np.payment_id} user=${req.user.id} plan=${plan}`);
+
         res.json({
             success: true,
-            payment_id: response.data.payment_id,
-            pay_address: response.data.pay_address,
-            pay_amount: response.data.pay_amount,
-            pay_currency: response.data.pay_currency,
-            price_amount: response.data.price_amount,
-            price_currency: response.data.price_currency,
-            expiration_estimate_date: response.data.expiration_estimate_date
+            order_id: orderId,
+            payment_id: String(np.payment_id),
+            pay_address: np.pay_address,
+            pay_amount: np.pay_amount,
+            pay_currency: np.pay_currency,
+            price_amount: np.price_amount,
+            price_currency: np.price_currency,
+            expiration_estimate_date: np.expiration_estimate_date
         });
     } catch (error) {
         console.error('Crypto payment error:', error.response?.data || error.message);
@@ -888,13 +942,41 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
     }
 });
 
-// Vérifier le statut d'un paiement crypto
-app.get('/api/crypto/status/:payment_id', authenticateToken, async (req, res) => {
+// Vérifier le statut d'un paiement crypto (accepte order_id OU payment_id)
+app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
     try {
-        const { payment_id } = req.params;
+        const { id } = req.params;
 
+        // Chercher en DB par order_id OU payment_id
+        const dbResult = await pool.query(
+            'SELECT * FROM crypto_payments WHERE order_id = $1 OR payment_id = $1 LIMIT 1',
+            [id]
+        );
+
+        if (dbResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Paiement non trouvé' });
+        }
+
+        const payment = dbResult.rows[0];
+
+        // Si déjà confirmé en DB, pas besoin d'appeler NOWPayments
+        if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
+            return res.json({
+                success: true,
+                payment_status: payment.payment_status,
+                pay_amount: payment.pay_amount,
+                pay_currency: payment.pay_currency,
+                pay_address: payment.pay_address,
+                order_id: payment.order_id,
+                price_amount: payment.price_amount,
+                price_currency: payment.price_currency,
+                cached: true
+            });
+        }
+
+        // Sinon, interroger NOWPayments
         const response = await axios.get(
-            `https://api.nowpayments.io/v1/payment/${payment_id}`,
+            `https://api.nowpayments.io/v1/payment/${payment.payment_id}`,
             {
                 headers: {
                     'x-api-key': process.env.NOWPAYMENTS_API_KEY
@@ -902,16 +984,33 @@ app.get('/api/crypto/status/:payment_id', authenticateToken, async (req, res) =>
             }
         );
 
+        const np = response.data;
+
+        // Mettre à jour le statut en DB
+        await pool.query(
+            'UPDATE crypto_payments SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [np.payment_status, payment.id]
+        );
+
+        // Si confirmé, activer le plan automatiquement (fallback si webhook rate)
+        if ((np.payment_status === 'finished' || np.payment_status === 'confirmed') && payment.plan) {
+            await pool.query(
+                'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
+                [payment.plan, 'active', payment.user_id]
+            );
+            console.log(`✅ Plan activé via status check: user=${payment.user_id} plan=${payment.plan}`);
+        }
+
         res.json({
             success: true,
-            payment_status: response.data.payment_status,
-            pay_amount: response.data.pay_amount,
-            actually_paid: response.data.actually_paid,
-            pay_currency: response.data.pay_currency,
-            pay_address: response.data.pay_address,
-            order_id: response.data.order_id,
-            price_amount: response.data.price_amount,
-            price_currency: response.data.price_currency
+            payment_status: np.payment_status,
+            pay_amount: np.pay_amount,
+            actually_paid: np.actually_paid,
+            pay_currency: np.pay_currency,
+            pay_address: np.pay_address,
+            order_id: np.order_id,
+            price_amount: np.price_amount,
+            price_currency: np.price_currency
         });
     } catch (error) {
         console.error('Crypto status error:', error.response?.data || error.message);
@@ -938,19 +1037,41 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
         }
 
         const payment = req.body;
-        console.log(`🪙 Crypto payment ${payment.payment_id} → ${payment.payment_status}`);
+        console.log(`🪙 Crypto webhook: order=${payment.order_id} payment_id=${payment.payment_id} → ${payment.payment_status}`);
 
-        if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
+        // Mettre à jour la DB
+        const dbResult = await pool.query(
+            'SELECT * FROM crypto_payments WHERE order_id = $1 OR payment_id = $2 LIMIT 1',
+            [payment.order_id, String(payment.payment_id)]
+        );
+
+        if (dbResult.rows.length > 0) {
+            const dbPayment = dbResult.rows[0];
+
+            await pool.query(
+                'UPDATE crypto_payments SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+                [payment.payment_status, dbPayment.id]
+            );
+
+            if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
+                await pool.query(
+                    'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
+                    [dbPayment.plan, 'active', dbPayment.user_id]
+                );
+                console.log(`✅ User ${dbPayment.user_id} → plan ${dbPayment.plan} (crypto via webhook)`);
+            }
+        } else {
+            // Fallback : parser l'order_id
             const orderParts = (payment.order_id || '').split('_');
             const userId = parseInt(orderParts[0]);
             const plan = orderParts[1];
 
-            if (userId && plan) {
+            if (userId && plan && (payment.payment_status === 'finished' || payment.payment_status === 'confirmed')) {
                 await pool.query(
                     'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
                     [plan, 'active', userId]
                 );
-                console.log(`✅ User ${userId} → plan ${plan} (crypto)`);
+                console.log(`✅ User ${userId} → plan ${plan} (crypto webhook fallback)`);
             }
         }
 
@@ -958,6 +1079,20 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
     } catch (error) {
         console.error('Crypto webhook error:', error);
         res.status(400).json({ error: 'Webhook invalide' });
+    }
+});
+
+// Historique des paiements crypto
+app.get('/api/crypto/payments', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, order_id, payment_id, plan, pay_currency, pay_amount, price_amount, price_currency, payment_status, created_at FROM crypto_payments WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            [req.user.id]
+        );
+        res.json({ payments: result.rows });
+    } catch (error) {
+        console.error('Crypto payments list error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
