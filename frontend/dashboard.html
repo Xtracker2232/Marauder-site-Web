@@ -2024,7 +2024,7 @@ print(data)`
             if (isCurrent) {
                 btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
             } else if (subscribeKey && subscribeKey !== '0') {
-                btn = `<button class="sub-plan-btn upgrade" onclick="subscribe('${subscribeKey}')">Choisir</button>`;
+                btn = `<button class="sub-plan-btn upgrade" onclick="openPaymentModal('${subscribeKey}')">Choisir</button>`;
             } else if (subscribeKey === '0') {
                 btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
             } else {
@@ -2038,6 +2038,98 @@ print(data)`
                 </div>
             `;
         }
+
+        // ============ PAYMENT MODAL ============
+let selectedPlan = null;
+
+function openPaymentModal(plan) {
+    selectedPlan = plan;
+    
+    const prices = { starter: '9,99€', pro: '29,99€' };
+    const names = { starter: 'Starter', pro: 'Pro' };
+    
+    // Supprimer une éventuelle modale existante
+    const existing = document.getElementById('paymentModalDash');
+    if (existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'paymentModalDash';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+    modal.innerHTML = `
+        <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
+            <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+
+            <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;letter-spacing:-0.3px;">Choisir un moyen de paiement</h2>
+            <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">
+                Abonnement <strong style="color:#fff;">${names[plan]}</strong> — ${prices[plan]} / mois
+            </p>
+
+            <button onclick="payWithCard('${plan}')" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                <div>
+                    <div style="font-weight:700;">Carte bancaire</div>
+                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
+                </div>
+                <span style="margin-left:auto;font-size:20px;">→</span>
+            </button>
+
+            <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#f59e0b;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9 9h4a2 2 0 0 1 0 4H9m0 0h4a2 2 0 0 1 0 4H9m2-12v2m0 10v2"/>
+                </svg>
+                <div>
+                    <div style="font-weight:700;">Crypto-monnaie</div>
+                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC</div>
+                </div>
+                <span style="margin-left:auto;font-size:20px;">→</span>
+            </button>
+
+            <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                    <path d="M7 21h6a4 4 0 0 0 4-4v-6a4 4 0 0 0-4-4H9"/>
+                    <path d="M10 3H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6"/>
+                </svg>
+                <div>
+                    <div style="font-weight:700;">PayPal</div>
+                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
+                </div>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) closePaymentModal();
+    });
+}
+
+function closePaymentModal() {
+    const m = document.getElementById('paymentModalDash');
+    if (m) m.remove();
+    selectedPlan = null;
+}
+
+function payWithCard(plan) {
+    closePaymentModal();
+    subscribe(plan);
+}
+
+function payWithCrypto() {
+    if (typeof showToast === 'function') {
+        showToast('🪙 Le paiement en crypto sera bientôt disponible !', 'info', 5000);
+    } else {
+        alert('🪙 Le paiement en crypto sera bientôt disponible !');
+    }
+}
+
+window.openPaymentModal = openPaymentModal;
+window.closePaymentModal = closePaymentModal;
+window.payWithCard = payWithCard;
+window.payWithCrypto = payWithCrypto;
 
         window.openTarifs = function() {
             window.location.href = '/tarifs.html';

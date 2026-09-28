@@ -162,7 +162,7 @@
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Lookup inclus</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Support prioritaire</li>
                 </ul>
-                <button class="plan-btn primary" id="btnStarter" onclick="subscribe('starter')">Choisir Starter</button>
+                <button class="plan-btn primary" id="btnStarter" onclick="openPaymentModal('starter')">Choisir Starter</button>
             </div>
 
             <!-- PRO -->
@@ -177,7 +177,7 @@
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Graphe inclus</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Support prioritaire</li>
                 </ul>
-                <button class="plan-btn primary" id="btnPro" onclick="subscribe('pro')">Choisir Pro</button>
+                <button class="plan-btn primary" id="btnPro" onclick="openPaymentModal('pro')">Choisir Pro</button>
             </div>
 
             <!-- ENTERPRISE -->
@@ -310,6 +310,107 @@
 
         // ============ INIT ============
         loadCurrentPlan();
+
+// ============ PAYMENT MODAL ============
+let selectedPlan = null;
+
+function openPaymentModal(plan) {
+    selectedPlan = plan;
+    const modal = document.getElementById('paymentModal');
+    const planLabel = document.getElementById('paymentModalPlan');
+    
+    const prices = { starter: '9,99€', pro: '29,99€' };
+    const names = { starter: 'Starter', pro: 'Pro' };
+    
+    if (planLabel) {
+        planLabel.innerHTML = 'Abonnement <strong style="color:#fff;">' + names[plan] + '</strong> — ' + prices[plan] + ' / mois';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+    selectedPlan = null;
+}
+
+function payWithCard() {
+    if (selectedPlan) {
+        closePaymentModal();
+        subscribe(selectedPlan);
+    }
+}
+
+function payWithCrypto() {
+    alert('🪙 Le paiement en crypto-monnaie sera bientôt disponible !\n\nNous travaillons actuellement à son intégration. Rejoignez notre Discord pour être informé du lancement.');
+}
+
+// Fermer la modale au clic extérieur
+document.getElementById('paymentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closePaymentModal();
+});
+
+// Fermer avec Echap
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePaymentModal();
+});
+
     </script>
+
+<!-- ============ PAYMENT MODAL ============ -->
+<div id="paymentModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;z-index:99999;padding:20px;">
+    <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
+        <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+
+        <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;letter-spacing:-0.3px;">Choisir un moyen de paiement</h2>
+        <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;" id="paymentModalPlan">
+            Abonnement <strong style="color:#fff;">Starter</strong> — 9,99€ / mois
+        </p>
+
+        <!-- CARTE BANCAIRE -->
+        <button onclick="payWithCard()" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all 0.2s;text-align:left;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <div>
+                <div style="font-weight:700;">Carte bancaire</div>
+                <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
+            </div>
+            <span style="margin-left:auto;font-size:20px;">→</span>
+        </button>
+
+        <!-- CRYPTO -->
+        <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all 0.2s;text-align:left;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#f59e0b;">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9 9h4a2 2 0 0 1 0 4H9m0 0h4a2 2 0 0 1 0 4H9m2-12v2m0 10v2"/>
+            </svg>
+            <div>
+                <div style="font-weight:700;">Crypto-monnaie</div>
+                <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC</div>
+            </div>
+            <span style="margin-left:auto;font-size:20px;">→</span>
+        </button>
+
+        <!-- PAYPAL (désactivé) -->
+        <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                <path d="M7 21h6a4 4 0 0 0 4-4v-6a4 4 0 0 0-4-4H9"/>
+                <path d="M10 3H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6"/>
+            </svg>
+            <div>
+                <div style="font-weight:700;">PayPal</div>
+                <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
+            </div>
+        </button>
+
+        <p style="font-size:12px;color:#6b6b6b;margin:24px 0 0 0;text-align:center;line-height:1.6;">
+            En validant un paiement, vous acceptez nos <a href="/cgu.html" style="color:#a0a0a0;">CGU</a>.<br>
+            Annulation possible à tout moment depuis votre espace client.
+        </p>
+    </div>
+</div>
+
 </body>
 </html>
