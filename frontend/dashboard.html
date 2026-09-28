@@ -497,10 +497,10 @@
         .api-key-warning { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; color: #f59e0b; font-size: 12px; margin-bottom: 20px; line-height: 1.6; }
         .api-key-warning svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 
-        /* ============================================
-           OVERLAY DEV API — Plein écran (sauf sidebar)
-           ============================================ */
-       .api-dev-overlay {
+/* ============================================
+   OVERLAY DEV API — Fond noir + message
+   ============================================ */
+.api-dev-overlay {
     position: fixed;
     top: 0;
     left: 220px;
@@ -508,80 +508,85 @@
     bottom: 0;
     background: #0a0a0a;
     display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 9998;
-            padding: 20px;
-            text-align: center;
-        }
-        .api-dev-overlay.active {
-            display: flex;
-        }
-        .api-dev-icon {
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(245,158,11,0.08);
-            border: 1px solid rgba(245,158,11,0.2);
-            border-radius: 20px;
-            margin-bottom: 8px;
-        }
-        .api-dev-icon svg { width: 36px; height: 36px; color: #f59e0b; }
-        .api-dev-title { font-size: 28px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -0.5px; }
-        .api-dev-subtitle { font-size: 15px; color: #a0a0a0; line-height: 1.7; margin: 0; max-width: 480px; }
-        .api-dev-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: rgba(245,158,11,0.08);
-            border: 1px solid rgba(245,158,11,0.25);
-            border-radius: 100px;
-            color: #f59e0b;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 8px;
-        }
-        .api-dev-dot {
-            width: 6px; height: 6px;
-            background: #f59e0b;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(245,158,11,0.8);
-            animation: apiPulse 1.8s ease-in-out infinite;
-        }
-        @keyframes apiPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.85); }
-        }
-        .api-dev-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 28px;
-            background: #5865F2;
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            margin-top: 16px;
-        }
-        .api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
-        .api-dev-btn svg { width: 20px; height: 20px; }
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 9998;
+    padding: 20px;
+    text-align: center;
+}
+.api-dev-overlay.active {
+    display: flex;
+}
+.api-dev-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 20px;
+    margin-bottom: 8px;
+}
+.api-dev-icon svg { width: 36px; height: 36px; color: #f59e0b; }
+.api-dev-title { font-size: 28px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -0.5px; }
+.api-dev-subtitle { font-size: 15px; color: #a0a0a0; line-height: 1.7; margin: 0; max-width: 480px; }
+.api-dev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 100px;
+    color: #f59e0b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 8px;
+}
+.api-dev-dot {
+    width: 6px; height: 6px;
+    background: #f59e0b;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(245,158,11,0.8);
+    animation: apiPulse 1.8s ease-in-out infinite;
+}
+@keyframes apiPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+}
+.api-dev-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: #5865F2;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-top: 16px;
+}
+.api-dev-btn:hover { background: #4752c4; transform: translateY(-2px); }
+.api-dev-btn svg { width: 20px; height: 20px; }
 
-        @media (max-width: 768px) {
-            .api-dev-overlay { left: 0; }
-        }
+/* Quand DEV_API=ON, on cache tout le contenu de la page API */
+body.dev-api-on #page-api .api-page-wrapper {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .api-dev-overlay { left: 0; }
+}
 
 
         /* ============================================
@@ -2167,8 +2172,19 @@ async function checkDevApi() {
     try {
         const res = await fetch('/api/config');
         const data = await res.json();
-        devApiActive = data.devApi === true;
-        console.log('🔒 Mode DEV API:', devApiActive ? 'ACTIVÉ' : 'DÉSACTIVÉ');
+        const overlay = document.getElementById('apiDevOverlay');
+        
+        if (data.devApi === true) {
+            // Active le mode DEV API
+            document.body.classList.add('dev-api-on');
+            if (overlay) overlay.classList.add('active');
+            console.log('🔒 Mode DEV API activé');
+        } else {
+            // Désactive le mode DEV API
+            document.body.classList.remove('dev-api-on');
+            if (overlay) overlay.classList.remove('active');
+            console.log('✅ Mode DEV API désactivé');
+        }
     } catch (err) {
         console.error('Erreur check dev api:', err);
     }
