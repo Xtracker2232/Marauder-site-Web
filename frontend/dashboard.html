@@ -2506,7 +2506,6 @@ print(data)`
                 if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
                 return;
             }
-            closePaymentModal();
 
             const modal = document.getElementById('cryptoModal');
             if (modal) modal.classList.add('active');
@@ -2690,10 +2689,12 @@ print(data)`
             }
         };
 
-        // payWithCrypto redirige vers le modal
-        window.payWithCrypto = function() {
-            window.openCryptoModal();
-        };
+      window.payWithCrypto = function() {
+    const planToPay = selectedPlan;  // Sauvegarder AVANT de fermer
+    closePaymentModal();
+    selectedPlan = planToPay;         // Restaurer APRÈS
+    window.openCryptoModal();
+};
 
         // ============================================
         // STRIPE
