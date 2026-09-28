@@ -331,7 +331,9 @@ async function getMonthlySearchCount(userId) {
 
 // Body parser (sauf webhook Stripe)
 app.use((req, res, next) => {
-    if (req.originalUrl === '/api/stripe/webhook' || req.originalUrl === '/api/crypto/webhook') {
+    if (req.originalUrl === '/api/stripe/webhook' 
+    || req.originalUrl === '/api/crypto/webhook' 
+    || req.originalUrl.startsWith('/api/card2crypto/callback')) {
         return next();
     }
     express.json()(req, res, next);
@@ -863,6 +865,151 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
         res.json({ message: 'Supprimé' });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
+    }
+});
+
+// ============ ROUTES CARD2CRYPTO (Crypto no-KYC) ============
+
+const CARD2CRYPTO_WALLET = '0x480Be9ecB3122fFFBc0917C34fb05B6E524E732a';
+const CARD2CRYPTO_CALLBACK_BASE = process.env.BASE_URL || 'http://localhost:8080';
+
+// Créer un paiement Card2Crypto
+app.post('/api/card2crypto/create-payment', authenticateToken, async (req, res) => {
+    try {
+        const { plan } = req.body;
+        if (!['starter', 'pro'].includes(plan)) {
+            return res.status(400).json({ error: 'Plan invalide' });
+        }
+
+        const prices = { starter: 9.99, pro: 29.99 };
+        const amount = prices[plan];
+
+        // Créer un order_id unique pour tracker
+        const orderId = `${req.user.id}_${plan}_${Date.now()}`;
+
+        // Callback URL avec orderId unique (obligatoire pour Card2Crypto)
+        const callbackUrl = `${CARD2CRYPTO_CALLBACK_BASE}/api/card2crypto/callback?order_id=${orderId}`;
+
+        // ÉTAPE 1 : Créer le wallet temporaire
+        const walletResponse = await axios.get('https://api.card2crypto.org/control/wallet.php', {
+            params: {
+                address: CARD2CRYPTO_WALLET,
+                callback: callbackUrl
+            },
+            timeout: 15000
+        });
+
+        if (!walletResponse.data || !walletResponse.data.address_in) {
+            console.error('Card2Crypto wallet error:', walletResponse.data);
+            return res.status(500).json({ error: 'Erreur création wallet' });
+        }
+
+        const encryptedAddress = walletResponse.data.address_in;
+
+        // Enregistrer le paiement en DB
+        try {
+            await pool.query(
+                `INSERT INTO payments (user_id, stripe_payment_intent_id, amount, currency, status)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [req.user.id, 'c2c_' + orderId, Math.round(amount * 100), 'usd', 'pending']
+            );
+        } catch (dbErr) {
+            console.error('DB insert error:', dbErr.message);
+        }
+
+        // Construire l'URL de paiement
+        const paymentUrl = `https://pay.card2crypto.org/pay.php?` +
+            `address=${encodeURIComponent(encryptedAddress)}` +
+            `&amount=${amount}` +
+            `&email=${encodeURIComponent(req.user.username + '@marauder.host')}` +
+            `&currency=USD`;
+
+        console.log(`🪙 Card2Crypto payment créé : ${orderId} → ${amount} USD`);
+
+        res.json({
+            success: true,
+            order_id: orderId,
+            payment_url: paymentUrl,
+            amount: amount,
+            currency: 'USD'
+        });
+    } catch (error) {
+        console.error('Card2Crypto create error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Erreur création paiement crypto' });
+    }
+});
+
+// Callback Card2Crypto (webhook GET)
+app.get('/api/card2crypto/callback', async (req, res) => {
+    try {
+        const { order_id, value_coin, ...otherParams } = req.query;
+
+        console.log('📩 Card2Crypto callback reçu:', { order_id, value_coin, ...otherParams });
+
+        if (!order_id) {
+            return res.status(400).send('order_id manquant');
+        }
+
+        // Extraire userId et plan
+        const parts = order_id.split('_');
+        const userId = parseInt(parts[0]);
+        const plan = parts[1];
+
+        if (!userId || !plan) {
+            console.error('❌ order_id invalide:', order_id);
+            return res.status(400).send('order_id invalide');
+        }
+
+        // Mettre à jour le plan de l'utilisateur
+        await pool.query(
+            'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
+            [plan, 'active', userId]
+        );
+
+        // Mettre à jour le paiement en DB
+        await pool.query(
+            `UPDATE payments 
+             SET status = 'succeeded' 
+             WHERE stripe_payment_intent_id = $1`,
+            ['c2c_' + order_id]
+        );
+
+        console.log(`✅ User ${userId} → plan ${plan} (Card2Crypto, ${value_coin} USDC reçus)`);
+
+        // Card2Crypto attend un 200 OK en réponse
+        res.status(200).send('OK');
+    } catch (error) {
+        console.error('Card2Crypto callback error:', error);
+        res.status(500).send('Erreur serveur');
+    }
+});
+
+// Vérifier le statut d'un paiement
+app.get('/api/card2crypto/status/:orderId', authenticateToken, async (req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        const result = await pool.query(
+            `SELECT * FROM payments 
+             WHERE user_id = $1 
+             AND stripe_payment_intent_id = $2`,
+            [req.user.id, 'c2c_' + orderId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({ status: 'not_found' });
+        }
+
+        const payment = result.rows[0];
+
+        if (payment.status === 'succeeded') {
+            return res.json({ status: 'confirmed' });
+        }
+
+        res.json({ status: 'waiting' });
+    } catch (error) {
+        console.error('Card2Crypto status error:', error);
+        res.status(500).json({ error: 'Erreur vérification' });
     }
 });
 
