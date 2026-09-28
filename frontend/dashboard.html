@@ -2190,6 +2190,22 @@ async function checkDevApi() {
     }
 }
 
+// ============ MASQUER L'OVERLAY HORS DE LA PAGE API ============
+function updateOverlayVisibility() {
+    const overlay = document.getElementById('apiDevOverlay');
+    const apiPage = document.getElementById('page-api');
+    if (!overlay) return;
+
+    // Overlay visible SEULEMENT si :
+    // - DEV_API = ON
+    // - Et on est sur la page API
+    if (document.body.classList.contains('dev-api-on') && apiPage && apiPage.classList.contains('active')) {
+        overlay.classList.add('active');
+    } else {
+        overlay.classList.remove('active');
+    }
+}
+
 // ============ INIT ============
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
