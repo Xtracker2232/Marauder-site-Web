@@ -2175,22 +2175,25 @@ print(data)`
             }).catch(function(e) { console.warn('Pre-create error:', e); });
 
             atlos.Pay({
-                merchantId: 'JGBWEIZDJC',
-                orderId: orderId,
-                orderAmount: prices[planToPay],
-                orderCurrency: 'USD',
-                onCompleted: function(completedOrderId) {
-                    if (typeof showToast === 'function') {
-                        showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
-                    }
-                    setTimeout(function() {
-                        checkAtlosStatus(completedOrderId || orderId);
-                    }, 3000);
-                },
-                onCanceled: function() {
-                    if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
-                }
-            });
+    merchantId: 'JGBWEIZDJC',
+    orderId: orderId,
+    orderAmount: prices[planToPay],
+    orderCurrency: 'USD',
+    theme: 'dark',
+    language: 'fr',
+    noBuyCrypto: false,
+    onCompleted: function(completedOrderId) {
+        if (typeof showToast === 'function') {
+            showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
+        }
+        setTimeout(function() {
+            checkAtlosStatus(completedOrderId || orderId);
+        }, 3000);
+    },
+    onCanceled: function() {
+        if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
+    }
+});
         };
 
         window.checkAtlosStatus = async function(orderId) {
