@@ -6,6 +6,7 @@
     <title>Marauder - Dashboard</title>
     <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
     <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
+    <script async src="https://atlos.io/packages/app/atlos.js"></script>
     <style>
         /* ============================================
         RESET & BASE
@@ -2111,38 +2112,7 @@ print(data)`
             if (typeof window.subscribe === 'function') window.subscribe(plan);
         };
 
-        window.payWithCrypto = async function() {
-            if (!selectedPlan) {
-                if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
-                return;
-            }
-
-            const planToPay = selectedPlan;
-            closePaymentModal();
-
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/crypto/create-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ plan: planToPay })
-                });
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    if (typeof showToast === 'function') {
-                        showToast(data.error || 'Erreur crypto', 'error');
-                    } else {
-                        alert(data.error || 'Erreur crypto');
-                    }
-                    return;
-                }
-
-                showCryptoPaymentModal(data);
+        eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
             } catch (err) {
                 console.error('Crypto error:', err);
                 if (typeof showToast === 'function') {
@@ -2151,7 +2121,90 @@ print(data)`
                     alert('Erreur de connexion');
                 }
             }
-        };
+        };window.payWithCrypto = function() {
+    if (!selectedPlan) {
+        if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
+        return;
+    }
+
+    const planToPay = selectedPlan;
+    closePaymentModal();
+
+    const prices = { starter: 9.99, pro: 29.99 };
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = userData.id || 'anon';
+
+    if (typeof atlos === 'undefined' || !atlos.Pay) {
+        if (typeof showToast === 'function') {
+            showToast('Chargement du module de paiement... Réessayez dans 2 secondes.', 'warning', 4000);
+        }
+        setTimeout(function() {
+            if (typeof atlos !== 'undefined' && atlos.Pay) {
+                window.payWithCrypto();
+            } else {
+                if (typeof showToast === 'function') showToast('Erreur : module ATLOS introuvable. Rechargez la page.', 'error', 6000);
+            }
+        }, 2000);
+        return;
+    }
+
+    const orderId = userId + '_' + planToPay + '_' + Date.now();
+
+    fetch('/api/atlos/create-payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ plan: planToPay })
+    }).catch(function(e) { console.warn('Pre-create error:', e); });
+
+    atlos.Pay({
+        merchantId: 'JGBWEIZDJC',
+        orderId: orderId,
+        orderAmount: prices[planToPay],
+        orderCurrency: 'USD',
+        onCompleted: function(completedOrderId) {
+            if (typeof showToast === 'function') {
+                showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
+            }
+            setTimeout(function() {
+                checkAtlosStatus(completedOrderId || orderId);
+            }, 3000);
+        },
+        onCanceled: function() {
+            if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
+        }
+    });
+};
+
+window.checkAtlosStatus = async function(orderId) {
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/atlos/status/' + encodeURIComponent(orderId), {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        if (data.status === 'paid' || data.status === 'confirmed') {
+            if (typeof showToast === 'function') {
+                showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 8000);
+            }
+            setTimeout(function() {
+                window.location.reload();
+            }, 3000);
+        } else {
+            setTimeout(function() {
+                checkAtlosStatus(orderId);
+            }, 5000);
+        }
+    } catch (err) {
+        console.error('ATLOS status error:', err);
+        setTimeout(function() {
+            checkAtlosStatus(orderId);
+        }, 5000);
+    }
+};
 
         window.showCryptoPaymentModal = function(payment) {
             const existing = document.getElementById('cryptoPaymentModal');
@@ -2333,308 +2386,93 @@ print(data)`
         }
 
 // ============================================
-// CRYPTO PAYMENT - Choix + Page dédiée + Statut temps réel
+// ATLOS CRYPTO PAYMENT
 // ============================================
-
 window.payWithCrypto = function() {
     if (!selectedPlan) {
         if (typeof showToast === 'function') showToast('Aucun plan sélectionné', 'error');
         return;
     }
+
     const planToPay = selectedPlan;
     closePaymentModal();
-    showCryptoChoiceModal(planToPay);
-};
 
-window.showCryptoChoiceModal = function(plan) {
-    const existing = document.getElementById('cryptoChoiceModal');
-    if (existing) existing.remove();
+    const prices = { starter: 9.99, pro: 29.99 };
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = userData.id || 'anon';
 
-    const cryptos = [
-        { id: 'usdttrc20', name: 'USDT (TRC20)', network: 'TRON · Frais bas', color: '#26A17B', icon: '₮' },
-        { id: 'usdterc20', name: 'USDT (ERC20)', network: 'Ethereum', color: '#627EEA', icon: '₮' },
-        { id: 'btc', name: 'Bitcoin', network: 'Bitcoin', color: '#F7931A', icon: '₿' },
-        { id: 'eth', name: 'Ethereum', network: 'Ethereum', color: '#627EEA', icon: 'Ξ' },
-        { id: 'usdc', name: 'USD Coin', network: 'Ethereum', color: '#2775CA', icon: '$' },
-        { id: 'ltc', name: 'Litecoin', network: 'Litecoin', color: '#345D9D', icon: 'Ł' },
-        { id: 'trx', name: 'TRON', network: 'TRON', color: '#EF0027', icon: '◈' },
-        { id: 'bnbbsc', name: 'BNB (BSC)', network: 'Binance Smart Chain', color: '#F3BA2F', icon: '⬢' }
-    ];
-
-    const modal = document.createElement('div');
-    modal.id = 'cryptoChoiceModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
-    modal.innerHTML = `
-        <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:560px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;max-height:85vh;overflow-y:auto;">
-            <button onclick="closeCryptoChoiceModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
-            <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Choisir une crypto-monnaie</h2>
-            <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;">Sélectionnez la crypto avec laquelle vous souhaitez payer</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
-                ${cryptos.map(c => `
-                    <button onclick="createCryptoPayment('${plan}', '${c.id}')" style="padding:16px;background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;border-radius:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;font-family:inherit;transition:all 0.2s;" onmouseover="this.style.borderColor='${c.color}';this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.borderColor='#2a2a2a';this.style.background='rgba(255,255,255,0.02)'">
-                        <div style="width:44px;height:44px;background:${c.color};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;color:#fff;font-weight:700;">${c.icon}</div>
-                        <div style="flex:1;">
-                            <div style="font-size:14px;font-weight:600;color:#ffffff;">${c.name}</div>
-                            <div style="font-size:11px;color:#6b6b6b;margin-top:2px;">${c.network}</div>
-                        </div>
-                        <span style="color:#6b6b6b;font-size:18px;">→</span>
-                    </button>
-                `).join('')}
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', function(e) { if (e.target === this) closeCryptoChoiceModal(); });
-};
-
-window.closeCryptoChoiceModal = function() {
-    const m = document.getElementById('cryptoChoiceModal');
-    if (m) m.remove();
-};
-
-window.createCryptoPayment = async function(plan, payCurrency) {
-    closeCryptoChoiceModal();
-    showCryptoLoadingModal();
-    try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/crypto/create-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({ plan: plan, pay_currency: payCurrency })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            closeCryptoLoadingModal();
-            if (typeof showToast === 'function') showToast(data.error || 'Erreur crypto', 'error');
-            return;
+    // Vérifier que le SDK ATLOS est chargé
+    if (typeof atlos === 'undefined' || !atlos.Pay) {
+        if (typeof showToast === 'function') {
+            showToast('Chargement du module de paiement... Réessayez dans 2 secondes.', 'warning', 4000);
         }
-        closeCryptoLoadingModal();
-        showCryptoPaymentPage(data);
-    } catch (err) {
-        console.error('Crypto error:', err);
-        closeCryptoLoadingModal();
-        if (typeof showToast === 'function') showToast('Erreur de connexion', 'error');
+        setTimeout(function() {
+            if (typeof atlos !== 'undefined' && atlos.Pay) {
+                window.payWithCrypto();
+            } else {
+                if (typeof showToast === 'function') showToast('Erreur : module ATLOS introuvable. Rechargez la page.', 'error', 6000);
+            }
+        }, 2000);
+        return;
     }
-};
 
-window.showCryptoLoadingModal = function() {
-    const existing = document.getElementById('cryptoLoadingModal');
-    if (existing) existing.remove();
-    const modal = document.createElement('div');
-    modal.id = 'cryptoLoadingModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
-    modal.innerHTML = '<div style="text-align:center;"><div style="width:60px;height:60px;border:3px solid #2a2a2a;border-top-color:#f59e0b;border-radius:50%;animation:cryptospin 1s linear infinite;margin:0 auto 20px;"></div><p style="color:#a0a0a0;font-size:14px;">Génération de l\'adresse de paiement...</p></div><style>@keyframes cryptospin { to { transform: rotate(360deg); } }</style>';
-    document.body.appendChild(modal);
-};
+    const orderId = userId + '_' + planToPay + '_' + Date.now();
 
-window.closeCryptoLoadingModal = function() {
-    const m = document.getElementById('cryptoLoadingModal');
-    if (m) m.remove();
-};
+    // Enregistrer l'ordre côté serveur
+    fetch('/api/atlos/create-payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ plan: planToPay })
+    }).catch(function(e) { console.warn('Pre-create error:', e); });
 
-window.showCryptoPaymentPage = function(payment) {
-    const existing = document.getElementById('cryptoPaymentPage');
-    if (existing) existing.remove();
-
-    const currencyNames = {
-        btc: 'Bitcoin (BTC)',
-        eth: 'Ethereum (ETH)',
-        usdttrc20: 'USDT (TRC20)',
-        usdterc20: 'USDT (ERC20)',
-        usdc: 'USD Coin (USDC)',
-        ltc: 'Litecoin (LTC)',
-        trx: 'TRON (TRX)',
-        bnbbsc: 'BNB (BSC)'
-    };
-
-    const currencyName = currencyNames[payment.pay_currency] || payment.pay_currency.toUpperCase();
-
-    const page = document.createElement('div');
-    page.id = 'cryptoPaymentPage';
-    page.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99999;overflow-y:auto;padding:20px;';
-    page.innerHTML = `
-        <div style="max-width:640px;margin:0 auto;padding:40px 20px;">
-            <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;box-shadow:0 24px 80px rgba(0,0,0,0.8);">
-                <div style="text-align:center;margin-bottom:32px;">
-                    <div style="width:64px;height:64px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                    </div>
-                    <h1 style="font-size:24px;font-weight:700;color:#ffffff;margin:0 0 8px 0;">Paiement en ${currencyName}</h1>
-                    <p style="font-size:14px;color:#a0a0a0;margin:0;">Envoyez le montant exact ci-dessous</p>
-                </div>
-
-                <!-- STATUS BADGE avec animation -->
-<div id="cryptoStatusBadge" style="padding:20px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;margin-bottom:24px;">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-        <div id="cryptoStatusDot" style="width:10px;height:10px;background:#f59e0b;border-radius:50%;animation:cryptopulse 1.5s ease-in-out infinite;box-shadow:0 0 12px #f59e0b;flex-shrink:0;"></div>
-        <div style="flex:1;">
-            <div id="cryptoStatusText" style="font-size:14px;font-weight:600;color:#f59e0b;">En attente de votre paiement</div>
-            <div id="cryptoStatusSub" style="font-size:11px;color:#6b6b6b;margin-top:3px;">Vérification automatique toutes les 5 secondes</div>
-        </div>
-    </div>
-    <div style="width:100%;height:3px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
-        <div id="cryptoProgressBar" style="height:100%;width:40%;background:linear-gradient(90deg, transparent, #f59e0b, transparent);border-radius:100px;animation:cryptoslide 1.8s ease-in-out infinite;"></div>
-    </div>
-    <div id="cryptoLoaderText" style="font-size:11px;color:#6b6b6b;text-align:center;margin-top:10px;letter-spacing:1px;text-transform:uppercase;animation:cryptofadetext 2s ease-in-out infinite;">
-        Analyse de la blockchain...
-    </div>
-</div>
-
-                <div style="background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px;">
-                    <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Montant à envoyer</div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                        <div style="font-family:'Courier New',monospace;font-size:22px;font-weight:700;color:#f59e0b;word-break:break-all;">${payment.pay_amount} ${payment.pay_currency.toUpperCase()}</div>
-                        <button onclick="copyCryptoText('${payment.pay_amount}', this)" style="padding:8px 16px;background:#ffffff;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap;">Copier</button>
-                    </div>
-                    <div style="font-size:12px;color:#6b6b6b;margin-top:8px;">≈ ${payment.price_amount} ${payment.price_currency.toUpperCase()}</div>
-                </div>
-
-                <div style="background:rgba(255,255,255,0.02);border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px;">
-                    <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Adresse de réception</div>
-                    <div style="font-family:'Courier New',monospace;font-size:13px;color:#ffffff;word-break:break-all;background:#050505;padding:14px;border-radius:8px;margin-bottom:12px;">${payment.pay_address}</div>
-                    <button onclick="copyCryptoText('${payment.pay_address}', this)" style="width:100%;padding:12px;background:#ffffff;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Copier l'adresse</button>
-                </div>
-
-                <div style="padding:16px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.2);border-radius:12px;margin-bottom:24px;">
-                    <div style="font-size:12px;color:#93c5fd;line-height:1.6;">
-                        ⚠️ <strong>Important :</strong><br>
-                        • Envoyez <strong>uniquement ${payment.pay_currency.toUpperCase()}</strong> sur cette adresse<br>
-                        • Le montant doit être <strong>exactement</strong> celui indiqué<br>
-                        • Le paiement sera détecté automatiquement sous 1-5 min<br>
-                        • Ne fermez pas cette page tant que ce n'est pas confirmé
-                    </div>
-                </div>
-
-                <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                    <button onclick="checkCryptoStatus('${payment.payment_id}')" style="flex:1;padding:12px;background:transparent;color:#a0a0a0;border:1px solid #2a2a2a;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Vérifier maintenant</button>
-                    <button onclick="closeCryptoPaymentPage()" style="flex:1;padding:12px;background:transparent;color:#a0a0a0;border:1px solid #2a2a2a;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;">Fermer</button>
-                </div>
-
-                <div style="text-align:center;margin-top:24px;font-size:11px;color:#6b6b6b;">Paiement sécurisé par NOWPayments</div>
-            </div>
-        </div>
-        <style>
-            @keyframes cryptopulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
-            @keyframes cryptoslide {
-    0% { transform: translateX(-100%); }
-    50% { transform: translateX(150%); }
-    100% { transform: translateX(250%); }
-}
-@keyframes cryptofadetext {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-}
-        </style>
-    `;
-    document.body.appendChild(page);
-    startCryptoPolling(payment.payment_id);
-};
-
-window.closeCryptoPaymentPage = function() {
-    if (window._cryptoPollingInterval) {
-        clearInterval(window._cryptoPollingInterval);
-        window._cryptoPollingInterval = null;
-    }
-    const p = document.getElementById('cryptoPaymentPage');
-    if (p) p.remove();
-};
-
-window.copyCryptoText = function(text, btn) {
-    navigator.clipboard.writeText(text).then(function() {
-        const original = btn.textContent;
-        btn.textContent = '✓ Copié !';
-        setTimeout(function() { btn.textContent = original; }, 2000);
+    // Ouvrir la popup ATLOS
+    atlos.Pay({
+        merchantId: 'JGBWEIZDJC',
+        orderId: orderId,
+        orderAmount: prices[planToPay],
+        orderCurrency: 'USD',
+        onCompleted: function(completedOrderId) {
+            if (typeof showToast === 'function') {
+                showToast('⏳ Paiement détecté, vérification en cours...', 'info', 5000);
+            }
+            setTimeout(function() {
+                checkAtlosStatus(completedOrderId || orderId);
+            }, 3000);
+        },
+        onCanceled: function() {
+            if (typeof showToast === 'function') showToast('Paiement annulé', 'info');
+        }
     });
 };
 
-window.checkCryptoStatus = async function(paymentId) {
+window.checkAtlosStatus = async function(orderId) {
     try {
         const token = localStorage.getItem('token');
-        const res = await fetch('/api/crypto/status/' + paymentId, {
+        const res = await fetch('/api/atlos/status/' + encodeURIComponent(orderId), {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
-        if (!res.ok) return;
-        updateCryptoStatusUI(data.payment_status, data);
-    } catch (err) {
-        console.error('Status check error:', err);
-    }
-};
 
-window.startCryptoPolling = function(paymentId) {
-    if (window._cryptoPollingInterval) clearInterval(window._cryptoPollingInterval);
-    checkCryptoStatus(paymentId);
-    window._cryptoPollingInterval = setInterval(function() {
-        checkCryptoStatus(paymentId);
-    }, 5000);
-};
-
-window.updateCryptoStatusUI = function(status, data) {
-    const badge = document.getElementById('cryptoStatusBadge');
-    const dot = document.getElementById('cryptoStatusDot');
-    const text = document.getElementById('cryptoStatusText');
-    const sub = document.getElementById('cryptoStatusSub');
-    if (!badge || !dot || !text || !sub) return;
-    // Mettre à jour le loader
-    const loaderText = document.getElementById('cryptoLoaderText');
-    const progressBar = document.getElementById('cryptoProgressBar');
-    
-    if (loaderText) {
-        const loaderTexts = {
-            waiting: 'Analyse de la blockchain...',
-            confirming: 'Confirmation en cours...',
-            confirmed: 'Vérification finale...',
-            sending: 'Traitement du paiement...',
-            finished: '✓ Paiement confirmé',
-            failed: '❌ Paiement échoué',
-            expired: '⌛ Paiement expiré',
-            partially_paid: '⚠️ Paiement partiel détecté'
-        };
-        loaderText.textContent = loaderTexts[status] || 'Analyse en cours...';
-    }
-    
-    if (progressBar) {
-        if (status === 'finished' || status === 'failed' || status === 'expired') {
-            progressBar.style.animation = 'none';
-            progressBar.style.width = status === 'finished' ? '100%' : '0%';
-            progressBar.style.background = status === 'finished' 
-                ? 'linear-gradient(90deg, #10b981, #22c55e)' 
-                : 'linear-gradient(90deg, #ef4444, #dc2626)';
+        if (data.status === 'paid' || data.status === 'confirmed') {
+            if (typeof showToast === 'function') {
+                showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 8000);
+            }
+            setTimeout(function() {
+                window.location.reload();
+            }, 3000);
         } else {
-            progressBar.style.animation = 'cryptoslide 1.8s ease-in-out infinite';
-            progressBar.style.width = '40%';
-            progressBar.style.background = 'linear-gradient(90deg, transparent, #f59e0b, transparent)';
+            setTimeout(function() {
+                checkAtlosStatus(orderId);
+            }, 5000);
         }
-    }
-
-    const configs = {
-        waiting:          { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)', color: '#f59e0b', text: 'En attente de votre paiement', sub: 'Vérification automatique toutes les 5 secondes', pulse: true },
-        confirming:       { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.3)', color: '#3b82f6', text: '⏳ Paiement détecté, confirmation en cours...', sub: 'Cela peut prendre 1 à 5 minutes', pulse: true },
-        confirmed:        { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.3)', color: '#3b82f6', text: '⏳ Paiement confirmé par le réseau', sub: 'Finalisation en cours...', pulse: true },
-        sending:          { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.3)', color: '#3b82f6', text: '⏳ Traitement du paiement...', sub: 'Encore quelques secondes', pulse: true },
-        finished:         { bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.3)', color: '#10b981', text: '✅ Paiement reçu !', sub: 'Votre abonnement a été activé', pulse: false },
-        failed:           { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.3)', color: '#ef4444', text: '❌ Paiement échoué', sub: 'Le montant reçu est insuffisant', pulse: false },
-        expired:          { bg: 'rgba(107,107,107,0.08)', border: 'rgba(107,107,107,0.3)', color: '#a0a0a0', text: '⌛ Paiement expiré', sub: 'Veuillez recommencer', pulse: false },
-        partially_paid:   { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)', color: '#f59e0b', text: '⚠️ Paiement partiel', sub: 'Montant reçu insuffisant, envoyez le reste', pulse: true }
-    };
-
-    const cfg = configs[status] || configs.waiting;
-    badge.style.background = cfg.bg;
-    badge.style.borderColor = cfg.border;
-    dot.style.background = cfg.color;
-    dot.style.boxShadow = '0 0 12px ' + cfg.color;
-    dot.style.animation = cfg.pulse ? 'cryptopulse 1.5s ease-in-out infinite' : 'none';
-    text.style.color = cfg.color;
-    text.textContent = cfg.text;
-    sub.textContent = cfg.sub;
-
-    if (status === 'finished') {
-        if (window._cryptoPollingInterval) {
-            clearInterval(window._cryptoPollingInterval);
-            window._cryptoPollingInterval = null;
-        }
-        if (typeof showToast === 'function') showToast('✅ Paiement confirmé ! Votre abonnement est actif.', 'success', 6000);
-        setTimeout(function() { window.location.reload(); }, 3000);
+    } catch (err) {
+        console.error('ATLOS status error:', err);
+        setTimeout(function() {
+            checkAtlosStatus(orderId);
+        }, 5000);
     }
 };
 
@@ -2647,5 +2485,6 @@ window.updateCryptoStatusUI = function(status, data) {
             await checkDevApi();
         });
     </script>
+    <script async src="https://atlos.io/packages/app/atlos.js"></script>
 </body>
 </html>
