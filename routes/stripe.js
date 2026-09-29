@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripeService = require('../services/stripe');
 const { authenticateToken, pool } = require('../middleware/auth');
+const emailService = require('../services/email');
 
 // ============================================
 // CRÉER UNE SESSION CHECKOUT
@@ -134,12 +135,10 @@ router.get('/payments', authenticateToken, async (req, res) => {
 // ============================================
 // WEBHOOK STRIPE
 // ⚠️ type: '*/*' pour capturer TOUS les Content-Type
-// sinon express.raw ne s'applique pas si charset=utf-8
 // ============================================
 router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
     const signature = req.headers['stripe-signature'];
 
-    // Logs de debug
     console.log('=== WEBHOOK REÇU ===');
     console.log('Signature présente:', signature ? 'OUI' : 'NON');
     console.log('Body est Buffer:', Buffer.isBuffer(req.body));
@@ -159,6 +158,7 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 
     try {
         switch (event.type) {
+
             // ============================================
             // PAIEMENT RÉUSSI
             // ============================================
@@ -171,10 +171,8 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 
                 console.log(`✅ Paiement réussi: user=${userId}, plan=${plan}, customer=${customerId}`);
 
-                // Récupérer les détails de la souscription
                 const subscription = await stripeService.stripe.subscriptions.retrieve(subscriptionId);
 
-                // Mettre à jour l'utilisateur
                 await pool.query(
                     `UPDATE users 
                      SET stripe_customer_id = $1, 
@@ -185,7 +183,6 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
                     [customerId, plan, subscription.status, subscription.current_period_end, userId]
                 );
 
-                // Insérer ou mettre à jour la souscription
                 await pool.query(
                     `INSERT INTO subscriptions 
                      (user_id, stripe_subscription_id, stripe_customer_id, stripe_price_id, status, plan, current_period_start, current_period_end, cancel_at_period_end)
@@ -211,6 +208,41 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
                 );
 
                 console.log(`💾 DB mise à jour pour user ${userId} → plan ${plan}`);
+
+                // ============================================
+                // 📧 ENVOI DE L'EMAIL DE CONFIRMATION
+                // ============================================
+                try {
+                    const customerEmail = session.customer_details?.email || session.customer_email;
+                    const amountTotal = (session.amount_total || 0) / 100;
+                    const currency = (session.currency || 'eur').toUpperCase();
+                    const orderNumber = `STRIPE-${session.id.slice(-8).toUpperCase()}`;
+
+                    if (customerEmail) {
+                        const emailResult = await emailService.sendReceiptEmail({
+                            order_number: orderNumber,
+                            plan: plan.toUpperCase(),
+                            pay_amount: amountTotal.toFixed(2),
+                            pay_currency: currency,
+                            price_amount: amountTotal.toFixed(2),
+                            price_currency: currency,
+                            pay_address: 'Carte bancaire via Stripe',
+                            created_at: new Date().toLocaleString('fr-FR'),
+                            email: customerEmail
+                        });
+
+                        if (emailResult.success) {
+                            console.log(`📧 Email de confirmation envoyé à ${customerEmail} (${orderNumber})`);
+                        } else {
+                            console.error(`❌ Échec envoi email à ${customerEmail}:`, emailResult.error);
+                        }
+                    } else {
+                        console.log('⚠️ Pas d\'email client dans la session Stripe — email non envoyé');
+                    }
+                } catch (emailErr) {
+                    console.error('❌ Erreur envoi email Stripe:', emailErr.message);
+                }
+
                 break;
             }
 
@@ -340,6 +372,15 @@ router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
 
                     console.log(`💰 Paiement enregistré: ${invoice.amount_paid / 100}€ pour user ${userId}`);
                 }
+                break;
+            }
+
+            // ============================================
+            // FACTURE PAYÉE (invoice.payment_succeeded)
+            // Événement non géré — on l'ignore proprement
+            // ============================================
+            case 'invoice.payment_succeeded': {
+                console.log('ℹ️ invoice.payment_succeeded ignoré (géré par invoice.paid)');
                 break;
             }
 
