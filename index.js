@@ -227,30 +227,6 @@ const initDB = async () => {
         `);
         console.log('✅ Migration Custom Quota OK');
 
-        // ============================================
-        // 💳 TABLE CRYPTO PAYMENTS (NOUVELLE)
-        // ============================================
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS crypto_payments (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                order_id VARCHAR(255) UNIQUE NOT NULL,
-                payment_id VARCHAR(255),
-                plan VARCHAR(50) NOT NULL,
-                pay_currency VARCHAR(50) NOT NULL,
-                pay_amount NUMERIC,
-                pay_address TEXT,
-                price_amount NUMERIC,
-                price_currency VARCHAR(10) DEFAULT 'eur',
-                payment_status VARCHAR(50) DEFAULT 'waiting',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
-            CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
-            CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
-        `);
-        console.log('✅ Migration Crypto Payments OK');
 
         const result = await client.query(
             'SELECT COUNT(*) FROM users WHERE username = $1',
@@ -274,6 +250,41 @@ const initDB = async () => {
         client.release();
     }
 };
+
+// ============================================
+// 💳 MIGRATION CRYPTO PAYMENTS v2 (email + order_number)
+// ============================================
+await client.query(`
+    CREATE TABLE IF NOT EXISTS crypto_payments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        order_id VARCHAR(255) UNIQUE NOT NULL,
+        order_number VARCHAR(50) UNIQUE,
+        payment_id VARCHAR(255),
+        plan VARCHAR(50) NOT NULL,
+        pay_currency VARCHAR(50) NOT NULL,
+        pay_amount NUMERIC,
+        pay_address TEXT,
+        price_amount NUMERIC,
+        price_currency VARCHAR(10) DEFAULT 'eur',
+        payment_status VARCHAR(50) DEFAULT 'waiting',
+        email VARCHAR(255),
+        email_sent BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
+    CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
+    CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
+    CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
+
+    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
+    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
+
+    CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
+`);
+console.log('✅ Migration Crypto Payments v2 OK');
 
 // ============================================
 // 6. HELPERS
@@ -362,6 +373,7 @@ app.set('trust proxy', 1);
 // ============================================
 const stripeRoutes = require('./routes/stripe');
 app.use('/api/stripe', stripeRoutes);
+const emailService = require('./services/email');
 
 // ============================================
 // 9. MAINTENANCE
@@ -865,12 +877,17 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
 // 19. ROUTES CRYPTO (NOWPayments)
 // ============================================
 
-// Créer un paiement crypto
 app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
     try {
-        const { plan, pay_currency } = req.body;
+        const { plan, pay_currency, email } = req.body;
+
         if (!['starter', 'pro'].includes(plan)) {
             return res.status(400).json({ error: 'Plan invalide' });
+        }
+
+        // Validation email
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Email invalide' });
         }
 
         const validCurrencies = ['btc', 'eth', 'usdttrc20', 'usdterc20', 'usdc', 'ltc', 'trx', 'bnbbsc'];
@@ -878,10 +895,15 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
 
         const prices = { starter: 9.99, pro: 29.99 };
         const amount = prices[plan];
-        const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+        const baseUrl = process.env.BASE_URL || 'https://marauder.host';
 
-        // Générer un order_id unique
+        // Génère order_id unique
         const orderId = `${req.user.id}_${plan}_${Date.now()}`;
+
+        // Génère le numéro de commande lisible
+        const seqResult = await pool.query("SELECT nextval('crypto_order_seq') AS seq");
+        const seqNum = String(seqResult.rows[0].seq).padStart(6, '0');
+        const orderNumber = `MAR-${new Date().getFullYear()}-${seqNum}`;
 
         // Appel NOWPayments
         const response = await axios.post(
@@ -891,7 +913,7 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
                 price_currency: 'eur',
                 pay_currency: chosenCurrency,
                 order_id: orderId,
-                order_description: `Abonnement Marauder ${plan.toUpperCase()}`,
+                order_description: `Abonnement Marauder ${plan.toUpperCase()} — ${orderNumber}`,
                 ipn_callback_url: `${baseUrl}/api/crypto/webhook`
             },
             {
@@ -901,6 +923,49 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
                 }
             }
         );
+
+        const np = response.data;
+
+        // Sauvegarder en DB (avec email + order_number)
+        await pool.query(
+            `INSERT INTO crypto_payments 
+             (user_id, order_id, order_number, payment_id, plan, pay_currency, pay_amount, pay_address, price_amount, price_currency, payment_status, email)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [
+                req.user.id,
+                orderId,
+                orderNumber,
+                String(np.payment_id),
+                plan,
+                chosenCurrency,
+                np.pay_amount,
+                np.pay_address,
+                np.price_amount,
+                np.price_currency,
+                np.payment_status || 'waiting',
+                email
+            ]
+        );
+
+        console.log(`🪙 Crypto payment créé: ${orderNumber} (order=${orderId}, payment_id=${np.payment_id}) user=${req.user.id} plan=${plan} email=${email}`);
+
+        res.json({
+            success: true,
+            order_id: orderId,
+            order_number: orderNumber,
+            payment_id: String(np.payment_id),
+            pay_address: np.pay_address,
+            pay_amount: np.pay_amount,
+            pay_currency: np.pay_currency,
+            price_amount: np.price_amount,
+            price_currency: np.price_currency,
+            expiration_estimate_date: np.expiration_estimate_date
+        });
+    } catch (error) {
+        console.error('Crypto payment error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Erreur création paiement crypto' });
+    }
+});
 
         const np = response.data;
 
@@ -1053,12 +1118,35 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
                 [payment.payment_status, dbPayment.id]
             );
 
-            if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
+            if ((payment.payment_status === 'finished' || payment.payment_status === 'confirmed') && dbPayment.plan) {
+                // Activer le plan
                 await pool.query(
                     'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
                     [dbPayment.plan, 'active', dbPayment.user_id]
                 );
                 console.log(`✅ User ${dbPayment.user_id} → plan ${dbPayment.plan} (crypto via webhook)`);
+
+                // Envoi email (si pas déjà envoyé)
+                if (!dbPayment.email_sent && dbPayment.email) {
+                    const emailResult = await emailService.sendReceiptEmail({
+                        order_number: dbPayment.order_number,
+                        plan: dbPayment.plan,
+                        pay_amount: dbPayment.pay_amount,
+                        pay_currency: dbPayment.pay_currency,
+                        price_amount: dbPayment.price_amount,
+                        price_currency: dbPayment.price_currency,
+                        pay_address: dbPayment.pay_address,
+                        created_at: dbPayment.created_at,
+                        email: dbPayment.email
+                    });
+
+                    if (emailResult.success) {
+                        await pool.query(
+                            'UPDATE crypto_payments SET email_sent = TRUE WHERE id = $1',
+                            [dbPayment.id]
+                        );
+                    }
+                }
             }
         } else {
             // Fallback : parser l'order_id
@@ -1611,6 +1699,143 @@ app.post('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, re
     process.env.API_MAINTENANCE = enabled ? 'ON' : 'OFF';
     console.log(`🔒 API Maintenance: ${process.env.API_MAINTENANCE}`);
     res.json({ success: true, enabled: process.env.API_MAINTENANCE === 'ON' });
+});
+
+// ============================================
+// 24bis. ROUTES ADMIN CRYPTO (Commandes)
+// ============================================
+
+// Liste des commandes crypto (avec pagination + recherche)
+app.get('/api/admin/crypto/orders', authenticateToken, requireAdmin, async (req, res) => {
+    const { page = 1, limit = 30, search = '' } = req.query;
+    const offset = (page - 1) * limit;
+    try {
+        let query = `
+            SELECT c.*, u.username as user_name
+            FROM crypto_payments c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE 1=1
+        `;
+        const params = [];
+        if (search) {
+            query += ` AND (c.order_number ILIKE $${params.length + 1} OR c.email ILIKE $${params.length + 1} OR c.order_id ILIKE $${params.length + 1})`;
+            params.push(`%${search}%`);
+        }
+        query += ` ORDER BY c.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+        params.push(limit, offset);
+
+        const result = await pool.query(query, params);
+
+        let countQuery = 'SELECT COUNT(*) FROM crypto_payments c WHERE 1=1';
+        const countParams = [];
+        if (search) {
+            countQuery += ` AND (c.order_number ILIKE $1 OR c.email ILIKE $1 OR c.order_id ILIKE $1)`;
+            countParams.push(`%${search}%`);
+        }
+        const countResult = await pool.query(countQuery, countParams);
+
+        res.json({
+            orders: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        console.error('Admin crypto orders error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Détail d'une commande
+app.get('/api/admin/crypto/orders/:id', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT c.*, u.username as user_name FROM crypto_payments c
+             LEFT JOIN users u ON c.user_id = u.id
+             WHERE c.id = $1 OR c.order_number = $1`,
+            [id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Commande non trouvée' });
+        res.json({ order: result.rows[0] });
+    } catch (error) {
+        console.error('Admin crypto order detail error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Valider manuellement une commande
+app.post('/api/admin/crypto/orders/:id/validate', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const orderResult = await pool.query('SELECT * FROM crypto_payments WHERE id = $1 OR order_number = $1', [id]);
+        if (orderResult.rows.length === 0) return res.status(404).json({ error: 'Commande non trouvée' });
+
+        const order = orderResult.rows[0];
+
+        // Mettre à jour le statut
+        await pool.query(
+            "UPDATE crypto_payments SET payment_status = 'confirmed', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+            [order.id]
+        );
+
+        // Activer le plan
+        await pool.query(
+            'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
+            [order.plan, 'active', order.user_id]
+        );
+
+        // Envoi email (si pas déjà envoyé)
+        if (!order.email_sent && order.email) {
+            const emailResult = await emailService.sendReceiptEmail({
+                order_number: order.order_number,
+                plan: order.plan,
+                pay_amount: order.pay_amount,
+                pay_currency: order.pay_currency,
+                price_amount: order.price_amount,
+                price_currency: order.price_currency,
+                pay_address: order.pay_address,
+                created_at: order.created_at,
+                email: order.email
+            });
+
+            if (emailResult.success) {
+                await pool.query(
+                    'UPDATE crypto_payments SET email_sent = TRUE WHERE id = $1',
+                    [order.id]
+                );
+            }
+        }
+
+        console.log(`✅ Commande ${order.order_number} validée manuellement par admin ${req.user.id}`);
+        res.json({ success: true, message: 'Commande validée', order_number: order.order_number });
+    } catch (error) {
+        console.error('Admin crypto validate error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Refuser manuellement une commande
+app.post('/api/admin/crypto/orders/:id/refuse', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { reason } = req.body || {};
+    try {
+        const orderResult = await pool.query('SELECT * FROM crypto_payments WHERE id = $1 OR order_number = $1', [id]);
+        if (orderResult.rows.length === 0) return res.status(404).json({ error: 'Commande non trouvée' });
+
+        const order = orderResult.rows[0];
+
+        await pool.query(
+            "UPDATE crypto_payments SET payment_status = 'refused', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+            [order.id]
+        );
+
+        console.log(`❌ Commande ${order.order_number} refusée par admin ${req.user.id}. Raison: ${reason || 'non spécifiée'}`);
+        res.json({ success: true, message: 'Commande refusée', order_number: order.order_number });
+    } catch (error) {
+        console.error('Admin crypto refuse error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
 });
 
 // ============================================

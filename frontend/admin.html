@@ -602,6 +602,7 @@
         <button class="admin-tab" data-tab="searches">Recherches</button>
         <button class="admin-tab" data-tab="blocklist">Blocklist</button>
         <button class="admin-tab" data-tab="tickets">Tickets</button>
+        <button class="admin-tab" data-tab="crypto">💳 Commandes Crypto</button>
     </div>
 
     <!-- TAB DASHBOARD -->
@@ -731,6 +732,40 @@
             </table>
         </div>
     </div>
+
+<!-- TAB COMMANDES CRYPTO -->
+<div id="tab-crypto" class="admin-tab-content">
+    <div class="admin-search">
+        <input type="text" id="cryptoSearch" placeholder="Rechercher par n° commande, email ou order_id..." />
+        <button id="cryptoSearchBtn">Rechercher</button>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>N° Commande</th>
+                    <th>Email</th>
+                    <th>Plan</th>
+                    <th>Montant</th>
+                    <th>Crypto</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="cryptoTableBody">
+                <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="admin-pagination">
+        <span id="cryptoPaginationInfo">Page 1 / 1</span>
+        <div>
+            <button id="cryptoPrevPage" disabled>Précédent</button>
+            <button id="cryptoNextPage">Suivant</button>
+        </div>
+    </div>
+</div>
 
     <!-- TAB TICKETS -->
     <div id="tab-tickets" class="admin-tab-content">

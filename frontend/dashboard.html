@@ -881,6 +881,13 @@
                     <p>Choisissez votre crypto-monnaie</p>
                 </div>
                 <div class="crypto-modal-coins" id="cryptoModalCoins"></div>
+                <div style="margin-bottom:16px;">
+    <label style="display:block;font-size:13px;font-weight:500;color:#a0a0a0;margin-bottom:6px;">Votre email</label>
+    <input type="email" id="cryptoModalEmail" placeholder="votre@email.com" style="width:100%;padding:12px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#ffffff;font-size:14px;font-family:Arial,sans-serif;outline:none;box-sizing:border-box;" />
+    <div style="font-size:11px;color:#6b6b6b;margin-top:8px;line-height:1.5;">
+        📧 Utilisé <strong style="color:#a0a0a0;">uniquement</strong> pour vous envoyer la preuve d'achat. Jamais partagé, jamais utilisé pour du marketing.
+    </div>
+</div>
                 <button class="crypto-modal-btn" id="cryptoModalContinue" disabled onclick="confirmCryptoModalChoice()">Continuer</button>
             </div>
 
@@ -930,13 +937,12 @@
             </div>
 
             <!-- Étape 3 : confirmé -->
-            <div id="cryptoModalStep3" class="crypto-modal-step">
-                <div class="crypto-modal-confirmed">
-                    <div class="crypto-modal-confirmed-icon">✓</div>
-                    <h2>Paiement confirmé !</h2>
-                    <p>Votre abonnement est actif.<br>Merci pour votre confiance.</p>
-                    <button class="crypto-modal-btn" onclick="finishCryptoModal()">Accéder à mon dashboard</button>
-                </div>
+            <div class="crypto-modal-confirmed">
+    <div class="crypto-modal-confirmed-icon">✓</div>
+    <h2>Paiement confirmé !</h2>
+    <p>Votre abonnement est actif.<br>Un email de confirmation vous a été envoyé.<br>Merci pour votre confiance.</p>
+    <button class="crypto-modal-btn" onclick="finishCryptoModal()">Accéder à mon dashboard</button>
+</div>
             </div>
         </div>
     </div>
@@ -2184,6 +2190,8 @@ document.querySelectorAll('.code-tab').forEach(tab => {
             const btn = document.getElementById('cryptoModalContinue');
             if (btn) { btn.disabled = true; btn.textContent = 'Continuer'; }
 
+            const emailInput = document.getElementById('cryptoModalEmail');
+if (emailInput) emailInput.value = '';
             document.getElementById('cryptoModalStep1').classList.add('active');
             document.getElementById('cryptoModalStep2').classList.remove('active');
             document.getElementById('cryptoModalStep3').classList.remove('active');
@@ -2200,33 +2208,77 @@ document.querySelectorAll('.code-tab').forEach(tab => {
         };
 
         window.confirmCryptoModalChoice = async function() {
-            if (!cryptoModalSelected || !selectedPlan) return;
+    if (!cryptoModalSelected || !selectedPlan) return;
 
-            const btn = document.getElementById('cryptoModalContinue');
-            if (btn) { btn.disabled = true; btn.textContent = 'Création en cours...'; }
+    // Récupérer et valider l'email
+    const emailInput = document.getElementById('cryptoModalEmail');
+    const email = emailInput ? emailInput.value.trim() : '';
 
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/crypto/create-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({
-                        plan: selectedPlan,
-                        pay_currency: cryptoModalSelected.payCurrency
-                    })
-                });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (typeof showToast === 'function') showToast('Veuillez entrer un email valide', 'error');
+        if (emailInput) emailInput.focus();
+        return;
+    }
 
-                const data = await res.json();
+    const btn = document.getElementById('cryptoModalContinue');
+    if (btn) { btn.disabled = true; btn.textContent = 'Création en cours...'; }
 
-                if (!res.ok || !data.success) {
-                    if (typeof showToast === 'function') showToast(data.error || 'Erreur lors de la création du paiement', 'error', 6000);
-                    console.error('Erreur create-payment:', data);
-                    if (btn) { btn.disabled = false; btn.textContent = 'Continuer'; }
-                    return;
-                }
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/crypto/create-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                plan: selectedPlan,
+                pay_currency: cryptoModalSelected.payCurrency,
+                email: email
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            if (typeof showToast === 'function') showToast(data.error || 'Erreur lors de la création du paiement', 'error', 6000);
+            console.error('Erreur create-payment:', data);
+            if (btn) { btn.disabled = false; btn.textContent = 'Continuer'; }
+            return;
+        }
+
+        document.getElementById('cryptoModalStep1').classList.remove('active');
+        document.getElementById('cryptoModalStep2').classList.add('active');
+
+        document.getElementById('cryptoModalSubtitle').textContent = 'Commande ' + data.order_number + ' · ' + cryptoModalSelected.name + ' (' + cryptoModalSelected.network + ')';
+        document.getElementById('cryptoModalAmount').textContent = data.pay_amount + ' ' + cryptoModalSelected.symbol;
+        document.getElementById('cryptoModalAmountFiat').textContent = '≈ ' + data.price_amount + ' ' + (data.price_currency || 'EUR').toUpperCase();
+        document.getElementById('cryptoModalAddress').textContent = data.pay_address;
+
+        const qrBox = document.getElementById('cryptoModalQrBox');
+        const qrImg = document.getElementById('cryptoModalQrImg');
+        if (qrBox && qrImg) {
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.pay_address);
+            qrBox.style.display = 'flex';
+        }
+
+        cryptoModalPaymentId = data.payment_id;
+        localStorage.setItem('pending_crypto_order', cryptoModalPaymentId);
+        localStorage.setItem('pending_crypto_order_number', data.order_number);
+
+        cryptoModalExpiresAt = Date.now() + (30 * 60 * 1000);
+        startCryptoModalCountdown();
+        updateCryptoModalStatus('waiting', 'En attente', 15);
+        startCryptoModalPolling();
+
+        if (typeof showToast === 'function') showToast('Commande ' + data.order_number + ' créée ! Envoyez le montant exact.', 'success');
+
+    } catch (err) {
+        console.error('Crypto error:', err);
+        if (typeof showToast === 'function') showToast('Erreur de connexion', 'error', 6000);
+        if (btn) { btn.disabled = false; btn.textContent = 'Continuer'; }
+    }
+};
 
                 document.getElementById('cryptoModalStep1').classList.remove('active');
                 document.getElementById('cryptoModalStep2').classList.add('active');

@@ -91,6 +91,7 @@ document.querySelectorAll('.admin-tab').forEach(function(tab) {
         if (tabId === 'searches') loadSearches();
         if (tabId === 'blocklist') loadBlocklist();
         if (tabId === 'tickets') loadTickets();
+        if (tabId === 'crypto') loadCryptoOrders();
     });
 });
 
@@ -768,3 +769,164 @@ window.closeModal = closeModal;
 window.openQuotaModal = openQuotaModal;
 window.saveQuota = saveQuota;
 window.toggleApiMaintenance = toggleApiMaintenance;
+window.toggleApiMaintenance = toggleApiMaintenance;
+window.loadCryptoOrders = loadCryptoOrders;
+window.validateCryptoOrder = validateCryptoOrder;
+window.refuseCryptoOrder = refuseCryptoOrder;
+
+// ============================================
+// 💳 COMMANDES CRYPTO
+// ============================================
+var cryptoPage = 1;
+var cryptoTotal = 0;
+var cryptoSearch = '';
+
+function getCryptoStatusBadge(status) {
+    var labels = {
+        waiting: 'En attente',
+        confirming: 'Confirmation...',
+        confirmed: 'Confirmé',
+        finished: 'Payé',
+        expired: 'Expiré',
+        failed: 'Échoué',
+        refused: 'Refusé'
+    };
+    var colors = {
+        waiting: '#f59e0b',
+        confirming: '#3b82f6',
+        confirmed: '#10b981',
+        finished: '#10b981',
+        expired: '#ef4444',
+        failed: '#ef4444',
+        refused: '#ef4444'
+    };
+    var color = colors[status] || '#a0a0a0';
+    var label = labels[status] || status;
+    return '<span style="background:rgba(255,255,255,0.05);color:' + color + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;text-transform:uppercase;">' + label + '</span>';
+}
+
+async function loadCryptoOrders(page, search) {
+    page = page || 1;
+    search = search || '';
+    cryptoPage = page;
+    cryptoSearch = search;
+
+    var tbody = document.getElementById('cryptoTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">Chargement...</td></tr>';
+
+    try {
+        var url = API_URL + '/api/admin/crypto/orders?page=' + page + '&limit=30&search=' + encodeURIComponent(search);
+        var response = await fetch(url, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!response.ok) throw new Error('Erreur');
+        var data = await response.json();
+        cryptoTotal = data.total || 0;
+
+        if (data.orders && data.orders.length > 0) {
+            var html = '';
+            data.orders.forEach(function(o) {
+                var dateStr = new Date(o.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+                var canAct = (o.payment_status === 'waiting' || o.payment_status === 'confirming');
+                html += '<tr>' +
+                    '<td><span style="font-family:\'Courier New\',monospace;color:#ffffff;font-weight:600;">' + (o.order_number || '-') + '</span></td>' +
+                    '<td style="font-size:12px;color:#a0a0a0;">' + (o.email || '-') + '</td>' +
+                    '<td>' + getPlanBadge(o.plan, 0) + '</td>' +
+                    '<td style="font-size:12px;color:#ffffff;">' + (o.price_amount || 0) + ' ' + (o.price_currency || 'EUR').toUpperCase() + '</td>' +
+                    '<td style="font-size:12px;color:#a0a0a0;font-family:\'Courier New\',monospace;">' + (o.pay_amount || '-') + ' ' + (o.pay_currency || '').toUpperCase() + '</td>' +
+                    '<td>' + getCryptoStatusBadge(o.payment_status) + '</td>' +
+                    '<td style="font-size:11px;color:var(--text-muted);">' + dateStr + '</td>' +
+                    '<td><div class="admin-actions">';
+                if (canAct) {
+                    html += '<button class="success" onclick="validateCryptoOrder(' + o.id + ')">Valider</button>';
+                    html += '<button class="danger" onclick="refuseCryptoOrder(' + o.id + ')">Refuser</button>';
+                } else {
+                    html += '<span style="color:var(--text-muted);font-size:11px;">—</span>';
+                }
+                html += '</div></td></tr>';
+            });
+            tbody.innerHTML = html;
+        } else {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">Aucune commande</td></tr>';
+        }
+        updateCryptoPagination(page, cryptoTotal);
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:30px;">Erreur de chargement</td></tr>';
+    }
+}
+
+function updateCryptoPagination(page, total) {
+    var totalPages = Math.ceil(total / 30) || 1;
+    var info = document.getElementById('cryptoPaginationInfo');
+    var prev = document.getElementById('cryptoPrevPage');
+    var next = document.getElementById('cryptoNextPage');
+    if (info) info.textContent = 'Page ' + page + ' / ' + totalPages + ' (' + total + ' commandes)';
+    if (prev) prev.disabled = page <= 1;
+    if (next) next.disabled = page >= totalPages;
+}
+
+window.validateCryptoOrder = async function(id) {
+    if (!confirm('Valider cette commande manuellement ? Le plan sera activé et un email sera envoyé au client.')) return;
+    try {
+        var response = await fetch(API_URL + '/api/admin/crypto/orders/' + id + '/validate', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (response.ok) {
+            showToast('✅ Commande validée, plan activé et email envoyé', 'success');
+            loadCryptoOrders(cryptoPage, cryptoSearch);
+        } else {
+            var data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur réseau', 'error');
+    }
+};
+
+window.refuseCryptoOrder = async function(id) {
+    var reason = prompt('Raison du refus (optionnel) :');
+    if (reason === null) return;
+    try {
+        var response = await fetch(API_URL + '/api/admin/crypto/orders/' + id + '/refuse', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ reason: reason || '' })
+        });
+        if (response.ok) {
+            showToast('Commande refusée', 'success');
+            loadCryptoOrders(cryptoPage, cryptoSearch);
+        } else {
+            var data = await response.json();
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur réseau', 'error');
+    }
+};
+
+// Event listeners
+document.getElementById('cryptoSearchBtn')?.addEventListener('click', function() {
+    var search = document.getElementById('cryptoSearch').value.trim();
+    loadCryptoOrders(1, search);
+});
+document.getElementById('cryptoSearch')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        var search = document.getElementById('cryptoSearch').value.trim();
+        loadCryptoOrders(1, search);
+    }
+});
+document.getElementById('cryptoPrevPage')?.addEventListener('click', function() {
+    if (cryptoPage > 1) loadCryptoOrders(cryptoPage - 1, cryptoSearch);
+});
+document.getElementById('cryptoNextPage')?.addEventListener('click', function() {
+    if (cryptoPage * 30 < cryptoTotal) loadCryptoOrders(cryptoPage + 1, cryptoSearch);
+});
+
+// Ajouter le chargement dans le switch des tabs (dans le listener .admin-tab)
+// Cherche ce bloc et ajoute la ligne crypto :
