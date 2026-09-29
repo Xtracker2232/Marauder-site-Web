@@ -36,8 +36,8 @@
         .plan.current::after { content: 'PLAN ACTUEL'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #10b981; color: #000; font-size: 10px; font-weight: 800; padding: 5px 16px; border-radius: 100px; letter-spacing: 1px; }
 
         .plan-name { font-size: 14px; font-weight: 700; color: #a0a0a0; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; }
-        .plan-price { font-size: 52px; font-weight: 800; margin-bottom: 8px; letter-spacing: -2px; line-height: 1; }
-        .plan-price span { font-size: 16px; font-weight: 400; color: #6b6b6b; letter-spacing: 0; }
+        .plan-price { font-size: 42px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1.5px; line-height: 1.1; white-space: nowrap; }
+        .plan-price span { font-size: 14px; font-weight: 400; color: #6b6b6b; letter-spacing: 0; }
         .plan-desc { font-size: 13px; color: #6b6b6b; margin-bottom: 32px; min-height: 40px; }
 
         .plan-features { list-style: none; text-align: left; margin-bottom: 32px; min-height: 200px; }
@@ -71,41 +71,79 @@
         .footer a { color: #6b6b6b; text-decoration: none; }
         .footer a:hover { color: #fff; }
 
+        /* CRYPTO MODAL */
+        .crypto-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 99999; padding: 20px; }
+        .crypto-modal.active { display: flex; }
+        .crypto-modal-box { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+        .crypto-modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; background: transparent; border: 1px solid #2a2a2a; border-radius: 8px; color: #6b6b6b; cursor: pointer; font-size: 18px; font-family: Arial, sans-serif; transition: all 0.2s; }
+        .crypto-modal-close:hover { background: rgba(255,255,255,0.05); color: #ffffff; }
+        .crypto-modal-step { display: none; }
+        .crypto-modal-step.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .crypto-modal-header { text-align: center; margin-bottom: 24px; }
+        .crypto-modal-header h2 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .crypto-modal-header p { font-size: 13px; color: #a0a0a0; }
+        .crypto-modal-coins { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 20px; }
+        .crypto-modal-coin { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 10px; cursor: pointer; transition: all 0.2s; color: #ffffff; font-family: Arial, sans-serif; }
+        .crypto-modal-coin:hover { border-color: rgba(255,255,255,0.2); background: #222222; transform: translateY(-2px); }
+        .crypto-modal-coin.selected { border-color: #ffffff; background: #222222; box-shadow: 0 0 0 3px rgba(255,255,255,0.08); }
+        .crypto-modal-coin-logo { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; }
+        .crypto-modal-coin-logo svg { width: 40px; height: 40px; display: block; }
+        .crypto-modal-coin-name { font-size: 13px; font-weight: 600; color: #ffffff; }
+        .crypto-modal-coin-network { font-size: 10px; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .crypto-modal-btn { width: 100%; padding: 14px; background: #ffffff; color: #000000; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; }
+        .crypto-modal-btn:hover:not(:disabled) { background: #cccccc; }
+        .crypto-modal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .crypto-modal-status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .crypto-modal-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .crypto-modal-status-badge.waiting { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .crypto-modal-status-badge.confirming { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+        .crypto-modal-status-badge.confirmed { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .crypto-modal-status-badge.expired { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .crypto-modal-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .crypto-modal-timer { font-family: 'Courier New', monospace; font-size: 13px; color: #a0a0a0; font-weight: 600; }
+        .crypto-modal-timer.warning { color: #f59e0b; }
+        .crypto-modal-timer.danger { color: #ef4444; }
+        .crypto-modal-amount { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 10px; padding: 18px; text-align: center; margin-bottom: 16px; }
+        .crypto-modal-amount-label { font-size: 11px; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; font-weight: 600; }
+        .crypto-modal-amount-value { font-size: 24px; font-weight: 700; color: #ffffff; font-family: 'Courier New', monospace; word-break: break-all; }
+        .crypto-modal-amount-fiat { font-size: 12px; color: #6b6b6b; margin-top: 6px; }
+        .crypto-modal-address { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .crypto-modal-address-label { font-size: 11px; color: #6b6b6b; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.8px; }
+        .crypto-modal-address-value { font-family: 'Courier New', monospace; font-size: 12px; color: #ffffff; word-break: break-all; padding: 12px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; margin-bottom: 10px; user-select: all; line-height: 1.5; }
+        .crypto-modal-copy { width: 100%; padding: 10px; background: #ffffff; color: #000000; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; cursor: pointer; transition: background 0.2s; }
+        .crypto-modal-copy:hover { background: #cccccc; }
+        .crypto-modal-copy.copied { background: #10b981; color: #ffffff; }
+        .crypto-modal-qr { display: flex; justify-content: center; padding: 16px; background: #ffffff; border-radius: 10px; margin-bottom: 16px; }
+        .crypto-modal-qr img { width: 160px; height: 160px; display: block; }
+        .crypto-modal-progress { margin-bottom: 16px; }
+        .crypto-modal-progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; margin-bottom: 8px; }
+        .crypto-modal-progress-fill { height: 100%; background: #ffffff; border-radius: 100px; transition: width 0.5s; width: 0%; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        .crypto-modal-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: #6b6b6b; font-weight: 600; }
+        .crypto-modal-info { padding: 14px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; color: #a0a0a0; font-size: 12px; line-height: 1.5; text-align: center; }
+        .crypto-modal-info strong { color: #10b981; }
+        .crypto-modal-confirmed { text-align: center; padding: 20px 0; }
+        .crypto-modal-confirmed-icon { width: 80px; height: 80px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: rgba(16,185,129,0.1); border: 2px solid rgba(16,185,129,0.3); border-radius: 50%; color: #10b981; font-size: 40px; font-weight: 700; }
+        .crypto-modal-confirmed h2 { font-size: 22px; color: #ffffff; margin-bottom: 8px; }
+        .crypto-modal-confirmed p { font-size: 14px; color: #a0a0a0; margin-bottom: 24px; line-height: 1.6; }
+
         /* MOBILE */
         @media (max-width: 768px) {
             .navbar { padding: 16px 20px; }
             .navbar-brand span { font-size: 18px; }
             .hero h1 { font-size: 32px; }
             .hero p { font-size: 14px; }
-            .plan-price { font-size: 40px; }
+            .plan-price { font-size: 36px; }
             .plans { grid-template-columns: 1fr; }
         }
 
-/* ============================================
-   FIX TAILLE DES PRIX (9,99€/mois ne doit pas déborder)
-   ============================================ */
-.limit-value,
-.plan-price,
-.sub-plan-price {
-    font-size: 22px !important;
-    line-height: 1.2 !important;
-    white-space: nowrap !important;
-    letter-spacing: -0.5px !important;
-}
-.limit-value span,
-.plan-price span,
-.sub-plan-price span {
-    font-size: 11px !important;
-    font-weight: 400 !important;
-    color: #6b6b6b !important;
-    letter-spacing: 0 !important;
-}
-
-/* Pour les cartes limit-card */
-.limit-card {
-    padding: 20px 14px !important;
-}
-
+        @media (max-width: 600px) {
+            .crypto-modal-box { padding: 24px 18px; }
+            .crypto-modal-coins { grid-template-columns: repeat(2, 1fr); }
+            .crypto-modal-amount-value { font-size: 18px; }
+            .crypto-modal-qr img { width: 130px; height: 130px; }
+        }
     </style>
 </head>
 <body>
@@ -142,9 +180,9 @@
                 <div class="plan-price">0€<span>/mois</span></div>
                 <div class="plan-desc">Pour découvrir Marauder et faire vos premières recherches</div>
                 <ul class="plan-features">
-                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 100 requêtes API / mois</li>
-                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 50 recherches / mois</li>
-                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 3 fiches</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 10 requêtes API / mois</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 10 recherches / mois</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 10 fiches</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Support communautaire</li>
                 </ul>
                 <button class="plan-btn secondary" id="btnFree" disabled>Plan actuel</button>
@@ -157,8 +195,8 @@
                 <div class="plan-desc">Pour les investigations régulières et les petits projets</div>
                 <ul class="plan-features">
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 1 000 requêtes API / mois</li>
-                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 500 recherches / mois</li>
-                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 25 fiches</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 1 000 recherches / mois</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 50 fiches</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Lookup inclus</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Support prioritaire</li>
                 </ul>
@@ -172,7 +210,7 @@
                 <div class="plan-desc">Pour les professionnels de l'investigation</div>
                 <ul class="plan-features">
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 10 000 requêtes API / mois</li>
-                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 5 000 recherches / mois</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 10 000 recherches / mois</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 100 fiches</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Graphe inclus</li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Support prioritaire</li>
@@ -212,13 +250,152 @@
     <!-- TOAST -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- PAYMENT MODAL (choix carte / crypto) -->
+    <div id="paymentModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;z-index:99999;padding:20px;">
+        <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
+            <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
+
+            <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;letter-spacing:-0.3px;">Choisir un moyen de paiement</h2>
+            <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;" id="paymentModalPlan">
+                Abonnement <strong style="color:#fff;">Starter</strong> — 9,99€ / mois
+            </p>
+
+            <!-- CARTE BANCAIRE -->
+            <button onclick="payWithCard()" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all 0.2s;text-align:left;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                <div>
+                    <div style="font-weight:700;">Carte bancaire</div>
+                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
+                </div>
+                <span style="margin-left:auto;font-size:20px;">→</span>
+            </button>
+
+            <!-- CRYPTO -->
+            <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all 0.2s;text-align:left;">
+                <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0;">
+                    <circle cx="16" cy="16" r="16" fill="#f7931a"/>
+                    <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/>
+                </svg>
+                <div>
+                    <div style="font-weight:700;">Crypto-monnaie</div>
+                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC, LTC, TRX, BNB</div>
+                </div>
+                <span style="margin-left:auto;font-size:20px;">→</span>
+            </button>
+
+            <!-- PAYPAL (désactivé) -->
+            <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
+                <svg width="28" height="28" viewBox="0 0 24 24" style="flex-shrink:0;">
+                    <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
+                </svg>
+                <div>
+                    <div style="font-weight:700;">PayPal</div>
+                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
+                </div>
+            </button>
+
+            <p style="font-size:12px;color:#6b6b6b;margin:24px 0 0 0;text-align:center;line-height:1.6;">
+                En validant un paiement, vous acceptez nos <a href="/cgu.html" style="color:#a0a0a0;">CGU</a>.<br>
+                Annulation possible à tout moment depuis votre espace client.
+            </p>
+        </div>
+    </div>
+
+    <!-- CRYPTO MODAL -->
+    <div id="cryptoModal" class="crypto-modal">
+        <div class="crypto-modal-box">
+            <button class="crypto-modal-close" onclick="closeCryptoModal()">×</button>
+
+            <!-- Étape 1 -->
+            <div id="cryptoModalStep1" class="crypto-modal-step active">
+                <div class="crypto-modal-header">
+                    <h2>Paiement Crypto</h2>
+                    <p>Choisissez votre crypto-monnaie</p>
+                </div>
+                <div class="crypto-modal-coins" id="cryptoModalCoins"></div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;color:#a0a0a0;margin-bottom:6px;">Votre email</label>
+                    <input type="email" id="cryptoModalEmail" placeholder="votre@email.com" style="width:100%;padding:12px 14px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#ffffff;font-size:14px;font-family:Arial,sans-serif;outline:none;box-sizing:border-box;" />
+                    <div style="font-size:11px;color:#6b6b6b;margin-top:8px;line-height:1.5;">
+                        📧 Utilisé <strong style="color:#a0a0a0;">uniquement</strong> pour vous envoyer la preuve d'achat. Jamais partagé.
+                    </div>
+                </div>
+                <button class="crypto-modal-btn" id="cryptoModalContinue" disabled onclick="confirmCryptoModalChoice()">Continuer</button>
+            </div>
+
+            <!-- Étape 2 -->
+            <div id="cryptoModalStep2" class="crypto-modal-step">
+                <div class="crypto-modal-header">
+                    <h2>Envoyez le paiement</h2>
+                    <p id="cryptoModalSubtitle">—</p>
+                </div>
+                <div class="crypto-modal-status">
+                    <span class="crypto-modal-status-badge waiting" id="cryptoModalStatusBadge">
+                        <span class="crypto-modal-status-dot"></span>
+                        <span id="cryptoModalStatusText">En attente</span>
+                    </span>
+                    <span class="crypto-modal-timer" id="cryptoModalTimer">--:--</span>
+                </div>
+                <div class="crypto-modal-amount">
+                    <div class="crypto-modal-amount-label">Montant exact à envoyer</div>
+                    <div class="crypto-modal-amount-value" id="cryptoModalAmount">0.00</div>
+                    <div class="crypto-modal-amount-fiat" id="cryptoModalAmountFiat">≈ 0.00 €</div>
+                </div>
+                <div class="crypto-modal-address">
+                    <div class="crypto-modal-address-label">Adresse de réception</div>
+                    <div class="crypto-modal-address-value" id="cryptoModalAddress">—</div>
+                    <button class="crypto-modal-copy" id="cryptoModalCopyBtn" onclick="copyCryptoModalAddress()">Copier l'adresse</button>
+                </div>
+                <div class="crypto-modal-qr" id="cryptoModalQrBox" style="display:none;">
+                    <img id="cryptoModalQrImg" src="" alt="QR Code">
+                </div>
+                <div class="crypto-modal-progress">
+                    <div class="crypto-modal-progress-bar"><div class="crypto-modal-progress-fill" id="cryptoModalProgressFill"></div></div>
+                    <div class="crypto-modal-progress-label">
+                        <span>Progression</span>
+                        <span id="cryptoModalProgressText">0%</span>
+                    </div>
+                </div>
+                <div class="crypto-modal-info">
+                    ✅ <strong>Vous pouvez fermer cette fenêtre.</strong><br>
+                    Le paiement sera détecté automatiquement. Votre abonnement sera activé dès confirmation.
+                </div>
+            </div>
+
+            <!-- Étape 3 -->
+            <div id="cryptoModalStep3" class="crypto-modal-step">
+                <div class="crypto-modal-confirmed">
+                    <div class="crypto-modal-confirmed-icon">✓</div>
+                    <h2>Paiement confirmé !</h2>
+                    <p>Votre abonnement est actif.<br>Un email de confirmation vous a été envoyé.<br>Merci pour votre confiance.</p>
+                    <button class="crypto-modal-btn" onclick="finishCryptoModal()">Accéder à mon dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============ AUTH CHECK ============
         const token = localStorage.getItem('token');
-        const username = localStorage.getItem('username');
-
         if (!token) {
             window.location.href = '/login.html?redirect=/tarifs.html';
+        }
+
+        // ============ TOAST ============
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
         // ============ LOAD CURRENT PLAN ============
@@ -238,13 +415,11 @@
                         const btn = plan.querySelector('.plan-btn');
                         if (btn) {
                             btn.disabled = true;
-                            if (planName === 'free') btn.textContent = 'Plan actuel';
-                            else btn.textContent = 'Plan actuel';
+                            btn.textContent = 'Plan actuel';
                         }
                     }
                 });
 
-                // Marquer les plans inférieurs comme "Rétrograder" (désactivé pour simplifier)
                 const levels = { free: 0, starter: 1, pro: 2, enterprise: 3 };
                 const currentLevel = levels[currentPlan] || 0;
                 document.querySelectorAll('.plan').forEach(plan => {
@@ -258,13 +433,12 @@
                         }
                     }
                 });
-
             } catch (err) {
                 console.error('Erreur chargement plan:', err);
             }
         }
 
-        // ============ SUBSCRIBE ============
+        // ============ SUBSCRIBE STRIPE ============
         async function subscribe(plan) {
             const loading = document.getElementById('loading');
             loading.classList.add('active');
@@ -294,123 +468,305 @@
             }
         }
 
-        // ============ TOAST ============
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(40px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+        // ============ PAYMENT MODAL ============
+        let selectedPlan = null;
+
+        function openPaymentModal(plan) {
+            selectedPlan = plan;
+            const modal = document.getElementById('paymentModal');
+            const planLabel = document.getElementById('paymentModalPlan');
+
+            const prices = { starter: '9,99€', pro: '29,99€' };
+            const names = { starter: 'Starter', pro: 'Pro' };
+
+            if (planLabel) {
+                planLabel.innerHTML = 'Abonnement <strong style="color:#fff;">' + names[plan] + '</strong> — ' + prices[plan] + ' / mois';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        function payWithCard() {
+            if (selectedPlan) {
+                const plan = selectedPlan;
+                closePaymentModal();
+                subscribe(plan);
+            }
+        }
+
+        function payWithCrypto() {
+            closePaymentModal();
+            openCryptoModal();
+        }
+
+        // ============ CRYPTO MODAL ============
+        const CRYPTO_COINS = [
+            { id: 'btc', name: 'Bitcoin', network: 'BTC', symbol: 'BTC', payCurrency: 'btc',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#f7931a"/><path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/></svg>' },
+            { id: 'eth', name: 'Ethereum', network: 'ERC20', symbol: 'ETH', payCurrency: 'eth',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" fill-opacity=".602" d="M16.5 4v8.87l7.5 3.35z"/><path fill="#fff" d="M16.5 4L9 16.22l7.5-3.35z"/><path fill="#fff" fill-opacity=".602" d="M16.5 21.97v6.02L24 17.6z"/><path fill="#fff" d="M16.5 27.99v-6.02L9 17.6z"/><path fill="#fff" fill-opacity=".2" d="M16.5 20.57l7.5-4.35-7.5-3.35z"/><path fill="#fff" fill-opacity=".602" d="M9 16.22l7.5 4.35v-7.7z"/></svg>' },
+            { id: 'usdt_trc20', name: 'USDT', network: 'TRC20', symbol: 'USDT', payCurrency: 'usdttrc20',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#26a17b"/><path fill="#fff" d="M17.92 13.86v-2.4h4.86V7.92H9.22v3.54h4.86v2.4c-3.95.18-6.92.96-6.92 1.9 0 .94 2.97 1.72 6.92 1.9v6.8h3.84v-6.8c3.94-.18 6.9-.96 6.9-1.9 0-.94-2.96-1.72-6.9-1.9zm0 3.22v0c-.1.01-.6.04-1.72.04-.89 0-1.52-.03-1.74-.04-3.48-.15-6.08-.76-6.08-1.49 0-.73 2.6-1.34 6.08-1.5v2.38c.23.02.88.05 1.76.05 1.07 0 1.6-.04 1.7-.05v-2.38c3.47.16 6.06.77 6.06 1.5 0 .73-2.59 1.34-6.06 1.49z"/></svg>' },
+            { id: 'usdt_erc20', name: 'USDT', network: 'ERC20', symbol: 'USDT', payCurrency: 'usdterc20',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#26a17b"/><path fill="#fff" d="M17.92 13.86v-2.4h4.86V7.92H9.22v3.54h4.86v2.4c-3.95.18-6.92.96-6.92 1.9 0 .94 2.97 1.72 6.92 1.9v6.8h3.84v-6.8c3.94-.18 6.9-.96 6.9-1.9 0-.94-2.96-1.72-6.9-1.9zm0 3.22v0c-.1.01-.6.04-1.72.04-.89 0-1.52-.03-1.74-.04-3.48-.15-6.08-.76-6.08-1.49 0-.73 2.6-1.34 6.08-1.5v2.38c.23.02.88.05 1.76.05 1.07 0 1.6-.04 1.7-.05v-2.38c3.47.16 6.06.77 6.06 1.5 0 .73-2.59 1.34-6.06 1.49z"/></svg>' },
+            { id: 'usdc', name: 'USDC', network: 'ERC20', symbol: 'USDC', payCurrency: 'usdc',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#2775ca"/><path fill="#fff" d="M20.5 18.6c0-1.9-1.1-2.5-3.4-2.8-1.6-.2-1.9-.6-1.9-1.3s.5-1.1 1.6-1.1c1 0 1.5.3 1.7 1.2 0 .1.1.2.2.2h.9c.1 0 .2-.1.2-.2v-.1c-.2-1.3-1-2.1-2.3-2.3v-1.1c0-.1-.1-.2-.2-.2h-.8c-.1 0-.2.1-.2.2v1.1c-1.6.2-2.6 1.1-2.6 2.5 0 1.8 1.1 2.5 3.4 2.8 1.6.2 2 .5 2 1.4 0 .8-.7 1.4-1.7 1.4-1.3 0-1.8-.5-2-1.5 0-.1-.1-.2-.2-.2h-1c-.1 0-.2.1-.2.2v.1c.2 1.4 1.1 2.3 2.8 2.5v1.1c0 .1.1.2.2.2h.8c.1 0 .2-.1.2-.2v-1.1c1.8-.3 2.8-1.3 2.8-2.8z"/><path fill="#fff" d="M12.6 25.3c-5.1-1.9-7.8-7.5-6-12.6 1-2.7 3-4.7 5.7-5.7.1 0 .2-.2.2-.3v-.7c0-.1 0-.2-.1-.2-.1 0-.2 0-.3.1-5.9 1.9-9.2 8.2-7.3 14.1 1.1 3.5 3.8 6.2 7.3 7.3.1 0 .2 0 .3-.1 0-.1.1-.1.1-.2v-.7c0-.1 0-.2-.1-.3-.1 0-.1-.1-.1-.1z"/><path fill="#fff" d="M19.7 6.6c-.1 0-.2 0-.3.1 0 .1-.1.1-.1.2v.7c0 .1 0 .2.1.3 0 .1.1.1.2.2 5.1 1.9 7.8 7.5 6 12.6-1 2.7-3 4.7-5.7 5.7-.1 0-.2.2-.2.3v.7c0 .1 0 .2.1.2.1 0 .2 0 .3-.1 5.9-1.9 9.2-8.2 7.3-14.1-1.1-3.5-3.8-6.2-7.3-7.3-.1-.1-.2-.1-.4-.2z"/></svg>' },
+            { id: 'ltc', name: 'Litecoin', network: 'LTC', symbol: 'LTC', payCurrency: 'ltc',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#a6a9aa"/><path fill="#fff" d="M16.6 6.6c-4.9 0-8.9 4-8.9 8.9 0 1.1.2 2.2.6 3.2L7 21.5c-.1.3.1.7.4.8l1.6.5 4-6.4 1.5.6-2.3 3.7 1 .4 5.6-3.5c.3-.2.5-.6.5-.9l-.2-1.4c1.9-1.5 3.1-3.9 3.1-6.5 0-4.9-3.9-8.8-8.8-8.8h-6.8z"/></svg>' },
+            { id: 'trx', name: 'Tron', network: 'TRC20', symbol: 'TRX', payCurrency: 'trx',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#ef0027"/><path fill="#fff" d="M8.5 8.5l6.4 15.4L23.6 11.1 8.5 8.5zm6.1 3.8l5.5 1.8-3.7 5.7-1.8-7.5zm-3.4-.9l6.1.6 1.9 7.7-8-8.3zm7.5 5.1l3.9-6 1.8 6.8-5.7-.8z"/></svg>' },
+            { id: 'bnb', name: 'BNB', network: 'BSC', symbol: 'BNB', payCurrency: 'bnbbsc',
+              svg: '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#f3ba2f"/><path fill="#fff" d="M12.1 14.2L16 10.3l3.9 3.9 2.3-2.3L16 5.7 9.8 11.9zM5.7 16l2.3-2.3L10.3 16l-2.3 2.3zm6.4 1.8L16 21.7l3.9-3.9 2.3 2.2L16 26.3l-6.2-6.2-.1-.1zm11.6-1.8L21.4 13.7 23.7 11.4 26 13.7l-2.3 2.3zM16 13.5l-2.5 2.5 2.5 2.5 2.5-2.5z"/></svg>' }
+        ];
+
+        let cryptoModalSelected = null;
+        let cryptoModalPaymentId = null;
+        let cryptoModalPolling = null;
+        let cryptoModalCountdown = null;
+        let cryptoModalExpiresAt = null;
+
+        function renderCryptoModalCoins() {
+            const grid = document.getElementById('cryptoModalCoins');
+            if (!grid) return;
+            grid.innerHTML = CRYPTO_COINS.map(c => `
+                <button class="crypto-modal-coin" data-coin-id="${c.id}" onclick="selectCryptoModalCoin('${c.id}')">
+                    <div class="crypto-modal-coin-logo">${c.svg}</div>
+                    <div class="crypto-modal-coin-name">${c.name}</div>
+                    <div class="crypto-modal-coin-network">${c.network}</div>
+                </button>
+            `).join('');
+        }
+
+        function selectCryptoModalCoin(id) {
+            cryptoModalSelected = CRYPTO_COINS.find(c => c.id === id) || null;
+            document.querySelectorAll('.crypto-modal-coin').forEach(el => {
+                el.classList.toggle('selected', el.dataset.coinId === id);
+            });
+            const btn = document.getElementById('cryptoModalContinue');
+            if (btn) btn.disabled = !cryptoModalSelected;
+        }
+
+        function openCryptoModal() {
+            if (!selectedPlan) {
+                showToast('Aucun plan sélectionné', 'error');
+                return;
+            }
+            const modal = document.getElementById('cryptoModal');
+            if (modal) modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            cryptoModalSelected = null;
+            cryptoModalPaymentId = null;
+            document.querySelectorAll('.crypto-modal-coin').forEach(el => el.classList.remove('selected'));
+            const btn = document.getElementById('cryptoModalContinue');
+            if (btn) { btn.disabled = true; btn.textContent = 'Continuer'; }
+
+            const emailInput = document.getElementById('cryptoModalEmail');
+            if (emailInput) emailInput.value = '';
+
+            document.getElementById('cryptoModalStep1').classList.add('active');
+            document.getElementById('cryptoModalStep2').classList.remove('active');
+            document.getElementById('cryptoModalStep3').classList.remove('active');
+
+            renderCryptoModalCoins();
+        }
+
+        function closeCryptoModal() {
+            const modal = document.getElementById('cryptoModal');
+            if (modal) modal.classList.remove('active');
+            document.body.style.overflow = '';
+            stopCryptoModalPolling();
+            stopCryptoModalCountdown();
+        }
+
+        async function confirmCryptoModalChoice() {
+            if (!cryptoModalSelected || !selectedPlan) return;
+
+            const emailInput = document.getElementById('cryptoModalEmail');
+            const email = emailInput ? emailInput.value.trim() : '';
+
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast('Veuillez entrer un email valide', 'error');
+                if (emailInput) emailInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('cryptoModalContinue');
+            if (btn) { btn.disabled = true; btn.textContent = 'Création en cours...'; }
+
+            try {
+                const res = await fetch('/api/crypto/create-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        plan: selectedPlan,
+                        pay_currency: cryptoModalSelected.payCurrency,
+                        email: email
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    showToast(data.error || 'Erreur lors de la création du paiement', 'error');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Continuer'; }
+                    return;
+                }
+
+                document.getElementById('cryptoModalStep1').classList.remove('active');
+                document.getElementById('cryptoModalStep2').classList.add('active');
+
+                document.getElementById('cryptoModalSubtitle').textContent = 'Commande ' + data.order_number + ' · ' + cryptoModalSelected.name + ' (' + cryptoModalSelected.network + ')';
+                document.getElementById('cryptoModalAmount').textContent = data.pay_amount + ' ' + cryptoModalSelected.symbol;
+                document.getElementById('cryptoModalAmountFiat').textContent = '≈ ' + data.price_amount + ' ' + (data.price_currency || 'EUR').toUpperCase();
+                document.getElementById('cryptoModalAddress').textContent = data.pay_address;
+
+                const qrBox = document.getElementById('cryptoModalQrBox');
+                const qrImg = document.getElementById('cryptoModalQrImg');
+                if (qrBox && qrImg) {
+                    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.pay_address);
+                    qrBox.style.display = 'flex';
+                }
+
+                cryptoModalPaymentId = data.payment_id;
+                localStorage.setItem('pending_crypto_order', cryptoModalPaymentId);
+                localStorage.setItem('pending_crypto_order_number', data.order_number);
+
+                cryptoModalExpiresAt = Date.now() + (30 * 60 * 1000);
+                startCryptoModalCountdown();
+                updateCryptoModalStatus('waiting', 'En attente', 15);
+                startCryptoModalPolling();
+
+                showToast('Commande ' + data.order_number + ' créée ! Envoyez le montant exact.', 'success');
+
+            } catch (err) {
+                console.error('Crypto error:', err);
+                showToast('Erreur de connexion', 'error');
+                if (btn) { btn.disabled = false; btn.textContent = 'Continuer'; }
+            }
+        }
+
+        function copyCryptoModalAddress() {
+            const addr = document.getElementById('cryptoModalAddress').textContent;
+            const btn = document.getElementById('cryptoModalCopyBtn');
+            navigator.clipboard.writeText(addr).then(() => {
+                if (btn) { btn.classList.add('copied'); btn.textContent = 'Adresse copiée !'; }
+                showToast('Adresse copiée !', 'success');
+                setTimeout(() => {
+                    if (btn) { btn.classList.remove('copied'); btn.textContent = 'Copier l\'adresse'; }
+                }, 2000);
+            });
+        }
+
+        function updateCryptoModalStatus(status, text, pct) {
+            const badge = document.getElementById('cryptoModalStatusBadge');
+            const txt = document.getElementById('cryptoModalStatusText');
+            const fill = document.getElementById('cryptoModalProgressFill');
+            const label = document.getElementById('cryptoModalProgressText');
+            if (badge) badge.className = 'crypto-modal-status-badge ' + status;
+            if (txt) txt.textContent = text;
+            if (fill) fill.style.width = pct + '%';
+            if (label) label.textContent = pct + '%';
+        }
+
+        function startCryptoModalCountdown() {
+            stopCryptoModalCountdown();
+            const el = document.getElementById('cryptoModalTimer');
+            cryptoModalCountdown = setInterval(() => {
+                const remaining = cryptoModalExpiresAt - Date.now();
+                if (remaining <= 0) {
+                    if (el) { el.textContent = '00:00'; el.className = 'crypto-modal-timer danger'; }
+                    stopCryptoModalCountdown();
+                    stopCryptoModalPolling();
+                    updateCryptoModalStatus('expired', 'Expiré', 100);
+                    return;
+                }
+                const m = Math.floor(remaining / 60000);
+                const s = Math.floor((remaining % 60000) / 1000);
+                if (el) {
+                    el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                    el.className = 'crypto-modal-timer' + (remaining < 5 * 60 * 1000 ? ' warning' : '') + (remaining < 60 * 1000 ? ' danger' : '');
+                }
+            }, 1000);
+        }
+
+        function stopCryptoModalCountdown() {
+            if (cryptoModalCountdown) { clearInterval(cryptoModalCountdown); cryptoModalCountdown = null; }
+        }
+
+        function startCryptoModalPolling() {
+            stopCryptoModalPolling();
+            cryptoModalPolling = setInterval(async () => {
+                if (!cryptoModalPaymentId) return;
+                try {
+                    const res = await fetch('/api/crypto/status/' + encodeURIComponent(cryptoModalPaymentId), {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    const st = data.payment_status;
+
+                    if (st === 'finished' || st === 'confirmed') {
+                        stopCryptoModalPolling();
+                        stopCryptoModalCountdown();
+                        updateCryptoModalStatus('confirmed', 'Confirmé', 100);
+                        localStorage.removeItem('pending_crypto_order');
+                        localStorage.removeItem('pending_crypto_order_number');
+                        document.getElementById('cryptoModalStep2').classList.remove('active');
+                        document.getElementById('cryptoModalStep3').classList.add('active');
+                    } else if (st === 'confirming' || st === 'sending' || st === 'partially_paid') {
+                        updateCryptoModalStatus('confirming', 'Confirmation...', 70);
+                    } else if (st === 'failed' || st === 'expired') {
+                        stopCryptoModalPolling();
+                        updateCryptoModalStatus('expired', 'Paiement échoué', 100);
+                    } else {
+                        updateCryptoModalStatus('waiting', 'En attente', 25);
+                    }
+                } catch (e) { console.error('Polling:', e); }
+            }, 5000);
+        }
+
+        function stopCryptoModalPolling() {
+            if (cryptoModalPolling) { clearInterval(cryptoModalPolling); cryptoModalPolling = null; }
+        }
+
+        function finishCryptoModal() {
+            closeCryptoModal();
+            window.location.href = '/dashboard.html?payment=success&plan=' + (selectedPlan || 'pro');
         }
 
         // ============ INIT ============
         loadCurrentPlan();
 
-// ============ PAYMENT MODAL ============
-let selectedPlan = null;
+        document.getElementById('paymentModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closePaymentModal();
+        });
 
-function openPaymentModal(plan) {
-    selectedPlan = plan;
-    const modal = document.getElementById('paymentModal');
-    const planLabel = document.getElementById('paymentModalPlan');
-    
-    const prices = { starter: '9,99€', pro: '29,99€' };
-    const names = { starter: 'Starter', pro: 'Pro' };
-    
-    if (planLabel) {
-        planLabel.innerHTML = 'Abonnement <strong style="color:#fff;">' + names[plan] + '</strong> — ' + prices[plan] + ' / mois';
-    }
-    
-    modal.style.display = 'flex';
-}
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePaymentModal();
+                closeCryptoModal();
+            }
+        });
 
-function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
-    selectedPlan = null;
-}
-
-function payWithCard() {
-    if (selectedPlan) {
-        closePaymentModal();
-        subscribe(selectedPlan);
-    }
-}
-
-function payWithCrypto() {
-    alert('🪙 Le paiement en crypto-monnaie sera bientôt disponible !\n\nNous travaillons actuellement à son intégration. Rejoignez notre Discord pour être informé du lancement.');
-}
-
-// Fermer la modale au clic extérieur
-document.getElementById('paymentModal')?.addEventListener('click', function(e) {
-    if (e.target === this) closePaymentModal();
-});
-
-// Fermer avec Echap
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closePaymentModal();
-});
-
+        // Exposer au global (au cas où)
+        window.openPaymentModal = openPaymentModal;
+        window.closePaymentModal = closePaymentModal;
+        window.payWithCard = payWithCard;
+        window.payWithCrypto = payWithCrypto;
+        window.openCryptoModal = openCryptoModal;
+        window.closeCryptoModal = closeCryptoModal;
+        window.confirmCryptoModalChoice = confirmCryptoModalChoice;
+        window.selectCryptoModalCoin = selectCryptoModalCoin;
+        window.copyCryptoModalAddress = copyCryptoModalAddress;
+        window.finishCryptoModal = finishCryptoModal;
     </script>
-
-<!-- ============ PAYMENT MODAL ============ -->
-<div id="paymentModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;z-index:99999;padding:20px;">
-    <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;padding:40px 32px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.8);position:relative;">
-        <button onclick="closePaymentModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:10px;color:#6b6b6b;cursor:pointer;font-size:18px;font-family:inherit;">×</button>
-
-        <h2 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px 0;letter-spacing:-0.3px;">Choisir un moyen de paiement</h2>
-        <p style="font-size:14px;color:#a0a0a0;margin:0 0 24px 0;" id="paymentModalPlan">
-            Abonnement <strong style="color:#fff;">Starter</strong> — 9,99€ / mois
-        </p>
-
-        <!-- CARTE BANCAIRE -->
-        <button onclick="payWithCard()" style="width:100%;padding:18px 20px;background:#ffffff;color:#000000;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all 0.2s;text-align:left;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <line x1="2" y1="10" x2="22" y2="10"/>
-            </svg>
-            <div>
-                <div style="font-weight:700;">Carte bancaire</div>
-                <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
-            </div>
-            <span style="margin-left:auto;font-size:20px;">→</span>
-        </button>
-
-        <!-- CRYPTO -->
-        <button onclick="payWithCrypto()" style="width:100%;padding:18px 20px;background:transparent;color:#ffffff;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all 0.2s;text-align:left;">
-           <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0;">
-    <circle cx="16" cy="16" r="16" fill="#f7931a"/>
-    <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2zm-3.7 5.2c-.5 2-3.9.9-5 .6l.9-3.6c1.1.3 4.6.8 4.1 3zm.5-5.3c-.5 1.8-3.3.9-4.2.7l.8-3.3c.9.2 3.9.6 3.4 2.6z"/>
-</svg>
-            <div>
-                <div style="font-weight:700;">Crypto-monnaie</div>
-                <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC</div>
-            </div>
-            <span style="margin-left:auto;font-size:20px;">→</span>
-        </button>
-
-        <!-- PAYPAL (désactivé) -->
-        <button disabled style="width:100%;padding:18px 20px;background:transparent;color:#6b6b6b;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;gap:14px;opacity:0.4;text-align:left;">
-           <svg width="28" height="28" viewBox="0 0 24 24" style="flex-shrink:0;">
-    <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
-    <path fill="#009cde" d="M19.55 5.804a6.93 6.93 0 0 0-.189-.089c-.028.179-.056.36-.089.539-.984 5.35-4.329 7.599-9.228 7.599h-1.617a.762.762 0 0 0-.755.649l-.879 5.571-.249 1.579a.404.404 0 0 0 .399.469h3.542c.322 0 .596-.234.646-.552l.026-.134.501-3.18.032-.175a.652.652 0 0 1 .645-.553h.406c2.637 0 4.702-.957 5.323-3.727.244-1.155.132-2.117-.477-2.794a3.19 3.19 0 0 0-.375-.337l.017-.021z"/>
-</svg>
-            <div>
-                <div style="font-weight:700;">PayPal</div>
-                <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Pas encore disponible</div>
-            </div>
-        </button>
-
-        <p style="font-size:12px;color:#6b6b6b;margin:24px 0 0 0;text-align:center;line-height:1.6;">
-            En validant un paiement, vous acceptez nos <a href="/cgu.html" style="color:#a0a0a0;">CGU</a>.<br>
-            Annulation possible à tout moment depuis votre espace client.
-        </p>
-    </div>
-</div>
 
 </body>
 </html>
