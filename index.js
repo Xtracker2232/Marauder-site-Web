@@ -47,15 +47,22 @@ console.log('🔒 Mode DEV API:', process.env.DEV_API || 'OFF');
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+});
+
+pool.on('error', (err) => {
+    console.error('❌ Erreur pool PG:', err.message);
 });
 
 // ============================================
 // 4. LIMITES PAR PLAN (source unique de vérité)
 // ============================================
 const PLAN_LIMITS = {
-    free:       { apiKeys: 1,        searchesPerMonth: 10,     resultsPerSearch: 10,  fiches: 10 },
-    starter:    { apiKeys: 1,        searchesPerMonth: 1000,   resultsPerSearch: 50,  fiches: 50 },
-    pro:        { apiKeys: 3,        searchesPerMonth: 10000,  resultsPerSearch: 100, fiches: 100 },
+    free:       { apiKeys: 1,        searchesPerMonth: 10,       resultsPerSearch: 10,  fiches: 10 },
+    starter:    { apiKeys: 1,        searchesPerMonth: 1000,     resultsPerSearch: 50,  fiches: 50 },
+    pro:        { apiKeys: 3,        searchesPerMonth: 10000,    resultsPerSearch: 100, fiches: 100 },
     enterprise: { apiKeys: Infinity, searchesPerMonth: Infinity, resultsPerSearch: 100, fiches: Infinity }
 };
 
@@ -69,22 +76,27 @@ async function getUserLimits(userId) {
         [userId]
     );
     const user = result.rows[0];
-    if (!user) return PLAN_LIMITS.free;
+    if (!user) return { ...PLAN_LIMITS.free, hasCustomQuota: false };
 
-    const planLimits = getPlanLimits(user.plan);
+    const planLimits = getPlanLimits(user.plan || 'free');
+    const customQuota = parseInt(user.custom_quota) || 0;
+
     return {
         ...planLimits,
-        searchesPerMonth: user.custom_quota > 0 ? user.custom_quota : planLimits.searchesPerMonth,
-        hasCustomQuota: user.custom_quota > 0
+        searchesPerMonth: customQuota > 0 ? customQuota : planLimits.searchesPerMonth,
+        hasCustomQuota: customQuota > 0
     };
 }
 
 // ============================================
 // 5. CRÉATION DES TABLES + MIGRATIONS
 // ============================================
-const initDB = async () => {
+async function initDB() {
     const client = await pool.connect();
     try {
+        await client.query('BEGIN');
+
+        // --- Tables de base ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -151,15 +163,19 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('✅ Tables OK');
 
+        // --- Migrations users (Stripe, plan, quota) ---
         await client.query(`
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255),
             ADD COLUMN IF NOT EXISTS plan VARCHAR(50) DEFAULT 'free',
             ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP,
-            ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50);
+            ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50),
+            ADD COLUMN IF NOT EXISTS custom_quota INTEGER DEFAULT 0;
+        `);
 
+        // --- Stripe ---
+        await client.query(`
             CREATE TABLE IF NOT EXISTS subscriptions (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -174,7 +190,6 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-
             CREATE TABLE IF NOT EXISTS payments (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -186,8 +201,8 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('✅ Migration Stripe OK');
 
+        // --- API Keys ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_keys (
                 id SERIAL PRIMARY KEY,
@@ -202,8 +217,8 @@ const initDB = async () => {
             CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
             CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
         `);
-        console.log('✅ Migration API Keys OK');
 
+        // --- API Logs ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_logs (
                 id SERIAL PRIMARY KEY,
@@ -219,15 +234,8 @@ const initDB = async () => {
             CREATE INDEX IF NOT EXISTS idx_api_logs_user ON api_logs(user_id);
             CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_logs(created_at);
         `);
-        console.log('✅ Migration API Logs OK');
 
-        await client.query(`
-            ALTER TABLE users 
-            ADD COLUMN IF NOT EXISTS custom_quota INTEGER DEFAULT 0;
-        `);
-        console.log('✅ Migration Custom Quota OK');
-
-        // ⬇️⬇️⬇️ AJOUTE TON BLOC CRYPTO ICI ⬇️⬇️⬇️
+        // --- Crypto Payments (NOWPayments) ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS crypto_payments (
                 id SERIAL PRIMARY KEY,
@@ -258,14 +266,14 @@ const initDB = async () => {
 
             CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
         `);
-        console.log('✅ Migration Crypto Payments v2 OK');
-        // ⬆️⬆️⬆️ FIN DE TON BLOC CRYPTO ⬆️⬆️⬆️
 
-        const result = await client.query(
-            'SELECT COUNT(*) FROM users WHERE username = $1',
+        // --- Admin par défaut ---
+        const adminCheck = await client.query(
+            'SELECT id FROM users WHERE username = $1',
             [process.env.ADMIN_USERNAME]
         );
-        if (parseInt(result.rows[0].count) === 0) {
+
+        if (adminCheck.rows.length === 0) {
             const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
             await client.query(
                 'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
@@ -279,67 +287,17 @@ const initDB = async () => {
             );
             console.log('✅ Admin vérifié');
         }
+
+        await client.query('COMMIT');
+        console.log('✅ Base de données initialisée');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ Erreur initDB:', error.message);
+        throw error;
     } finally {
         client.release();
     }
-};
-        const result = await client.query(
-            'SELECT COUNT(*) FROM users WHERE username = $1',
-            [process.env.ADMIN_USERNAME]
-        );
-        if (parseInt(result.rows[0].count) === 0) {
-            const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
-            await client.query(
-                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-                [process.env.ADMIN_USERNAME, hashedPassword, 'admin']
-            );
-            console.log('✅ Admin créé');
-        } else {
-            await client.query(
-                'UPDATE users SET role = $1 WHERE username = $2',
-                ['admin', process.env.ADMIN_USERNAME]
-            );
-            console.log('✅ Admin vérifié');
-        }
-    } finally {
-        client.release();
-    }
-};
-
-// ============================================
-// 💳 MIGRATION CRYPTO PAYMENTS v2 (email + order_number)
-// ============================================
-await client.query(`
-    CREATE TABLE IF NOT EXISTS crypto_payments (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        order_id VARCHAR(255) UNIQUE NOT NULL,
-        order_number VARCHAR(50) UNIQUE,
-        payment_id VARCHAR(255),
-        plan VARCHAR(50) NOT NULL,
-        pay_currency VARCHAR(50) NOT NULL,
-        pay_amount NUMERIC,
-        pay_address TEXT,
-        price_amount NUMERIC,
-        price_currency VARCHAR(10) DEFAULT 'eur',
-        payment_status VARCHAR(50) DEFAULT 'waiting',
-        email VARCHAR(255),
-        email_sent BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
-    CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
-    CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
-    CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
-
-    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
-    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
-    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
-
-    CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
-`);
-console.log('✅ Migration Crypto Payments v2 OK');
+}
 
 // ============================================
 // 6. HELPERS
@@ -355,14 +313,9 @@ async function getBlocklist() {
 }
 
 function isBlocked(person, blocklist) {
-    if (!blocklist || blocklist.length === 0) return false;
-    const fieldsToCheck = [
-        'nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'ville',
-        'code_postal', 'nom_utilisateur', 'adresse_ip', 'steam_id', 'discord_id',
-        'nir', 'iban', 'nom_naissance', 'nom_affichage', 'societe', 'profession',
-        'fonction', 'siret', 'siren', 'bic', 'vin_plaque'
-    ];
-    for (let entry of blocklist) {
+    if (!blocklist || blocklist.length === 0 || !person) return false;
+    for (const entry of blocklist) {
+        if (!entry?.type || !entry?.value) continue;
         const fieldValue = person[entry.type];
         if (fieldValue && typeof fieldValue === 'string') {
             if (fieldValue.toLowerCase().includes(entry.value.toLowerCase())) {
@@ -376,15 +329,9 @@ function isBlocked(person, blocklist) {
 
 async function getMonthlySearchCount(userId) {
     const result = await pool.query(
-        `SELECT 
-            (SELECT COUNT(*) FROM search_history 
-             WHERE user_id = $1 
-             AND created_at >= date_trunc('month', CURRENT_DATE))
-            +
-            (SELECT COUNT(*) FROM api_logs 
-             WHERE user_id = $1 
-             AND created_at >= date_trunc('month', CURRENT_DATE))
-         AS total`,
+        `SELECT COUNT(*) AS total FROM search_history 
+         WHERE user_id = $1 
+         AND created_at >= date_trunc('month', CURRENT_DATE)`,
         [userId]
     );
     return parseInt(result.rows[0].total) || 0;
@@ -393,9 +340,12 @@ async function getMonthlySearchCount(userId) {
 // ============================================
 // 7. MIDDLEWARES GLOBAUX
 // ============================================
+
+// ⚠️ IMPORTANT : raw body pour vérifier signature NOWPayments
+app.use('/api/crypto/webhook', express.raw({ type: 'application/json' }));
+
 app.use((req, res, next) => {
-    if (req.originalUrl === '/api/stripe/webhook' 
-    || req.originalUrl === '/api/crypto/webhook') {
+    if (req.originalUrl === '/api/stripe/webhook' || req.originalUrl === '/api/crypto/webhook') {
         return next();
     }
     express.json()(req, res, next);
@@ -410,7 +360,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-    origin: function(origin, callback) {
+    origin: function (origin, callback) {
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
             callback(null, true);
@@ -427,8 +377,8 @@ app.set('trust proxy', 1);
 // 8. STRIPE ROUTES
 // ============================================
 const stripeRoutes = require('./routes/stripe');
-app.use('/api/stripe', stripeRoutes);
 const emailService = require('./services/email');
+app.use('/api/stripe', stripeRoutes);
 
 // ============================================
 // 9. MAINTENANCE
@@ -518,6 +468,7 @@ const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Token manquant' });
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const result = await pool.query(
@@ -542,6 +493,9 @@ const authenticateToken = async (req, res, next) => {
         if (error.name === 'JsonWebTokenError') {
             return res.status(403).json({ error: 'Token invalide' });
         }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(403).json({ error: 'Token expiré' });
+        }
         console.error('Auth error:', error);
         return res.status(500).json({ error: 'Erreur serveur' });
     }
@@ -564,20 +518,32 @@ const requireAdmin = async (req, res, next) => {
 // ============================================
 app.post('/api/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Identifiants requis' });
+    }
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (result.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
+
         const user = result.rows[0];
         if (user.banned) return res.status(403).json({ error: 'Ce compte a été banni' });
+
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
+
         await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
+
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
-        res.json({ success: true, token, user: { id: user.id, username: user.username, role: user.role } });
+
+        res.json({
+            success: true,
+            token,
+            user: { id: user.id, username: user.username, role: user.role }
+        });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -585,26 +551,33 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 });
 
 app.post('/api/register',
-    body('username').isLength({ min: 3 }).trim().escape(),
-    body('password').isLength({ min: 8 }),
+    body('username').isLength({ min: 3, max: 100 }).trim().escape(),
+    body('password').isLength({ min: 8, max: 128 }),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
         const { username, password } = req.body;
         try {
-            const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || 'unknown';
+            const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+                || req.socket.remoteAddress
+                || 'unknown';
+
             const hashed = await bcrypt.hash(password, 12);
             const result = await pool.query(
                 'INSERT INTO users (username, password_hash, reg_ip) VALUES ($1, $2, $3) RETURNING id, username, role',
                 [username, hashed, ip]
             );
+
             await pool.query(
                 'INSERT INTO ip_used (ip, user_id) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING',
                 [ip, result.rows[0].id]
             );
+
             res.status(201).json({ success: true, user: result.rows[0] });
         } catch (error) {
             if (error.code === '23505') return res.status(400).json({ error: 'Nom déjà utilisé' });
+            console.error('Register error:', error);
             res.status(500).json({ error: 'Erreur serveur' });
         }
     }
@@ -626,8 +599,8 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             if (used >= limits.searchesPerMonth) {
                 return res.status(429).json({
                     error: 'quota_exceeded',
-                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois pour le plan ${req.user.plan.toUpperCase()})`,
-                    used: used,
+                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois pour le plan ${(req.user.plan || 'free').toUpperCase()})`,
+                    used,
                     limit: limits.searchesPerMonth
                 });
             }
@@ -666,7 +639,7 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
         }
 
         res.json({
-            data: { results: results },
+            data: { results },
             meta: {
                 total: results.length,
                 filtered: totalBeforeFilter !== results.length,
@@ -676,7 +649,7 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Brix error:', error.message);
+        console.error('Brix error:', error.response?.data || error.message);
         res.status(500).json({ error: 'Erreur de recherche' });
     }
 });
@@ -696,7 +669,7 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
                 return res.status(429).json({
                     error: 'quota_exceeded',
                     message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
-                    used: used,
+                    used,
                     limit: limits.searchesPerMonth
                 });
             }
@@ -712,6 +685,10 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         );
 
         let results = response.data.data?.results || [];
+        // Limite résultats selon plan
+        if (results.length > limits.resultsPerSearch) {
+            results = results.slice(0, limits.resultsPerSearch);
+        }
         if (blocklist.length > 0 && results.length > 0) {
             results = results.filter(row => !isBlocked(row, blocklist));
         }
@@ -719,18 +696,18 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         try {
             await pool.query(
                 'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
-                [req.user.id, { type: 'lookup', lookup_type: type, value: value }, results.length]
+                [req.user.id, { type: 'lookup', lookup_type: type, value }, results.length]
             );
         } catch (dbError) {
             console.error('Erreur historique lookup:', dbError.message);
         }
 
         res.json({
-            data: { results: results },
-            meta: { filtered: true }
+            data: { results },
+            meta: { filtered: true, plan_limit: limits.resultsPerSearch }
         });
     } catch (error) {
-        console.error('Lookup error:', error.message);
+        console.error('Lookup error:', error.response?.data || error.message);
         res.status(500).json({ error: 'Erreur de lookup' });
     }
 });
@@ -759,10 +736,23 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Recherche non trouvée' });
 
+        // Vérif quota
+        const limits = await getUserLimits(req.user.id);
+        if (limits.searchesPerMonth !== Infinity) {
+            const used = await getMonthlySearchCount(req.user.id);
+            if (used >= limits.searchesPerMonth) {
+                return res.status(429).json({
+                    error: 'quota_exceeded',
+                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
+                    used,
+                    limit: limits.searchesPerMonth
+                });
+            }
+        }
+
         let query = result.rows[0].query;
         if (typeof query === 'string') query = JSON.parse(query);
 
-        const limits = await getUserLimits(req.user.id);
         query.per_page = limits.resultsPerSearch;
 
         const blocklist = await getBlocklist();
@@ -784,11 +774,12 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
         }
 
         res.json({
-            results: results,
+            results,
             total: results.length,
             took_ms: response.data.meta?.took_ms || 0
         });
     } catch (error) {
+        console.error('Replay error:', error.message);
         res.status(500).json({ error: 'Erreur replay' });
     }
 });
@@ -798,7 +789,10 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
 // ============================================
 app.get('/api/fiches', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM fiches WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        const result = await pool.query(
+            'SELECT * FROM fiches WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
         res.json({ fiches: result.rows });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
@@ -824,11 +818,14 @@ app.post('/api/fiches/:id/persons', authenticateToken, async (req, res) => {
     const { person } = req.body;
     if (!person) return res.status(400).json({ error: 'Personne requise' });
     try {
-        const fiche = await pool.query('SELECT * FROM fiches WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        const fiche = await pool.query(
+            'SELECT * FROM fiches WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
         if (fiche.rows.length === 0) return res.status(404).json({ error: 'Fiche non trouvée' });
 
         const limits = await getUserLimits(req.user.id);
-        let persons = fiche.rows[0].persons || [];
+        const persons = fiche.rows[0].persons || [];
         if (persons.length >= limits.fiches) {
             return res.status(400).json({ error: `Max ${limits.fiches} personnes par fiche` });
         }
@@ -862,7 +859,10 @@ app.put('/api/fiches/:id', authenticateToken, async (req, res) => {
 app.delete('/api/fiches/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('DELETE FROM fiches WHERE id = $1 AND user_id = $2 RETURNING *', [id, req.user.id]);
+        const result = await pool.query(
+            'DELETE FROM fiches WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Fiche non trouvée' });
         res.json({ message: 'Supprimée' });
     } catch (error) {
@@ -889,7 +889,10 @@ app.post('/api/graphes', authenticateToken, async (req, res) => {
 
 app.get('/api/graphes', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.user.id]);
+        const result = await pool.query(
+            'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
+            [req.user.id]
+        );
         if (result.rows.length === 0) return res.json({ graphe: null });
         res.json({ graphe: result.rows[0] });
     } catch (error) {
@@ -899,7 +902,10 @@ app.get('/api/graphes', authenticateToken, async (req, res) => {
 
 app.get('/api/graphes/all', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        const result = await pool.query(
+            'SELECT * FROM graphes WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
         res.json({ graphes: result.rows });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
@@ -909,7 +915,10 @@ app.get('/api/graphes/all', authenticateToken, async (req, res) => {
 app.get('/api/graphes/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('SELECT * FROM graphes WHERE id = $1 AND user_id = $2', [id, req.user.id]);
+        const result = await pool.query(
+            'SELECT * FROM graphes WHERE id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Graphe non trouvé' });
         res.json({ graphe: result.rows[0] });
     } catch (error) {
@@ -920,7 +929,10 @@ app.get('/api/graphes/:id', authenticateToken, async (req, res) => {
 app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('DELETE FROM graphes WHERE id = $1 AND user_id = $2 RETURNING *', [id, req.user.id]);
+        const result = await pool.query(
+            'DELETE FROM graphes WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Graphe non trouvé' });
         res.json({ message: 'Supprimé' });
     } catch (error) {
@@ -940,7 +952,6 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Plan invalide' });
         }
 
-        // Validation email
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ error: 'Email invalide' });
         }
@@ -952,15 +963,12 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
         const amount = prices[plan];
         const baseUrl = process.env.BASE_URL || 'https://marauder.host';
 
-        // Génère order_id unique
         const orderId = `${req.user.id}_${plan}_${Date.now()}`;
 
-        // Génère le numéro de commande lisible
         const seqResult = await pool.query("SELECT nextval('crypto_order_seq') AS seq");
         const seqNum = String(seqResult.rows[0].seq).padStart(6, '0');
         const orderNumber = `MAR-${new Date().getFullYear()}-${seqNum}`;
 
-        // Appel NOWPayments
         const response = await axios.post(
             'https://api.nowpayments.io/v1/payment',
             {
@@ -975,13 +983,13 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
                 headers: {
                     'x-api-key': process.env.NOWPAYMENTS_API_KEY,
                     'Content-Type': 'application/json'
-                }
+                },
+                timeout: 15000
             }
         );
 
         const np = response.data;
 
-        // Sauvegarder en DB (avec email + order_number)
         await pool.query(
             `INSERT INTO crypto_payments 
              (user_id, order_id, order_number, payment_id, plan, pay_currency, pay_amount, pay_address, price_amount, price_currency, payment_status, email)
@@ -1022,54 +1030,12 @@ app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
     }
 });
 
-        const np = response.data;
-
-        // Sauvegarder en DB
-        await pool.query(
-            `INSERT INTO crypto_payments 
-             (user_id, order_id, payment_id, plan, pay_currency, pay_amount, pay_address, price_amount, price_currency, payment_status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-            [
-                req.user.id,
-                orderId,
-                String(np.payment_id),
-                plan,
-                chosenCurrency,
-                np.pay_amount,
-                np.pay_address,
-                np.price_amount,
-                np.price_currency,
-                np.payment_status || 'waiting'
-            ]
-        );
-
-        console.log(`🪙 Crypto payment créé: order=${orderId} payment_id=${np.payment_id} user=${req.user.id} plan=${plan}`);
-
-        res.json({
-            success: true,
-            order_id: orderId,
-            payment_id: String(np.payment_id),
-            pay_address: np.pay_address,
-            pay_amount: np.pay_amount,
-            pay_currency: np.pay_currency,
-            price_amount: np.price_amount,
-            price_currency: np.price_currency,
-            expiration_estimate_date: np.expiration_estimate_date
-        });
-    } catch (error) {
-        console.error('Crypto payment error:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Erreur création paiement crypto' });
-    }
-});
-
-// Vérifier le statut d'un paiement crypto (accepte order_id OU payment_id)
 app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Chercher en DB par order_id OU payment_id
         const dbResult = await pool.query(
-            'SELECT * FROM crypto_payments WHERE order_id = $1 OR payment_id = $1 LIMIT 1',
+            'SELECT * FROM crypto_payments WHERE order_id = $1 OR payment_id = $1 OR order_number = $1 LIMIT 1',
             [id]
         );
 
@@ -1079,7 +1045,6 @@ app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
 
         const payment = dbResult.rows[0];
 
-        // Si déjà confirmé en DB, pas besoin d'appeler NOWPayments
         if (payment.payment_status === 'finished' || payment.payment_status === 'confirmed') {
             return res.json({
                 success: true,
@@ -1088,31 +1053,28 @@ app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
                 pay_currency: payment.pay_currency,
                 pay_address: payment.pay_address,
                 order_id: payment.order_id,
+                order_number: payment.order_number,
                 price_amount: payment.price_amount,
                 price_currency: payment.price_currency,
                 cached: true
             });
         }
 
-        // Sinon, interroger NOWPayments
         const response = await axios.get(
             `https://api.nowpayments.io/v1/payment/${payment.payment_id}`,
             {
-                headers: {
-                    'x-api-key': process.env.NOWPAYMENTS_API_KEY
-                }
+                headers: { 'x-api-key': process.env.NOWPAYMENTS_API_KEY },
+                timeout: 10000
             }
         );
 
         const np = response.data;
 
-        // Mettre à jour le statut en DB
         await pool.query(
             'UPDATE crypto_payments SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
             [np.payment_status, payment.id]
         );
 
-        // Si confirmé, activer le plan automatiquement (fallback si webhook rate)
         if ((np.payment_status === 'finished' || np.payment_status === 'confirmed') && payment.plan) {
             await pool.query(
                 'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
@@ -1129,6 +1091,7 @@ app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
             pay_currency: np.pay_currency,
             pay_address: np.pay_address,
             order_id: np.order_id,
+            order_number: payment.order_number,
             price_amount: np.price_amount,
             price_currency: np.price_currency
         });
@@ -1138,28 +1101,37 @@ app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Webhook NOWPayments (IPN)
-app.post('/api/crypto/webhook', express.json(), async (req, res) => {
+// ⚠️ Webhook NOWPayments : utilise req.body RAW (Buffer)
+app.post('/api/crypto/webhook', async (req, res) => {
     try {
         const signature = req.headers['x-nowpayments-sig'];
         if (!signature) {
             return res.status(400).json({ error: 'Signature manquante' });
         }
 
+        const rawBody = req.body; // Buffer
         const hmac = crypto.createHmac('sha512', process.env.NOWPAYMENTS_IPN_SECRET);
-        const sortedBody = JSON.stringify(req.body, Object.keys(req.body).sort());
-        hmac.update(sortedBody);
+        hmac.update(rawBody);
         const computedSignature = hmac.digest('hex');
 
-        if (computedSignature !== signature) {
+        // Comparaison en temps constant
+        const sigBuf = Buffer.from(signature, 'hex');
+        const computedBuf = Buffer.from(computedSignature, 'hex');
+        if (sigBuf.length !== computedBuf.length || !crypto.timingSafeEqual(sigBuf, computedBuf)) {
             console.error('❌ Signature invalide');
             return res.status(401).json({ error: 'Signature invalide' });
         }
 
-        const payment = req.body;
+        // Parse le JSON APRÈS vérification
+        let payment;
+        try {
+            payment = JSON.parse(rawBody.toString('utf8'));
+        } catch (e) {
+            return res.status(400).json({ error: 'JSON invalide' });
+        }
+
         console.log(`🪙 Crypto webhook: order=${payment.order_id} payment_id=${payment.payment_id} → ${payment.payment_status}`);
 
-        // Mettre à jour la DB
         const dbResult = await pool.query(
             'SELECT * FROM crypto_payments WHERE order_id = $1 OR payment_id = $2 LIMIT 1',
             [payment.order_id, String(payment.payment_id)]
@@ -1174,38 +1146,40 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
             );
 
             if ((payment.payment_status === 'finished' || payment.payment_status === 'confirmed') && dbPayment.plan) {
-                // Activer le plan
                 await pool.query(
                     'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
                     [dbPayment.plan, 'active', dbPayment.user_id]
                 );
                 console.log(`✅ User ${dbPayment.user_id} → plan ${dbPayment.plan} (crypto via webhook)`);
 
-                // Envoi email (si pas déjà envoyé)
                 if (!dbPayment.email_sent && dbPayment.email) {
-                    const emailResult = await emailService.sendReceiptEmail({
-                        order_number: dbPayment.order_number,
-                        plan: dbPayment.plan,
-                        pay_amount: dbPayment.pay_amount,
-                        pay_currency: dbPayment.pay_currency,
-                        price_amount: dbPayment.price_amount,
-                        price_currency: dbPayment.price_currency,
-                        pay_address: dbPayment.pay_address,
-                        created_at: dbPayment.created_at,
-                        email: dbPayment.email
-                    });
+                    try {
+                        const emailResult = await emailService.sendReceiptEmail({
+                            order_number: dbPayment.order_number,
+                            plan: dbPayment.plan,
+                            pay_amount: dbPayment.pay_amount,
+                            pay_currency: dbPayment.pay_currency,
+                            price_amount: dbPayment.price_amount,
+                            price_currency: dbPayment.price_currency,
+                            pay_address: dbPayment.pay_address,
+                            created_at: dbPayment.created_at,
+                            email: dbPayment.email
+                        });
 
-                    if (emailResult.success) {
-                        await pool.query(
-                            'UPDATE crypto_payments SET email_sent = TRUE WHERE id = $1',
-                            [dbPayment.id]
-                        );
+                        if (emailResult.success) {
+                            await pool.query(
+                                'UPDATE crypto_payments SET email_sent = TRUE WHERE id = $1',
+                                [dbPayment.id]
+                            );
+                        }
+                    } catch (emailErr) {
+                        console.error('Erreur envoi email:', emailErr.message);
                     }
                 }
             }
         } else {
             // Fallback : parser l'order_id
-            const orderParts = (payment.order_id || '').split('_');
+            const orderParts = String(payment.order_id || '').split('_');
             const userId = parseInt(orderParts[0]);
             const plan = orderParts[1];
 
@@ -1225,11 +1199,10 @@ app.post('/api/crypto/webhook', express.json(), async (req, res) => {
     }
 });
 
-// Historique des paiements crypto
 app.get('/api/crypto/payments', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT id, order_id, payment_id, plan, pay_currency, pay_amount, price_amount, price_currency, payment_status, created_at FROM crypto_payments WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            'SELECT id, order_id, order_number, payment_id, plan, pay_currency, pay_amount, price_amount, price_currency, payment_status, created_at FROM crypto_payments WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
             [req.user.id]
         );
         res.json({ payments: result.rows });
@@ -1248,15 +1221,9 @@ app.get('/api/usage', authenticateToken, async (req, res) => {
         const monthCount = await getMonthlySearchCount(req.user.id);
 
         const todayResult = await pool.query(
-            `SELECT 
-                (SELECT COUNT(*) FROM search_history 
-                 WHERE user_id = $1 
-                 AND DATE(created_at) = CURRENT_DATE)
-                +
-                (SELECT COUNT(*) FROM api_logs 
-                 WHERE user_id = $1 
-                 AND DATE(created_at) = CURRENT_DATE)
-             AS total`,
+            `SELECT COUNT(*) AS total FROM search_history 
+             WHERE user_id = $1 
+             AND DATE(created_at) = CURRENT_DATE`,
             [req.user.id]
         );
         const todayCount = parseInt(todayResult.rows[0].total) || 0;
@@ -1270,7 +1237,7 @@ app.get('/api/usage', authenticateToken, async (req, res) => {
             today: todayCount,
             month: monthCount,
             limit: limit === Infinity ? '∞' : limit,
-            remaining: remaining,
+            remaining,
             resultsPerSearch: limits.resultsPerSearch
         });
     } catch (error) {
@@ -1326,7 +1293,7 @@ app.get('/api/keys/limits', authenticateToken, async (req, res) => {
 
         res.json({
             plan: req.user.plan || 'free',
-            currentCount: currentCount,
+            currentCount,
             maxKeys: limits.apiKeys
         });
     } catch (error) {
@@ -1347,8 +1314,8 @@ app.post('/api/keys', authenticateToken, async (req, res) => {
 
         if (currentCount >= limits.apiKeys) {
             return res.status(403).json({
-                error: `Limite atteinte pour le plan ${req.user.plan.toUpperCase()} (${limits.apiKeys} clé${limits.apiKeys > 1 ? 's' : ''} maximum)`,
-                currentCount: currentCount,
+                error: `Limite atteinte pour le plan ${(req.user.plan || 'free').toUpperCase()} (${limits.apiKeys} clé${limits.apiKeys > 1 ? 's' : ''} maximum)`,
+                currentCount,
                 maxKeys: limits.apiKeys,
                 plan: req.user.plan
             });
@@ -1424,7 +1391,7 @@ app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) =>
             [req.user.id]
         );
         const isProtected = result.rows[0]?.username === process.env.ADMIN_USERNAME;
-        res.json({ isAdmin: true, isProtected: isProtected, user: result.rows[0] });
+        res.json({ isAdmin: true, isProtected, user: result.rows[0] });
     } catch (error) {
         res.status(500).json({ error: 'Erreur' });
     }
@@ -1432,13 +1399,16 @@ app.get('/api/admin/check', authenticateToken, requireAdmin, async (req, res) =>
 
 app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const totalUsers = await pool.query('SELECT COUNT(*) FROM users');
-        const totalSearches = await pool.query('SELECT COUNT(*) FROM search_history');
-        const totalFiches = await pool.query('SELECT COUNT(*) FROM fiches');
-        const totalGraphes = await pool.query('SELECT COUNT(*) FROM graphes');
-        const bannedUsers = await pool.query('SELECT COUNT(*) FROM users WHERE banned = TRUE');
-        const searchesToday = await pool.query('SELECT COUNT(*) FROM search_history WHERE DATE(created_at) = CURRENT_DATE');
-        const usersToday = await pool.query('SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURRENT_DATE');
+        const [totalUsers, totalSearches, totalFiches, totalGraphes, bannedUsers, searchesToday, usersToday] = await Promise.all([
+            pool.query('SELECT COUNT(*) FROM users'),
+            pool.query('SELECT COUNT(*) FROM search_history'),
+            pool.query('SELECT COUNT(*) FROM fiches'),
+            pool.query('SELECT COUNT(*) FROM graphes'),
+            pool.query('SELECT COUNT(*) FROM users WHERE banned = TRUE'),
+            pool.query('SELECT COUNT(*) FROM search_history WHERE DATE(created_at) = CURRENT_DATE'),
+            pool.query('SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURRENT_DATE')
+        ]);
+
         res.json({
             total_users: parseInt(totalUsers.rows[0].count),
             total_searches: parseInt(totalSearches.rows[0].count),
@@ -1454,8 +1424,11 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
 });
 
 app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
-    const { page = 1, limit = 20, search = '' } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const search = req.query.search || '';
     const offset = (page - 1) * limit;
+
     try {
         let query = `
             SELECT 
@@ -1467,12 +1440,14 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
             WHERE u.username != $1
         `;
         const params = [process.env.ADMIN_USERNAME];
+
         if (search) {
             query += ` AND (u.username ILIKE $${params.length + 1} OR u.reg_ip ILIKE $${params.length + 1})`;
             params.push(`%${search}%`);
         }
         query += ` ORDER BY u.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
         params.push(limit, offset);
+
         const result = await pool.query(query, params);
 
         let countQuery = 'SELECT COUNT(*) FROM users WHERE username != $1';
@@ -1486,8 +1461,8 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
         res.json({
             users: result.rows,
             total: parseInt(countResult.rows[0].count),
-            page: parseInt(page),
-            limit: parseInt(limit)
+            page,
+            limit
         });
     } catch (error) {
         console.error('Admin users error:', error);
@@ -1502,6 +1477,7 @@ app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être consulté' });
         }
+
         const result = await pool.query(`
             SELECT 
                 u.id, u.username, u.role, u.created_at, u.last_login, u.banned, u.reg_ip, u.plan, u.custom_quota,
@@ -1511,13 +1487,17 @@ app.get('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
             FROM users u
             WHERE u.id = $1
         `, [id]);
+
         if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
-        const ips = await pool.query('SELECT ip, created_at FROM ip_used WHERE user_id = $1', [id]);
-        const searches = await pool.query(
-            'SELECT id, query, results_count, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
-            [id]
-        );
+        const [ips, searches] = await Promise.all([
+            pool.query('SELECT ip, created_at FROM ip_used WHERE user_id = $1', [id]),
+            pool.query(
+                'SELECT id, query, results_count, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
+                [id]
+            )
+        ]);
+
         res.json({ user: result.rows[0], ips: ips.rows, recent_searches: searches.rows });
     } catch (error) {
         console.error('User detail error:', error);
@@ -1533,8 +1513,8 @@ app.post('/api/admin/users/:id/ban', authenticateToken, requireAdmin, async (req
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Ce compte admin ne peut pas être banni' });
         }
-        await pool.query('UPDATE users SET banned = $1 WHERE id = $2', [banned, id]);
-        res.json({ success: true, banned });
+        await pool.query('UPDATE users SET banned = $1 WHERE id = $2', [!!banned, id]);
+        res.json({ success: true, banned: !!banned });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
     }
@@ -1557,6 +1537,10 @@ app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, 
 app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
+    const validRoles = ['user', 'admin', 'moderator'];
+    if (!validRoles.includes(role)) {
+        return res.status(400).json({ error: 'Rôle invalide' });
+    }
     try {
         const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
         if (adminCheck.rows[0]?.username === process.env.ADMIN_USERNAME) {
@@ -1573,7 +1557,7 @@ app.post('/api/admin/users/:id/quota', authenticateToken, requireAdmin, async (r
     const { id } = req.params;
     const { custom_quota } = req.body;
     try {
-        const quota = parseInt(custom_quota) || 0;
+        const quota = Math.max(0, parseInt(custom_quota) || 0);
         await pool.query('UPDATE users SET custom_quota = $1 WHERE id = $2', [quota, id]);
         res.json({ success: true, custom_quota: quota });
     } catch (error) {
@@ -1610,7 +1594,7 @@ app.post('/api/admin/blocklist', authenticateToken, requireAdmin, async (req, re
     try {
         const result = await pool.query(
             'INSERT INTO blocklist (type, value, reason, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
-            [type, value, reason, req.user.id]
+            [type, value, reason || null, req.user.id]
         );
         res.status(201).json({ success: true, entry: result.rows[0] });
     } catch (error) {
@@ -1713,7 +1697,8 @@ app.patch('/api/admin/tickets/:id/status', authenticateToken, requireAdmin, asyn
 });
 
 app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res) => {
-    const { page = 1, limit = 50 } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
     const offset = (page - 1) * limit;
     try {
         const result = await pool.query(`
@@ -1727,8 +1712,8 @@ app.get('/api/admin/searches', authenticateToken, requireAdmin, async (req, res)
         res.json({
             searches: result.rows,
             total: parseInt(count.rows[0].count),
-            page: parseInt(page),
-            limit: parseInt(limit)
+            page,
+            limit
         });
     } catch (error) {
         res.status(500).json({ error: 'Erreur serveur' });
@@ -1759,11 +1744,12 @@ app.post('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, re
 // ============================================
 // 24bis. ROUTES ADMIN CRYPTO (Commandes)
 // ============================================
-
-// Liste des commandes crypto (avec pagination + recherche)
 app.get('/api/admin/crypto/orders', authenticateToken, requireAdmin, async (req, res) => {
-    const { page = 1, limit = 30, search = '' } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 30));
+    const search = req.query.search || '';
     const offset = (page - 1) * limit;
+
     try {
         let query = `
             SELECT c.*, u.username as user_name
@@ -1792,8 +1778,8 @@ app.get('/api/admin/crypto/orders', authenticateToken, requireAdmin, async (req,
         res.json({
             orders: result.rows,
             total: parseInt(countResult.rows[0].count),
-            page: parseInt(page),
-            limit: parseInt(limit)
+            page,
+            limit
         });
     } catch (error) {
         console.error('Admin crypto orders error:', error);
@@ -1801,14 +1787,13 @@ app.get('/api/admin/crypto/orders', authenticateToken, requireAdmin, async (req,
     }
 });
 
-// Détail d'une commande
 app.get('/api/admin/crypto/orders/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         const result = await pool.query(
             `SELECT c.*, u.username as user_name FROM crypto_payments c
              LEFT JOIN users u ON c.user_id = u.id
-             WHERE c.id = $1 OR c.order_number = $1`,
+             WHERE c.id = $1 OR c.order_number = $1 OR c.order_id = $1`,
             [id]
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Commande non trouvée' });
@@ -1819,46 +1804,49 @@ app.get('/api/admin/crypto/orders/:id', authenticateToken, requireAdmin, async (
     }
 });
 
-// Valider manuellement une commande
 app.post('/api/admin/crypto/orders/:id/validate', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     try {
-        const orderResult = await pool.query('SELECT * FROM crypto_payments WHERE id = $1 OR order_number = $1', [id]);
+        const orderResult = await pool.query(
+            'SELECT * FROM crypto_payments WHERE id = $1 OR order_number = $1',
+            [id]
+        );
         if (orderResult.rows.length === 0) return res.status(404).json({ error: 'Commande non trouvée' });
 
         const order = orderResult.rows[0];
 
-        // Mettre à jour le statut
         await pool.query(
             "UPDATE crypto_payments SET payment_status = 'confirmed', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
             [order.id]
         );
 
-        // Activer le plan
         await pool.query(
             'UPDATE users SET plan = $1, subscription_status = $2 WHERE id = $3',
             [order.plan, 'active', order.user_id]
         );
 
-        // Envoi email (si pas déjà envoyé)
         if (!order.email_sent && order.email) {
-            const emailResult = await emailService.sendReceiptEmail({
-                order_number: order.order_number,
-                plan: order.plan,
-                pay_amount: order.pay_amount,
-                pay_currency: order.pay_currency,
-                price_amount: order.price_amount,
-                price_currency: order.price_currency,
-                pay_address: order.pay_address,
-                created_at: order.created_at,
-                email: order.email
-            });
+            try {
+                const emailResult = await emailService.sendReceiptEmail({
+                    order_number: order.order_number,
+                    plan: order.plan,
+                    pay_amount: order.pay_amount,
+                    pay_currency: order.pay_currency,
+                    price_amount: order.price_amount,
+                    price_currency: order.price_currency,
+                    pay_address: order.pay_address,
+                    created_at: order.created_at,
+                    email: order.email
+                });
 
-            if (emailResult.success) {
-                await pool.query(
-                    'UPDATE crypto_payments SET email_sent = TRUE WHERE id = $1',
-                    [order.id]
-                );
+                if (emailResult.success) {
+                    await pool.query(
+                        'UPDATE crypto_payments SET email_sent = TRUE WHERE id = $1',
+                        [order.id]
+                    );
+                }
+            } catch (emailErr) {
+                console.error('Erreur envoi email:', emailErr.message);
             }
         }
 
@@ -1870,12 +1858,14 @@ app.post('/api/admin/crypto/orders/:id/validate', authenticateToken, requireAdmi
     }
 });
 
-// Refuser manuellement une commande
 app.post('/api/admin/crypto/orders/:id/refuse', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body || {};
     try {
-        const orderResult = await pool.query('SELECT * FROM crypto_payments WHERE id = $1 OR order_number = $1', [id]);
+        const orderResult = await pool.query(
+            'SELECT * FROM crypto_payments WHERE id = $1 OR order_number = $1',
+            [id]
+        );
         if (orderResult.rows.length === 0) return res.status(404).json({ error: 'Commande non trouvée' });
 
         const order = orderResult.rows[0];
@@ -1988,6 +1978,7 @@ app.use('/api/v1', apiV1Routes);
 // 28. CONFIG PUBLIQUE
 // ============================================
 app.get('/api/config', (req, res) => {
+    res.set('Cache-Control', 'public, max-age=60');
     res.json({
         devApi: process.env.DEV_API === 'ON',
         maintenance: process.env.MAINTENANCE === 'ON'
@@ -1997,8 +1988,13 @@ app.get('/api/config', (req, res) => {
 // ============================================
 // 29. HEALTH CHECK
 // ============================================
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({ status: 'ok', db: 'ok', timestamp: new Date().toISOString() });
+    } catch (error) {
+        res.status(503).json({ status: 'error', db: 'down', timestamp: new Date().toISOString() });
+    }
 });
 
 // ============================================
@@ -2023,9 +2019,32 @@ process.on('unhandledRejection', (err) => {
 // ============================================
 // 31. DÉMARRAGE
 // ============================================
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Marauder API running on port ${PORT}`);
+});
+
 (async () => {
-    await initDB();
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Marauder API running on port ${PORT}`);
-    });
+    try {
+        await initDB();
+    } catch (error) {
+        console.error('❌ Impossible de démarrer l\'API:', error.message);
+        process.exit(1);
+    }
 })();
+
+// Arrêt propre
+const shutdown = async (signal) => {
+    console.log(`\n${signal} reçu, arrêt en cours...`);
+    server.close(async () => {
+        try {
+            await pool.end();
+            console.log('✅ Pool PG fermé');
+        } catch (e) {
+            console.error('Erreur fermeture pool:', e.message);
+        }
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
