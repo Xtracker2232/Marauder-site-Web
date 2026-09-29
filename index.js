@@ -227,7 +227,62 @@ const initDB = async () => {
         `);
         console.log('✅ Migration Custom Quota OK');
 
+        // ⬇️⬇️⬇️ AJOUTE TON BLOC CRYPTO ICI ⬇️⬇️⬇️
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS crypto_payments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                order_id VARCHAR(255) UNIQUE NOT NULL,
+                order_number VARCHAR(50) UNIQUE,
+                payment_id VARCHAR(255),
+                plan VARCHAR(50) NOT NULL,
+                pay_currency VARCHAR(50) NOT NULL,
+                pay_amount NUMERIC,
+                pay_address TEXT,
+                price_amount NUMERIC,
+                price_currency VARCHAR(10) DEFAULT 'eur',
+                payment_status VARCHAR(50) DEFAULT 'waiting',
+                email VARCHAR(255),
+                email_sent BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
+            CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
+            CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
+            CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
 
+            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
+            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
+
+            CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
+        `);
+        console.log('✅ Migration Crypto Payments v2 OK');
+        // ⬆️⬆️⬆️ FIN DE TON BLOC CRYPTO ⬆️⬆️⬆️
+
+        const result = await client.query(
+            'SELECT COUNT(*) FROM users WHERE username = $1',
+            [process.env.ADMIN_USERNAME]
+        );
+        if (parseInt(result.rows[0].count) === 0) {
+            const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+            await client.query(
+                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+                [process.env.ADMIN_USERNAME, hashedPassword, 'admin']
+            );
+            console.log('✅ Admin créé');
+        } else {
+            await client.query(
+                'UPDATE users SET role = $1 WHERE username = $2',
+                ['admin', process.env.ADMIN_USERNAME]
+            );
+            console.log('✅ Admin vérifié');
+        }
+    } finally {
+        client.release();
+    }
+};
         const result = await client.query(
             'SELECT COUNT(*) FROM users WHERE username = $1',
             [process.env.ADMIN_USERNAME]
