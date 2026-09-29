@@ -236,106 +236,34 @@ async function initDB() {
         `);
 
         // --- Crypto Payments (NOWPayments) ---
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS crypto_payments (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                order_id VARCHAR(255) UNIQUE NOT NULL,
-                order_number VARCHAR(50) UNIQUE,
-                payment_id VARCHAR(255),
-                plan VARCHAR(50) NOT NULL,
-                pay_currency VARCHAR(50) NOT NULL,
-                pay_amount NUMERIC,
-                pay_address TEXT,
-                price_amount NUMERIC,
-                price_currency VARCHAR(10) DEFAULT 'eur',
-                payment_status VARCHAR(50) DEFAULT 'waiting',
-                email VARCHAR(255),
-                email_sent BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
-            CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
-            CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
-            CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
-
-            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
-            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
-            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
-
-            CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
-        `);
-
-        // --- Admin par défaut ---
-        const adminCheck = await client.query(
-            'SELECT id FROM users WHERE username = $1',
-            [process.env.ADMIN_USERNAME]
-        );
-
-        if (adminCheck.rows.length === 0) {
-            const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
-            await client.query(
-                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
-                [process.env.ADMIN_USERNAME, hashedPassword, 'admin']
-            );
-            console.log('✅ Admin créé');
-        } else {
-            await client.query(
-                'UPDATE users SET role = $1 WHERE username = $2',
-                ['admin', process.env.ADMIN_USERNAME]
-            );
-            console.log('✅ Admin vérifié');
-        }
-
-        await client.query('COMMIT');
-        console.log('✅ Base de données initialisée');
-    } catch (error) {
-        await client.query('ROLLBACK');
-        console.error('❌ Erreur initDB:', error.message);
-        throw error;
-    } finally {
-        client.release();
-    }
-}
-
-// ============================================
-// 6. HELPERS
-// ============================================
-async function getBlocklist() {
-    try {
-        const result = await pool.query('SELECT type, value FROM blocklist');
-        return result.rows;
-    } catch (error) {
-        console.error('Erreur blocklist:', error.message);
-        return [];
-    }
-}
-
-function isBlocked(person, blocklist) {
-    if (!blocklist || blocklist.length === 0 || !person) return false;
-    for (const entry of blocklist) {
-        if (!entry?.type || !entry?.value) continue;
-        const fieldValue = person[entry.type];
-        if (fieldValue && typeof fieldValue === 'string') {
-            if (fieldValue.toLowerCase().includes(entry.value.toLowerCase())) {
-                console.log(`🚫 Bloqué: ${entry.type}=${entry.value}`);
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-async function getMonthlySearchCount(userId) {
-    const result = await pool.query(
-        `SELECT COUNT(*) AS total FROM search_history 
-         WHERE user_id = $1 
-         AND created_at >= date_trunc('month', CURRENT_DATE)`,
-        [userId]
+await client.query(`
+    CREATE TABLE IF NOT EXISTS crypto_payments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        order_id VARCHAR(255) UNIQUE NOT NULL,
+        payment_id VARCHAR(255),
+        plan VARCHAR(50) NOT NULL,
+        pay_currency VARCHAR(50) NOT NULL,
+        pay_amount NUMERIC,
+        pay_address TEXT,
+        price_amount NUMERIC,
+        price_currency VARCHAR(10) DEFAULT 'eur',
+        payment_status VARCHAR(50) DEFAULT 'waiting',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    return parseInt(result.rows[0].total) || 0;
-}
+
+    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
+    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
+
+    CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
+
+    CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
+    CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
+    CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
+    CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
+`);
 
 // ============================================
 // 7. MIDDLEWARES GLOBAUX
