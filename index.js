@@ -57,7 +57,7 @@ pool.on('error', (err) => {
 });
 
 // ============================================
-// 4. LIMITES PAR PLAN (source unique de vérité)
+// 4. LIMITES PAR PLAN
 // ============================================
 const PLAN_LIMITS = {
     free:       { apiKeys: 1,        searchesPerMonth: 10,       resultsPerSearch: 10,  fiches: 10 },
@@ -164,7 +164,7 @@ async function initDB() {
             );
         `);
 
-        // --- Migrations users (Stripe, plan, quota) ---
+        // --- Migrations users ---
         await client.query(`
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255),
@@ -236,40 +236,108 @@ async function initDB() {
         `);
 
         // --- Crypto Payments (NOWPayments) ---
-await client.query(`
-    CREATE TABLE IF NOT EXISTS crypto_payments (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        order_id VARCHAR(255) UNIQUE NOT NULL,
-        payment_id VARCHAR(255),
-        plan VARCHAR(50) NOT NULL,
-        pay_currency VARCHAR(50) NOT NULL,
-        pay_amount NUMERIC,
-        pay_address TEXT,
-        price_amount NUMERIC,
-        price_currency VARCHAR(10) DEFAULT 'eur',
-        payment_status VARCHAR(50) DEFAULT 'waiting',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS crypto_payments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                order_id VARCHAR(255) UNIQUE NOT NULL,
+                payment_id VARCHAR(255),
+                plan VARCHAR(50) NOT NULL,
+                pay_currency VARCHAR(50) NOT NULL,
+                pay_amount NUMERIC,
+                pay_address TEXT,
+                price_amount NUMERIC,
+                price_currency VARCHAR(10) DEFAULT 'eur',
+                payment_status VARCHAR(50) DEFAULT 'waiting',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
+            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+            ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
+
+            CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
+
+            CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
+            CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
+            CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
+            CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
+        `);
+
+        // --- Admin par défaut ---
+        const adminCheck = await client.query(
+            'SELECT id FROM users WHERE username = $1',
+            [process.env.ADMIN_USERNAME]
+        );
+
+        if (adminCheck.rows.length === 0) {
+            const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+            await client.query(
+                'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+                [process.env.ADMIN_USERNAME, hashedPassword, 'admin']
+            );
+            console.log('✅ Admin créé');
+        } else {
+            await client.query(
+                'UPDATE users SET role = $1 WHERE username = $2',
+                ['admin', process.env.ADMIN_USERNAME]
+            );
+            console.log('✅ Admin vérifié');
+        }
+
+        await client.query('COMMIT');
+        console.log('✅ Base de données initialisée');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ Erreur initDB:', error.message);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+// ============================================
+// 6. HELPERS
+// ============================================
+async function getBlocklist() {
+    try {
+        const result = await pool.query('SELECT type, value FROM blocklist');
+        return result.rows;
+    } catch (error) {
+        console.error('Erreur blocklist:', error.message);
+        return [];
+    }
+}
+
+function isBlocked(person, blocklist) {
+    if (!blocklist || blocklist.length === 0 || !person) return false;
+    for (const entry of blocklist) {
+        if (!entry?.type || !entry?.value) continue;
+        const fieldValue = person[entry.type];
+        if (fieldValue && typeof fieldValue === 'string') {
+            if (fieldValue.toLowerCase().includes(entry.value.toLowerCase())) {
+                console.log(`🚫 Bloqué: ${entry.type}=${entry.value}`);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+async function getMonthlySearchCount(userId) {
+    const result = await pool.query(
+        `SELECT COUNT(*) AS total FROM search_history 
+         WHERE user_id = $1 
+         AND created_at >= date_trunc('month', CURRENT_DATE)`,
+        [userId]
     );
-
-    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
-    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email VARCHAR(255);
-    ALTER TABLE crypto_payments ADD COLUMN IF NOT EXISTS email_sent BOOLEAN DEFAULT FALSE;
-
-    CREATE SEQUENCE IF NOT EXISTS crypto_order_seq START 1;
-
-    CREATE INDEX IF NOT EXISTS idx_crypto_order ON crypto_payments(order_id);
-    CREATE INDEX IF NOT EXISTS idx_crypto_order_number ON crypto_payments(order_number);
-    CREATE INDEX IF NOT EXISTS idx_crypto_payment_id ON crypto_payments(payment_id);
-    CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
-`);
+    return parseInt(result.rows[0].total) || 0;
+}
 
 // ============================================
 // 7. MIDDLEWARES GLOBAUX
 // ============================================
-
-// ⚠️ IMPORTANT : raw body pour vérifier signature NOWPayments
 app.use('/api/crypto/webhook', express.raw({ type: 'application/json' }));
 
 app.use((req, res, next) => {
@@ -613,7 +681,6 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
         );
 
         let results = response.data.data?.results || [];
-        // Limite résultats selon plan
         if (results.length > limits.resultsPerSearch) {
             results = results.slice(0, limits.resultsPerSearch);
         }
@@ -664,7 +731,6 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Recherche non trouvée' });
 
-        // Vérif quota
         const limits = await getUserLimits(req.user.id);
         if (limits.searchesPerMonth !== Infinity) {
             const used = await getMonthlySearchCount(req.user.id);
@@ -871,7 +937,6 @@ app.delete('/api/graphes/:id', authenticateToken, async (req, res) => {
 // ============================================
 // 19. ROUTES CRYPTO (NOWPayments)
 // ============================================
-
 app.post('/api/crypto/create-payment', authenticateToken, async (req, res) => {
     try {
         const { plan, pay_currency, email } = req.body;
@@ -1029,7 +1094,6 @@ app.get('/api/crypto/status/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// ⚠️ Webhook NOWPayments : utilise req.body RAW (Buffer)
 app.post('/api/crypto/webhook', async (req, res) => {
     try {
         const signature = req.headers['x-nowpayments-sig'];
@@ -1037,12 +1101,11 @@ app.post('/api/crypto/webhook', async (req, res) => {
             return res.status(400).json({ error: 'Signature manquante' });
         }
 
-        const rawBody = req.body; // Buffer
+        const rawBody = req.body;
         const hmac = crypto.createHmac('sha512', process.env.NOWPAYMENTS_IPN_SECRET);
         hmac.update(rawBody);
         const computedSignature = hmac.digest('hex');
 
-        // Comparaison en temps constant
         const sigBuf = Buffer.from(signature, 'hex');
         const computedBuf = Buffer.from(computedSignature, 'hex');
         if (sigBuf.length !== computedBuf.length || !crypto.timingSafeEqual(sigBuf, computedBuf)) {
@@ -1050,7 +1113,6 @@ app.post('/api/crypto/webhook', async (req, res) => {
             return res.status(401).json({ error: 'Signature invalide' });
         }
 
-        // Parse le JSON APRÈS vérification
         let payment;
         try {
             payment = JSON.parse(rawBody.toString('utf8'));
@@ -1106,7 +1168,6 @@ app.post('/api/crypto/webhook', async (req, res) => {
                 }
             }
         } else {
-            // Fallback : parser l'order_id
             const orderParts = String(payment.order_id || '').split('_');
             const userId = parseInt(orderParts[0]);
             const plan = orderParts[1];
@@ -1670,7 +1731,7 @@ app.post('/api/admin/api-maintenance', authenticateToken, requireAdmin, (req, re
 });
 
 // ============================================
-// 24bis. ROUTES ADMIN CRYPTO (Commandes)
+// 24bis. ROUTES ADMIN CRYPTO
 // ============================================
 app.get('/api/admin/crypto/orders', authenticateToken, requireAdmin, async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -1960,7 +2021,6 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     }
 })();
 
-// Arrêt propre
 const shutdown = async (signal) => {
     console.log(`\n${signal} reçu, arrêt en cours...`);
     server.close(async () => {
