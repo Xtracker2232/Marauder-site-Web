@@ -70,16 +70,27 @@ router.post('/search',
                 });
             }
 
-            const results = extractBrixResults(response);
+            let results = extractBrixResults(response);
             const meta = extractBrixMeta(response);
             const maintenance = isBrixMaintenance(response);
+
+            // ===== LIMITATION SELON LE PLAN =====
+            const maxResults = req.apiKey.resultsPerSearch;
+            const totalBeforeLimit = results.length;
+            if (maxResults !== Infinity && results.length > maxResults) {
+                results = results.slice(0, maxResults);
+            }
 
             return res.json({
                 success: true,
                 mock: false,
                 data: { results },
                 meta: {
-                    total: meta.total || results.length,
+                    total: meta.total || totalBeforeLimit,
+                    returned: results.length,
+                    plan_limit: maxResults === Infinity ? '∞' : maxResults,
+                    limited: totalBeforeLimit !== results.length,
+                    total_before_limit: totalBeforeLimit,
                     page: meta.page || 1,
                     pages: meta.pages || 1,
                     per_page: meta.per_page || results.length,
@@ -143,16 +154,26 @@ router.get('/lookup/:type/:value',
                 });
             }
 
-            const results = extractBrixResults(response);
+            let results = extractBrixResults(response);
             const meta = extractBrixMeta(response);
             const maintenance = isBrixMaintenance(response);
+
+            // ===== LIMITATION SELON LE PLAN =====
+            const maxResults = req.apiKey.resultsPerSearch;
+            const totalBeforeLimit = results.length;
+            if (maxResults !== Infinity && results.length > maxResults) {
+                results = results.slice(0, maxResults);
+            }
 
             return res.json({
                 success: true,
                 mock: false,
                 data: { results },
                 meta: {
-                    total: meta.total || results.length,
+                    total: meta.total || totalBeforeLimit,
+                    returned: results.length,
+                    plan_limit: maxResults === Infinity ? '∞' : maxResults,
+                    limited: totalBeforeLimit !== results.length,
                     took_ms: meta.took_ms || 0,
                     maintenance: maintenance,
                     warning: maintenance ? 'BrixHub signale une maintenance — résultats possiblement incomplets' : null
@@ -189,6 +210,7 @@ router.get('/me',
             res.json({
                 success: true,
                 plan: req.apiKey.plan,
+                resultsPerSearch: req.apiKey.resultsPerSearch,
                 usage: {
                     used: used,
                     limit: limit === Infinity ? '∞' : limit,
@@ -200,8 +222,6 @@ router.get('/me',
         }
     }
 );
-
-module.exports = router;
 
 // ============================================
 // GET /api/v1/usage — Stats API de l'utilisateur
@@ -243,6 +263,7 @@ router.get('/usage',
             res.json({
                 success: true,
                 plan: req.apiKey.plan,
+                resultsPerSearch: req.apiKey.resultsPerSearch,
                 usage: {
                     today: todayCount,
                     month: monthCount,
@@ -257,3 +278,5 @@ router.get('/usage',
         }
     }
 );
+
+module.exports = router;

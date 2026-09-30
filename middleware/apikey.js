@@ -15,14 +15,18 @@ const pool = new Pool({
 // ⚠️ Doit rester synchronisé avec index.js (PLAN_LIMITS)
 // ============================================
 const PLAN_LIMITS = {
-    free:       { api: 10 },
-    starter:    { api: 1000 },
-    pro:        { api: 10000 },
-    enterprise: { api: Infinity }
+    free:       { api: 10,       resultsPerSearch: 10  },
+    starter:    { api: 1000,     resultsPerSearch: 50  },
+    pro:        { api: 10000,    resultsPerSearch: 100 },
+    enterprise: { api: Infinity, resultsPerSearch: 100 }
 };
 
 function getPlanLimit(plan) {
     return PLAN_LIMITS[plan]?.api ?? 10;
+}
+
+function getPlanResultsPerSearch(plan) {
+    return PLAN_LIMITS[plan]?.resultsPerSearch ?? 10;
 }
 
 // ============================================
@@ -100,6 +104,7 @@ const requireApiKey = async (req, res, next) => {
         const limit = keyData.custom_quota > 0
             ? keyData.custom_quota
             : getPlanLimit(plan);
+        const resultsPerSearch = getPlanResultsPerSearch(plan);
 
         // Vérifier la limite mensuelle SAUF pour /me et /usage
         const isStatsRoute = req.path === '/me' ||
@@ -137,6 +142,7 @@ const requireApiKey = async (req, res, next) => {
             userId: keyData.user_id,
             plan: plan,
             limit: limit,
+            resultsPerSearch: resultsPerSearch,
             isCustomQuota: keyData.custom_quota > 0
         };
 
@@ -160,7 +166,6 @@ const logApiRequest = (endpoint, method) => {
     return async (req, res, next) => {
         const startTime = Date.now();
 
-        // Ne pas logger les routes de stats
         const isStatsRoute = req.path === '/me' ||
                              req.path === '/usage' ||
                              req.originalUrl.includes('/api/v1/me') ||
@@ -170,7 +175,6 @@ const logApiRequest = (endpoint, method) => {
             return next();
         }
 
-        // Ne pas logger les requêtes OPTIONS (preflight CORS)
         if (req.method === 'OPTIONS') {
             return next();
         }
@@ -178,7 +182,6 @@ const logApiRequest = (endpoint, method) => {
         res.on('finish', async () => {
             if (!req.apiKey) return;
 
-            // ✅ Ne compter QUE les requêtes réussies (2xx)
             if (res.statusCode < 200 || res.statusCode >= 300) {
                 return;
             }
