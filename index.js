@@ -329,18 +329,15 @@ async function getMonthlySearchCount(userId) {
 }
 
 // ============================================
-// 6bis. HELPER BRIXHUB (nouveau format)
+// 6bis. HELPER BRIXHUB
 // ============================================
 function extractBrixResults(response) {
-    // Nouveau format : response.data.data.results
-    // Ancien format : response.data.results
     if (response?.data?.data?.results) return response.data.data.results;
     if (response?.data?.results) return response.data.results;
     return [];
 }
 
 function extractBrixMeta(response) {
-    // Le meta peut être à response.data.meta (nouveau) ou response.data.data.meta
     return response?.data?.meta || response?.data?.data?.meta || {};
 }
 
@@ -458,6 +455,7 @@ const RATE_LIMIT_EXEMPT = [
     '/api/logs',
     '/api/keys',
     '/api/keys/limits',
+    '/api/my-api-usage',
     '/api/config',
     '/api/health',
     '/api/stripe/webhook',
@@ -632,7 +630,6 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
             }
         );
 
-        // ✅ Extraction compatible ancien + nouveau format BrixHub
         let results = extractBrixResults(response);
         const meta = extractBrixMeta(response);
         const maintenance = isBrixMaintenance(response);
@@ -1377,6 +1374,44 @@ app.delete('/api/keys/:id', authenticateToken, async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Delete key error:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============================================
+// 22bis. STATS API v1 (pour dashboard)
+// ============================================
+app.get('/api/my-api-usage', authenticateToken, async (req, res) => {
+    try {
+        const limits = await getUserLimits(req.user.id);
+        const apiLimit = limits.searchesPerMonth;
+
+        const monthResult = await pool.query(
+            `SELECT COUNT(*) AS total FROM api_logs
+             WHERE user_id = $1
+             AND created_at >= date_trunc('month', CURRENT_DATE)`,
+            [req.user.id]
+        );
+        const monthCount = parseInt(monthResult.rows[0].total) || 0;
+
+        const todayResult = await pool.query(
+            `SELECT COUNT(*) AS total FROM api_logs
+             WHERE user_id = $1
+             AND DATE(created_at) = CURRENT_DATE`,
+            [req.user.id]
+        );
+        const todayCount = parseInt(todayResult.rows[0].total) || 0;
+
+        const remaining = apiLimit === Infinity ? '∞' : Math.max(0, apiLimit - monthCount);
+
+        res.json({
+            today: todayCount,
+            month: monthCount,
+            limit: apiLimit === Infinity ? '∞' : apiLimit,
+            remaining
+        });
+    } catch (error) {
+        console.error('My api usage error:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
