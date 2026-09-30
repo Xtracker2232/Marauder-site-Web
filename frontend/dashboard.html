@@ -103,7 +103,7 @@
         .search-tab-content { display: none; }
         .search-tab-content.active { display: block; }
         .section { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; user-select: none; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .section-header h3 { font-size: 15px; font-weight: 600; color: #ffffff; }
         .section-header .toggle-icon { color: #6b6b6b; transition: transform 0.3s ease; }
         .section-header .toggle-icon.open { transform: rotate(180deg); }
@@ -113,6 +113,7 @@
         .form-group { margin-bottom: 0; }
         .form-group label { display: block; font-size: 13px; font-weight: 500; color: #a0a0a0; margin-bottom: 6px; }
         .form-group input, .form-group select { width: 100%; padding: 10px 14px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; color: #ffffff; font-size: 14px; font-family: Arial, sans-serif; outline: none; }
+
         .form-group input:focus, .form-group select:focus { border-color: #ffffff; }
 
         .search-actions { display: flex; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; }
@@ -328,8 +329,8 @@
         /* ============================================
         MOBILE
         ============================================ */
-        .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; background: #111111; border: 1px solid #2a2a2a; border-radius: 10px; color: #ffffff; padding: 8px 10px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; }
-        .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; }
+        .mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; background: #111111; border: 1px solid #2a2a2a; border-radius: 10px; color: #ffffff; padding: 8px 10px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; -webkit-tap-highlight-color: transparent; }
         .sidebar-backdrop.active { display: block; }
 
         @media screen and (max-width: 768px) {
@@ -941,7 +942,7 @@
     </div>
 
     <!-- ============ BOUTON MENU MOBILE ============ -->
-    <button class="mobile-menu-btn" id="mobileMenuBtn">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
             <line x1="3" y1="12" x2="21" y2="12"/>
             <line x1="3" y1="6" x2="21" y2="6"/>
@@ -2678,58 +2679,89 @@ print(data)`
             });
         }
 
-        // Mobile menu
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        // ============================================
+        // MENU MOBILE + BACKDROP + FERMETURE AUTO
+        // ============================================
+        (function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
-    if (!mobileMenuBtn || !sidebar || !sidebarBackdrop) {
-        console.error('Éléments du menu mobile introuvables');
-        return;
-    }
+            if (!mobileMenuBtn || !sidebar || !sidebarBackdrop) {
+                console.error('Éléments du menu mobile introuvables');
+                return;
+            }
 
-    mobileMenuBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        sidebar.classList.toggle('open');
-        sidebarBackdrop.classList.toggle('active');
-    });
+            function toggleMenu(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                sidebar.classList.toggle('open');
+                sidebarBackdrop.classList.toggle('active');
+            }
 
-    // Fermer le menu quand on clique sur le fond
-    sidebarBackdrop.addEventListener('click', function() {
-        sidebar.classList.remove('open');
-        sidebarBackdrop.classList.remove('active');
-    });
-
-    // Fermer le menu quand on clique sur un lien du menu
-    sidebar.querySelectorAll('li[data-page]').forEach(function(li) {
-        li.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
+            function closeMenu() {
                 sidebar.classList.remove('open');
                 sidebarBackdrop.classList.remove('active');
             }
-        });
-    });
-});
-        if (sidebarBackdrop) {
-            sidebarBackdrop.addEventListener('click', function() {
-                sidebar.classList.remove('open');
-                this.classList.remove('active');
-            });
-        }
 
-        // Section toggle (accordéons)
+            // Support à la fois click et touchstart pour mobile
+            mobileMenuBtn.addEventListener('click', toggleMenu);
+            mobileMenuBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                toggleMenu(e);
+            }, { passive: false });
+
+            // Fermer quand on clique sur le backdrop
+            sidebarBackdrop.addEventListener('click', closeMenu);
+            sidebarBackdrop.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                closeMenu();
+            }, { passive: false });
+
+            // Fermer le menu quand on clique sur un lien du menu (mobile uniquement)
+            sidebar.querySelectorAll('li[data-page]').forEach(function(li) {
+                li.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeMenu();
+                    }
+                });
+            });
+        })();
+
+        // ============================================
+        // ACCORDÉONS DES SECTIONS (robuste sur mobile)
+        // ============================================
         document.querySelectorAll('.section-header').forEach(header => {
-            header.addEventListener('click', function() {
-                const body = this.nextElementSibling;
-                const icon = this.querySelector('.toggle-icon');
+            function toggleSection(e) {
+                if (e) { e.preventDefault(); }
+                const body = header.nextElementSibling;
+                const icon = header.querySelector('.toggle-icon');
                 if (body) body.classList.toggle('open');
                 if (icon) icon.classList.toggle('open');
-            });
+            }
+
+            header.addEventListener('click', toggleSection);
+            header.addEventListener('touchstart', function(e) {
+                // On ne preventDefault que si c'est bien un tap sur le header (pas un scroll)
+                const touch = e.touches[0];
+                const startY = touch.clientY;
+                const startX = touch.clientX;
+                const onTouchEnd = function(ev) {
+                    const endTouch = ev.changedTouches[0];
+                    const deltaY = Math.abs(endTouch.clientY - startY);
+                    const deltaX = Math.abs(endTouch.clientX - startX);
+                    // Si le mouvement est faible, c'est un tap → toggle
+                    if (deltaY < 10 && deltaX < 10) {
+                        toggleSection(ev);
+                    }
+                    header.removeEventListener('touchend', onTouchEnd);
+                };
+                header.addEventListener('touchend', onTouchEnd, { passive: true });
+            }, { passive: true });
         });
 
-        // Search tabs
+        // ============================================
+        // SEARCH TABS
+        // ============================================
         document.querySelectorAll('.search-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
@@ -2740,7 +2772,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Logout
+        // ============================================
+        // LOGOUT
+        // ============================================
         document.getElementById('logoutBtn')?.addEventListener('click', function() {
             customConfirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function() {
                 localStorage.removeItem('token');
