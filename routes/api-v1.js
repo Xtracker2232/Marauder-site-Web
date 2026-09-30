@@ -13,6 +13,24 @@ const pool = new Pool({
 });
 
 // ============================================
+// HELPERS BRIXHUB (compatibles ancien + nouveau format)
+// ============================================
+function extractBrixResults(response) {
+    if (response?.data?.data?.results) return response.data.data.results;
+    if (response?.data?.results) return response.data.results;
+    return [];
+}
+
+function extractBrixMeta(response) {
+    return response?.data?.meta || response?.data?.data?.meta || {};
+}
+
+function isBrixMaintenance(response) {
+    const meta = extractBrixMeta(response);
+    return meta.maintenance === true || response?.data?.maintenance === true;
+}
+
+// ============================================
 // POST /api/v1/search
 // ============================================
 router.post('/search',
@@ -29,67 +47,50 @@ router.post('/search',
                 });
             }
 
-            // ===== MODE MOCK (tant que BrixHub est down) =====
-            const BRIX_AVAILABLE = process.env.BRIX_AVAILABLE === 'true';
-
-            if (!BRIX_AVAILABLE) {
-                // Retourner des données mock pour tester
-                return res.json({
-                    success: true,
-                    mock: true,
-                    data: {
-                        results: [
-                            {
-                                nom_famille: 'TEST',
-                                prenom: 'Jean',
-                                email: 'jean.test@example.com',
-                                telephone: '0612345678',
-                                ville: 'Paris',
-                                _mock: true
-                            }
-                        ]
-                    },
-                    meta: {
-                        total: 1,
-                        took_ms: 5,
-                        warning: 'BrixHub temporairement indisponible — données mock'
+            // ===== APPEL BRIXHUB =====
+            let response;
+            try {
+                response = await axios.post(
+                    'https://api.brixhub.to/api/v1/search',
+                    query,
+                    {
+                        headers: {
+                            'X-API-Key': process.env.BRIX_API_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 30000
                     }
+                );
+            } catch (brixError) {
+                console.error('BrixHub error:', brixError.response?.data || brixError.message);
+                return res.status(503).json({
+                    error: 'upstream_unavailable',
+                    message: 'Le fournisseur de données est temporairement indisponible. Réessayez dans quelques minutes.',
+                    detail: brixError.message
                 });
             }
 
-            // ===== MODE RÉEL (BrixHub) =====
-            const response = await axios.post(
-                'https://api.brixhub.to/api/v1/search',
-                query,
-                {
-                    headers: {
-                        'X-API-Key': process.env.BRIX_API_KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 15000
-                }
-            );
+            const results = extractBrixResults(response);
+            const meta = extractBrixMeta(response);
+            const maintenance = isBrixMaintenance(response);
 
-            res.json({
+            return res.json({
                 success: true,
-                data: response.data.data || { results: [] },
+                mock: false,
+                data: { results },
                 meta: {
-                    total: response.data.data?.results?.length || 0,
-                    took_ms: response.data.meta?.took_ms || 0
+                    total: meta.total || results.length,
+                    page: meta.page || 1,
+                    pages: meta.pages || 1,
+                    per_page: meta.per_page || results.length,
+                    took_ms: meta.took_ms || 0,
+                    maintenance: maintenance,
+                    warning: maintenance ? 'BrixHub signale une maintenance — résultats possiblement incomplets' : null
                 }
             });
 
         } catch (error) {
             console.error('API v1 search error:', error.message);
-
-            if (error.response) {
-                return res.status(error.response.status).json({
-                    error: 'upstream_error',
-                    message: 'Erreur du fournisseur de données',
-                    status: error.response.status
-                });
-            }
-
             res.status(500).json({
                 error: 'server_error',
                 message: 'Erreur lors de la recherche'
@@ -123,44 +124,38 @@ router.get('/lookup/:type/:value',
                 });
             }
 
-            // ===== MODE MOCK =====
-            const BRIX_AVAILABLE = process.env.BRIX_AVAILABLE === 'true';
-
-            if (!BRIX_AVAILABLE) {
-                return res.json({
-                    success: true,
-                    mock: true,
-                    data: {
-                        results: [
-                            {
-                                nom_famille: 'TEST',
-                                prenom: 'Jean',
-                                [type === 'email' ? 'email' : type === 'phone' ? 'telephone' : 'iban']: value,
-                                _mock: true
-                            }
-                        ]
-                    },
-                    meta: {
-                        total: 1,
-                        warning: 'BrixHub temporairement indisponible — données mock'
+            // ===== APPEL BRIXHUB =====
+            let response;
+            try {
+                response = await axios.get(
+                    `https://api.brixhub.to/api/v1/lookup/${type}/${encodeURIComponent(value)}`,
+                    {
+                        headers: { 'X-API-Key': process.env.BRIX_API_KEY },
+                        timeout: 30000
                     }
+                );
+            } catch (brixError) {
+                console.error('BrixHub lookup error:', brixError.response?.data || brixError.message);
+                return res.status(503).json({
+                    error: 'upstream_unavailable',
+                    message: 'Le fournisseur de données est temporairement indisponible.',
+                    detail: brixError.message
                 });
             }
 
-            // ===== MODE RÉEL =====
-            const response = await axios.get(
-                `https://api.brixhub.to/api/v1/lookup/${type}/${encodeURIComponent(value)}`,
-                {
-                    headers: { 'X-API-Key': process.env.BRIX_API_KEY },
-                    timeout: 15000
-                }
-            );
+            const results = extractBrixResults(response);
+            const meta = extractBrixMeta(response);
+            const maintenance = isBrixMaintenance(response);
 
-            res.json({
+            return res.json({
                 success: true,
-                data: response.data.data || { results: [] },
+                mock: false,
+                data: { results },
                 meta: {
-                    total: response.data.data?.results?.length || 0
+                    total: meta.total || results.length,
+                    took_ms: meta.took_ms || 0,
+                    maintenance: maintenance,
+                    warning: maintenance ? 'BrixHub signale une maintenance — résultats possiblement incomplets' : null
                 }
             });
 
