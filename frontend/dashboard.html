@@ -103,9 +103,9 @@
         .search-tab-content { display: none; }
         .search-tab-content.active { display: block; }
         .section { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        .section-header h3 { font-size: 15px; font-weight: 600; color: #ffffff; }
-        .section-header .toggle-icon { color: #6b6b6b; transition: transform 0.3s ease; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .section-header h3 { font-size: 15px; font-weight: 600; color: #ffffff; pointer-events: none; }
+        .section-header .toggle-icon { color: #6b6b6b; transition: transform 0.3s ease; pointer-events: none; }
         .section-header .toggle-icon.open { transform: rotate(180deg); }
         .section-body { padding: 0 20px 20px 20px; display: none; }
         .section-body.open { display: block; }
@@ -1655,6 +1655,57 @@ Fais la recherche et affiche les résultats.
         };
 
         // ============================================
+        // ⚡ DÉLÉGATION D'ÉVÉNEMENTS — accordéons des sections
+        // Fonctionne PC + mobile, et même si les éléments sont recréés
+        // ============================================
+        document.addEventListener('click', function(e) {
+            const header = e.target.closest('.section-header');
+            if (!header) return;
+            // Ignore si on a cliqué dans un input/button à l'intérieur (sécurité)
+            if (e.target.closest('input, select, textarea, button')) return;
+
+            const body = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            if (body) body.classList.toggle('open');
+            if (icon) icon.classList.toggle('open');
+        });
+
+        // ============================================
+        // ⚡ DÉLÉGATION D'ÉVÉNEMENTS — menu mobile
+        // ============================================
+        document.addEventListener('click', function(e) {
+            // Bouton hamburger
+            if (e.target.closest('#mobileMenuBtn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (sidebar) sidebar.classList.toggle('open');
+                if (backdrop) backdrop.classList.toggle('active');
+                return;
+            }
+
+            // Clic sur le backdrop
+            if (e.target.closest('#sidebarBackdrop')) {
+                e.preventDefault();
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (sidebar) sidebar.classList.remove('open');
+                if (backdrop) backdrop.classList.remove('active');
+                return;
+            }
+
+            // Clic sur un lien du menu (mobile uniquement)
+            const navItem = e.target.closest('.sidebar-nav > li[data-page], .support-submenu li[data-page]');
+            if (navItem && window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (sidebar) sidebar.classList.remove('open');
+                if (backdrop) backdrop.classList.remove('active');
+            }
+        });
+
+        // ============================================
         // API TABS
         // ============================================
         document.querySelectorAll('.api-tab').forEach(tab => {
@@ -2640,7 +2691,7 @@ print(data)`
         });
 
         // ============================================
-        // NAVIGATION SIDEBAR (simplifiée pour éviter les conflits)
+        // NAVIGATION SIDEBAR
         // ============================================
         document.querySelectorAll('.sidebar-nav > li[data-page]').forEach(li => {
             li.addEventListener('click', function() {
@@ -2656,15 +2707,6 @@ print(data)`
                 if (page === 'api') {
                     loadApiKeys();
                 }
-                if (page === 'tickets') {
-                    // loadTickets();
-                }
-                if (page === 'history') {
-                    // loadHistory();
-                }
-                if (page === 'fiches') {
-                    // loadFiches();
-                }
             });
         });
 
@@ -2678,86 +2720,6 @@ print(data)`
                 supportSubmenu.classList.toggle('open');
             });
         }
-
-        // ============================================
-        // MENU MOBILE + BACKDROP + FERMETURE AUTO
-        // ============================================
-        (function() {
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-
-            if (!mobileMenuBtn || !sidebar || !sidebarBackdrop) {
-                console.error('Éléments du menu mobile introuvables');
-                return;
-            }
-
-            function toggleMenu(e) {
-                if (e) { e.preventDefault(); e.stopPropagation(); }
-                sidebar.classList.toggle('open');
-                sidebarBackdrop.classList.toggle('active');
-            }
-
-            function closeMenu() {
-                sidebar.classList.remove('open');
-                sidebarBackdrop.classList.remove('active');
-            }
-
-            // Support à la fois click et touchstart pour mobile
-            mobileMenuBtn.addEventListener('click', toggleMenu);
-            mobileMenuBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                toggleMenu(e);
-            }, { passive: false });
-
-            // Fermer quand on clique sur le backdrop
-            sidebarBackdrop.addEventListener('click', closeMenu);
-            sidebarBackdrop.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                closeMenu();
-            }, { passive: false });
-
-            // Fermer le menu quand on clique sur un lien du menu (mobile uniquement)
-            sidebar.querySelectorAll('li[data-page]').forEach(function(li) {
-                li.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        closeMenu();
-                    }
-                });
-            });
-        })();
-
-        // ============================================
-        // ACCORDÉONS DES SECTIONS (robuste sur mobile)
-        // ============================================
-        document.querySelectorAll('.section-header').forEach(header => {
-            function toggleSection(e) {
-                if (e) { e.preventDefault(); }
-                const body = header.nextElementSibling;
-                const icon = header.querySelector('.toggle-icon');
-                if (body) body.classList.toggle('open');
-                if (icon) icon.classList.toggle('open');
-            }
-
-            header.addEventListener('click', toggleSection);
-            header.addEventListener('touchstart', function(e) {
-                // On ne preventDefault que si c'est bien un tap sur le header (pas un scroll)
-                const touch = e.touches[0];
-                const startY = touch.clientY;
-                const startX = touch.clientX;
-                const onTouchEnd = function(ev) {
-                    const endTouch = ev.changedTouches[0];
-                    const deltaY = Math.abs(endTouch.clientY - startY);
-                    const deltaX = Math.abs(endTouch.clientX - startX);
-                    // Si le mouvement est faible, c'est un tap → toggle
-                    if (deltaY < 10 && deltaX < 10) {
-                        toggleSection(ev);
-                    }
-                    header.removeEventListener('touchend', onTouchEnd);
-                };
-                header.addEventListener('touchend', onTouchEnd, { passive: true });
-            }, { passive: true });
-        });
 
         // ============================================
         // SEARCH TABS
