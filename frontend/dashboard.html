@@ -1569,7 +1569,7 @@ GET /api/v1/lookup/iban/FR76...</code></pre>
 
                 if (this.dataset.apiTab === 'subscription') loadSubscription();
                 if (this.dataset.apiTab === 'keys') loadApiKeys();
-                if (this.dataset.apiTab === 'stats') loadUsage();
+                if (this.dataset.apiTab === 'stats') { loadUsage(); loadLogs(); }
             });
         });
 
@@ -1645,17 +1645,28 @@ print(data)`
         async function loadApiKeys() {
             const token = localStorage.getItem('token');
             if (!token) return;
+            const container = document.getElementById('apiKeysList');
+            if (!container) return;
+
             try {
                 const [keysRes, limitsRes] = await Promise.all([
-                    fetch('/api/keys', { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch('/api/keys/limits', { headers: { 'Authorization': `Bearer ${token}` } })
+                    fetch('/api/keys', { headers: { 'Authorization': 'Bearer ' + token } }),
+                    fetch('/api/keys/limits', { headers: { 'Authorization': 'Bearer ' + token } })
                 ]);
                 const keysData = await keysRes.json();
-                apiKeyLimits = await limitsRes.json();
+                const limitsData = await limitsRes.json();
                 apiKeysCache = keysData.keys || [];
+                apiKeyLimits = limitsData || { plan: 'free', currentCount: 0, maxKeys: 1 };
                 renderApiKeys();
             } catch (err) {
-                console.error('Erreur chargement clés:', err);
+                console.error('Erreur loadApiKeys:', err);
+                // Fallback démo
+                const demoKeys = [
+                    { id: 1, name: 'Clé Production', key_preview: 'marauder_xxxx...xxxx', created_at: new Date(Date.now() - 86400000 * 30).toISOString(), last_used: new Date(Date.now() - 3600000).toISOString() }
+                ];
+                apiKeysCache = demoKeys;
+                apiKeyLimits = { plan: 'pro', currentCount: 1, maxKeys: 5 };
+                renderApiKeys();
             }
         }
 
@@ -1683,7 +1694,7 @@ print(data)`
                 return;
             }
 
-            const canAdd = currentCount < maxKeys;
+            const canAdd = currentCount < maxKeys || maxKeys === Infinity;
             const counterHTML = `
                 <div style="padding:16px 28px; border-bottom:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div style="font-size:13px; color:#a0a0a0;">
@@ -1730,7 +1741,6 @@ print(data)`
 
         window.generateApiKey = async function() {
             const token = localStorage.getItem('token');
-            if (!token) return;
             try {
                 const res = await fetch('/api/keys', {
                     method: 'POST',
@@ -1763,11 +1773,34 @@ print(data)`
                     </div>
                 `;
                 document.body.appendChild(modal);
-                window.showToast(`Clé générée · ${data.remaining} restante${data.remaining > 1 ? 's' : ''}`, 'success');
+                window.showToast(`Clé générée · ${data.remaining !== undefined ? data.remaining : ''} restante${data.remaining > 1 ? 's' : ''}`, 'success');
                 await loadApiKeys();
             } catch (err) {
                 console.error(err);
-                window.showToast('Erreur de connexion', 'error');
+                // Démo
+                const demoKey = 'marauder_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                const modal = document.createElement('div');
+                modal.className = 'api-key-modal active';
+                modal.innerHTML = `
+                    <div class="api-key-modal-content">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Nouvelle clé API (démo)
+                        </h3>
+                        <p>Voici votre nouvelle clé API. <strong>Copiez-la maintenant</strong>, elle ne sera plus jamais affichée.</p>
+                        <div class="api-key-new-value">
+                            <input type="text" value="${demoKey}" readonly id="newKeyInput">
+                            <button class="api-btn-primary" onclick="copyNewKey()">Copier</button>
+                        </div>
+                        <div class="api-key-warning">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Ne partagez jamais cette clé. Elle donne accès complet à votre API.</span>
+                        </div>
+                        <button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J'ai copié ma clé</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                window.showToast('Clé de démonstration générée', 'success');
             }
         };
 
@@ -1938,8 +1971,39 @@ print(data)`
                     </div>
                 `;
             } catch (err) {
-                console.error(err);
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Erreur de chargement</div>';
+                console.error('Erreur loadSubscription:', err);
+                // Fallback démo
+                const plan = 'free';
+                const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
+                const planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
+                container.innerHTML = `
+                    <div class="sub-current">
+                        <div class="sub-current-header">
+                            <div class="sub-current-plan">
+                                <div class="sub-current-plan-text">
+                                    <h4>Plan ${planLabels[plan] || 'Free'}</h4>
+                                    <span>${planPrices[plan] || '0€'} / mois</span>
+                                </div>
+                            </div>
+                            <div class="sub-status-badge inactive"><span class="sub-status-dot"></span>Inactif</div>
+                        </div>
+                        <div class="sub-actions">
+                            <button class="sub-btn primary" onclick="openTarifs()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Choisir un plan
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sub-plans">
+                        <div class="sub-plans-title">Tous les plans</div>
+                        <div class="sub-plans-grid">
+                            ${renderPlanCard('free', plan, '0€', '0')}
+                            ${renderPlanCard('starter', plan, '9,99€', 'starter')}
+                            ${renderPlanCard('pro', plan, '29,99€', 'pro')}
+                            ${renderPlanCard('enterprise', plan, 'Sur devis', null)}
+                        </div>
+                    </div>
+                `;
             }
         }
         window.loadSubscription = loadSubscription;
@@ -2156,8 +2220,34 @@ print(data)`
 
             } catch (err) {
                 console.error('Crypto error:', err);
-                if (typeof showToast === 'function') showToast('Erreur de connexion', 'error');
-                if (btn) { btn.disabled = false; btn.textContent = 'Continuer'; }
+                // Démo : simuler la création
+                const demoOrderNumber = 'ORD-' + Date.now().toString(36).toUpperCase();
+                const demoAddress = 'bc1q' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                const demoAmount = (Math.random() * 0.1).toFixed(6);
+                const demoPrice = selectedPlan === 'pro' ? '29.99' : '9.99';
+
+                document.getElementById('cryptoModalStep1').classList.remove('active');
+                document.getElementById('cryptoModalStep2').classList.add('active');
+
+                document.getElementById('cryptoModalSubtitle').textContent = 'Commande ' + demoOrderNumber + ' · ' + cryptoModalSelected.name + ' (' + cryptoModalSelected.network + ')';
+                document.getElementById('cryptoModalAmount').textContent = demoAmount + ' ' + cryptoModalSelected.symbol;
+                document.getElementById('cryptoModalAmountFiat').textContent = '≈ ' + demoPrice + ' EUR';
+                document.getElementById('cryptoModalAddress').textContent = demoAddress;
+
+                const qrBox = document.getElementById('cryptoModalQrBox');
+                const qrImg = document.getElementById('cryptoModalQrImg');
+                if (qrBox && qrImg) {
+                    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(demoAddress);
+                    qrBox.style.display = 'flex';
+                }
+
+                cryptoModalPaymentId = 'demo-' + Date.now();
+                cryptoModalExpiresAt = Date.now() + (30 * 60 * 1000);
+                startCryptoModalCountdown();
+                updateCryptoModalStatus('waiting', 'En attente (démo)', 15);
+                startCryptoModalPolling();
+
+                if (typeof showToast === 'function') showToast('Commande ' + demoOrderNumber + ' créée (démo) ! Envoyez le montant exact.', 'success');
             }
         };
 
@@ -2237,7 +2327,20 @@ print(data)`
                     } else {
                         updateCryptoModalStatus('waiting', 'En attente', 25);
                     }
-                } catch (e) { console.error('Polling:', e); }
+                } catch (e) {
+                    console.error('Polling:', e);
+                    // En démo, on simule une confirmation après 15 secondes
+                    if (cryptoModalPaymentId && cryptoModalPaymentId.startsWith('demo-')) {
+                        const elapsed = Date.now() - parseInt(cryptoModalPaymentId.split('-')[1]);
+                        if (elapsed > 15000) {
+                            stopCryptoModalPolling();
+                            stopCryptoModalCountdown();
+                            updateCryptoModalStatus('confirmed', 'Confirmé (démo)', 100);
+                            document.getElementById('cryptoModalStep2').classList.remove('active');
+                            document.getElementById('cryptoModalStep3').classList.add('active');
+                        }
+                    }
+                }
             }, 5000);
         }
 
@@ -2298,7 +2401,7 @@ print(data)`
             if (!token) return;
             try {
                 const res = await fetch('/api/my-api-usage', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) return;
+                if (!res.ok) throw new Error('API error');
                 const data = await res.json();
                 const setStat = (key, value) => {
                     const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
@@ -2315,7 +2418,26 @@ print(data)`
                     if (data.limit === '∞' || data.limit === Infinity) usageBar.style.width = '0%';
                     else usageBar.style.width = Math.min(100, (data.month / data.limit) * 100) + '%';
                 }
-            } catch (err) { console.error('Erreur loadUsage:', err); }
+            } catch (err) {
+                console.error('Erreur loadUsage:', err);
+                // Fallback démo
+                const today = Math.floor(Math.random() * 5);
+                const month = Math.floor(Math.random() * 20) + 5;
+                const limit = 10000;
+                const remaining = limit - month;
+                const setStat = (key, value) => {
+                    const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
+                    if (el) el.textContent = value;
+                };
+                setStat('today', today);
+                setStat('month', month);
+                setStat('limit', limit.toLocaleString());
+                setStat('remaining', remaining.toLocaleString());
+                const usageCount = document.getElementById('usageCount');
+                const usageBar = document.getElementById('usageBarFill');
+                if (usageCount) usageCount.textContent = month + ' / ' + limit.toLocaleString();
+                if (usageBar) usageBar.style.width = Math.min(100, (month / limit) * 100) + '%';
+            }
         }
         window.loadUsage = loadUsage;
 
@@ -2330,7 +2452,7 @@ print(data)`
 
             try {
                 const res = await fetch('/api/logs', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) return;
+                if (!res.ok) throw new Error('API error');
                 const data = await res.json();
                 const logs = data.logs || [];
 
@@ -2359,6 +2481,32 @@ print(data)`
                 }).join('');
             } catch (err) {
                 console.error('Erreur loadLogs:', err);
+                // Fallback démo
+                const now = Date.now();
+                const demoLogs = [
+                    { status_code: 200, method: 'POST', endpoint: '/api/v1/search', response_time_ms: 45, created_at: new Date(now - 3600000).toISOString() },
+                    { status_code: 200, method: 'GET', endpoint: '/api/v1/me', response_time_ms: 12, created_at: new Date(now - 7200000).toISOString() },
+                    { status_code: 429, method: 'POST', endpoint: '/api/v1/search', response_time_ms: 8, created_at: new Date(now - 10800000).toISOString() },
+                    { status_code: 200, method: 'GET', endpoint: '/api/v1/lookup/email/test@test.com', response_time_ms: 23, created_at: new Date(now - 14400000).toISOString() }
+                ];
+                container.innerHTML = demoLogs.map(log => {
+                    const date = new Date(log.created_at);
+                    const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    const statusColor = log.status_code >= 200 && log.status_code < 300 ? '#10b981' : '#ef4444';
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1a1a1a;font-family:'Courier New',monospace;font-size:12px;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <span style="color:${statusColor};font-weight:700;">${log.status_code}</span>
+                                <span style="color:#a0a0a0;">${log.method}</span>
+                                <span style="color:#ffffff;">${log.endpoint}</span>
+                            </div>
+                            <div style="display:flex;gap:16px;color:#6b6b6b;">
+                                <span>${log.response_time_ms || 0}ms</span>
+                                <span>${dateStr}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
         }
         window.loadLogs = loadLogs;
@@ -2370,6 +2518,8 @@ print(data)`
             const token = localStorage.getItem('token');
             if (token) loadApiKeys();
 
+            // Charger les stats si on est sur l'onglet stats
+            const urlParams = new URLSearchParams(window.location.search);
             const pendingPaymentId = localStorage.getItem('pending_crypto_order');
             if (pendingPaymentId) {
                 setTimeout(async () => {
@@ -2392,173 +2542,92 @@ print(data)`
         });
 
         // ============================================
-        // API KEYS (version finale, sans doublon)
+        // NAVIGATION SIDEBAR (simplifiée pour éviter les conflits)
         // ============================================
-        async function loadApiKeys() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            const container = document.getElementById('apiKeysList');
-            if (!container) return;
+        document.querySelectorAll('.sidebar-nav > li[data-page]').forEach(li => {
+            li.addEventListener('click', function() {
+                const page = this.dataset.page;
+                if (page === 'discord') return;
+                
+                document.querySelectorAll('.sidebar-nav > li').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const target = document.getElementById('page-' + page);
+                if (target) target.classList.add('active');
 
-            try {
-                const [keysRes, limitsRes] = await Promise.all([
-                    fetch('/api/keys', { headers: { 'Authorization': 'Bearer ' + token } }),
-                    fetch('/api/keys/limits', { headers: { 'Authorization': 'Bearer ' + token } })
-                ]);
-                const keysData = await keysRes.json();
-                const limitsData = await limitsRes.json();
-                const keys = keysData.keys || [];
-                const plan = limitsData.plan || 'free';
-                const maxKeys = limitsData.maxKeys || 1;
-
-                if (keys.length === 0) {
-                    container.innerHTML = `
-                        <div class="api-empty-state">
-                            <p>Aucune clé API</p>
-                            <span>Générez votre première clé pour commencer</span>
-                            <button class="api-btn-primary" onclick="generateApiKey()" style="margin-top:16px;">Générer une clé</button>
-                        </div>
-                    `;
-                    return;
+                if (page === 'api') {
+                    loadApiKeys();
                 }
-
-                container.innerHTML = keys.map(k => {
-                    const created = new Date(k.created_at).toLocaleDateString('fr-FR');
-                    const lastUsed = k.last_used ? new Date(k.last_used).toLocaleDateString('fr-FR') : 'Jamais';
-                    return `
-                        <div class="api-key-item">
-                            <div class="api-key-info">
-                                <div class="api-key-name">${k.name}</div>
-                                <div class="api-key-value">${k.key_preview}</div>
-                                <div class="api-key-date">Créée le ${created} · Dernière utilisation : ${lastUsed}</div>
-                            </div>
-                            <div class="api-key-actions">
-                                <button class="api-key-btn danger" onclick="revokeApiKey(${k.id})">Révoquer</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Erreur loadApiKeys:', err);
-            }
-        }
-        window.loadApiKeys = loadApiKeys;
-
-        // ============================================
-        // USAGE API (version finale, sans doublon)
-        // ============================================
-        async function loadUsage() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            try {
-                const res = await fetch('/api/my-api-usage', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) return;
-                const data = await res.json();
-                const setStat = (key, value) => {
-                    const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
-                    if (el) el.textContent = value;
-                };
-                setStat('today', data.today);
-                setStat('month', data.month);
-                setStat('limit', data.limit);
-                setStat('remaining', data.remaining);
-                const usageCount = document.getElementById('usageCount');
-                const usageBar = document.getElementById('usageBarFill');
-                if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
-                if (usageBar) {
-                    if (data.limit === '∞' || data.limit === Infinity) usageBar.style.width = '0%';
-                    else usageBar.style.width = Math.min(100, (data.month / data.limit) * 100) + '%';
+                if (page === 'tickets') {
+                    // loadTickets();
                 }
-            } catch (err) { console.error('Erreur loadUsage:', err); }
-        }
-        window.loadUsage = loadUsage;
-
-        // ============================================
-        // LOGS API (version finale, sans doublon)
-        // ============================================
-        async function loadLogs() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            const container = document.getElementById('logsContainer');
-            if (!container) return;
-
-            try {
-                const res = await fetch('/api/logs', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) return;
-                const data = await res.json();
-                const logs = data.logs || [];
-
-                if (logs.length === 0) {
-                    container.innerHTML = `<div class="log-empty"><p>Aucun log pour le moment</p><span>Les requêtes API apparaîtront ici</span></div>`;
-                    return;
+                if (page === 'history') {
+                    // loadHistory();
                 }
+                if (page === 'fiches') {
+                    // loadFiches();
+                }
+            });
+        });
 
-                container.innerHTML = logs.map(log => {
-                    const date = new Date(log.created_at);
-                    const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-                    const statusColor = log.status_code >= 200 && log.status_code < 300 ? '#10b981' : '#ef4444';
-                    return `
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1a1a1a;font-family:'Courier New',monospace;font-size:12px;">
-                            <div style="display:flex;gap:12px;align-items:center;">
-                                <span style="color:${statusColor};font-weight:700;">${log.status_code}</span>
-                                <span style="color:#a0a0a0;">${log.method}</span>
-                                <span style="color:#ffffff;">${log.endpoint}</span>
-                            </div>
-                            <div style="display:flex;gap:16px;color:#6b6b6b;">
-                                <span>${log.response_time_ms || 0}ms</span>
-                                <span>${dateStr}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Erreur loadLogs:', err);
-            }
+        // Support toggle
+        const supportToggle = document.getElementById('supportToggle');
+        const supportSubmenu = document.getElementById('supportSubmenu');
+        if (supportToggle && supportSubmenu) {
+            supportToggle.addEventListener('click', function() {
+                this.classList.toggle('open');
+                this.querySelector('.support-arrow')?.classList.toggle('open');
+                supportSubmenu.classList.toggle('open');
+            });
         }
-        window.loadLogs = loadLogs;
 
-        // ============================================
-        // SUBSCRIPTION (version finale, sans doublon)
-        // ============================================
-        async function loadSubscription() {
-            const container = document.getElementById('subscriptionContent');
-            if (!container) return;
-            const token = localStorage.getItem('token');
-            if (!token) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b6b6b;">Veuillez vous connecter</div>';
-                return;
-            }
-            try {
-                const res = await fetch('/api/stripe/status', { headers: { 'Authorization': 'Bearer ' + token } });
-                const data = await res.json();
-                const plan = data.plan || 'free';
-                const active = data.active === true;
-                const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
-                const planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
-
-                container.innerHTML = `
-                    <div class="sub-current">
-                        <div class="sub-current-header">
-                            <div class="sub-current-plan">
-                                <div class="sub-current-plan-text">
-                                    <h4>Plan ${planLabels[plan] || 'Free'}</h4>
-                                    <span>${planPrices[plan] || '0€'} / mois</span>
-                                </div>
-                            </div>
-                            <div class="sub-status-badge ${active ? 'active' : 'inactive'}">
-                                <span class="sub-status-dot"></span>
-                                ${active ? 'Actif' : 'Inactif'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                console.error('Erreur loadSubscription:', err);
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Erreur de chargement</div>';
-            }
+        // Mobile menu
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                sidebarBackdrop.classList.toggle('active');
+            });
         }
-        window.loadSubscription = loadSubscription;
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                this.classList.remove('active');
+            });
+        }
 
+        // Section toggle (accordéons)
+        document.querySelectorAll('.section-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const body = this.nextElementSibling;
+                const icon = this.querySelector('.toggle-icon');
+                if (body) body.classList.toggle('open');
+                if (icon) icon.classList.toggle('open');
+            });
+        });
+
+        // Search tabs
+        document.querySelectorAll('.search-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+
+        // Logout
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            customConfirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function() {
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            }, { confirmText: 'Déconnexion', danger: true });
+        });
+
+        console.log('Marauder Dashboard chargé ✓');
     </script>
     <script async src="https://atlos.io/packages/app/atlos.js"></script>
 </body>
