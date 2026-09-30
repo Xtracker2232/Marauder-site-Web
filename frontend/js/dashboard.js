@@ -1463,3 +1463,36 @@ document.getElementById('sidebarBackdrop').addEventListener('click', function() 
 verifyToken();
 loadProfile();
 console.log('Dashboard charge');
+
+// ============ USAGE API ============
+window.loadUsage = async function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const res = await fetch('/api/my-api-usage', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const setStat = (key, value) => {
+            const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
+            if (el) el.textContent = value;
+        };
+        setStat('today', data.today);
+        setStat('month', data.month);
+        setStat('limit', data.limit);
+        setStat('remaining', data.remaining);
+        const usageCount = document.getElementById('usageCount');
+        const usageBar = document.getElementById('usageBarFill');
+        if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
+        if (usageBar) {
+            if (data.limit === '∞' || data.limit === Infinity) usageBar.style.width = '0%';
+            else usageBar.style.width = Math.min(100, (data.month / data.limit) * 100) + '%';
+        }
+    } catch (err) { console.error('Erreur loadUsage:', err); }
+};
+
+// ============ USAGE API (appelé par l'onglet Statistiques) ============
+window.loadSubscription = window.loadSubscription || function() {
+    // déjà géré dans dashboard.html si présent
+};
+
+console.log('Dashboard charge');
