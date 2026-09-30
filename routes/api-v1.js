@@ -202,3 +202,58 @@ router.get('/me',
 );
 
 module.exports = router;
+
+// ============================================
+// GET /api/v1/usage — Stats API de l'utilisateur
+// ============================================
+router.get('/usage',
+    requireApiKey,
+    async (req, res) => {
+        try {
+            const userId = req.apiKey.userId;
+            const limit = req.apiKey.limit;
+
+            const monthResult = await pool.query(
+                `SELECT COUNT(*) AS total FROM api_logs
+                 WHERE user_id = $1
+                 AND created_at >= date_trunc('month', CURRENT_DATE)`,
+                [userId]
+            );
+            const monthCount = parseInt(monthResult.rows[0].total) || 0;
+
+            const todayResult = await pool.query(
+                `SELECT COUNT(*) AS total FROM api_logs
+                 WHERE user_id = $1
+                 AND DATE(created_at) = CURRENT_DATE`,
+                [userId]
+            );
+            const todayCount = parseInt(todayResult.rows[0].total) || 0;
+
+            const byEndpointResult = await pool.query(
+                `SELECT endpoint, COUNT(*) AS total FROM api_logs
+                 WHERE user_id = $1
+                 AND created_at >= date_trunc('month', CURRENT_DATE)
+                 GROUP BY endpoint
+                 ORDER BY total DESC`,
+                [userId]
+            );
+
+            const remaining = limit === Infinity ? '∞' : Math.max(0, limit - monthCount);
+
+            res.json({
+                success: true,
+                plan: req.apiKey.plan,
+                usage: {
+                    today: todayCount,
+                    month: monthCount,
+                    limit: limit === Infinity ? '∞' : limit,
+                    remaining,
+                    by_endpoint: byEndpointResult.rows
+                }
+            });
+        } catch (error) {
+            console.error('API v1 usage error:', error);
+            res.status(500).json({ error: 'server_error' });
+        }
+    }
+);
