@@ -2,30 +2,17 @@ const API_URL = window.location.origin;
 const token = localStorage.getItem('token');
 
 // ============================================
-// OVERRIDE DES CONFIRM NATIFS DU NAVIGATEUR
+// OVERRIDE DES CONFIRM NATIFS
 // ============================================
-// On remplace window.confirm par notre modal custom.
-// Comme on ne peut pas bloquer le code pour attendre
-// la réponse, on utilise une approche par callback global.
-// Pour les appels synchrones existants, on renvoie false
-// (l'action est annulée) et on affiche le modal custom.
-// L'utilisateur devra re-cliquer pour confirmer.
 (function() {
     const nativeConfirm = window.confirm;
     window.confirm = function(message) {
-        // Affiche le modal custom si dispo
         if (typeof window.customConfirm === 'function') {
-            // On ne peut pas retourner le résultat de manière synchrone.
-            // On stocke le message et on retourne false pour l'instant.
-            // Le vrai fix est de convertir chaque confirm() en customConfirm() avec callback.
-            // Mais pour éviter le popup navigateur, on affiche le modal et on bloque.
             window._pendingConfirmMessage = message;
             window.customConfirm('Confirmation', message, function() {
-                // L'utilisateur a confirmé. On rejoue l'action.
-                // (nécessite que le code appelant soit refactoré en callback)
                 console.log('✅ Confirmé par utilisateur');
             });
-            return false; // Annule l'action en attendant
+            return false;
         }
         return nativeConfirm(message);
     };
@@ -134,7 +121,7 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
     item.addEventListener('click', function() {
         const page = this.dataset.page;
         if (page === 'discord') {
-            window.open('https://discord.gg/ton-invite', '_blank');
+            window.open('https://discord.gg/jf6QRZHaTB', '_blank');
             return;
         }
         document.querySelectorAll('.sidebar-nav li[data-page]').forEach(li => li.classList.remove('active'));
@@ -142,7 +129,7 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const target = document.getElementById('page-' + page);
         if (target) target.classList.add('active');
-        
+
         if (page === 'profile') loadProfile();
         if (page === 'history') loadHistory();
         if (page === 'fiches') loadFiches();
@@ -153,7 +140,6 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
                     window.initGrapheModule();
                 } else {
                     console.error('Module graphe non chargé');
-                    showToast('Erreur : module graphe non disponible', 'error');
                 }
             }, 100);
         }
@@ -219,7 +205,7 @@ function displayResults(container, results) {
         const confidence = person._confidence || 0;
         const confidenceClass = confidence >= 70 ? 'high' : confidence >= 40 ? 'medium' : 'low';
         const fullName = (person.prenom || '') + ' ' + (person.nom_famille || 'Inconnu');
-        
+
         let fieldsHtml = '';
         const excludedKeys = ['_confidence', '_sources', '_source_db', 'famille'];
         Object.entries(person)
@@ -237,7 +223,7 @@ function displayResults(container, results) {
                     </div>
                 `;
             });
-        
+
         let familleHtml = '';
         if (person.famille && person.famille.length > 0) {
             familleHtml = `
@@ -252,14 +238,13 @@ function displayResults(container, results) {
                 </div>
             `;
         }
-        
+
         return `
             <div class="result-card-full" data-index="${index}">
                 <div class="result-header-full">
                     <div class="result-name-full" onclick="toggleFiche(${index})">${fullName}</div>
                     <div class="result-meta">
                         <span class="confidence-badge confidence-${confidenceClass}">${confidence}%</span>
-                        ${person._sources ? '<span class="result-sources-badge">' + person._sources.length + ' source(s)</span>' : ''}
                     </div>
                 </div>
                 <div class="result-fields" id="fiche-${index}">
@@ -300,11 +285,81 @@ function toggleDeep(index) {
     if (el) el.classList.toggle('open');
 }
 
-// ============ SEARCH ============
+// ============ FONCTION DE RECHERCHE (corrigée : 1-2 requêtes au lieu de 20) ============
+let searchInProgress = false;
+
+async function performSearch(query, container) {
+    const response = await fetch(API_URL + '/api/brix/search', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(query)
+    });
+
+    const data = await response.json();
+    let results = data.data?.results || [];
+
+    // Déduplication
+    const uniqueResults = [];
+    const seen = new Set();
+    results.forEach(p => {
+        const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' + (p.email || '') + '|' + (p.telephone || '');
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueResults.push(p);
+        }
+    });
+    results = uniqueResults;
+
+    // Pivot famille : UNIQUEMENT sur le 1er résultat, 1 seul pivot (email)
+    if (results.length > 0 && results[0].email) {
+        const p = results[0];
+        try {
+            const pivotPayload = { email: p.email, flexible: false, per_page: 5 };
+            const pivotResponse = await fetch(API_URL + '/api/brix/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(pivotPayload)
+            });
+            const pivotData = await pivotResponse.json();
+            const pivotResults = pivotData.data?.results || [];
+            const famille = [];
+            for (let pr of pivotResults) {
+                if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
+                famille.push({
+                    prenom: pr.prenom || '',
+                    nom_famille: pr.nom_famille || '',
+                    date_naissance: pr.date_naissance || '',
+                    email: pr.email || '',
+                    telephone: pr.telephone || '',
+                    lien: 'Email partage'
+                });
+                if (famille.length >= 5) break;
+            }
+            if (famille.length > 0) p.famille = famille;
+        } catch (e) { /* Silence */ }
+    }
+
+    return results;
+}
+
+// ============ SEARCH FRENCH ============
 document.getElementById('searchBtn').addEventListener('click', async function() {
+    if (searchInProgress) {
+        showToast('Recherche deja en cours...', 'info');
+        return;
+    }
+    searchInProgress = true;
+    this.disabled = true;
+
     const query = {
         flexible: true,
-        per_page: 100,
+        per_page: 50,
         page: 1,
         nom_famille: document.getElementById('searchNom')?.value || undefined,
         prenom: document.getElementById('searchPrenom')?.value || undefined,
@@ -343,8 +398,10 @@ document.getElementById('searchBtn').addEventListener('click', async function() 
 
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
-    if (Object.keys(query).length <= 1) {
+    if (Object.keys(query).length <= 3) {
         showToast('Veuillez remplir au moins un critere', 'warning');
+        searchInProgress = false;
+        this.disabled = false;
         return;
     }
 
@@ -353,174 +410,20 @@ document.getElementById('searchBtn').addEventListener('click', async function() 
     showSearchLoading();
 
     try {
-        const response = await fetch(API_URL + '/api/brix/search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(query)
-        });
-
-        const data = await response.json();
-        let results = data.data?.results || [];
-
-        const total = data.meta?.total || 0;
-        const perPage = query.per_page || 100;
-        const totalPages = Math.ceil(total / perPage);
-        if (totalPages > 1) {
-            for (let page = 2; page <= Math.min(totalPages, 5); page++) {
-                try {
-                    const pageQuery = { ...query, page: page };
-                    const pageResponse = await fetch(API_URL + '/api/brix/search', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        },
-                        body: JSON.stringify(pageQuery)
-                    });
-                    const pageData = await pageResponse.json();
-                    if (pageData.data?.results) {
-                        results = results.concat(pageData.data.results);
-                    }
-                } catch (e) { /* Silence */ }
-            }
-        }
-
-        const uniqueResults = [];
-        const seen = new Set();
-        results.forEach(p => {
-            const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' + (p.email || '') + '|' + (p.telephone || '');
-            if (!seen.has(key)) {
-                seen.add(key);
-                uniqueResults.push(p);
-            }
-        });
-        results = uniqueResults;
-
-        const pivotDone = new Set();
-        for (let p of results.slice(0, 5)) {
-            const famille = [];
-            if (p.adresse && p.code_postal) {
-                const pivotKey = 'adresse_' + p.adresse + '_' + p.code_postal;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = { adresse: p.adresse, code_postal: p.code_postal, flexible: false, per_page: 10 };
-                        const pivotResponse = await fetch(API_URL + '/api/brix/search', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Meme adresse'
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-            if (p.telephone && famille.length < 5) {
-                const phoneClean = p.telephone.replace(/\D/g, '');
-                if (phoneClean.length >= 8) {
-                    const pivotKey = 'tel_' + phoneClean;
-                    if (!pivotDone.has(pivotKey)) {
-                        pivotDone.add(pivotKey);
-                        try {
-                            const pivotPayload = { telephone: phoneClean, flexible: false, per_page: 5 };
-                            const pivotResponse = await fetch(API_URL + '/api/brix/search', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': 'Bearer ' + token
-                                },
-                                body: JSON.stringify(pivotPayload)
-                            });
-                            const pivotData = await pivotResponse.json();
-                            const pivotResults = pivotData.data?.results || [];
-                            for (let pr of pivotResults) {
-                                if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                                const membre = {
-                                    prenom: pr.prenom || '',
-                                    nom_famille: pr.nom_famille || '',
-                                    date_naissance: pr.date_naissance || '',
-                                    email: pr.email || '',
-                                    telephone: pr.telephone || '',
-                                    lien: 'Telephone partage'
-                                };
-                                if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                    famille.push(membre);
-                                }
-                            }
-                        } catch (e) { /* Silence */ }
-                    }
-                }
-            }
-            if (p.email && famille.length < 5) {
-                const pivotKey = 'email_' + p.email;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = { email: p.email, flexible: false, per_page: 5 };
-                        const pivotResponse = await fetch(API_URL + '/api/brix/search', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Email partage'
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-            if (famille.length > 0) {
-                p.famille = famille;
-            }
-        }
+        const results = await performSearch(query, container);
 
         setTimeout(() => {
             hideSearchLoading();
-            if (container) {
-                if (results.length > 0) {
-                    displayResults(container, results);
-                    showToast(results.length + ' resultat(s) trouve(s)', 'success');
-                } else {
-                    container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
-                    showToast('Aucun resultat', 'info');
-                }
+            if (results.length > 0) {
+                displayResults(container, results);
+                showToast(results.length + ' resultat(s) trouve(s)', 'success');
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                showToast('Aucun resultat', 'info');
             }
-        }, 1500);
+            searchInProgress = false;
+            document.getElementById('searchBtn').disabled = false;
+        }, 500);
 
     } catch (error) {
         console.error('Search error:', error);
@@ -528,15 +431,24 @@ document.getElementById('searchBtn').addEventListener('click', async function() 
             hideSearchLoading();
             container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de recherche</div>';
             showToast('Erreur de recherche', 'error');
-        }, 1500);
+            searchInProgress = false;
+            document.getElementById('searchBtn').disabled = false;
+        }, 500);
     }
 });
 
 // ============ SEARCH PRO ============
 document.getElementById('searchBtnPro').addEventListener('click', async function() {
+    if (searchInProgress) {
+        showToast('Recherche deja en cours...', 'info');
+        return;
+    }
+    searchInProgress = true;
+    this.disabled = true;
+
     const query = {
         flexible: true,
-        per_page: 100,
+        per_page: 50,
         page: 1,
         nom_famille: document.getElementById('searchNomPro')?.value || undefined,
         prenom: document.getElementById('searchPrenomPro')?.value || undefined,
@@ -557,8 +469,10 @@ document.getElementById('searchBtnPro').addEventListener('click', async function
 
     Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
 
-    if (Object.keys(query).length <= 1) {
+    if (Object.keys(query).length <= 3) {
         showToast('Veuillez remplir au moins un critere', 'warning');
+        searchInProgress = false;
+        this.disabled = false;
         return;
     }
 
@@ -567,105 +481,20 @@ document.getElementById('searchBtnPro').addEventListener('click', async function
     showSearchLoading();
 
     try {
-        const response = await fetch(API_URL + '/api/brix/search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(query)
-        });
-
-        const data = await response.json();
-        let results = data.data?.results || [];
-
-        const total = data.meta?.total || 0;
-        const perPage = query.per_page || 100;
-        const totalPages = Math.ceil(total / perPage);
-        if (totalPages > 1) {
-            for (let page = 2; page <= Math.min(totalPages, 5); page++) {
-                try {
-                    const pageQuery = { ...query, page: page };
-                    const pageResponse = await fetch(API_URL + '/api/brix/search', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        },
-                        body: JSON.stringify(pageQuery)
-                    });
-                    const pageData = await pageResponse.json();
-                    if (pageData.data?.results) {
-                        results = results.concat(pageData.data.results);
-                    }
-                } catch (e) { /* Silence */ }
-            }
-        }
-
-        const uniqueResults = [];
-        const seen = new Set();
-        results.forEach(p => {
-            const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' + (p.email || '') + '|' + (p.telephone || '');
-            if (!seen.has(key)) {
-                seen.add(key);
-                uniqueResults.push(p);
-            }
-        });
-        results = uniqueResults;
-
-        const pivotDone = new Set();
-        for (let p of results.slice(0, 5)) {
-            const famille = [];
-            if (p.adresse && p.code_postal) {
-                const pivotKey = 'adresse_' + p.adresse + '_' + p.code_postal;
-                if (!pivotDone.has(pivotKey)) {
-                    pivotDone.add(pivotKey);
-                    try {
-                        const pivotPayload = { adresse: p.adresse, code_postal: p.code_postal, flexible: false, per_page: 10 };
-                        const pivotResponse = await fetch(API_URL + '/api/brix/search', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify(pivotPayload)
-                        });
-                        const pivotData = await pivotResponse.json();
-                        const pivotResults = pivotData.data?.results || [];
-                        for (let pr of pivotResults) {
-                            if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                            const membre = {
-                                prenom: pr.prenom || '',
-                                nom_famille: pr.nom_famille || '',
-                                date_naissance: pr.date_naissance || '',
-                                email: pr.email || '',
-                                telephone: pr.telephone || '',
-                                lien: 'Meme adresse'
-                            };
-                            if (!famille.some(m => m.prenom === membre.prenom && m.nom_famille === membre.nom_famille)) {
-                                famille.push(membre);
-                            }
-                        }
-                    } catch (e) { /* Silence */ }
-                }
-            }
-            if (famille.length > 0) {
-                p.famille = famille;
-            }
-        }
+        const results = await performSearch(query, container);
 
         setTimeout(() => {
             hideSearchLoading();
-            if (container) {
-                if (results.length > 0) {
-                    displayResults(container, results);
-                    showToast(results.length + ' resultat(s) trouve(s)', 'success');
-                } else {
-                    container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
-                    showToast('Aucun resultat', 'info');
-                }
+            if (results.length > 0) {
+                displayResults(container, results);
+                showToast(results.length + ' resultat(s) trouve(s)', 'success');
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
+                showToast('Aucun resultat', 'info');
             }
-        }, 1500);
+            searchInProgress = false;
+            document.getElementById('searchBtnPro').disabled = false;
+        }, 500);
 
     } catch (error) {
         console.error('Search error:', error);
@@ -673,7 +502,9 @@ document.getElementById('searchBtnPro').addEventListener('click', async function
             hideSearchLoading();
             container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de recherche</div>';
             showToast('Erreur de recherche', 'error');
-        }, 1500);
+            searchInProgress = false;
+            document.getElementById('searchBtnPro').disabled = false;
+        }, 500);
     }
 });
 
@@ -721,7 +552,7 @@ document.getElementById('lookupBtn').addEventListener('click', async function() 
                 container.innerHTML = '<div class="empty-state">Aucun resultat trouve</div>';
                 showToast('Aucun resultat', 'info');
             }
-        }, 1500);
+        }, 500);
 
     } catch (error) {
         console.error('Lookup error:', error);
@@ -729,7 +560,7 @@ document.getElementById('lookupBtn').addEventListener('click', async function() 
             hideSearchLoading();
             container.innerHTML = '<div class="empty-state" style="color:#ef4444;">Erreur de lookup</div>';
             showToast('Erreur de lookup', 'error');
-        }, 1500);
+        }, 500);
     }
 });
 
@@ -766,7 +597,7 @@ async function loadHistory() {
             return `
                 <div class="history-item">
                     <div class="history-header">
-                        <div class="history-date">${dateStr} ${timeStr}</div>
+                        <div class="history-date">${dateStr} ${timeStr} · ${displayName}</div>
                         <span class="history-result-count ${resultCount === 0 ? 'empty' : ''}">${resultText}</span>
                     </div>
                     <div class="history-footer">
@@ -790,7 +621,7 @@ async function replaySearch(id) {
         });
         const data = await response.json();
         const results = data.results || [];
-        
+
         setTimeout(() => {
             hideSearchLoading();
             if (results.length > 0) {
@@ -804,7 +635,7 @@ async function replaySearch(id) {
             } else {
                 showToast('Aucun resultat', 'info');
             }
-        }, 1500);
+        }, 500);
     } catch (error) {
         console.error('Replay error:', error);
         hideSearchLoading();
@@ -1075,7 +906,6 @@ function copyFullCard(index) {
             text += '\n';
         });
     }
-    if (person._sources) text += '\nSources: ' + person._sources.join(', ');
     text += '\n\n--- by Marauder ---';
     navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
 }
@@ -1093,35 +923,18 @@ function addToGraphe(index) {
     }
 }
 
-// ========================================
-// ============ API NOMINATIM ============
-// ========================================
-
+// ============ API NOMINATIM (géocodage) ============
 async function getCityCoordinates(ville) {
     if (!ville) return null;
-    
     try {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ville + ', France')}&format=json&limit=1`,
-            {
-                headers: {
-                    'User-Agent': 'Marauder-App/1.0'
-                }
-            }
+            { headers: { 'User-Agent': 'Marauder-App/1.0' } }
         );
-        
-        if (!response.ok) {
-            console.error('Erreur API:', response.status);
-            return null;
-        }
-        
+        if (!response.ok) return null;
         const data = await response.json();
-        
         if (data && data.length > 0) {
-            return {
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon)
-            };
+            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         }
         return null;
     } catch (error) {
@@ -1130,20 +943,11 @@ async function getCityCoordinates(ville) {
     }
 }
 
-// ========================================
-// ============ CARTE AVEC IMAGE ============
-// ========================================
-
 function gpsToPosition(lat, lng) {
-    // Bornes géographiques de la France
-    const MIN_LAT = 41.0;   // Sud
-    const MAX_LAT = 51.5;   // Nord
-    const MIN_LNG = -5.5;   // Ouest
-    const MAX_LNG = 9.0;    // Est
-    
+    const MIN_LAT = 41.0, MAX_LAT = 51.5;
+    const MIN_LNG = -5.5, MAX_LNG = 9.0;
     const left = ((lng - MIN_LNG) / (MAX_LNG - MIN_LNG)) * 100;
     const top = (1 - ((lat - MIN_LAT) / (MAX_LAT - MIN_LAT))) * 100;
-    
     return {
         top: Math.max(2, Math.min(98, top)),
         left: Math.max(2, Math.min(98, left))
@@ -1153,29 +957,20 @@ function gpsToPosition(lat, lng) {
 async function movePinOnMap(ville) {
     const pin = document.getElementById('mapPin');
     if (!pin) return;
-
-    if (!ville) {
-        pin.style.display = 'none';
-        return;
-    }
-
+    if (!ville) { pin.style.display = 'none'; return; }
     try {
         const coords = await getCityCoordinates(ville);
-        
         if (coords) {
             const pos = gpsToPosition(coords.lat, coords.lng);
             pin.style.display = 'block';
             pin.style.top = pos.top + '%';
             pin.style.left = pos.left + '%';
-            console.log(`📍 ${ville} → ${pos.top}%, ${pos.left}%`);
         } else {
             pin.style.display = 'block';
             pin.style.top = '24%';
             pin.style.left = '48%';
-            console.log(`⚠️ Ville non trouvée: ${ville}, centré sur Paris`);
         }
     } catch (error) {
-        console.error('Erreur:', error);
         pin.style.display = 'block';
         pin.style.top = '24%';
         pin.style.left = '48%';
@@ -1203,9 +998,6 @@ function openInvestigation(index) {
     const ville = person.ville || person.ville_naissance || person.adresse?.split(',').pop()?.trim() || 'Localisation inconnue';
     document.getElementById('investigationCityLabel').textContent = ville;
 
-    // ============================================
-    // DÉPLACER LE POINT SUR LA CARTE (via API)
-    // ============================================
     movePinOnMap(ville);
 
     const confidence = person._confidence || 0;
@@ -1216,7 +1008,7 @@ function openInvestigation(index) {
     const grid = document.getElementById('investigationInfoGrid');
     let html = '';
     const importantKeys = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'date_naissance'];
-    
+
     Object.entries(person)
         .filter(([key]) => !key.startsWith('_') && key !== 'famille')
         .forEach(([key, value]) => {
@@ -1232,7 +1024,7 @@ function openInvestigation(index) {
                 </div>
             `;
         });
-    
+
     if (person.famille && person.famille.length > 0) {
         html += `
             <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
@@ -1279,7 +1071,6 @@ document.getElementById('investigationCopy')?.addEventListener('click', function
             text += '\n';
         });
     }
-    if (person._sources) text += '\nSources: ' + person._sources.join(', ');
     text += '\n\n--- by Marauder ---';
     navigator.clipboard.writeText(text).then(() => showToast('Copie !', 'success'));
 });
@@ -1575,7 +1366,7 @@ document.getElementById('grapheSauvegarder').addEventListener('click', function(
 document.getElementById('grapheMesGraphes').addEventListener('click', showGraphesModal);
 
 document.getElementById('grapheEffacer').addEventListener('click', function() {
-    showModal('Confirmation', '<p style="color:var(--text-secondary);">Effacer tout le graphe ?</p>', 'Effacer', function() {
+    showModal('Confirmation', '<p style="color:#a0a0a0;">Effacer tout le graphe ?</p>', 'Effacer', function() {
         if (window.grapheNodes) window.grapheNodes = [];
         if (window.grapheEdges) window.grapheEdges = [];
         if (typeof window.renderGraphe === 'function') window.renderGraphe();
@@ -1588,7 +1379,7 @@ async function showGraphesModal() {
     const modal = document.getElementById('graphesModal');
     const list = document.getElementById('graphesList');
     if (!modal || !list) return;
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Chargement...</div>';
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#6b6b6b;">Chargement...</div>';
     modal.style.display = 'flex';
     try {
         const response = await fetch(API_URL + '/api/graphes/all', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -1599,7 +1390,7 @@ async function showGraphesModal() {
             try { const data = JSON.parse(saved); graphes.push({ id: 'local', name: 'Graphe local', nodes: data.nodes || [], edges: data.edges || [], created_at: new Date().toISOString(), isLocal: true }); } catch (e) {}
         }
         if (graphes.length === 0) {
-            list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Aucun graphe sauvegarde</div>';
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:#6b6b6b;">Aucun graphe sauvegarde</div>';
             return;
         }
         list.innerHTML = graphes.map((g, i) => `
@@ -1615,7 +1406,7 @@ async function showGraphesModal() {
             </div>
         `).join('');
     } catch (error) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">Erreur de chargement</div>';
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444;">Erreur de chargement</div>';
     }
 }
 

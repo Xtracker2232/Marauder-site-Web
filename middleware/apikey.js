@@ -29,9 +29,7 @@ function getPlanLimit(plan) {
 // MIDDLEWARE : requireApiKey
 // ============================================
 const requireApiKey = async (req, res, next) => {
-    // ============================================
     // 0. Vérifier si l'API est en maintenance
-    // ============================================
     if (process.env.API_MAINTENANCE === 'ON') {
         return res.status(503).json({
             error: 'api_maintenance',
@@ -42,7 +40,6 @@ const requireApiKey = async (req, res, next) => {
 
     const authHeader = req.headers['authorization'];
 
-    // 1. Vérifier la présence du header
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({
             error: 'missing_api_key',
@@ -52,7 +49,6 @@ const requireApiKey = async (req, res, next) => {
 
     const rawKey = authHeader.replace('Bearer ', '').trim();
 
-    // 2. Vérifier le format de la clé
     if (!rawKey.startsWith('marauder_')) {
         return res.status(401).json({
             error: 'invalid_api_key',
@@ -61,10 +57,8 @@ const requireApiKey = async (req, res, next) => {
     }
 
     try {
-        // 3. Hasher la clé pour comparaison
         const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
 
-        // 4. Chercher la clé en DB
         const result = await pool.query(
             `SELECT 
                 ak.id, 
@@ -88,7 +82,6 @@ const requireApiKey = async (req, res, next) => {
 
         const keyData = result.rows[0];
 
-        // 5. Vérifier si la clé est révoquée
         if (keyData.revoked) {
             return res.status(401).json({
                 error: 'revoked_api_key',
@@ -96,7 +89,6 @@ const requireApiKey = async (req, res, next) => {
             });
         }
 
-        // 6. Vérifier si l'utilisateur est banni
         if (keyData.banned) {
             return res.status(403).json({
                 error: 'banned',
@@ -104,16 +96,18 @@ const requireApiKey = async (req, res, next) => {
             });
         }
 
-        // 7. Définir plan et limite (AVANT le if, utilisés plus loin)
         const plan = keyData.plan || 'free';
         const limit = keyData.custom_quota > 0
             ? keyData.custom_quota
             : getPlanLimit(plan);
 
-        // 8. Vérifier la limite mensuelle (SAUF pour /me qui doit toujours répondre)
-        const isMeRoute = req.path === '/me' || req.originalUrl.includes('/api/v1/me');
+        // Vérifier la limite mensuelle SAUF pour /me et /usage
+        const isStatsRoute = req.path === '/me' ||
+                             req.path === '/usage' ||
+                             req.originalUrl.includes('/api/v1/me') ||
+                             req.originalUrl.includes('/api/v1/usage');
 
-        if (!isMeRoute && limit !== Infinity) {
+        if (!isStatsRoute && limit !== Infinity) {
             const countResult = await pool.query(
                 `SELECT COUNT(*) FROM api_logs
                  WHERE user_id = $1
@@ -133,13 +127,11 @@ const requireApiKey = async (req, res, next) => {
             }
         }
 
-        // 9. Mettre à jour last_used
         await pool.query(
             'UPDATE api_keys SET last_used = CURRENT_TIMESTAMP WHERE id = $1',
             [keyData.id]
         );
 
-        // 10. Attacher les infos à la requête
         req.apiKey = {
             id: keyData.id,
             userId: keyData.user_id,
@@ -162,14 +154,24 @@ const requireApiKey = async (req, res, next) => {
 // ============================================
 // MIDDLEWARE : logApiRequest
 // Enregistre la requête dans api_logs APRÈS la réponse
+// ⚠️ Ne log QUE les vraies routes API (pas /me, /usage, pas OPTIONS)
 // ============================================
 const logApiRequest = (endpoint, method) => {
     return async (req, res, next) => {
         const startTime = Date.now();
 
-        // Ne PAS logger /me (consultation du compteur)
-        const isMeRoute = req.path === '/me' || req.originalUrl.includes('/api/v1/me');
-        if (isMeRoute) {
+        // Ne pas logger les routes de stats
+        const isStatsRoute = req.path === '/me' ||
+                             req.path === '/usage' ||
+                             req.originalUrl.includes('/api/v1/me') ||
+                             req.originalUrl.includes('/api/v1/usage');
+
+        if (isStatsRoute) {
+            return next();
+        }
+
+        // Ne pas logger les requêtes OPTIONS (preflight CORS)
+        if (req.method === 'OPTIONS') {
             return next();
         }
 
@@ -212,7 +214,6 @@ const logApiRequest = (endpoint, method) => {
 
 // ============================================
 // MIDDLEWARE : requirePlan
-// Exige un plan minimum pour accéder à une route
 // ============================================
 const requirePlan = (minPlan) => {
     const levels = { free: 0, starter: 1, pro: 2, enterprise: 3 };
@@ -238,9 +239,6 @@ const requirePlan = (minPlan) => {
     };
 };
 
-// ============================================
-// EXPORTS
-// ============================================
 module.exports = {
     requireApiKey,
     logApiRequest,
