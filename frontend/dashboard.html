@@ -2346,6 +2346,175 @@ window.loadUsage = loadUsage;
                 }, 2000);
             }
         });
+
+// ============================================
+// API KEYS
+// ============================================
+async function loadApiKeys() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const container = document.getElementById('apiKeysList');
+    if (!container) return;
+
+    try {
+        const [keysRes, limitsRes] = await Promise.all([
+            fetch('/api/keys', { headers: { 'Authorization': 'Bearer ' + token } }),
+            fetch('/api/keys/limits', { headers: { 'Authorization': 'Bearer ' + token } })
+        ]);
+        const keysData = await keysRes.json();
+        const limitsData = await limitsRes.json();
+        const keys = keysData.keys || [];
+        const plan = limitsData.plan || 'free';
+        const maxKeys = limitsData.maxKeys || 1;
+
+        if (keys.length === 0) {
+            container.innerHTML = `
+                <div class="api-empty-state">
+                    <p>Aucune clé API</p>
+                    <span>Générez votre première clé pour commencer</span>
+                    <button class="api-btn-primary" onclick="generateApiKey()" style="margin-top:16px;">Générer une clé</button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = keys.map(k => {
+            const created = new Date(k.created_at).toLocaleDateString('fr-FR');
+            const lastUsed = k.last_used ? new Date(k.last_used).toLocaleDateString('fr-FR') : 'Jamais';
+            return `
+                <div class="api-key-item">
+                    <div class="api-key-info">
+                        <div class="api-key-name">${k.name}</div>
+                        <div class="api-key-value">${k.key_preview}</div>
+                        <div class="api-key-date">Créée le ${created} · Dernière utilisation : ${lastUsed}</div>
+                    </div>
+                    <div class="api-key-actions">
+                        <button class="api-key-btn danger" onclick="revokeApiKey(${k.id})">Révoquer</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Erreur loadApiKeys:', err);
+    }
+}
+window.loadApiKeys = loadApiKeys;
+
+// ============================================
+// USAGE API
+// ============================================
+async function loadUsage() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const res = await fetch('/api/my-api-usage', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const setStat = (key, value) => {
+            const el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
+            if (el) el.textContent = value;
+        };
+        setStat('today', data.today);
+        setStat('month', data.month);
+        setStat('limit', data.limit);
+        setStat('remaining', data.remaining);
+        const usageCount = document.getElementById('usageCount');
+        const usageBar = document.getElementById('usageBarFill');
+        if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
+        if (usageBar) {
+            if (data.limit === '∞' || data.limit === Infinity) usageBar.style.width = '0%';
+            else usageBar.style.width = Math.min(100, (data.month / data.limit) * 100) + '%';
+        }
+    } catch (err) { console.error('Erreur loadUsage:', err); }
+}
+window.loadUsage = loadUsage;
+
+// ============================================
+// LOGS API
+// ============================================
+async function loadLogs() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const container = document.getElementById('logsContainer');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/logs', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const logs = data.logs || [];
+
+        if (logs.length === 0) {
+            container.innerHTML = `<div class="log-empty"><p>Aucun log pour le moment</p><span>Les requêtes API apparaîtront ici</span></div>`;
+            return;
+        }
+
+        container.innerHTML = logs.map(log => {
+            const date = new Date(log.created_at);
+            const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            const statusColor = log.status_code >= 200 && log.status_code < 300 ? '#10b981' : '#ef4444';
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1a1a1a;font-family:'Courier New',monospace;font-size:12px;">
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <span style="color:${statusColor};font-weight:700;">${log.status_code}</span>
+                        <span style="color:#a0a0a0;">${log.method}</span>
+                        <span style="color:#ffffff;">${log.endpoint}</span>
+                    </div>
+                    <div style="display:flex;gap:16px;color:#6b6b6b;">
+                        <span>${log.response_time_ms || 0}ms</span>
+                        <span>${dateStr}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Erreur loadLogs:', err);
+    }
+}
+window.loadLogs = loadLogs;
+
+// ============================================
+// SUBSCRIPTION
+// ============================================
+async function loadSubscription() {
+    const container = document.getElementById('subscriptionContent');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6b6b6b;">Veuillez vous connecter</div>';
+        return;
+    }
+    try {
+        const res = await fetch('/api/stripe/status', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        const plan = data.plan || 'free';
+        const active = data.active === true;
+        const planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
+        const planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
+
+        container.innerHTML = `
+            <div class="sub-current">
+                <div class="sub-current-header">
+                    <div class="sub-current-plan">
+                        <div class="sub-current-plan-text">
+                            <h4>Plan ${planLabels[plan] || 'Free'}</h4>
+                            <span>${planPrices[plan] || '0€'} / mois</span>
+                        </div>
+                    </div>
+                    <div class="sub-status-badge ${active ? 'active' : 'inactive'}">
+                        <span class="sub-status-dot"></span>
+                        ${active ? 'Actif' : 'Inactif'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Erreur loadSubscription:', err);
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Erreur de chargement</div>';
+    }
+}
+window.loadSubscription = loadSubscription;
+
     </script>
     <script async src="https://atlos.io/packages/app/atlos.js"></script>
 </body>
