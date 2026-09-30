@@ -7,37 +7,182 @@
     <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
     <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
     <script>
-    // ============================================
-    // FONCTIONS GLOBALES
-    // ============================================
-    window.toggleSection = function(el) {
-        if (!el) return;
-        var body = el.nextElementSibling;
-        var icon = el.querySelector('.toggle-icon');
-        if (body && body.classList.contains('section-body')) {
-            body.classList.toggle('open');
-        } else {
-            // Fallback : chercher le .section-body dans le parent .section
-            var parent = el.closest('.section');
-            if (parent) {
-                var b = parent.querySelector('.section-body');
-                if (b) b.classList.toggle('open');
+    <script>
+        // ============================================
+        // SÉCURITÉ : on force tout APRÈS le chargement complet
+        // ============================================
+        window.toggleSection = function(el) {
+            if (!el) return;
+            var body = el.nextElementSibling;
+            var icon = el.querySelector('.toggle-icon');
+            if (body && body.classList.contains('section-body')) {
+                body.classList.toggle('open');
             }
-        }
-        if (icon) icon.classList.toggle('open');
-    };
-    window.toggleMobileMenu = function() {
-        var s = document.getElementById('sidebar');
-        var b = document.getElementById('sidebarBackdrop');
-        if (s) s.classList.toggle('open');
-        if (b) b.classList.toggle('active');
-    };
-    window.closeMobileMenu = function() {
-        var s = document.getElementById('sidebar');
-        var b = document.getElementById('sidebarBackdrop');
-        if (s) s.classList.remove('open');
-        if (b) b.classList.remove('active');
-    };
+            if (icon) icon.classList.toggle('open');
+        };
+        window.toggleMobileMenu = function() {
+            var s = document.getElementById('sidebar');
+            var b = document.getElementById('sidebarBackdrop');
+            if (s) s.classList.toggle('open');
+            if (b) b.classList.toggle('active');
+        };
+        window.closeMobileMenu = function() {
+            var s = document.getElementById('sidebar');
+            var b = document.getElementById('sidebarBackdrop');
+            if (s) s.classList.remove('open');
+            if (b) b.classList.remove('active');
+        };
+
+        window.customConfirm = function(title, text, onConfirm, options) {
+            options = options || {};
+            const confirmText = options.confirmText || 'Confirmer';
+            const cancelText = options.cancelText || 'Annuler';
+            const danger = options.danger === true;
+
+            const overlay = document.getElementById('confirmModal');
+            const titleEl = document.getElementById('mcTitle');
+            const textEl = document.getElementById('mcText');
+            const cancelBtn = document.getElementById('mcCancel');
+            const confirmBtn = document.getElementById('mcConfirm');
+
+            titleEl.textContent = title || 'Confirmation';
+            textEl.textContent = text || 'Êtes-vous sûr ?';
+            cancelBtn.textContent = cancelText;
+            confirmBtn.textContent = confirmText;
+            confirmBtn.className = 'mc-btn ' + (danger ? 'mc-btn-danger' : 'mc-btn-primary');
+
+            overlay.classList.add('active');
+
+            const cleanup = () => {
+                overlay.classList.remove('active');
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+            const handleConfirm = () => { cleanup(); if (onConfirm) onConfirm(); };
+            const handleCancel = () => cleanup();
+
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+        };
+
+        window.showToast = window.showToast || function(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (type || '');
+            toast.innerHTML = '<button class="toast-close" onclick="this.parentElement.remove()">&times;</button>' + message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        // ============================================
+        // INIT APRÈS CHARGEMENT COMPLET (DOM + scripts externes)
+        // ============================================
+        window.addEventListener('load', function() {
+            console.log('=== Marauder : application des handlers ===');
+
+            // 1) FORCER les onclick sur TOUTES les .section-header (écrase tout)
+            document.querySelectorAll('.section-header').forEach(function(header) {
+                header.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    window.toggleSection(this);
+                };
+            });
+            console.log('✓ ' + document.querySelectorAll('.section-header').length + ' section-header liés');
+
+            // 2) FORCER le bouton menu mobile (écrase tout)
+            var btn = document.getElementById('mobileMenuBtn');
+            if (btn) {
+                btn.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    window.toggleMobileMenu();
+                };
+                console.log('✓ Bouton menu mobile lié');
+            } else {
+                console.warn('✗ Bouton menu mobile INTROUVABLE');
+            }
+
+            // 3) FORCER le backdrop
+            var backdrop = document.getElementById('sidebarBackdrop');
+            if (backdrop) {
+                backdrop.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    window.closeMobileMenu();
+                };
+            }
+
+            // 4) API TABS
+            document.querySelectorAll('.api-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.api-tab-content').forEach(c => c.classList.remove('active'));
+                    const target = document.getElementById('api-tab-' + this.dataset.apiTab);
+                    if (target) target.classList.add('active');
+                    if (this.dataset.apiTab === 'subscription' && typeof loadSubscription === 'function') loadSubscription();
+                    if (this.dataset.apiTab === 'keys' && typeof loadApiKeys === 'function') loadApiKeys();
+                    if (this.dataset.apiTab === 'stats') {
+                        if (typeof loadUsage === 'function') loadUsage();
+                        if (typeof loadLogs === 'function') loadLogs();
+                    }
+                });
+            });
+
+            // 5) SEARCH TABS
+            document.querySelectorAll('.search-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.search-tab-content').forEach(c => c.classList.remove('active'));
+                    const target = document.getElementById('tab-' + this.dataset.tab);
+                    if (target) target.classList.add('active');
+                });
+            });
+
+            // 6) NAVIGATION SIDEBAR
+            document.querySelectorAll('.sidebar-nav > li[data-page]').forEach(li => {
+                li.onclick = function() {
+                    const page = this.dataset.page;
+                    if (page === 'discord') {
+                        window.open('https://discord.gg/jf6QRZHaTB', '_blank');
+                        return;
+                    }
+                    document.querySelectorAll('.sidebar-nav > li').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    const target = document.getElementById('page-' + page);
+                    if (target) target.classList.add('active');
+                    if (page === 'api' && typeof loadApiKeys === 'function') loadApiKeys();
+                    if (window.innerWidth <= 768) window.closeMobileMenu();
+                };
+            });
+
+            // 7) SUPPORT TOGGLE
+            const supportToggle = document.getElementById('supportToggle');
+            const supportSubmenu = document.getElementById('supportSubmenu');
+            if (supportToggle && supportSubmenu) {
+                supportToggle.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    this.classList.toggle('open');
+                    const arrow = this.querySelector('.support-arrow');
+                    if (arrow) arrow.classList.toggle('open');
+                    supportSubmenu.classList.toggle('open');
+                };
+            }
+
+            // 8) LOGOUT
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.onclick = function() {
+                    window.customConfirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function() {
+                        localStorage.removeItem('token');
+                        window.location.href = '/login.html';
+                    }, { confirmText: 'Déconnexion', danger: true });
+                };
+            }
+
+            console.log('=== Marauder : handlers appliqués ===');
+        });
     </script>
     <style>
         /* ============================================
