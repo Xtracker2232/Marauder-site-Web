@@ -96,7 +96,6 @@ async function initDB() {
     try {
         await client.query('BEGIN');
 
-        // --- Tables de base ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -164,7 +163,6 @@ async function initDB() {
             );
         `);
 
-        // --- Migrations users ---
         await client.query(`
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255),
@@ -174,7 +172,6 @@ async function initDB() {
             ADD COLUMN IF NOT EXISTS custom_quota INTEGER DEFAULT 0;
         `);
 
-        // --- Stripe ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS subscriptions (
                 id SERIAL PRIMARY KEY,
@@ -202,7 +199,6 @@ async function initDB() {
             );
         `);
 
-        // --- API Keys ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_keys (
                 id SERIAL PRIMARY KEY,
@@ -218,7 +214,6 @@ async function initDB() {
             CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
         `);
 
-        // --- API Logs ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS api_logs (
                 id SERIAL PRIMARY KEY,
@@ -235,7 +230,6 @@ async function initDB() {
             CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_logs(created_at);
         `);
 
-        // --- Crypto Payments (NOWPayments) ---
         await client.query(`
             CREATE TABLE IF NOT EXISTS crypto_payments (
                 id SERIAL PRIMARY KEY,
@@ -265,7 +259,6 @@ async function initDB() {
             CREATE INDEX IF NOT EXISTS idx_crypto_user ON crypto_payments(user_id);
         `);
 
-        // --- Admin par défaut ---
         const adminCheck = await client.query(
             'SELECT id FROM users WHERE username = $1',
             [process.env.ADMIN_USERNAME]
@@ -333,6 +326,27 @@ async function getMonthlySearchCount(userId) {
         [userId]
     );
     return parseInt(result.rows[0].total) || 0;
+}
+
+// ============================================
+// 6bis. HELPER BRIXHUB (nouveau format)
+// ============================================
+function extractBrixResults(response) {
+    // Nouveau format : response.data.data.results
+    // Ancien format : response.data.results
+    if (response?.data?.data?.results) return response.data.data.results;
+    if (response?.data?.results) return response.data.results;
+    return [];
+}
+
+function extractBrixMeta(response) {
+    // Le meta peut être à response.data.meta (nouveau) ou response.data.data.meta
+    return response?.data?.meta || response?.data?.data?.meta || {};
+}
+
+function isBrixMaintenance(response) {
+    const meta = extractBrixMeta(response);
+    return meta.maintenance === true || response?.data?.maintenance === true;
 }
 
 // ============================================
@@ -614,11 +628,15 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
                     'X-API-Key': process.env.BRIX_API_KEY,
                     'Content-Type': 'application/json'
                 },
-                timeout: 10000
+                timeout: 30000
             }
         );
 
-        let results = response.data.data?.results || [];
+        // ✅ Extraction compatible ancien + nouveau format BrixHub
+        let results = extractBrixResults(response);
+        const meta = extractBrixMeta(response);
+        const maintenance = isBrixMaintenance(response);
+
         const totalBeforeFilter = results.length;
 
         if (blocklist.length > 0 && results.length > 0) {
@@ -641,12 +659,16 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
                 filtered: totalBeforeFilter !== results.length,
                 total_before_filter: totalBeforeFilter,
                 plan_limit: limits.resultsPerSearch,
-                took_ms: response.data.meta?.took_ms || 0
+                took_ms: meta.took_ms || 0,
+                pages: meta.pages || 1,
+                page: meta.page || 1,
+                maintenance: maintenance,
+                warning: maintenance ? 'BrixHub en maintenance — résultats possiblement incomplets' : null
             }
         });
     } catch (error) {
         console.error('Brix error:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Erreur de recherche' });
+        res.status(500).json({ error: 'Erreur de recherche', detail: error.message });
     }
 });
 
@@ -676,11 +698,13 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
             `https://api.brixhub.to/api/v1/lookup/${type}/${encodeURIComponent(value)}`,
             {
                 headers: { 'X-API-Key': process.env.BRIX_API_KEY },
-                timeout: 10000
+                timeout: 30000
             }
         );
 
-        let results = response.data.data?.results || [];
+        let results = extractBrixResults(response);
+        const meta = extractBrixMeta(response);
+
         if (results.length > limits.resultsPerSearch) {
             results = results.slice(0, limits.resultsPerSearch);
         }
@@ -699,11 +723,11 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
 
         res.json({
             data: { results },
-            meta: { filtered: true, plan_limit: limits.resultsPerSearch }
+            meta: { filtered: true, plan_limit: limits.resultsPerSearch, took_ms: meta.took_ms || 0 }
         });
     } catch (error) {
         console.error('Lookup error:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Erreur de lookup' });
+        res.status(500).json({ error: 'Erreur de lookup', detail: error.message });
     }
 });
 
@@ -758,11 +782,13 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
                     'X-API-Key': process.env.BRIX_API_KEY,
                     'Content-Type': 'application/json'
                 },
-                timeout: 10000
+                timeout: 30000
             }
         );
 
-        let results = response.data.data?.results || [];
+        let results = extractBrixResults(response);
+        const meta = extractBrixMeta(response);
+
         if (blocklist.length > 0 && results.length > 0) {
             results = results.filter(person => !isBlocked(person, blocklist));
         }
@@ -770,7 +796,7 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
         res.json({
             results,
             total: results.length,
-            took_ms: response.data.meta?.took_ms || 0
+            took_ms: meta.took_ms || 0
         });
     } catch (error) {
         console.error('Replay error:', error.message);
