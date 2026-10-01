@@ -479,11 +479,13 @@
         .fiche-btn:hover, .history-replay:hover { background: var(--glass-1); color: #fff; }
         .fiche-btn.danger:hover { border-color: rgba(239,68,68,0.4); color: var(--danger); }
 
+        /* PROFIL */
         .profile-card {
             background: linear-gradient(135deg, rgba(28,28,28,0.55), rgba(14,14,14,0.7));
             border: 1px solid var(--stroke-1);
             border-radius: 22px;
-            padding: 36px; max-width: 520px;
+            padding: 36px; max-width: 620px;
+            animation: pageIn 0.4s;
         }
         .profile-card .profile-row {
             display: flex; justify-content: space-between;
@@ -493,6 +495,42 @@
         .profile-card .profile-row:last-child { border-bottom: none; }
         .profile-card .label { color: var(--text-3); font-size: 13.5px; }
         .profile-card .value { color: #fff; font-weight: 600; font-size: 14px; }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 24px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--stroke-1);
+        }
+        .profile-avatar {
+            width: 72px; height: 72px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(60,60,60,0.6), rgba(30,30,30,0.8));
+            border: 1px solid var(--stroke-2);
+            border-radius: 20px;
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -1px;
+        }
+        .profile-header-info h3 {
+            font-size: 22px; font-weight: 800; color: #fff;
+            margin-bottom: 4px;
+        }
+        .profile-header-info p {
+            font-size: 13px; color: var(--text-3);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+            padding-top: 20px;
+            border-top: 1px solid var(--stroke-1);
+            flex-wrap: wrap;
+        }
 
         /* TOAST */
         .toast-container {
@@ -607,6 +645,40 @@
             display: flex; gap: 12px; margin-bottom: 24px;
             flex-wrap: wrap;
         }
+
+        /* MENU CONTEXTUEL GRAPHE */
+        #grapheContextMenu {
+            position: fixed;
+            background: linear-gradient(135deg, rgba(30,30,30,0.98), rgba(15,15,15,0.99));
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--stroke-2);
+            border-radius: 14px;
+            padding: 6px;
+            min-width: 200px;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            animation: menuIn 0.15s ease;
+        }
+        #grapheContextMenu.active { display: block; }
+        @keyframes menuIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        #grapheContextMenu .menu-item {
+            padding: 10px 14px;
+            color: var(--text-2);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #grapheContextMenu .menu-item svg { width: 14px; height: 14px; }
+        #grapheContextMenu .menu-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        #grapheContextMenu .menu-item.danger:hover { background: rgba(239,68,68,0.1); color: var(--danger); }
+        #grapheContextMenu .menu-divider { height: 1px; background: var(--stroke-1); margin: 4px 8px; }
 
         /* INVESTIGATION OVERLAY */
         .investigation-overlay {
@@ -771,6 +843,7 @@
             .investigation-actions { flex-direction: column; }
             .site-footer { margin-left: 0 !important; }
             .toast-container { top: auto; bottom: 20px; right: 12px; left: 12px; max-width: none; }
+            .profile-header { flex-direction: column; align-items: flex-start; }
         }
 
         /* API PAGE */
@@ -1322,6 +1395,36 @@
     <!-- TOAST -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- MENU CONTEXTUEL GRAPHE -->
+    <div id="grapheContextMenu">
+        <div class="menu-item" data-action="edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Modifier
+        </div>
+        <div class="menu-item" data-action="color">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            Changer couleur
+        </div>
+        <div class="menu-item" data-action="role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Changer rôle
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" data-action="link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Lier à...
+        </div>
+        <div class="menu-item" data-action="detach">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Détacher tous les liens
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item danger" data-action="delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Supprimer
+        </div>
+    </div>
+
     <!-- MODAL GENERIQUE -->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal">
@@ -1592,9 +1695,8 @@
             <header class="page-header"><h2>Graphe de connexions</h2></header>
             <div class="graphe-toolbar">
                 <button id="grapheAddPersonne" class="btn-primary" style="width:auto;padding:12px 26px;">+ Personne</button>
-                <button id="grapheAttacher" class="btn-secondary">Attacher</button>
                 <button id="grapheSauvegarder" class="btn-secondary">Sauvegarder</button>
-                <button id="grapheMesGraphes" class="btn-secondary">Mes graphes</button>
+                <button id="grapheMesGraphes" class="btn-secondary">Recharger</button>
                 <button id="grapheEffacer" class="btn-secondary" style="color:#ef4444;">Effacer</button>
             </div>
             <div id="grapheContainer"><canvas id="grapheCanvas"></canvas></div>
@@ -1609,7 +1711,9 @@
         <!-- PAGE PROFIL -->
         <section id="page-profile" class="page">
             <header class="page-header"><h2>Profil</h2></header>
-            <div id="profileInfo" class="profile-card"></div>
+            <div id="profileInfo" class="profile-card">
+                <div style="text-align:center; padding:40px; color:#7a7a7a;">Chargement du profil...</div>
+            </div>
         </section>
 
         <!-- PAGE API -->
@@ -1661,7 +1765,6 @@
                     </div>
                 </div>
 
-                <!-- DOCS -->
                 <div id="api-tab-docs" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -1676,7 +1779,7 @@
                         <div class="api-docs">
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>Informations générales</h4>
-                                <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique. Automatisez vos recherches, intégrez Marauder dans vos outils existants, ou créez vos propres applications.</p>
+                                <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique.</p>
                                 <div class="doc-info">
                                     <span><strong>URL de base :</strong> <code>https://marauder.host/api/v1</code></span>
                                     <span><strong>Format :</strong> JSON</span>
@@ -1692,7 +1795,6 @@
                                     <div class="code-header"><span>Header</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>Authorization: Bearer marauder_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
                                 </div>
-                                <p style="margin-top:14px;">⚠️ <strong>Ne partagez jamais votre clé API.</strong></p>
                             </div>
 
                             <div class="doc-section">
@@ -1707,64 +1809,27 @@
 
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Mon profil — GET /me</h4>
-                                <p>Récupère les informations de votre compte et l'usage de votre quota ce mois-ci.</p>
                                 <div class="endpoint"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/me</span></div>
                                 <div class="code-block">
                                     <div class="code-header"><span>Exemple cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>curl https://marauder.host/api/v1/me \
   -H "Authorization: Bearer marauder_xxx"</code></pre>
                                 </div>
-                                <p style="margin-top:14px;font-size:13px;color:#a0a0a0;">Réponse :</p>
-                                <div class="code-block">
-                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>{
-  "success": true,
-  "plan": "free",
-  "resultsPerSearch": 10,
-  "usage": {
-    "used": 4,
-    "limit": 10,
-    "remaining": 6
-  }
-}</code></pre>
-                                </div>
                             </div>
 
                             <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Statistiques d'utilisation — GET /usage</h4>
-                                <p>Récupère les statistiques détaillées de votre consommation d'API.</p>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Statistiques — GET /usage</h4>
                                 <div class="endpoint"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/usage</span></div>
                                 <div class="code-block">
                                     <div class="code-header"><span>Exemple cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>curl https://marauder.host/api/v1/usage \
   -H "Authorization: Bearer marauder_xxx"</code></pre>
                                 </div>
-                                <p style="margin-top:14px;font-size:13px;color:#a0a0a0;">Réponse :</p>
-                                <div class="code-block">
-                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>{
-  "success": true,
-  "plan": "free",
-  "resultsPerSearch": 10,
-  "usage": {
-    "today": 2,
-    "month": 4,
-    "limit": 10,
-    "remaining": 6,
-    "by_endpoint": [
-      { "endpoint": "/api/v1/search", "total": "3" },
-      { "endpoint": "/api/v1/me", "total": "1" }
-    ]
-  }
-}</code></pre>
-                                </div>
                             </div>
 
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Recherche multi-critères — POST /search</h4>
-                                <p>L'endpoint principal. Recherchez une personne avec plus de 20 critères combinables.</p>
                                 <div class="endpoint"><span class="endpoint-method post">POST</span><span class="endpoint-path">/api/v1/search</span></div>
-
                                 <p style="font-size:13px;color:#a0a0a0;margin-top:14px;">Body JSON — Tous les champs acceptés :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>Body complet</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
@@ -1800,13 +1865,6 @@
   "per_page": 50
 }</code></pre>
                                 </div>
-
-                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Paramètres spéciaux :</p>
-                                <div class="errors-table">
-                                    <div class="error-row"><span class="error-code" style="width:120px;">flexible</span><span class="error-desc">booléen — recherche approximative (tolère fautes)</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:120px;">per_page</span><span class="error-desc">nombre — résultats par page (limité par plan)</span></div>
-                                </div>
-
                                 <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Exemple cURL :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>Exemple</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
@@ -1815,7 +1873,6 @@
   -H "Content-Type: application/json" \
   -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
                                 </div>
-
                                 <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Réponse :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
@@ -1848,34 +1905,12 @@
   }
 }</code></pre>
                                 </div>
-
-                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Champs spéciaux de réponse :</p>
-                                <div class="errors-table">
-                                    <div class="error-row"><span class="error-code" style="width:140px;">_confidence</span><span class="error-desc">Score de confiance du résultat (0-100)</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:140px;">_sources</span><span class="error-desc">Sources d'où viennent les données</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.total</span><span class="error-desc">Nombre total de résultats trouvés</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.returned</span><span class="error-desc">Résultats retournés (limité par plan)</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.limited</span><span class="error-desc">true si résultats tronqués</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.pages</span><span class="error-desc">Nombre total de pages</span></div>
-                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.took_ms</span><span class="error-desc">Temps de réponse en ms</span></div>
-                                </div>
                             </div>
 
                             <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Lookup rapide — GET /lookup/:type/:value ❌</h4>
-                                <p>⚠️ <strong>Cette route est actuellement INDISPONIBLE</strong> car notre fournisseur de données ne propose pas l'endpoint lookup.</p>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Lookup rapide ❌</h4>
+                                <p>⚠️ <strong>Route INDISPONIBLE</strong> — utilisez <code>/search</code> à la place.</p>
                                 <div class="endpoint" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/lookup/:type/:value</span></div>
-                                <p style="font-size:13px;color:#a0a0a0;">Types : <code>email</code>, <code>phone</code>, <code>iban</code></p>
-                                <div class="code-block">
-                                    <div class="code-header"><span>Réponse quand appelée</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>{
-  "error": "upstream_unavailable",
-  "message": "Le fournisseur de données est temporairement indisponible."
-}</code></pre>
-                                </div>
-                                <div style="margin-top:14px; padding:14px 18px; background: rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.25); border-radius:12px; color:#f59e0b; font-size:13px; line-height:1.6;">
-                                    ⚠️ <strong>Utilisez <code>/search</code> à la place.</strong>
-                                </div>
                             </div>
 
                             <div class="doc-section">
@@ -1884,9 +1919,9 @@
                                     <div class="error-row"><span class="error-code">200</span><span class="error-desc">Succès</span></div>
                                     <div class="error-row"><span class="error-code">400</span><span class="error-desc">Requête invalide</span></div>
                                     <div class="error-row"><span class="error-code">401</span><span class="error-desc">Clé API manquante ou invalide</span></div>
-                                    <div class="error-row"><span class="error-code">403</span><span class="error-desc">Accès refusé (banni, quota dépassé)</span></div>
-                                    <div class="error-row"><span class="error-code">404</span><span class="error-desc">Route ou ressource introuvable</span></div>
-                                    <div class="error-row"><span class="error-code">429</span><span class="error-desc">Quota mensuel dépassé</span></div>
+                                    <div class="error-row"><span class="error-code">403</span><span class="error-desc">Accès refusé</span></div>
+                                    <div class="error-row"><span class="error-code">404</span><span class="error-desc">Introuvable</span></div>
+                                    <div class="error-row"><span class="error-code">429</span><span class="error-desc">Quota dépassé</span></div>
                                     <div class="error-row"><span class="error-code">500</span><span class="error-desc">Erreur serveur</span></div>
                                     <div class="error-row"><span class="error-code">503</span><span class="error-desc">Fournisseur indisponible</span></div>
                                 </div>
@@ -1907,31 +1942,10 @@
   -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
                                 </div>
                             </div>
-
-                            <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12.75 11h4.25a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h4.25l-.5-1.07A4.001 4.001 0 0 1 12 2z"/></svg></span>Prompt IA prêt à copier</h4>
-                                <div class="code-block">
-                                    <div class="code-header"><span>Prompt</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>---
-Tu es un assistant qui utilise l'API Marauder (OSINT).
-
-URL de base : https://marauder.host/api/v1
-Clé API : marauder_VOTRE_CLE_ICI
-
-Endpoints :
-- POST /search → recherche multi-critères
-- GET /me → infos compte + quota
-- GET /usage → stats détaillées
-
-Fais la recherche et affiche les résultats.
----</code></pre>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- STATS -->
                 <div id="api-tab-stats" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -1964,7 +1978,6 @@ Fais la recherche et affiche les résultats.
                     </div>
                 </div>
 
-                <!-- SUBSCRIPTION -->
                 <div id="api-tab-subscription" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -1990,13 +2003,12 @@ Fais la recherche et affiche les résultats.
         <a href="/cgu.html">CGU</a> · <span>Created by Index</span>
     </footer>
 
-    <!-- SCRIPT UNIFIÉ -->
     <script>
     (function() {
         'use strict';
 
         /* ============================================
-           UTILITAIRES GLOBAUX
+           UTILITAIRES
            ============================================ */
         window.toggleSection = function(el) {
             if (!el) return;
@@ -2068,7 +2080,7 @@ Fais la recherche et affiche les résultats.
         };
 
         /* ============================================
-           DÉLÉGATION CAPTURE
+           DÉLÉGATION GLOBALE
            ============================================ */
         document.addEventListener('click', function(e) {
             var t = e.target;
@@ -2112,8 +2124,9 @@ Fais la recherche et affiche les résultats.
                 document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
                 var target = document.getElementById('page-' + page);
                 if (target) target.classList.add('active');
-                if (page === 'api' && typeof loadApiKeys === 'function') loadApiKeys();
-                if (page === 'graphe') setTimeout(initGraphe, 50);
+                if (page === 'api') loadApiKeys();
+                if (page === 'graphe') setTimeout(initGraphe, 60);
+                if (page === 'profile') loadProfile();
                 if (window.innerWidth <= 768) window.closeMobileMenu();
                 return;
             }
@@ -2162,8 +2175,8 @@ Fais la recherche et affiche les résultats.
                 var code = document.getElementById('codeExample');
                 var examples = {
                     curl: 'curl -X POST https://marauder.host/api/v1/search \\\n  -H "Authorization: Bearer marauder_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"nom_famille": "Dupont", "prenom": "Jean"}\'',
-                    js: 'const response = await fetch(\'https://marauder.host/api/v1/search\', {\n  method: \'POST\',\n  headers: {\n    \'Authorization\': \'Bearer marauder_xxx\',\n    \'Content-Type\': \'application/json\'\n  },\n  body: JSON.stringify({ nom_famille: \'Dupont\', prenom: \'Jean\' })\n});\nconst data = await response.json();\nconsole.log(data);',
-                    python: 'import requests\n\nresponse = requests.post(\n    \'https://marauder.host/api/v1/search\',\n    headers={\n        \'Authorization\': \'Bearer marauder_xxx\',\n        \'Content-Type\': \'application/json\'\n    },\n    json={\'nom_famille\': \'Dupont\', \'prenom\': \'Jean\'}\n)\nprint(response.json())'
+                    js: 'const response = await fetch(\'https://marauder.host/api/v1/search\', {\n  method: \'POST\',\n  headers: {\n    \'Authorization\': \'Bearer marauder_xxx\',\n    \'Content-Type\': \'application/json\'\n  },\n  body: JSON.stringify({ nom_famille: \'Dupont\', prenom: \'Jean\' })\n});',
+                    python: 'import requests\n\nresponse = requests.post(\n    \'https://marauder.host/api/v1/search\',\n    headers={\n        \'Authorization\': \'Bearer marauder_xxx\',\n        \'Content-Type\': \'application/json\'\n    },\n    json={\'nom_famille\': \'Dupont\', \'prenom\': \'Jean\'}\n)'
                 };
                 if (label) label.textContent = lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python';
                 if (code) code.innerHTML = '<code>' + (examples[lang] || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
@@ -2208,7 +2221,7 @@ Fais la recherche et affiche les résultats.
             }
             if (grid) {
                 var fields = [];
-                var priority = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'date_naissance', 'ville_naissance', 'nir', 'iban', 'bic', 'steam_id', 'fivem_license', 'discord_id'];
+                var priority = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'date_naissance', 'nir', 'iban', 'bic', 'steam_id', 'discord_id'];
                 priority.forEach(function(key) {
                     if (personData[key]) {
                         fields.push('<div class="investigation-info-item important"><div class="investigation-info-label">' + key.replace(/_/g, ' ') + '</div><div class="investigation-info-value">' + personData[key] + '</div></div>');
@@ -2224,6 +2237,63 @@ Fais la recherche et affiche les résultats.
         window.closeInvestigation = function() {
             var overlay = document.getElementById('investigationOverlay');
             if (overlay) overlay.classList.remove('active');
+        };
+
+        /* ============================================
+           PROFIL — Chargement avec fallback
+           ============================================ */
+        window.loadProfile = async function() {
+            var container = document.getElementById('profileInfo');
+            if (!container) return;
+
+            var defaultData = {
+                username: localStorage.getItem('username') || 'Admin',
+                role: 'user',
+                plan: 'free',
+                created_at: null,
+                last_login: null,
+                searches_count: 0
+            };
+
+            var data = Object.assign({}, defaultData);
+            var token = localStorage.getItem('token');
+
+            if (token) {
+                try {
+                    var res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                    if (res.ok) {
+                        var apiData = await res.json();
+                        data = Object.assign(data, apiData);
+                    }
+                } catch (err) {
+                    // Silencieux : on utilise les données par défaut
+                }
+            }
+
+            var initial = (data.username || 'A').charAt(0).toUpperCase();
+            var createdStr = data.created_at ? new Date(data.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+            var lastLoginStr = data.last_login ? new Date(data.last_login).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Maintenant';
+            var roleLabel = data.role === 'admin' ? 'Administrateur' : data.role === 'owner' ? 'Propriétaire' : 'Utilisateur';
+            var planLabel = (data.plan || 'free').toUpperCase();
+
+            container.innerHTML =
+                '<div class="profile-header">' +
+                    '<div class="profile-avatar">' + initial + '</div>' +
+                    '<div class="profile-header-info">' +
+                        '<h3>' + (data.username || 'Admin') + '</h3>' +
+                        '<p>Compte Marauder · Plan ' + planLabel + '</p>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="profile-row"><span class="label">Nom d\'utilisateur</span><span class="value">' + (data.username || 'Admin') + '</span></div>' +
+                '<div class="profile-row"><span class="label">Rôle</span><span class="value">' + roleLabel + '</span></div>' +
+                '<div class="profile-row"><span class="label">Plan actuel</span><span class="value">' + planLabel + '</span></div>' +
+                '<div class="profile-row"><span class="label">Membre depuis</span><span class="value">' + createdStr + '</span></div>' +
+                '<div class="profile-row"><span class="label">Dernière connexion</span><span class="value">' + lastLoginStr + '</span></div>' +
+                '<div class="profile-row"><span class="label">Recherches effectuées</span><span class="value">' + (data.searches_count || 0) + '</span></div>' +
+                '<div class="profile-actions">' +
+                    '<button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="window.showToast(\'Fonction bientôt disponible\', \'warning\')">Modifier le profil</button>' +
+                    '<button class="btn-secondary" onclick="window.location.href=\'/cgu.html\'">Voir les CGU</button>' +
+                '</div>';
         };
 
         /* ============================================
@@ -2267,8 +2337,7 @@ Fais la recherche et affiche les résultats.
             var counterHTML = '<div style="padding:18px 32px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;"><div style="font-size:13px;color:#b8b8b8;"><strong style="color:#fff;">' + currentCount + '</strong> / ' + maxDisplay + ' clé <span style="color:#7a7a7a;"> · Plan ' + plan.toUpperCase() + '</span></div>' + (canAdd ? '<button class="api-btn-primary" onclick="generateApiKey()">Générer</button>' : '<span style="font-size:12px;color:#f59e0b;">Limite atteinte</span>') + '</div>';
             var keysHTML = apiKeysCache.map(function(k) {
                 var createdDate = new Date(k.created_at).toLocaleDateString('fr-FR');
-                var lastUsed = k.last_used ? new Date(k.last_used).toLocaleDateString('fr-FR') : 'Jamais';
-                return '<div class="api-key-item"><div class="api-key-info"><div class="api-key-name">' + k.name + '</div><div class="api-key-value">' + k.key_preview + '</div><div class="api-key-date">Créée le ' + createdDate + ' · Dernière utilisation : ' + lastUsed + '</div></div><div class="api-key-actions"><button class="api-key-btn danger" onclick="revokeApiKey(' + k.id + ')">Révoquer</button></div></div>';
+                return '<div class="api-key-item"><div class="api-key-info"><div class="api-key-name">' + k.name + '</div><div class="api-key-value">' + k.key_preview + '</div><div class="api-key-date">Créée le ' + createdDate + '</div></div><div class="api-key-actions"><button class="api-key-btn danger" onclick="revokeApiKey(' + k.id + ')">Révoquer</button></div></div>';
             }).join('');
             container.innerHTML = counterHTML + keysHTML;
         }
@@ -2283,7 +2352,7 @@ Fais la recherche et affiche les résultats.
                 window.showToast('Clé générée', 'success');
                 await loadApiKeys();
             } catch (err) {
-                var demoKey = 'marauder_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                var demoKey = 'marauder_' + Math.random().toString(36).substring(2, 15);
                 showNewKeyModal(demoKey, true);
             }
         };
@@ -2291,7 +2360,7 @@ Fais la recherche et affiche les résultats.
         function showNewKeyModal(key, isDemo) {
             var modal = document.createElement('div');
             modal.className = 'api-key-modal active';
-            modal.innerHTML = '<div class="api-key-modal-content"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Nouvelle clé API' + (isDemo ? ' (démo)' : '') + '</h3><p>Copiez-la maintenant, elle ne sera plus jamais affichée.</p><div class="api-key-new-value"><input type="text" value="' + key + '" readonly id="newKeyInput"><button class="api-btn-primary" onclick="copyNewKey()">Copier</button></div><div class="api-key-warning">Ne partagez jamais cette clé.</div><button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J\'ai copié ma clé</button></div>';
+            modal.innerHTML = '<div class="api-key-modal-content"><h3>Nouvelle clé API' + (isDemo ? ' (démo)' : '') + '</h3><p>Copiez-la maintenant, elle ne sera plus jamais affichée.</p><div class="api-key-new-value"><input type="text" value="' + key + '" readonly id="newKeyInput"><button class="api-btn-primary" onclick="copyNewKey()">Copier</button></div><div class="api-key-warning">Ne partagez jamais cette clé.</div><button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J\'ai copié ma clé</button></div>';
             document.body.appendChild(modal);
         }
 
@@ -2317,7 +2386,7 @@ Fais la recherche et affiche les résultats.
         };
 
         /* ============================================
-           SUBSCRIPTION — FIX (affiche toujours du contenu)
+           SUBSCRIPTION
            ============================================ */
         window.loadSubscription = async function() {
             var container = document.getElementById('subscriptionContent');
@@ -2325,12 +2394,8 @@ Fais la recherche et affiche les résultats.
 
             var planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
             var planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
-            var plan = 'free';
-            var active = false;
-            var status = 'inactive';
-            var periodEnd = null;
+            var plan = 'free', active = false, status = 'inactive', periodEnd = null;
 
-            // Tentative de récupération côté serveur (silencieuse)
             var token = localStorage.getItem('token');
             if (token) {
                 try {
@@ -2342,15 +2407,11 @@ Fais la recherche et affiche les résultats.
                         status = data.status || 'inactive';
                         periodEnd = data.currentPeriodEnd;
                     }
-                } catch (err) {
-                    // Silencieux - on affiche quand même le fallback
-                }
+                } catch (err) {}
             }
 
             var statusBadgeClass = 'inactive', statusText = 'Inactif';
             if (active) { statusBadgeClass = 'active'; statusText = 'Actif'; }
-            else if (status === 'past_due') { statusBadgeClass = 'past_due'; statusText = 'Paiement en retard'; }
-            else if (status === 'canceled') { statusBadgeClass = 'canceled'; statusText = 'Annulé'; }
 
             var periodEndStr = '—';
             if (periodEnd) {
@@ -2383,9 +2444,7 @@ Fais la recherche et affiche les résultats.
                     '<div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">' + periodEndStr + '</div></div>' +
                 '</div>' +
                 '<div class="sub-actions">' +
-                    (plan === 'free'
-                        ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>'
-                        : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') +
+                    (plan === 'free' ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') +
                 '</div>' +
             '</div>' +
             '<div class="sub-plans">' +
@@ -2438,30 +2497,11 @@ Fais la recherche et affiche les résultats.
             } catch (err) { window.showToast('Erreur de connexion', 'error'); }
         };
 
-        /* ============================================
-           USAGE / LOGS
-           ============================================ */
-        window.loadUsage = async function() {
-            var token = localStorage.getItem('token');
-            if (!token) return;
-            try {
-                var res = await fetch('/api/my-api-usage', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) throw new Error();
-                var data = await res.json();
-                var setStat = function(key, value) { var el = document.querySelector('.api-stat-value[data-stat="' + key + '"]'); if (el) el.textContent = value; };
-                setStat('today', data.today);
-                setStat('month', data.month);
-                setStat('limit', data.limit);
-                setStat('remaining', data.remaining);
-                var usageCount = document.getElementById('usageCount');
-                if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
-            } catch (err) { /* silencieux */ }
-        };
-
-        window.loadLogs = async function() { /* hook backend */ };
+        window.loadUsage = async function() { /* hook */ };
+        window.loadLogs = async function() { /* hook */ };
 
         /* ============================================
-           GRAPHE INTERACTIF (intégré)
+           GRAPHE INTERACTIF + MENU CONTEXTUEL
            ============================================ */
         var grapheState = {
             nodes: [],
@@ -2474,7 +2514,8 @@ Fais la recherche et affiche les résultats.
             panStart: null,
             selectedNode: null,
             initialized: false,
-            animationId: null
+            animationId: null,
+            contextNode: null
         };
 
         function initGraphe() {
@@ -2483,7 +2524,6 @@ Fais la recherche et affiche les résultats.
             var container = document.getElementById('grapheContainer');
             if (!container) return;
 
-            // Redimensionner le canvas
             function resizeCanvas() {
                 var rect = container.getBoundingClientRect();
                 var dpr = window.devicePixelRatio || 1;
@@ -2498,23 +2538,20 @@ Fais la recherche et affiche les résultats.
             resizeCanvas();
             window.addEventListener('resize', function() {
                 resizeCanvas();
-                drawGraphe();
             });
 
-            // Ajouter des nodes de démo au premier init
             if (!grapheState.initialized) {
                 grapheState.initialized = true;
                 if (grapheState.nodes.length === 0) {
                     var rect = container.getBoundingClientRect();
                     var cx = rect.width / 2;
                     var cy = rect.height / 2;
-                    var demoNodes = [
+                    grapheState.nodes = [
                         { id: 1, x: cx - 150, y: cy - 80, label: 'Jean Dupont', color: '#ffffff', role: 'Cible' },
                         { id: 2, x: cx + 150, y: cy - 80, label: 'Marie Martin', color: '#3b82f6', role: 'Famille' },
                         { id: 3, x: cx - 150, y: cy + 100, label: 'Paul Dupont', color: '#10b981', role: 'Famille' },
                         { id: 4, x: cx + 150, y: cy + 100, label: 'Sophie Durand', color: '#f59e0b', role: 'Contact' }
                     ];
-                    grapheState.nodes = demoNodes;
                     grapheState.edges = [
                         { from: 1, to: 2 },
                         { from: 1, to: 3 },
@@ -2523,17 +2560,15 @@ Fais la recherche et affiche les résultats.
                 }
             }
 
-            // Animation
             function drawGraphe() {
                 var ctx = canvas.getContext('2d');
                 var rect = container.getBoundingClientRect();
                 ctx.clearRect(0, 0, rect.width, rect.height);
-
                 ctx.save();
                 ctx.translate(grapheState.offsetX, grapheState.offsetY);
                 ctx.scale(grapheState.scale, grapheState.scale);
 
-                // Dessiner les edges
+                // Edges
                 ctx.strokeStyle = 'rgba(255,255,255,0.15)';
                 ctx.lineWidth = 1.5;
                 grapheState.edges.forEach(function(edge) {
@@ -2547,19 +2582,15 @@ Fais la recherche et affiche les résultats.
                     }
                 });
 
-                // Dessiner les nodes
+                // Nodes
                 grapheState.nodes.forEach(function(node) {
                     var isSelected = grapheState.selectedNode && grapheState.selectedNode.id === node.id;
-
-                    // Halo
                     if (isSelected) {
                         ctx.beginPath();
                         ctx.arc(node.x, node.y, 38, 0, Math.PI * 2);
                         ctx.fillStyle = 'rgba(255,255,255,0.08)';
                         ctx.fill();
                     }
-
-                    // Cercle principal
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, 24, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(30,30,30,0.95)';
@@ -2567,25 +2598,18 @@ Fais la recherche et affiche les résultats.
                     ctx.strokeStyle = node.color || '#fff';
                     ctx.lineWidth = 2;
                     ctx.stroke();
-
-                    // Point central
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, 4, 0, Math.PI * 2);
                     ctx.fillStyle = node.color || '#fff';
                     ctx.fill();
-
-                    // Label
                     ctx.fillStyle = '#fff';
                     ctx.font = '12px -apple-system, Arial, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.fillText(node.label, node.x, node.y + 44);
-
-                    // Rôle
                     ctx.fillStyle = 'rgba(255,255,255,0.5)';
                     ctx.font = '10px -apple-system, Arial, sans-serif';
                     ctx.fillText(node.role || '', node.x, node.y + 58);
                 });
-
                 ctx.restore();
             }
 
@@ -2596,7 +2620,6 @@ Fais la recherche et affiche les résultats.
             if (grapheState.animationId) cancelAnimationFrame(grapheState.animationId);
             animate();
 
-            // Helper : trouver node sous la souris
             function getNodeAt(mx, my) {
                 var worldX = (mx - grapheState.offsetX) / grapheState.scale;
                 var worldY = (my - grapheState.offsetY) / grapheState.scale;
@@ -2609,117 +2632,129 @@ Fais la recherche et affiche les résultats.
                 return null;
             }
 
-            // Souris
-            canvas.addEventListener('mousedown', function(e) {
-                var rect = canvas.getBoundingClientRect();
-                var mx = e.clientX - rect.left;
-                var my = e.clientY - rect.top;
-                var node = getNodeAt(mx, my);
-                if (node) {
-                    grapheState.dragging = node;
-                    grapheState.selectedNode = node;
-                } else {
-                    grapheState.panning = true;
-                    grapheState.panStart = { x: e.clientX - grapheState.offsetX, y: e.clientY - grapheState.offsetY };
-                    grapheState.selectedNode = null;
-                }
-            });
+            // Renommer les listeners pour éviter doublons
+            if (!canvas.dataset.bound) {
+                canvas.dataset.bound = '1';
 
-            canvas.addEventListener('mousemove', function(e) {
-                var rect = canvas.getBoundingClientRect();
-                var mx = e.clientX - rect.left;
-                var my = e.clientY - rect.top;
-                if (grapheState.dragging) {
-                    grapheState.dragging.x = (mx - grapheState.offsetX) / grapheState.scale;
-                    grapheState.dragging.y = (my - grapheState.offsetY) / grapheState.scale;
-                } else if (grapheState.panning) {
-                    grapheState.offsetX = e.clientX - grapheState.panStart.x;
-                    grapheState.offsetY = e.clientY - grapheState.panStart.y;
-                } else {
-                    canvas.style.cursor = getNodeAt(mx, my) ? 'pointer' : 'grab';
-                }
-            });
-
-            canvas.addEventListener('mouseup', function() {
-                grapheState.dragging = null;
-                grapheState.panning = false;
-            });
-
-            canvas.addEventListener('mouseleave', function() {
-                grapheState.dragging = null;
-                grapheState.panning = false;
-            });
-
-            // Zoom
-            canvas.addEventListener('wheel', function(e) {
-                e.preventDefault();
-                var rect = canvas.getBoundingClientRect();
-                var mx = e.clientX - rect.left;
-                var my = e.clientY - rect.top;
-                var oldScale = grapheState.scale;
-                var delta = e.deltaY > 0 ? 0.9 : 1.1;
-                grapheState.scale *= delta;
-                grapheState.scale = Math.max(0.3, Math.min(3, grapheState.scale));
-                grapheState.offsetX = mx - (mx - grapheState.offsetX) * (grapheState.scale / oldScale);
-                grapheState.offsetY = my - (my - grapheState.offsetY) * (grapheState.scale / oldScale);
-            }, { passive: false });
-
-            // Touch
-            var lastTouchDist = 0;
-            canvas.addEventListener('touchstart', function(e) {
-                if (e.touches.length === 1) {
+                canvas.addEventListener('mousedown', function(e) {
                     var rect = canvas.getBoundingClientRect();
-                    var t = e.touches[0];
-                    var mx = t.clientX - rect.left;
-                    var my = t.clientY - rect.top;
+                    var mx = e.clientX - rect.left;
+                    var my = e.clientY - rect.top;
                     var node = getNodeAt(mx, my);
                     if (node) {
                         grapheState.dragging = node;
                         grapheState.selectedNode = node;
                     } else {
                         grapheState.panning = true;
-                        grapheState.panStart = { x: t.clientX - grapheState.offsetX, y: t.clientY - grapheState.offsetY };
+                        grapheState.panStart = { x: e.clientX - grapheState.offsetX, y: e.clientY - grapheState.offsetY };
+                        grapheState.selectedNode = null;
                     }
-                } else if (e.touches.length === 2) {
-                    var dx = e.touches[0].clientX - e.touches[1].clientX;
-                    var dy = e.touches[0].clientY - e.touches[1].clientY;
-                    lastTouchDist = Math.sqrt(dx * dx + dy * dy);
-                }
-            }, { passive: true });
+                    hideContextMenu();
+                });
 
-            canvas.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 1) {
-                    var t = e.touches[0];
+                canvas.addEventListener('mousemove', function(e) {
+                    var rect = canvas.getBoundingClientRect();
+                    var mx = e.clientX - rect.left;
+                    var my = e.clientY - rect.top;
                     if (grapheState.dragging) {
+                        grapheState.dragging.x = (mx - grapheState.offsetX) / grapheState.scale;
+                        grapheState.dragging.y = (my - grapheState.offsetY) / grapheState.scale;
+                    } else if (grapheState.panning) {
+                        grapheState.offsetX = e.clientX - grapheState.panStart.x;
+                        grapheState.offsetY = e.clientY - grapheState.panStart.y;
+                    } else {
+                        canvas.style.cursor = getNodeAt(mx, my) ? 'pointer' : 'grab';
+                    }
+                });
+
+                canvas.addEventListener('mouseup', function() {
+                    grapheState.dragging = null;
+                    grapheState.panning = false;
+                });
+
+                canvas.addEventListener('mouseleave', function() {
+                    grapheState.dragging = null;
+                    grapheState.panning = false;
+                });
+
+                // CLIC DROIT = MENU CONTEXTUEL
+                canvas.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    var rect = canvas.getBoundingClientRect();
+                    var mx = e.clientX - rect.left;
+                    var my = e.clientY - rect.top;
+                    var node = getNodeAt(mx, my);
+                    if (node) {
+                        grapheState.selectedNode = node;
+                        grapheState.contextNode = node;
+                        showContextMenu(e.clientX, e.clientY, node);
+                    } else {
+                        hideContextMenu();
+                    }
+                });
+
+                // Zoom
+                canvas.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    var rect = canvas.getBoundingClientRect();
+                    var mx = e.clientX - rect.left;
+                    var my = e.clientY - rect.top;
+                    var oldScale = grapheState.scale;
+                    var delta = e.deltaY > 0 ? 0.9 : 1.1;
+                    grapheState.scale *= delta;
+                    grapheState.scale = Math.max(0.3, Math.min(3, grapheState.scale));
+                    grapheState.offsetX = mx - (mx - grapheState.offsetX) * (grapheState.scale / oldScale);
+                    grapheState.offsetY = my - (my - grapheState.offsetY) * (grapheState.scale / oldScale);
+                }, { passive: false });
+
+                // Touch : click droit simulé par appui long
+                var longPressTimer = null;
+                canvas.addEventListener('touchstart', function(e) {
+                    if (e.touches.length === 1) {
+                        var t = e.touches[0];
                         var rect = canvas.getBoundingClientRect();
                         var mx = t.clientX - rect.left;
                         var my = t.clientY - rect.top;
-                        grapheState.dragging.x = (mx - grapheState.offsetX) / grapheState.scale;
-                        grapheState.dragging.y = (my - grapheState.offsetY) / grapheState.scale;
-                        e.preventDefault();
-                    } else if (grapheState.panning) {
-                        grapheState.offsetX = t.clientX - grapheState.panStart.x;
-                        grapheState.offsetY = t.clientY - grapheState.panStart.y;
-                        e.preventDefault();
+                        var node = getNodeAt(mx, my);
+                        if (node) {
+                            longPressTimer = setTimeout(function() {
+                                grapheState.selectedNode = node;
+                                grapheState.contextNode = node;
+                                showContextMenu(t.clientX, t.clientY, node);
+                                if (navigator.vibrate) navigator.vibrate(30);
+                            }, 500);
+                        }
+                        grapheState.dragging = node;
+                        if (!node) {
+                            grapheState.panning = true;
+                            grapheState.panStart = { x: t.clientX - grapheState.offsetX, y: t.clientY - grapheState.offsetY };
+                        }
                     }
-                } else if (e.touches.length === 2) {
-                    var dx = e.touches[0].clientX - e.touches[1].clientX;
-                    var dy = e.touches[0].clientY - e.touches[1].clientY;
-                    var dist = Math.sqrt(dx * dx + dy * dy);
-                    if (lastTouchDist > 0) {
-                        grapheState.scale *= dist / lastTouchDist;
-                        grapheState.scale = Math.max(0.3, Math.min(3, grapheState.scale));
-                    }
-                    lastTouchDist = dist;
-                    e.preventDefault();
-                }
-            }, { passive: false });
+                }, { passive: true });
 
-            canvas.addEventListener('touchend', function() {
-                grapheState.dragging = null;
-                grapheState.panning = false;
-                lastTouchDist = 0;
-            });
+                canvas.addEventListener('touchmove', function(e) {
+                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                    if (e.touches.length === 1) {
+                        var t = e.touches[0];
+                        if (grapheState.dragging) {
+                            var rect = canvas.getBoundingClientRect();
+                            grapheState.dragging.x = (t.clientX - rect.left - grapheState.offsetX) / grapheState.scale;
+                            grapheState.dragging.y = (t.clientY - rect.top - grapheState.offsetY) / grapheState.scale;
+                            e.preventDefault();
+                        } else if (grapheState.panning) {
+                            grapheState.offsetX = t.clientX - grapheState.panStart.x;
+                            grapheState.offsetY = t.clientY - grapheState.panStart.y;
+                            e.preventDefault();
+                        }
+                    }
+                }, { passive: false });
+
+                canvas.addEventListener('touchend', function() {
+                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                    grapheState.dragging = null;
+                    grapheState.panning = false;
+                });
+            }
 
             // Boutons
             var addBtn = document.getElementById('grapheAddPersonne');
@@ -2738,7 +2773,7 @@ Fais la recherche et affiche les résultats.
                         color: colors[newId % colors.length],
                         role: roles[newId % roles.length]
                     });
-                    window.showToast('Personne ajoutée au graphe', 'success');
+                    window.showToast('Personne ajoutée', 'success');
                 });
             }
 
@@ -2760,11 +2795,8 @@ Fais la recherche et affiche les résultats.
                 saveBtn.dataset.bound = '1';
                 saveBtn.addEventListener('click', function() {
                     try {
-                        localStorage.setItem('marauder_graphe', JSON.stringify({
-                            nodes: grapheState.nodes,
-                            edges: grapheState.edges
-                        }));
-                        window.showToast('Graphe sauvegardé localement', 'success');
+                        localStorage.setItem('marauder_graphe', JSON.stringify({ nodes: grapheState.nodes, edges: grapheState.edges }));
+                        window.showToast('Graphe sauvegardé', 'success');
                     } catch (e) { window.showToast('Erreur sauvegarde', 'error'); }
                 });
             }
@@ -2779,16 +2811,100 @@ Fais la recherche et affiche les résultats.
                             var data = JSON.parse(saved);
                             grapheState.nodes = data.nodes || [];
                             grapheState.edges = data.edges || [];
-                            window.showToast('Graphe chargé', 'success');
+                            window.showToast('Graphe rechargé', 'success');
                         } else {
                             window.showToast('Aucun graphe sauvegardé', 'warning');
                         }
-                    } catch (e) { window.showToast('Erreur chargement', 'error'); }
+                    } catch (e) { window.showToast('Erreur', 'error'); }
                 });
             }
         }
 
         window.initGraphe = initGraphe;
+
+        /* ============================================
+           MENU CONTEXTUEL
+           ============================================ */
+        function showContextMenu(x, y, node) {
+            var menu = document.getElementById('grapheContextMenu');
+            if (!menu) return;
+            menu.classList.add('active');
+            menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+            menu.style.top = Math.min(y, window.innerHeight - 300) + 'px';
+        }
+
+        function hideContextMenu() {
+            var menu = document.getElementById('grapheContextMenu');
+            if (menu) menu.classList.remove('active');
+        }
+
+        window.hideContextMenu = hideContextMenu;
+
+        // Actions du menu contextuel
+        document.addEventListener('click', function(e) {
+            var menuItem = e.target.closest && e.target.closest('#grapheContextMenu .menu-item');
+            if (menuItem) {
+                e.preventDefault(); e.stopPropagation();
+                var action = menuItem.dataset.action;
+                var node = grapheState.contextNode;
+                if (!node) { hideContextMenu(); return; }
+
+                if (action === 'edit') {
+                    var newName = prompt('Nouveau nom :', node.label);
+                    if (newName && newName.trim()) node.label = newName.trim();
+                } else if (action === 'color') {
+                    var colors = ['#ffffff', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+                    var choice = prompt('Couleur (1-7) :\n1. Blanc\n2. Bleu\n3. Vert\n4. Orange\n5. Rouge\n6. Violet\n7. Rose', '1');
+                    var idx = parseInt(choice, 10);
+                    if (idx >= 1 && idx <= 7) node.color = colors[idx - 1];
+                } else if (action === 'role') {
+                    var roles = ['Cible', 'Famille', 'Contact', 'Associé', 'Employeur', 'Ami', 'Inconnu'];
+                    var choice2 = prompt('Rôle :\n1. Cible\n2. Famille\n3. Contact\n4. Associé\n5. Employeur\n6. Ami\n7. Inconnu', '1');
+                    var idx2 = parseInt(choice2, 10);
+                    if (idx2 >= 1 && idx2 <= 7) node.role = roles[idx2 - 1];
+                } else if (action === 'link') {
+                    var otherNodes = grapheState.nodes.filter(function(n) { return n.id !== node.id; });
+                    if (otherNodes.length === 0) {
+                        window.showToast('Aucun autre nœud à lier', 'warning');
+                    } else {
+                        var list = otherNodes.map(function(n, i) { return (i + 1) + '. ' + n.label; }).join('\n');
+                        var choice3 = prompt('Lier à quel nœud ?\n' + list, '1');
+                        var idx3 = parseInt(choice3, 10) - 1;
+                        if (idx3 >= 0 && idx3 < otherNodes.length) {
+                            var target = otherNodes[idx3];
+                            var exists = grapheState.edges.some(function(ed) {
+                                return (ed.from === node.id && ed.to === target.id) || (ed.from === target.id && ed.to === node.id);
+                            });
+                            if (!exists) {
+                                grapheState.edges.push({ from: node.id, to: target.id });
+                                window.showToast('Lien créé', 'success');
+                            } else {
+                                window.showToast('Lien déjà existant', 'warning');
+                            }
+                        }
+                    }
+                } else if (action === 'detach') {
+                    grapheState.edges = grapheState.edges.filter(function(ed) {
+                        return ed.from !== node.id && ed.to !== node.id;
+                    });
+                    window.showToast('Liens détachés', 'success');
+                } else if (action === 'delete') {
+                    grapheState.nodes = grapheState.nodes.filter(function(n) { return n.id !== node.id; });
+                    grapheState.edges = grapheState.edges.filter(function(ed) {
+                        return ed.from !== node.id && ed.to !== node.id;
+                    });
+                    grapheState.selectedNode = null;
+                    window.showToast('Nœud supprimé', 'success');
+                }
+                hideContextMenu();
+                return;
+            }
+
+            // Clic ailleurs = fermer
+            if (!e.target.closest || !e.target.closest('#grapheContextMenu')) {
+                hideContextMenu();
+            }
+        }, true);
 
         /* ============================================
            INIT
@@ -2797,21 +2913,11 @@ Fais la recherche et affiche les résultats.
             var token = localStorage.getItem('token');
             if (token && typeof loadApiKeys === 'function') loadApiKeys();
 
-            // Init graphe si on est sur la page graphe (par défaut caché)
-            var hash = window.location.hash;
-            if (hash === '#graphe') {
-                var li = document.querySelector('.sidebar-nav > li[data-page="graphe"]');
-                if (li) li.click();
+            // Si on est sur la page profil au chargement
+            if (document.getElementById('page-profile').classList.contains('active')) {
+                loadProfile();
             }
         });
-
-        // Init graphe au premier clic sur l'onglet (déjà géré dans la délégation)
-        // On force une init au cas où la page est déjà affichée
-        setTimeout(function() {
-            if (document.getElementById('page-graphe').classList.contains('active')) {
-                initGraphe();
-            }
-        }, 500);
 
         console.log('Marauder Dashboard chargé ✓');
     })();
