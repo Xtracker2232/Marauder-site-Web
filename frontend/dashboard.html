@@ -2639,12 +2639,29 @@ Fais la recherche et affiche les résultats.
                 return;
             }
 
-            // BOUTONS RECHERCHE
-            if (t.closest && t.closest('#searchBtn')) { e.preventDefault(); e.stopPropagation(); window.performSearch(''); return; }
-            if (t.closest && t.closest('#searchBtnPro')) { e.preventDefault(); e.stopPropagation(); window.performSearch('Pro'); return; }
-            if (t.closest && t.closest('#clearBtn')) { e.preventDefault(); e.stopPropagation(); clearSearchFields(''); window.showToast('Champs effacés', 'success'); return; }
-            if (t.closest && t.closest('#clearBtnPro')) { e.preventDefault(); e.stopPropagation(); clearSearchFields('Pro'); window.showToast('Champs effacés', 'success'); return; }
-            if (t.closest && t.closest('#lookupBtn')) { e.preventDefault(); e.stopPropagation(); window.performLookup(); return; }
+// BOUTONS RECHERCHE
+if (t.closest && t.closest('#searchBtn')) {
+    e.preventDefault(); e.stopPropagation();
+    var fields = getSearchFields('');
+    if (Object.keys(fields).length === 0) {
+        window.showToast('Renseignez au moins un champ', 'warning');
+        return;
+    }
+    var query = Object.assign({}, fields, { flexible: true, per_page: 10 });
+    window.performSearch(query, document.getElementById('searchResults'));
+    return;
+}
+if (t.closest && t.closest('#searchBtnPro')) {
+    e.preventDefault(); e.stopPropagation();
+    var fieldsPro = getSearchFields('Pro');
+    if (Object.keys(fieldsPro).length === 0) {
+        window.showToast('Renseignez au moins un champ', 'warning');
+        return;
+    }
+    var queryPro = Object.assign({}, fieldsPro, { flexible: true, per_page: 10 });
+    window.performSearch(queryPro, document.getElementById('searchResults'));
+    return;
+}
         }, true);
 
         document.addEventListener('keydown', function(e) {
