@@ -62,7 +62,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 100px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
-        /* MODAL CONFIRM */
         .mc-overlay {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.7);
@@ -99,7 +98,6 @@
         .mc-btn-secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .mc-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
 
-        /* MODALE CUSTOM */
         .custom-modal-overlay {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.75);
@@ -182,11 +180,7 @@
             text-align: left;
             display: flex; align-items: center; gap: 10px;
         }
-        .role-option:hover {
-            background: rgba(255,255,255,0.06);
-            border-color: var(--stroke-2);
-            transform: translateY(-2px);
-        }
+        .role-option:hover { background: rgba(255,255,255,0.06); border-color: var(--stroke-2); transform: translateY(-2px); }
         .role-option.selected {
             background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
             border-color: rgba(255,255,255,0.4);
@@ -194,7 +188,6 @@
         }
         .role-option-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-        /* SIDEBAR */
         .sidebar {
             width: 240px;
             background: linear-gradient(180deg, rgba(20,20,20,0.72), rgba(10,10,10,0.85));
@@ -298,7 +291,6 @@
         }
         .sidebar-footer button svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-        /* MAIN */
         .main-content {
             margin-left: 240px;
             padding: 40px 48px;
@@ -332,7 +324,6 @@
             border-radius: 100px;
         }
 
-        /* SEARCH TABS */
         .search-tabs {
             background: var(--glass-1);
             border: 1px solid var(--stroke-1);
@@ -357,7 +348,6 @@
         .search-tab-content { display: none; }
         .search-tab-content.active { display: block; }
 
-        /* SECTIONS */
         .section {
             background: linear-gradient(135deg, rgba(28,28,28,0.55), rgba(14,14,14,0.7));
             border: 1px solid var(--stroke-1);
@@ -475,7 +465,6 @@
         }
         .lookup-form .form-group { flex: 1; min-width: 180px; margin-bottom: 0; }
 
-        /* RESULTS */
         .results-container { margin-top: 24px; }
         .results-counter {
             display: flex; justify-content: space-between; align-items: center;
@@ -540,7 +529,6 @@
 
         .empty-state { text-align: center; padding: 60px 24px; color: var(--text-3); font-size: 14px; }
 
-        /* FICHES / HISTORY / TICKETS */
         .fiche-item, .history-item, .ticket-item {
             background: linear-gradient(135deg, rgba(28,28,28,0.55), rgba(14,14,14,0.7));
             border: 1px solid var(--stroke-1);
@@ -574,7 +562,6 @@
         .fiche-btn:hover, .history-replay:hover { background: var(--glass-1); color: #fff; }
         .fiche-btn.danger:hover { border-color: rgba(239,68,68,0.4); color: var(--danger); }
 
-        /* PROFIL */
         .profile-card {
             background: linear-gradient(135deg, rgba(28,28,28,0.55), rgba(14,14,14,0.7));
             border: 1px solid var(--stroke-1);
@@ -614,7 +601,6 @@
             flex-wrap: wrap;
         }
 
-        /* TOAST */
         .toast-container {
             position: fixed; top: 20px; right: 20px;
             z-index: 9999999;
@@ -644,7 +630,6 @@
             font-size: 18px; line-height: 1; padding: 0 4px;
         }
 
-        /* MODAL GENERIQUE */
         .modal-overlay {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.6);
@@ -664,7 +649,6 @@
         .modal h3 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 18px; }
         .modal-actions { display: flex; gap: 12px; margin-top: 22px; }
 
-        /* LOADING */
         .search-loading {
             position: fixed; inset: 0;
             background: rgba(5,5,5,0.92);
@@ -709,7 +693,6 @@
         }
         @keyframes fadeText { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-        /* GRAPHE */
         #grapheContainer {
             width: 100%; height: 520px;
             background: linear-gradient(135deg, rgba(20,20,20,0.6), rgba(10,10,10,0.8));
@@ -783,7 +766,6 @@
         #grapheContextMenu .menu-item.danger:hover { background: rgba(239,68,68,0.1); color: var(--danger); }
         #grapheContextMenu .menu-divider { height: 1px; background: var(--stroke-1); margin: 4px 8px; }
 
-        /* INVESTIGATION OVERLAY */
         .investigation-overlay {
             position: fixed; inset: 0;
             background: #0a0a0a;
@@ -892,7 +874,6 @@
             flex-wrap: wrap;
         }
 
-        /* MOBILE */
         .mobile-menu-btn {
             display: none;
             position: fixed; top: 16px; left: 16px;
@@ -944,7 +925,6 @@
             .role-grid { grid-template-columns: 1fr; }
         }
 
-        /* API PAGE */
         .api-page-wrapper { display: flex; flex-direction: column; gap: 26px; }
         .api-hero {
             background: linear-gradient(135deg, rgba(30,30,30,0.6), rgba(12,12,12,0.8));
@@ -1201,6 +1181,21 @@
             letter-spacing: 1.2px;
             padding: 4px 12px; border-radius: 100px;
         }
+        .limit-card.active-plan {
+            border-color: rgba(16,185,129,0.5);
+            background: rgba(16,185,129,0.05);
+            position: relative;
+        }
+        .limit-card.active-plan::after {
+            content: 'VOTRE PLAN';
+            position: absolute; top: -9px; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: #fff;
+            font-size: 9px; font-weight: 800;
+            letter-spacing: 1.2px;
+            padding: 4px 12px; border-radius: 100px;
+        }
         .limit-name { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
         .limit-value { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 8px; }
         .limit-value span { font-size: 11px; font-weight: 400; color: var(--text-3); }
@@ -1262,11 +1257,17 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
+            line-height: 1.1;
         }
         .api-stat-label {
             font-size: 12px; color: var(--text-3);
             font-weight: 600; text-transform: uppercase;
             letter-spacing: 0.6px;
+        }
+        .api-stat-sub {
+            font-size: 11px;
+            color: var(--text-3);
+            margin-top: 4px;
         }
         .api-usage-bar {
             padding: 22px 32px;
@@ -1289,6 +1290,12 @@
             border-radius: 100px;
             transition: width 0.6s;
         }
+        .usage-bar-fill.warn {
+            background: linear-gradient(90deg, var(--warn), #f97316);
+        }
+        .usage-bar-fill.danger {
+            background: linear-gradient(90deg, var(--danger), #dc2626);
+        }
         .api-logs { padding: 28px 32px; }
         .api-logs h4 {
             display: flex; align-items: center; gap: 10px;
@@ -1308,6 +1315,21 @@
         }
         .log-empty svg { width: 40px; height: 40px; color: var(--text-4); margin-bottom: 16px; }
         .log-empty p { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-entry-left { display: flex; gap: 14px; align-items: center; }
+        .log-status { font-weight: 700; }
+        .log-method { color: var(--text-2); }
+        .log-endpoint { color: #fff; }
+        .log-entry-right { display: flex; gap: 16px; color: var(--text-3); }
 
         .api-key-modal {
             position: fixed; inset: 0;
@@ -1350,7 +1372,6 @@
             line-height: 1.6;
         }
 
-        /* SUBSCRIPTION */
         .sub-current {
             padding: 32px;
             background: linear-gradient(135deg, rgba(30,30,30,0.5), rgba(14,14,14,0.7));
@@ -1443,7 +1464,6 @@
         .sub-plan-btn.upgrade { background: linear-gradient(135deg, #fff, #e0e0e0); color: #000; }
         .sub-plan-btn.current-btn { background: transparent; color: var(--success); cursor: default; border: 1px solid rgba(16,185,129,0.3); }
 
-        /* FOOTER */
         .site-footer {
             border-top: 1px solid var(--stroke-1);
             padding: 22px 48px; margin-top: 60px;
@@ -1458,7 +1478,6 @@
 </head>
 <body>
 
-    <!-- MODAL CONFIRM -->
     <div id="confirmModal" class="mc-overlay">
         <div class="mc-box">
             <div class="mc-title" id="mcTitle">Confirmation</div>
@@ -1470,13 +1489,9 @@
         </div>
     </div>
 
-    <!-- MODAL INPUT CUSTOM -->
     <div id="customInputModal" class="custom-modal-overlay">
         <div class="custom-modal">
-            <h3 id="customInputTitle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Modifier
-            </h3>
+            <h3 id="customInputTitle">Modifier</h3>
             <input type="text" id="customInputField" class="custom-modal-input" placeholder="Entrez une valeur...">
             <div class="custom-modal-actions">
                 <button class="mc-btn mc-btn-secondary" onclick="closeCustomInput()">Annuler</button>
@@ -1485,13 +1500,9 @@
         </div>
     </div>
 
-    <!-- MODAL COULEUR -->
     <div id="colorPickerModal" class="custom-modal-overlay">
         <div class="custom-modal">
-            <h3>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-                Choisir une couleur
-            </h3>
+            <h3>Choisir une couleur</h3>
             <div class="color-grid" id="colorGrid"></div>
             <div class="custom-modal-actions">
                 <button class="mc-btn mc-btn-secondary" onclick="closeColorPicker()">Annuler</button>
@@ -1499,13 +1510,9 @@
         </div>
     </div>
 
-    <!-- MODAL RÔLE -->
     <div id="rolePickerModal" class="custom-modal-overlay">
         <div class="custom-modal">
-            <h3>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Choisir un rôle
-            </h3>
+            <h3>Choisir un rôle</h3>
             <div class="role-grid" id="roleGrid"></div>
             <div class="custom-modal-actions">
                 <button class="mc-btn mc-btn-secondary" onclick="closeRolePicker()">Annuler</button>
@@ -1513,7 +1520,6 @@
         </div>
     </div>
 
-    <!-- LOADING -->
     <div id="searchOverlay" class="search-loading">
         <div class="loading-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1535,10 +1541,8 @@
         <div class="loading-text">Analyse en cours</div>
     </div>
 
-    <!-- TOAST -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- MENU CONTEXTUEL GRAPHE -->
     <div id="grapheContextMenu">
         <div class="menu-item" data-action="edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1568,7 +1572,6 @@
         </div>
     </div>
 
-    <!-- MODAL GENERIQUE -->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal">
             <h3 id="modalTitle">Titre</h3>
@@ -1580,7 +1583,6 @@
         </div>
     </div>
 
-    <!-- INVESTIGATION OVERLAY -->
     <div id="investigationOverlay" class="investigation-overlay">
         <div class="investigation-container">
             <div class="investigation-header">
@@ -1623,7 +1625,6 @@
         </div>
     </div>
 
-    <!-- BOUTON MENU MOBILE -->
     <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
             <line x1="3" y1="12" x2="21" y2="12"/>
@@ -1633,7 +1634,6 @@
     </button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1672,10 +1672,8 @@
         </div>
     </nav>
 
-    <!-- MAIN -->
     <main class="main-content">
 
-        <!-- PAGE RECHERCHE -->
         <section id="page-search" class="page active">
             <header class="page-header">
                 <h2>Recherche</h2>
@@ -1809,7 +1807,6 @@
             <div id="searchResults" class="results-container"></div>
         </section>
 
-        <!-- PAGE LOOKUP -->
         <section id="page-lookup" class="page">
             <header class="page-header"><h2>Lookup</h2></header>
             <div class="lookup-form">
@@ -1820,20 +1817,17 @@
             <div id="lookupResults" class="results-container"></div>
         </section>
 
-        <!-- PAGE HISTORIQUE -->
         <section id="page-history" class="page">
             <header class="page-header"><h2>Historique</h2></header>
             <div id="historyList" class="results-container"></div>
         </section>
 
-        <!-- PAGE FICHES -->
         <section id="page-fiches" class="page">
             <header class="page-header"><h2>Fiches</h2></header>
             <button id="createFicheBtn" class="btn-primary" style="width:auto;padding:13px 28px;">Creer une fiche</button>
             <div id="fichesList" class="results-container" style="margin-top:24px;"></div>
         </section>
 
-        <!-- PAGE GRAPHE -->
         <section id="page-graphe" class="page">
             <header class="page-header"><h2>Graphe de connexions</h2></header>
             <div class="graphe-toolbar">
@@ -1850,13 +1844,11 @@
             <div id="grapheContainer"><canvas id="grapheCanvas"></canvas></div>
         </section>
 
-        <!-- PAGE TICKETS -->
         <section id="page-tickets" class="page">
             <header class="page-header"><h2>Tickets</h2><button id="openTicketBtn" class="btn-primary" style="width:auto;padding:12px 26px;">Nouveau ticket</button></header>
             <div id="ticketsList" class="results-container"></div>
         </section>
 
-        <!-- PAGE PROFIL -->
         <section id="page-profile" class="page">
             <header class="page-header"><h2>Profil</h2></header>
             <div id="profileInfo" class="profile-card">
@@ -1864,7 +1856,6 @@
             </div>
         </section>
 
-        <!-- PAGE API -->
         <section id="page-api" class="page">
             <div class="api-page-wrapper">
                 <div class="api-hero">
@@ -1891,7 +1882,6 @@
                     <button class="api-tab" data-api-tab="subscription">Mon abonnement</button>
                 </div>
 
-                <!-- TAB KEYS -->
                 <div id="api-tab-keys" class="api-tab-content active">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -1914,7 +1904,6 @@
                     </div>
                 </div>
 
-                <!-- TAB DOCS — COMPLETE -->
                 <div id="api-tab-docs" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -1928,7 +1917,6 @@
 
                         <div class="api-docs">
 
-                            <!-- 1. INFORMATIONS GÉNÉRALES -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>Informations générales</h4>
                                 <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique. Automatisez vos recherches, intégrez Marauder dans vos outils existants, ou créez vos propres applications.</p>
@@ -1940,7 +1928,6 @@
                                 </div>
                             </div>
 
-                            <!-- 2. AUTHENTIFICATION -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Authentification</h4>
                                 <p>Toutes les requêtes doivent inclure votre clé API dans le header <code>Authorization</code> :</p>
@@ -1951,19 +1938,17 @@
                                 <p style="margin-top:14px;">⚠️ <strong>Ne partagez jamais votre clé API.</strong> Elle donne accès complet à votre compte et à votre quota.</p>
                             </div>
 
-                            <!-- 3. LIMITES PAR PLAN -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Limites par plan</h4>
                                 <p>Chaque plan définit un quota mensuel de requêtes et un nombre maximum de résultats par recherche.</p>
-                                <div class="limits-grid">
-                                    <div class="limit-card"><div class="limit-name">Free</div><div class="limit-value">10<span>/mois</span></div><div class="limit-price">0€</div><div class="limit-detail">10 résultats/recherche</div></div>
-                                    <div class="limit-card"><div class="limit-name">Starter</div><div class="limit-value">1 000<span>/mois</span></div><div class="limit-price">9,99€</div><div class="limit-detail">50 résultats/recherche</div></div>
-                                    <div class="limit-card featured"><div class="limit-name">Pro</div><div class="limit-value">10 000<span>/mois</span></div><div class="limit-price">29,99€</div><div class="limit-detail">100 résultats/recherche</div></div>
-                                    <div class="limit-card"><div class="limit-name">Enterprise</div><div class="limit-value">Illimité</div><div class="limit-price">Sur devis</div><div class="limit-detail">100 résultats/recherche</div></div>
+                                <div class="limits-grid" id="limitsGrid">
+                                    <div class="limit-card" data-plan="free"><div class="limit-name">Free</div><div class="limit-value">10<span>/mois</span></div><div class="limit-price">0€</div><div class="limit-detail">10 résultats/recherche</div></div>
+                                    <div class="limit-card" data-plan="starter"><div class="limit-name">Starter</div><div class="limit-value">1 000<span>/mois</span></div><div class="limit-price">9,99€</div><div class="limit-detail">50 résultats/recherche</div></div>
+                                    <div class="limit-card" data-plan="pro"><div class="limit-name">Pro</div><div class="limit-value">10 000<span>/mois</span></div><div class="limit-price">29,99€</div><div class="limit-detail">100 résultats/recherche</div></div>
+                                    <div class="limit-card" data-plan="enterprise"><div class="limit-name">Enterprise</div><div class="limit-value">Illimité</div><div class="limit-price">Sur devis</div><div class="limit-detail">100 résultats/recherche</div></div>
                                 </div>
                             </div>
 
-                            <!-- 4. GET /me -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Mon profil — <code>GET /me</code></h4>
                                 <p>Récupère les informations de votre compte et l'usage de votre quota ce mois-ci.</p>
@@ -1978,18 +1963,17 @@
                                     <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>{
   "success": true,
-  "plan": "free",
-  "resultsPerSearch": 10,
+  "plan": "starter",
+  "resultsPerSearch": 50,
   "usage": {
     "used": 4,
-    "limit": 10,
-    "remaining": 6
+    "limit": 1000,
+    "remaining": 996
   }
 }</code></pre>
                                 </div>
                             </div>
 
-                            <!-- 5. GET /usage -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Statistiques d'utilisation — <code>GET /usage</code></h4>
                                 <p>Récupère les statistiques détaillées de votre consommation d'API (requêtes du jour, du mois, et répartition par endpoint).</p>
@@ -2004,13 +1988,13 @@
                                     <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>{
   "success": true,
-  "plan": "free",
-  "resultsPerSearch": 10,
+  "plan": "starter",
+  "resultsPerSearch": 50,
   "usage": {
     "today": 2,
     "month": 4,
-    "limit": 10,
-    "remaining": 6,
+    "limit": 1000,
+    "remaining": 996,
     "by_endpoint": [
       { "endpoint": "/api/v1/search", "total": "3" },
       { "endpoint": "/api/v1/me", "total": "1" }
@@ -2020,7 +2004,6 @@
                                 </div>
                             </div>
 
-                            <!-- 6. POST /search -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Recherche multi-critères — <code>POST /search</code></h4>
                                 <p>L'endpoint principal. Recherchez une personne avec plus de 20 critères combinables : nom, prénom, email, téléphone, adresse, NIR, IBAN, et bien plus.</p>
@@ -2098,13 +2081,13 @@
   },
   "meta": {
     "total": 946,
-    "returned": 10,
-    "plan_limit": 10,
+    "returned": 50,
+    "plan_limit": 50,
     "limited": true,
     "total_before_limit": 946,
     "page": 1,
-    "pages": 95,
-    "per_page": 10,
+    "pages": 19,
+    "per_page": 50,
     "took_ms": 7,
     "maintenance": false,
     "warning": null
@@ -2125,15 +2108,13 @@
                                 </div>
                             </div>
 
-                            <!-- 7. GET /lookup -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Lookup rapide — <code>GET /lookup/:type/:value</code> ❌</h4>
                                 <p>⚠️ <strong>Cette route est actuellement INDISPONIBLE</strong> car notre fournisseur de données ne propose pas l'endpoint lookup.</p>
                                 <div class="endpoint" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/lookup/:type/:value</span></div>
                                 <p style="font-size:13px;color:#a0a0a0;">Types disponibles : <code>email</code>, <code>phone</code>, <code>iban</code></p>
-                                <p style="font-size:13px;color:#a0a0a0;">Réponse quand appelée :</p>
                                 <div class="code-block">
-                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <div class="code-header"><span>Réponse quand appelée</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>{
   "error": "upstream_unavailable",
   "message": "Le fournisseur de données est temporairement indisponible."
@@ -2145,7 +2126,6 @@
                                 </div>
                             </div>
 
-                            <!-- 8. CODES D'ERREUR -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>Codes d'erreur</h4>
                                 <div class="errors-table">
@@ -2160,7 +2140,6 @@
                                 </div>
                             </div>
 
-                            <!-- 9. EXEMPLES DE CODE -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>Exemples de code</h4>
                                 <div class="code-tabs">
@@ -2177,7 +2156,6 @@
                                 </div>
                             </div>
 
-                            <!-- 10. PROMPT IA -->
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12.75 11h4.25a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h4.25l-.5-1.07A4.001 4.001 0 0 1 12 2z"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span>Prompt IA prêt à copier</h4>
                                 <p>Copiez-collez ce prompt dans ChatGPT / Claude / une autre IA pour qu'elle utilise votre API :</p>
@@ -2209,7 +2187,6 @@ Fais la recherche et affiche les résultats.
                     </div>
                 </div>
 
-                <!-- TAB STATS -->
                 <div id="api-tab-stats" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -2221,13 +2198,26 @@ Fais la recherche et affiche les résultats.
                             </div>
                         </div>
                         <div class="api-stats-grid">
-                            <div class="api-stat-card"><div class="api-stat-value" data-stat="today">0</div><div class="api-stat-label">Requêtes aujourd'hui</div></div>
-                            <div class="api-stat-card"><div class="api-stat-value" data-stat="month">0</div><div class="api-stat-label">Requêtes ce mois</div></div>
-                            <div class="api-stat-card"><div class="api-stat-value" data-stat="limit">10</div><div class="api-stat-label">Limite mensuelle</div></div>
-                            <div class="api-stat-card"><div class="api-stat-value" data-stat="remaining">10</div><div class="api-stat-label">Requêtes restantes</div></div>
+                            <div class="api-stat-card">
+                                <div class="api-stat-value" data-stat="today">—</div>
+                                <div class="api-stat-label">Requêtes aujourd'hui</div>
+                            </div>
+                            <div class="api-stat-card">
+                                <div class="api-stat-value" data-stat="month">—</div>
+                                <div class="api-stat-label">Requêtes ce mois</div>
+                            </div>
+                            <div class="api-stat-card">
+                                <div class="api-stat-value" data-stat="limit">—</div>
+                                <div class="api-stat-label">Limite mensuelle</div>
+                                <div class="api-stat-sub" id="statLimitSub">Plan —</div>
+                            </div>
+                            <div class="api-stat-card">
+                                <div class="api-stat-value" data-stat="remaining">—</div>
+                                <div class="api-stat-label">Requêtes restantes</div>
+                            </div>
                         </div>
                         <div class="api-usage-bar">
-                            <div class="usage-label"><span>Utilisation ce mois</span><span id="usageCount">0 / 10</span></div>
+                            <div class="usage-label"><span>Utilisation ce mois</span><span id="usageCount">— / —</span></div>
                             <div class="usage-bar-bg"><div class="usage-bar-fill" id="usageBarFill" style="width: 0%;"></div></div>
                         </div>
                         <div class="api-logs">
@@ -2242,7 +2232,6 @@ Fais la recherche et affiche les résultats.
                     </div>
                 </div>
 
-                <!-- TAB SUBSCRIPTION -->
                 <div id="api-tab-subscription" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -2263,7 +2252,6 @@ Fais la recherche et affiche les résultats.
 
     </main>
 
-    <!-- FOOTER -->
     <footer class="site-footer">
         <a href="/cgu.html">CGU</a> · <span>Created by Index</span>
     </footer>
@@ -2272,9 +2260,6 @@ Fais la recherche et affiche les résultats.
     (function() {
         'use strict';
 
-        /* ============================================
-           UTILITAIRES
-           ============================================ */
         window.toggleSection = function(el) {
             if (!el) return;
             var body = el.nextElementSibling;
@@ -2353,7 +2338,7 @@ Fais la recherche et affiche les résultats.
             var modal = document.getElementById('customInputModal');
             var titleEl = document.getElementById('customInputTitle');
             var field = document.getElementById('customInputField');
-            titleEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' + (title || 'Modifier');
+            titleEl.textContent = title || 'Modifier';
             field.value = currentValue || '';
             customInputCallback = callback;
             modal.classList.add('active');
@@ -2368,9 +2353,7 @@ Fais la recherche et affiche les résultats.
         window.confirmCustomInput = function() {
             var field = document.getElementById('customInputField');
             var value = field.value.trim();
-            if (value && customInputCallback) {
-                customInputCallback(value);
-            }
+            if (value && customInputCallback) customInputCallback(value);
             closeCustomInput();
         };
 
@@ -2380,7 +2363,209 @@ Fais la recherche et affiche les résultats.
         });
 
         /* ============================================
-           GRAPHE STATE
+           ÉTAT GLOBAL
+           ============================================ */
+        var currentUser = {
+            plan: 'free',
+            limit: 10,
+            resultsPerSearch: 10,
+            used: 0,
+            today: 0,
+            month: 0,
+            remaining: 10
+        };
+
+        /* ============================================
+           CHARGEMENT DES STATS API
+           ============================================ */
+        window.loadApiStats = async function() {
+            var token = localStorage.getItem('token');
+
+            // Valeur par défaut si pas de token
+            if (!token) {
+                currentUser.plan = 'free';
+                currentUser.limit = 10;
+                currentUser.resultsPerSearch = 10;
+                currentUser.used = 0;
+                currentUser.today = 0;
+                currentUser.month = 0;
+                currentUser.remaining = 10;
+                renderApiStats();
+                renderLimitsGrid();
+                return;
+            }
+
+            try {
+                // Récupérer /api/my-api-usage (stats locales)
+                var usageRes = await fetch('/api/my-api-usage', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (usageRes.ok) {
+                    var usageData = await usageRes.json();
+                    if (usageData.plan) currentUser.plan = usageData.plan;
+                    if (typeof usageData.limit !== 'undefined') currentUser.limit = usageData.limit;
+                    if (typeof usageData.month !== 'undefined') currentUser.month = usageData.month;
+                    if (typeof usageData.today !== 'undefined') currentUser.today = usageData.today;
+                    if (typeof usageData.remaining !== 'undefined') currentUser.remaining = usageData.remaining;
+                    if (typeof usageData.resultsPerSearch !== 'undefined') currentUser.resultsPerSearch = usageData.resultsPerSearch;
+                }
+
+                // Compléter avec /api/stripe/status pour le plan exact
+                try {
+                    var stripeRes = await fetch('/api/stripe/status', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (stripeRes.ok) {
+                        var stripeData = await stripeRes.json();
+                        if (stripeData.plan) {
+                            currentUser.plan = stripeData.plan;
+                            // Recalculer la limite selon le plan
+                            var planLimits = { free: 10, starter: 1000, pro: 10000, enterprise: '∞' };
+                            var planResults = { free: 10, starter: 50, pro: 100, enterprise: 100 };
+                            currentUser.limit = planLimits[currentUser.plan] || 10;
+                            currentUser.resultsPerSearch = planResults[currentUser.plan] || 10;
+                            currentUser.remaining = currentUser.limit === '∞' ? '∞' : Math.max(0, currentUser.limit - currentUser.month);
+                        }
+                    }
+                } catch (e) {
+                    // Silencieux
+                }
+
+            } catch (err) {
+                console.warn('Erreur chargement stats API:', err);
+            }
+
+            renderApiStats();
+            renderLimitsGrid();
+        };
+
+        function renderApiStats() {
+            var limitDisplay = currentUser.limit === '∞' ? '∞' : currentUser.limit.toLocaleString('fr-FR');
+            var remainingDisplay = currentUser.remaining === '∞' ? '∞' : currentUser.remaining.toLocaleString('fr-FR');
+
+            var setStat = function(key, value) {
+                var el = document.querySelector('.api-stat-value[data-stat="' + key + '"]');
+                if (el) el.textContent = value;
+            };
+
+            setStat('today', currentUser.today.toLocaleString('fr-FR'));
+            setStat('month', currentUser.month.toLocaleString('fr-FR'));
+            setStat('limit', limitDisplay);
+            setStat('remaining', remainingDisplay);
+
+            // Sub-label du plan
+            var planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
+            var statLimitSub = document.getElementById('statLimitSub');
+            if (statLimitSub) statLimitSub.textContent = 'Plan ' + (planLabels[currentUser.plan] || currentUser.plan);
+
+            // Barre d'utilisation
+            var usageCount = document.getElementById('usageCount');
+            var usageBar = document.getElementById('usageBarFill');
+            if (usageCount) usageCount.textContent = currentUser.month.toLocaleString('fr-FR') + ' / ' + limitDisplay;
+
+            if (usageBar) {
+                if (currentUser.limit === '∞' || currentUser.limit === 0) {
+                    usageBar.style.width = '0%';
+                    usageBar.className = 'usage-bar-fill';
+                } else {
+                    var pct = Math.min(100, (currentUser.month / currentUser.limit) * 100);
+                    usageBar.style.width = pct + '%';
+                    usageBar.className = 'usage-bar-fill' +
+                        (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
+                }
+            }
+        }
+
+        function renderLimitsGrid() {
+            var cards = document.querySelectorAll('#limitsGrid .limit-card');
+            cards.forEach(function(card) {
+                card.classList.remove('featured', 'active-plan');
+                var plan = card.dataset.plan;
+                if (plan === currentUser.plan) {
+                    card.classList.add('active-plan');
+                } else if (plan === 'pro') {
+                    card.classList.add('featured');
+                }
+            });
+        }
+
+        /* ============================================
+           LOGS API
+           ============================================ */
+        window.loadLogs = async function() {
+            var token = localStorage.getItem('token');
+            if (!token) return;
+            var container = document.getElementById('logsContainer');
+            if (!container) return;
+
+            try {
+                var res = await fetch('/api/logs', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!res.ok) throw new Error();
+                var data = await res.json();
+                var logs = data.logs || [];
+
+                if (logs.length === 0) {
+                    container.innerHTML = '<div class="log-empty"><p>Aucun log pour le moment</p><span style="font-size:12px;color:#7a7a7a;">Les requêtes API apparaîtront ici</span></div>';
+                    return;
+                }
+
+                container.innerHTML = logs.slice(0, 20).map(function(log) {
+                    var date = new Date(log.created_at);
+                    var dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    var statusColor = log.status_code >= 200 && log.status_code < 300 ? 'var(--success)' : 'var(--danger)';
+                    return '<div class="log-entry">' +
+                        '<div class="log-entry-left">' +
+                            '<span class="log-status" style="color:' + statusColor + ';">' + log.status_code + '</span>' +
+                            '<span class="log-method">' + log.method + '</span>' +
+                            '<span class="log-endpoint">' + log.endpoint + '</span>' +
+                        '</div>' +
+                        '<div class="log-entry-right">' +
+                            '<span>' + (log.response_time_ms || 0) + 'ms</span>' +
+                            '<span>' + dateStr + '</span>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } catch (err) {
+                // Garder l'empty state
+            }
+        };
+
+        /* ============================================
+           PROFIL
+           ============================================ */
+        window.loadProfile = async function() {
+            var container = document.getElementById('profileInfo');
+            if (!container) return;
+            var defaultData = {
+                username: localStorage.getItem('username') || 'Admin',
+                role: 'user',
+                plan: currentUser.plan || 'free',
+                created_at: null,
+                last_login: null,
+                searches_count: 0
+            };
+            var data = Object.assign({}, defaultData);
+            var token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    var res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                    if (res.ok) {
+                        var apiData = await res.json();
+                        data = Object.assign(data, apiData);
+                        if (apiData.plan) currentUser.plan = apiData.plan;
+                    }
+                } catch (err) {}
+            }
+            var initial = (data.username || 'A').charAt(0).toUpperCase();
+            var createdStr = data.created_at ? new Date(data.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+            var lastLoginStr = data.last_login ? new Date(data.last_login).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Maintenant';
+            var roleLabel = data.role === 'admin' ? 'Administrateur' : data.role === 'owner' ? 'Propriétaire' : 'Utilisateur';
+            var planLabel = (data.plan || 'free').toUpperCase();
+            container.innerHTML = '<div class="profile-header"><div class="profile-avatar">' + initial + '</div><div class="profile-header-info"><h3>' + (data.username || 'Admin') + '</h3><p>Compte Marauder · Plan ' + planLabel + '</p></div></div><div class="profile-row"><span class="label">Nom d\'utilisateur</span><span class="value">' + (data.username || 'Admin') + '</span></div><div class="profile-row"><span class="label">Rôle</span><span class="value">' + roleLabel + '</span></div><div class="profile-row"><span class="label">Plan actuel</span><span class="value">' + planLabel + '</span></div><div class="profile-row"><span class="label">Membre depuis</span><span class="value">' + createdStr + '</span></div><div class="profile-row"><span class="label">Dernière connexion</span><span class="value">' + lastLoginStr + '</span></div><div class="profile-actions"><button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="window.showToast(\'Bientôt disponible\', \'warning\')">Modifier le profil</button><button class="btn-secondary" onclick="window.location.href=\'/cgu.html\'">Voir les CGU</button></div>';
+        };
+
+        /* ============================================
+           GRAPHE
            ============================================ */
         var grapheState = {
             nodes: [],
@@ -2454,9 +2639,7 @@ Fais la recherche et affiche les résultats.
                         { id: 4, x: cx + 150, y: cy + 100, label: 'Sophie Durand', color: '#f59e0b', role: 'Contact' }
                     ];
                     grapheState.edges = [
-                        { from: 1, to: 2 },
-                        { from: 1, to: 3 },
-                        { from: 1, to: 4 }
+                        { from: 1, to: 2 }, { from: 1, to: 3 }, { from: 1, to: 4 }
                     ];
                 }
             }
@@ -2485,14 +2668,12 @@ Fais la recherche et affiche les résultats.
                 grapheState.nodes.forEach(function(node) {
                     var isSelected = grapheState.selectedNode && grapheState.selectedNode.id === node.id;
                     var isLinkingSource = grapheState.linkingMode && grapheState.linkingSource && grapheState.linkingSource.id === node.id;
-
                     if (isSelected || isLinkingSource) {
                         ctx.beginPath();
                         ctx.arc(node.x, node.y, 38, 0, Math.PI * 2);
                         ctx.fillStyle = isLinkingSource ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.08)';
                         ctx.fill();
                     }
-
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, 24, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(30,30,30,0.95)';
@@ -2500,17 +2681,14 @@ Fais la recherche et affiche les résultats.
                     ctx.strokeStyle = node.color || '#fff';
                     ctx.lineWidth = 2;
                     ctx.stroke();
-
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, 4, 0, Math.PI * 2);
                     ctx.fillStyle = node.color || '#fff';
                     ctx.fill();
-
                     ctx.fillStyle = '#fff';
                     ctx.font = '12px -apple-system, Arial, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.fillText(node.label, node.x, node.y + 44);
-
                     ctx.fillStyle = 'rgba(255,255,255,0.5)';
                     ctx.font = '10px -apple-system, Arial, sans-serif';
                     ctx.fillText(node.role || '', node.x, node.y + 58);
@@ -2552,9 +2730,8 @@ Fais la recherche et affiche les résultats.
                             return (ed.from === grapheState.linkingSource.id && ed.to === node.id) ||
                                    (ed.from === node.id && ed.to === grapheState.linkingSource.id);
                         });
-                        if (exists) {
-                            window.showToast('Lien déjà existant', 'warning');
-                        } else {
+                        if (exists) window.showToast('Lien déjà existant', 'warning');
+                        else {
                             grapheState.edges.push({ from: grapheState.linkingSource.id, to: node.id });
                             window.showToast('Lien créé', 'success');
                         }
@@ -2601,13 +2778,11 @@ Fais la recherche et affiche les résultats.
                 canvas.addEventListener('contextmenu', function(e) {
                     e.preventDefault();
                     var rect = canvas.getBoundingClientRect();
-                    var mx = e.clientX - rect.left;
-                    var my = e.clientY - rect.top;
-                    var node = getNodeAt(mx, my);
+                    var node = getNodeAt(e.clientX - rect.left, e.clientY - rect.top);
                     if (node) {
                         grapheState.selectedNode = node;
                         grapheState.contextNode = node;
-                        showContextMenu(e.clientX, e.clientY, node);
+                        showContextMenu(e.clientX, e.clientY);
                     } else {
                         hideContextMenu();
                     }
@@ -2619,8 +2794,7 @@ Fais la recherche et affiche les résultats.
                     var mx = e.clientX - rect.left;
                     var my = e.clientY - rect.top;
                     var oldScale = grapheState.scale;
-                    var delta = e.deltaY > 0 ? 0.9 : 1.1;
-                    grapheState.scale *= delta;
+                    grapheState.scale *= (e.deltaY > 0 ? 0.9 : 1.1);
                     grapheState.scale = Math.max(0.3, Math.min(3, grapheState.scale));
                     grapheState.offsetX = mx - (mx - grapheState.offsetX) * (grapheState.scale / oldScale);
                     grapheState.offsetY = my - (my - grapheState.offsetY) * (grapheState.scale / oldScale);
@@ -2631,10 +2805,7 @@ Fais la recherche et affiche les résultats.
                     if (e.touches.length === 1) {
                         var t = e.touches[0];
                         var rect = canvas.getBoundingClientRect();
-                        var mx = t.clientX - rect.left;
-                        var my = t.clientY - rect.top;
-                        var node = getNodeAt(mx, my);
-
+                        var node = getNodeAt(t.clientX - rect.left, t.clientY - rect.top);
                         if (grapheState.linkingMode && node && node.id !== grapheState.linkingSource.id) {
                             var exists = grapheState.edges.some(function(ed) {
                                 return (ed.from === grapheState.linkingSource.id && ed.to === node.id) ||
@@ -2643,18 +2814,15 @@ Fais la recherche et affiche les résultats.
                             if (!exists) {
                                 grapheState.edges.push({ from: grapheState.linkingSource.id, to: node.id });
                                 window.showToast('Lien créé', 'success');
-                            } else {
-                                window.showToast('Lien déjà existant', 'warning');
                             }
                             cancelLinking();
                             return;
                         }
-
                         if (node) {
                             longPressTimer = setTimeout(function() {
                                 grapheState.selectedNode = node;
                                 grapheState.contextNode = node;
-                                showContextMenu(t.clientX, t.clientY, node);
+                                showContextMenu(t.clientX, t.clientY);
                                 if (navigator.vibrate) navigator.vibrate(30);
                             }, 500);
                         }
@@ -2745,9 +2913,7 @@ Fais la recherche et affiche les résultats.
                             grapheState.nodes = data.nodes || [];
                             grapheState.edges = data.edges || [];
                             window.showToast('Graphe rechargé', 'success');
-                        } else {
-                            window.showToast('Aucun graphe sauvegardé', 'warning');
-                        }
+                        } else window.showToast('Aucun graphe sauvegardé', 'warning');
                     } catch (e) { window.showToast('Erreur', 'error'); }
                 });
             }
@@ -2755,7 +2921,7 @@ Fais la recherche et affiche les résultats.
 
         window.initGraphe = initGraphe;
 
-        function showContextMenu(x, y, node) {
+        function showContextMenu(x, y) {
             var menu = document.getElementById('grapheContextMenu');
             if (!menu) return;
             menu.classList.add('active');
@@ -2767,8 +2933,6 @@ Fais la recherche et affiche les résultats.
             var menu = document.getElementById('grapheContextMenu');
             if (menu) menu.classList.remove('active');
         }
-
-        window.hideContextMenu = hideContextMenu;
 
         window.cancelLinking = function() {
             grapheState.linkingMode = false;
@@ -2792,6 +2956,9 @@ Fais la recherche et affiche les résultats.
             if (canvas) canvas.classList.add('linking');
         }
 
+        window.closeColorPicker = function() { document.getElementById('colorPickerModal').classList.remove('active'); };
+        window.closeRolePicker = function() { document.getElementById('rolePickerModal').classList.remove('active'); };
+
         function showColorPicker(node) {
             var modal = document.getElementById('colorPickerModal');
             var grid = document.getElementById('colorGrid');
@@ -2802,21 +2969,6 @@ Fais la recherche et affiche les résultats.
             }).join('');
             modal.classList.add('active');
         }
-
-        window.closeColorPicker = function() {
-            document.getElementById('colorPickerModal').classList.remove('active');
-        };
-
-        document.addEventListener('click', function(e) {
-            var swatch = e.target.closest && e.target.closest('.color-swatch');
-            if (swatch && grapheState.contextNode) {
-                e.preventDefault(); e.stopPropagation();
-                grapheState.contextNode.color = swatch.dataset.color;
-                window.showToast('Couleur modifiée', 'success');
-                closeColorPicker();
-                hideContextMenu();
-            }
-        }, true);
 
         function showRolePicker(node) {
             var modal = document.getElementById('rolePickerModal');
@@ -2829,11 +2981,15 @@ Fais la recherche et affiche les résultats.
             modal.classList.add('active');
         }
 
-        window.closeRolePicker = function() {
-            document.getElementById('rolePickerModal').classList.remove('active');
-        };
-
         document.addEventListener('click', function(e) {
+            var swatch = e.target.closest && e.target.closest('.color-swatch');
+            if (swatch && grapheState.contextNode) {
+                e.preventDefault(); e.stopPropagation();
+                grapheState.contextNode.color = swatch.dataset.color;
+                window.showToast('Couleur modifiée', 'success');
+                closeColorPicker();
+                hideContextMenu();
+            }
             var roleBtn = e.target.closest && e.target.closest('.role-option');
             if (roleBtn && grapheState.contextNode) {
                 e.preventDefault(); e.stopPropagation();
@@ -2857,23 +3013,16 @@ Fais la recherche et affiche les résultats.
                         node.label = newName;
                         window.showToast('Nom modifié', 'success');
                     });
-                } else if (action === 'color') {
-                    showColorPicker(node);
-                } else if (action === 'role') {
-                    showRolePicker(node);
-                } else if (action === 'link') {
-                    startLinking(node);
-                } else if (action === 'detach') {
-                    grapheState.edges = grapheState.edges.filter(function(ed) {
-                        return ed.from !== node.id && ed.to !== node.id;
-                    });
+                } else if (action === 'color') showColorPicker(node);
+                else if (action === 'role') showRolePicker(node);
+                else if (action === 'link') startLinking(node);
+                else if (action === 'detach') {
+                    grapheState.edges = grapheState.edges.filter(function(ed) { return ed.from !== node.id && ed.to !== node.id; });
                     window.showToast('Liens détachés', 'success');
                 } else if (action === 'delete') {
                     window.customConfirm('Supprimer', 'Supprimer ce nœud et tous ses liens ?', function() {
                         grapheState.nodes = grapheState.nodes.filter(function(n) { return n.id !== node.id; });
-                        grapheState.edges = grapheState.edges.filter(function(ed) {
-                            return ed.from !== node.id && ed.to !== node.id;
-                        });
+                        grapheState.edges = grapheState.edges.filter(function(ed) { return ed.from !== node.id && ed.to !== node.id; });
                         grapheState.selectedNode = null;
                         window.showToast('Nœud supprimé', 'success');
                     }, { confirmText: 'Supprimer', danger: true });
@@ -2881,15 +3030,11 @@ Fais la recherche et affiche les résultats.
                 hideContextMenu();
                 return;
             }
-
             if (!e.target.closest || (!e.target.closest('#grapheContextMenu') && !e.target.closest('.custom-modal') && !e.target.closest('.mc-box'))) {
                 hideContextMenu();
             }
         }, true);
 
-        /* ============================================
-           DÉLÉGATION GLOBALE
-           ============================================ */
         document.addEventListener('click', function(e) {
             var t = e.target;
 
@@ -2928,7 +3073,10 @@ Fais la recherche et affiche les résultats.
                 document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
                 var target = document.getElementById('page-' + page);
                 if (target) target.classList.add('active');
-                if (page === 'api') loadApiKeys();
+                if (page === 'api') {
+                    loadApiKeys();
+                    loadApiStats();
+                }
                 if (page === 'graphe') setTimeout(initGraphe, 60);
                 if (page === 'profile') loadProfile();
                 if (window.innerWidth <= 768) window.closeMobileMenu();
@@ -2962,6 +3110,10 @@ Fais la recherche et affiche les résultats.
                 if (apiTarget) apiTarget.classList.add('active');
                 if (at.dataset.apiTab === 'subscription') loadSubscription();
                 if (at.dataset.apiTab === 'keys') loadApiKeys();
+                if (at.dataset.apiTab === 'stats') {
+                    loadApiStats();
+                    loadLogs();
+                }
                 return;
             }
             if (t.closest && t.closest('.code-tab')) {
@@ -3040,36 +3192,6 @@ Fais la recherche et affiche les résultats.
             if (overlay) overlay.classList.remove('active');
         };
 
-        window.loadProfile = async function() {
-            var container = document.getElementById('profileInfo');
-            if (!container) return;
-            var defaultData = {
-                username: localStorage.getItem('username') || 'Admin',
-                role: 'user',
-                plan: 'free',
-                created_at: null,
-                last_login: null,
-                searches_count: 0
-            };
-            var data = Object.assign({}, defaultData);
-            var token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    var res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
-                    if (res.ok) {
-                        var apiData = await res.json();
-                        data = Object.assign(data, apiData);
-                    }
-                } catch (err) {}
-            }
-            var initial = (data.username || 'A').charAt(0).toUpperCase();
-            var createdStr = data.created_at ? new Date(data.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
-            var lastLoginStr = data.last_login ? new Date(data.last_login).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Maintenant';
-            var roleLabel = data.role === 'admin' ? 'Administrateur' : data.role === 'owner' ? 'Propriétaire' : 'Utilisateur';
-            var planLabel = (data.plan || 'free').toUpperCase();
-            container.innerHTML = '<div class="profile-header"><div class="profile-avatar">' + initial + '</div><div class="profile-header-info"><h3>' + (data.username || 'Admin') + '</h3><p>Compte Marauder · Plan ' + planLabel + '</p></div></div><div class="profile-row"><span class="label">Nom d\'utilisateur</span><span class="value">' + (data.username || 'Admin') + '</span></div><div class="profile-row"><span class="label">Rôle</span><span class="value">' + roleLabel + '</span></div><div class="profile-row"><span class="label">Plan actuel</span><span class="value">' + planLabel + '</span></div><div class="profile-row"><span class="label">Membre depuis</span><span class="value">' + createdStr + '</span></div><div class="profile-row"><span class="label">Dernière connexion</span><span class="value">' + lastLoginStr + '</span></div><div class="profile-actions"><button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="window.showToast(\'Bientôt disponible\', \'warning\')">Modifier le profil</button><button class="btn-secondary" onclick="window.location.href=\'/cgu.html\'">Voir les CGU</button></div>';
-        };
-
         /* API KEYS */
         var apiKeysCache = [];
         var apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
@@ -3091,7 +3213,7 @@ Fais la recherche et affiche les résultats.
                 renderApiKeys();
             } catch (err) {
                 apiKeysCache = [];
-                apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
+                apiKeyLimits = { plan: currentUser.plan || 'free', currentCount: 0, maxKeys: 1 };
                 renderApiKeys();
             }
         };
@@ -3142,7 +3264,7 @@ Fais la recherche et affiche les résultats.
                 try {
                     var res = await fetch('/api/keys/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
                     if (res.ok) { window.showToast('Clé révoquée', 'success'); await loadApiKeys(); }
-                    else { window.showToast('Erreur', 'error'); }
+                    else window.showToast('Erreur', 'error');
                 } catch (err) { window.showToast('Erreur', 'error'); }
             }, { confirmText: 'Révoquer', danger: true });
         };
@@ -3157,19 +3279,20 @@ Fais la recherche et affiche les résultats.
             if (modal) modal.remove();
         };
 
+        /* SUBSCRIPTION */
         window.loadSubscription = async function() {
             var container = document.getElementById('subscriptionContent');
             if (!container) return;
             var planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
             var planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
-            var plan = 'free', active = false, status = 'inactive', periodEnd = null;
+            var plan = currentUser.plan || 'free', active = false, status = 'inactive', periodEnd = null;
             var token = localStorage.getItem('token');
             if (token) {
                 try {
                     var res = await fetch('/api/stripe/status', { headers: { 'Authorization': 'Bearer ' + token } });
                     if (res.ok) {
                         var data = await res.json();
-                        plan = data.plan || 'free';
+                        plan = data.plan || plan;
                         active = data.active === true;
                         status = data.status || 'inactive';
                         periodEnd = data.currentPeriodEnd;
@@ -3178,6 +3301,7 @@ Fais la recherche et affiche les résultats.
             }
             var statusBadgeClass = 'inactive', statusText = 'Inactif';
             if (active) { statusBadgeClass = 'active'; statusText = 'Actif'; }
+            else if (plan !== 'free') { statusBadgeClass = 'active'; statusText = 'Actif'; }
             var periodEndStr = '—';
             if (periodEnd) {
                 var d = new Date(periodEnd * 1000);
@@ -3190,7 +3314,7 @@ Fais la recherche et affiche les résultats.
                 if (isCurrent) btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
                 else if (subscribeKey && subscribeKey !== '0') btn = '<button class="sub-plan-btn upgrade" onclick="openPaymentModal(\'' + subscribeKey + '\')">Choisir</button>';
                 else if (subscribeKey === '0') btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
-                else btn = '<button class="sub-plan-btn upgrade" onclick="window.open(\'https://discord.gg/jf6QRZHaTB\',\'_blank\')">Nous contacter</button>';
+                else btn = '<button class="sub-plan-btn upgrade" onclick="window.open(\'https://discord.gg/jf6QRZHaTB\', \'_blank\')">Nous contacter</button>';
                 return '<div class="sub-plan-card ' + (isCurrent ? 'current' : '') + '"><div class="sub-plan-name">' + names[planKey] + '</div><div class="sub-plan-price">' + price + (price !== 'Sur devis' ? '<span>/mois</span>' : '') + '</div>' + btn + '</div>';
             }
             container.innerHTML = '<div class="sub-current"><div class="sub-current-header"><div class="sub-current-plan"><div class="sub-current-plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sub-current-plan-text"><h4>Plan ' + (planLabels[plan] || 'Free') + '</h4><span>' + (planPrices[plan] || '0€') + ' / mois</span></div></div><div class="sub-status-badge ' + statusBadgeClass + '"><span class="sub-status-dot"></span>' + statusText + '</div></div><div class="sub-details"><div class="sub-detail-item"><div class="sub-detail-label">Plan actuel</div><div class="sub-detail-value">' + (planLabels[plan] || 'Free') + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Statut</div><div class="sub-detail-value">' + statusText + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">' + periodEndStr + '</div></div></div><div class="sub-actions">' + (plan === 'free' ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') + '</div></div><div class="sub-plans"><div class="sub-plans-title">Tous les plans</div><div class="sub-plans-grid">' + renderPlanCard('free', plan, '0€', '0') + renderPlanCard('starter', plan, '9,99€', 'starter') + renderPlanCard('pro', plan, '29,99€', 'pro') + renderPlanCard('enterprise', plan, 'Sur devis', null) + '</div></div>';
@@ -3230,7 +3354,11 @@ Fais la recherche et affiche les résultats.
 
         document.addEventListener('DOMContentLoaded', function() {
             var token = localStorage.getItem('token');
-            if (token && typeof loadApiKeys === 'function') loadApiKeys();
+            if (token) {
+                loadApiKeys();
+                loadApiStats();
+                loadLogs();
+            }
             if (document.getElementById('page-profile').classList.contains('active')) loadProfile();
         });
 
