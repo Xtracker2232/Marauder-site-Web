@@ -149,7 +149,7 @@
         .section { background: linear-gradient(135deg, rgba(28,28,28,0.55), rgba(14,14,14,0.7)); border: 1px solid var(--stroke-1); border-radius: 22px; margin-bottom: 14px; overflow: hidden; position: relative; transition: border-color 0.3s; }
         .section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); }
         .section:hover { border-color: var(--stroke-2); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; cursor: pointer; user-select: none; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .section-header:hover { background: rgba(255,255,255,0.015); }
         .section-header h3 { font-size: 15px; font-weight: 600; color: #fff; pointer-events: none; }
         .section-header .toggle-icon { color: var(--text-3); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), color 0.3s; pointer-events: none; }
@@ -475,9 +475,7 @@
         .api-key-new-value input { flex: 1; padding: 15px 18px; background: rgba(0,0,0,0.4); border: 1px solid var(--stroke-1); border-radius: 12px; color: #fff; font-family: 'Courier New', monospace; font-size: 12px; outline: none; }
         .api-key-warning { padding: 16px 18px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.25); border-radius: 12px; color: var(--warn); font-size: 12px; margin-bottom: 22px; line-height: 1.6; }
 
-        /* ============================================
-           CRYPTO MODAL
-           ============================================ */
+        /* CRYPTO MODAL */
         .crypto-modal {
             position: fixed;
             inset: 0;
@@ -1355,7 +1353,6 @@
                     </div>
                 </div>
 
-                <!-- DOCS COMPLETE -->
                 <div id="api-tab-docs" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -1673,6 +1670,22 @@ Fais la recherche et affiche les résultats.
     (function() {
         'use strict';
 
+        /* ============================================
+           FIX SCROLL — Débloque le scroll dans tous les cas
+           ============================================ */
+        function unlockScroll() {
+            document.body.style.overflow = '';
+            document.body.style.overflowY = '';
+            document.body.style.overflowX = '';
+            document.documentElement.style.overflow = '';
+            document.documentElement.style.overflowY = '';
+            document.body.style.position = '';
+            document.body.style.height = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+        }
+        window.unlockScroll = unlockScroll;
+
         /* UTILITAIRES */
         window.toggleSection = function(el) {
             if (!el) return;
@@ -1767,6 +1780,341 @@ Fais la recherche et affiche les résultats.
 
         /* USER STATE */
         var currentUser = { plan: 'free', limit: 10, resultsPerSearch: 10, used: 0, today: 0, month: 0, remaining: 10 };
+
+        /* ============================================
+           RECHERCHE — avec animation loading + scroll
+           ============================================ */
+        function getSearchFields(prefix) {
+            var isPro = prefix === 'Pro';
+            var fields = {};
+            if (!isPro) {
+                var map = {
+                    nom_famille: 'searchNom',
+                    prenom: 'searchPrenom',
+                    nom_naissance: 'searchNomNaissance',
+                    nom_affichage: 'searchNomAffichage',
+                    jour_naissance: 'searchJour',
+                    mois_naissance: 'searchMois',
+                    annee_naissance: 'searchAnnee',
+                    date_naissance: 'searchDateNaissance',
+                    ville_naissance: 'searchVilleNaissance',
+                    genre: 'searchGenre',
+                    email: 'searchEmail',
+                    telephone: 'searchPhone',
+                    nom_utilisateur: 'searchUsername',
+                    adresse_ip: 'searchIp',
+                    adresse: 'searchAdresse',
+                    code_postal: 'searchCp',
+                    ville: 'searchVille',
+                    steam_id: 'searchSteam',
+                    fivem_license: 'searchFivemLicense',
+                    discord_id: 'searchDiscord',
+                    xbox_live_id: 'searchXbox',
+                    live_id: 'searchLive',
+                    fivem_license2: 'searchFivemLicense2',
+                    nir: 'searchNir',
+                    iban: 'searchIban',
+                    bic: 'searchBic',
+                    vin_plaque: 'searchVin'
+                };
+                Object.keys(map).forEach(function(key) {
+                    var el = document.getElementById(map[key]);
+                    if (el && el.value.trim()) fields[key] = el.value.trim();
+                });
+            } else {
+                var mapPro = {
+                    nom_famille: 'searchNomPro',
+                    prenom: 'searchPrenomPro',
+                    nom_naissance: 'searchNomNaissancePro',
+                    societe: 'searchSociete',
+                    profession: 'searchProfession',
+                    fonction: 'searchFonction',
+                    email: 'searchEmailPro',
+                    telephone: 'searchPhonePro',
+                    adresse_ip: 'searchIpPro',
+                    siret: 'searchSiret',
+                    siren: 'searchSiren',
+                    nir: 'searchNirPro',
+                    iban: 'searchIbanPro',
+                    bic: 'searchBicPro',
+                    vin_plaque: 'searchVinPro'
+                };
+                Object.keys(mapPro).forEach(function(key) {
+                    var el = document.getElementById(mapPro[key]);
+                    if (el && el.value.trim()) fields[key] = el.value.trim();
+                });
+            }
+            return fields;
+        }
+
+        window.performSearch = async function(prefix) {
+            prefix = prefix || '';
+            var overlay = document.getElementById('searchOverlay');
+            var resultsDiv = document.getElementById('searchResults');
+
+            var fields = getSearchFields(prefix);
+
+            if (Object.keys(fields).length === 0) {
+                window.showToast('Renseignez au moins un champ', 'warning');
+                return;
+            }
+
+            // Afficher le loading
+            if (overlay) overlay.classList.add('active');
+
+            // Construire le body
+            var body = Object.assign({}, fields, { flexible: true, per_page: currentUser.resultsPerSearch || 10 });
+
+            try {
+                var token = localStorage.getItem('token');
+                var res = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + (token || '')
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (res.status === 404) throw new Error('endpoint_unavailable');
+                if (!res.ok && res.status !== 200) throw new Error('api_error');
+
+                var data = await res.json();
+
+                if (overlay) overlay.classList.remove('active');
+
+                // Afficher les résultats
+                renderSearchResults(data, resultsDiv);
+
+                // Défiler vers les résultats (après un petit délai pour laisser le DOM se mettre à jour)
+                setTimeout(function() {
+                    if (resultsDiv) {
+                        resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 150);
+
+                // Stats
+                if (data.meta) {
+                    var count = data.meta.total || (data.data && data.data.results ? data.data.results.length : 0);
+                    window.showToast(count + ' résultat' + (count > 1 ? 's' : '') + ' trouvé' + (count > 1 ? 's' : ''), 'success');
+                }
+            } catch (err) {
+                if (overlay) overlay.classList.remove('active');
+
+                // Mode démo : afficher des résultats fictifs
+                var demoResults = generateDemoResults(fields, prefix);
+                renderSearchResults({
+                    success: true,
+                    mock: true,
+                    data: { results: demoResults },
+                    meta: { total: demoResults.length, returned: demoResults.length, plan_limit: 10, limited: false, page: 1, pages: 1, per_page: 10, took_ms: 42, maintenance: false }
+                }, resultsDiv, true);
+
+                setTimeout(function() {
+                    if (resultsDiv) resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+
+                window.showToast('Résultats de démonstration (' + demoResults.length + ')', 'warning');
+            }
+        };
+
+        function generateDemoResults(fields, prefix) {
+            var results = [];
+            var baseNames = [
+                { nom: 'Dupont', prenom: 'Jean', email: 'jean.dupont@example.com', tel: '0612345678', ville: 'Paris', cp: '75001', conf: 85 },
+                { nom: 'Martin', prenom: 'Sophie', email: 'sophie.martin@example.com', tel: '0623456789', ville: 'Lyon', cp: '69001', conf: 72 },
+                { nom: 'Bernard', prenom: 'Pierre', email: 'pierre.bernard@example.com', tel: '0634567890', ville: 'Marseille', cp: '13001', conf: 68 },
+                { nom: 'Dubois', prenom: 'Marie', email: 'marie.dubois@example.com', tel: '0645678901', ville: 'Toulouse', cp: '31000', conf: 91 },
+                { nom: 'Moreau', prenom: 'Lucas', email: 'lucas.moreau@example.com', tel: '0656789012', ville: 'Bordeaux', cp: '33000', conf: 55 }
+            ];
+
+            baseNames.forEach(function(b, i) {
+                var result = {
+                    nom_famille: fields.nom_famille || b.nom,
+                    prenom: fields.prenom || b.prenom,
+                    email: fields.email || b.email,
+                    telephone: fields.telephone || b.tel,
+                    ville: fields.ville || b.ville,
+                    code_postal: fields.code_postal || b.cp,
+                    adresse: fields.adresse || (10 + i) + ' rue de la République',
+                    date_naissance: '1990-0' + (i + 1) + '-15',
+                    _confidence: b.conf,
+                    _sources: ['Zen Mobile', 'Facebook', 'PagesBlanches'].slice(0, 2 + (i % 2))
+                };
+                results.push(result);
+            });
+
+            return results;
+        }
+
+        function renderSearchResults(data, container, isDemo) {
+            if (!container) return;
+
+            var results = (data && data.data && data.data.results) ? data.data.results : [];
+            var meta = data && data.meta ? data.meta : {};
+
+            if (results.length === 0) {
+                container.innerHTML = '<div class="results-counter"><div><span style="color:#7a7a7a;font-size:14px;">Aucun résultat</span></div></div>';
+                return;
+            }
+
+            var counterHTML = '<div class="results-counter">' +
+                '<div><strong style="color:#fff;font-size:16px;">' + results.length + '</strong> <span style="color:#7a7a7a;">résultat' + (results.length > 1 ? 's' : '') + (meta.limited ? ' (limité par le plan)' : '') + '</span></div>' +
+                '<div style="font-size:12px;color:#7a7a7a;">' + (isDemo ? 'Mode démo' : (meta.took_ms ? meta.took_ms + 'ms' : '')) + (meta.total ? ' · Total: ' + meta.total : '') + '</div>' +
+                '</div>';
+
+            var cardsHTML = results.map(function(r, idx) {
+                var fullName = ((r.prenom || '') + ' ' + (r.nom_famille || '')).trim() || 'Inconnu';
+                var confidence = r._confidence || 50;
+                var confClass = confidence >= 80 ? 'confidence-high' : confidence >= 50 ? 'confidence-medium' : 'confidence-low';
+
+                var fieldsHTML = '';
+                var priority = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'date_naissance', 'nir', 'iban', 'bic', 'steam_id', 'discord_id'];
+                priority.forEach(function(key) {
+                    if (r[key]) {
+                        fieldsHTML += '<div class="result-field"><div class="field-label">' + key.replace(/_/g, ' ') + '</div><div class="field-value highlight">' + r[key] + '</div></div>';
+                    }
+                });
+
+                var sourcesHTML = '';
+                if (r._sources && r._sources.length) {
+                    sourcesHTML = '<div class="result-field"><div class="field-label">Sources</div><div class="field-value">' + r._sources.join(', ') + '</div></div>';
+                }
+
+                return '<div class="result-card-full" data-result-index="' + idx + '">' +
+                    '<div class="result-header-full">' +
+                        '<div class="result-name-full">' + fullName + '</div>' +
+                        '<div style="display:flex;align-items:center;gap:12px;">' +
+                            '<span class="confidence-badge ' + confClass + '">' + confidence + '%</span>' +
+                            '<button class="btn-deep" onclick="toggleResultFields(this)">Voir détails</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="result-fields">' + fieldsHTML + sourcesHTML + '</div>' +
+                    '<div class="result-actions">' +
+                        '<button class="btn-deep" onclick="openInvestigationFromIndex(' + idx + ')">Investigation</button>' +
+                        '<button class="btn-deep" onclick="copyResultToClipboard(' + idx + ')">Copier</button>' +
+                        '<button class="btn-deep" onclick="addResultToFiche(' + idx + ')">+ Fiche</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            container.innerHTML = counterHTML + cardsHTML;
+
+            // Sauvegarder les résultats pour utilisation ultérieure
+            window._currentResults = results;
+        }
+
+        window.toggleResultFields = function(btn) {
+            var card = btn.closest('.result-card-full');
+            if (!card) return;
+            var fields = card.querySelector('.result-fields');
+            if (fields) {
+                fields.classList.toggle('open');
+                btn.textContent = fields.classList.contains('open') ? 'Masquer détails' : 'Voir détails';
+            }
+        };
+
+        window.openInvestigationFromIndex = function(idx) {
+            if (window._currentResults && window._currentResults[idx]) {
+                window.openInvestigation(window._currentResults[idx]);
+            }
+        };
+
+        window.copyResultToClipboard = function(idx) {
+            if (!window._currentResults || !window._currentResults[idx]) return;
+            var r = window._currentResults[idx];
+            var text = Object.keys(r).filter(function(k) { return k.charAt(0) !== '_'; }).map(function(k) { return k + ': ' + r[k]; }).join('\n');
+            navigator.clipboard.writeText(text).then(function() {
+                window.showToast('Résultat copié', 'success');
+            });
+        };
+
+        window.addResultToFiche = function(idx) {
+            if (!window._currentResults || !window._currentResults[idx]) return;
+            window.showToast('Fonction fiche à venir', 'warning');
+        };
+
+        /* ============================================
+           LOOKUP
+           ============================================ */
+        window.performLookup = async function() {
+            var type = document.getElementById('lookupType').value;
+            var value = document.getElementById('lookupValue').value.trim();
+            var overlay = document.getElementById('searchOverlay');
+            var resultsDiv = document.getElementById('lookupResults');
+
+            if (!value) {
+                window.showToast('Renseignez une valeur', 'warning');
+                return;
+            }
+
+            if (overlay) overlay.classList.add('active');
+
+            try {
+                var token = localStorage.getItem('token');
+                var field = type === 'email' ? 'email' : type === 'phone' ? 'telephone' : 'iban';
+                var body = {};
+                body[field] = value;
+
+                var res = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + (token || '')
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (overlay) overlay.classList.remove('active');
+
+                if (res.ok) {
+                    var data = await res.json();
+                    renderSearchResults(data, resultsDiv, false);
+                    setTimeout(function() {
+                        if (resultsDiv) resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 150);
+                } else {
+                    throw new Error('error');
+                }
+            } catch (err) {
+                if (overlay) overlay.classList.remove('active');
+
+                var demoResults = [{
+                    nom_famille: 'Dupont',
+                    prenom: 'Jean',
+                    email: type === 'email' ? value : 'jean.dupont@example.com',
+                    telephone: type === 'phone' ? value : '0612345678',
+                    iban: type === 'iban' ? value : 'FR7630006000011234567890189',
+                    ville: 'Paris',
+                    _confidence: 78,
+                    _sources: ['Zen Mobile', 'Facebook']
+                }];
+
+                renderSearchResults({
+                    success: true,
+                    mock: true,
+                    data: { results: demoResults },
+                    meta: { total: 1, returned: 1, plan_limit: 10, limited: false, page: 1, pages: 1, per_page: 10, took_ms: 35, maintenance: false }
+                }, resultsDiv, true);
+
+                setTimeout(function() {
+                    if (resultsDiv) resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+
+                window.showToast('Résultat de démonstration', 'warning');
+            }
+        };
+
+        /* CLEAR BUTTONS */
+        function clearSearchFields(prefix) {
+            var isPro = prefix === 'Pro';
+            var ids = isPro ? ['searchNomPro','searchPrenomPro','searchNomNaissancePro','searchSociete','searchProfession','searchFonction','searchEmailPro','searchPhonePro','searchIpPro','searchSiret','searchSiren','searchNirPro','searchIbanPro','searchBicPro','searchVinPro']
+                            : ['searchNom','searchPrenom','searchNomNaissance','searchNomAffichage','searchJour','searchMois','searchAnnee','searchDateNaissance','searchVilleNaissance','searchGenre','searchEmail','searchPhone','searchUsername','searchIp','searchAdresse','searchCp','searchVille','searchSteam','searchFivemLicense','searchDiscord','searchXbox','searchLive','searchFivemLicense2','searchNir','searchIban','searchBic','searchVin'];
+            ids.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        }
 
         /* API STATS */
         window.loadApiStats = async function() {
@@ -2223,6 +2571,8 @@ Fais la recherche et affiche les résultats.
                 var li = t.closest('.sidebar-nav > li[data-page]');
                 var page = li.dataset.page;
                 if (page === 'discord') { window.open('https://discord.gg/jf6QRZHaTB', '_blank'); return; }
+                // Débloquer le scroll au changement de page
+                unlockScroll();
                 document.querySelectorAll('.sidebar-nav > li').forEach(function(l) { l.classList.remove('active'); });
                 li.classList.add('active');
                 document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -2232,6 +2582,8 @@ Fais la recherche et affiche les résultats.
                 if (page === 'graphe') setTimeout(initGraphe, 60);
                 if (page === 'profile') loadProfile();
                 if (window.innerWidth <= 768) window.closeMobileMenu();
+                // Remonter en haut de page
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
             if (t.closest && t.closest('#logoutBtn')) {
@@ -2286,10 +2638,37 @@ Fais la recherche et affiche les résultats.
                 if (grid) navigator.clipboard.writeText(grid.innerText).then(function() { window.showToast('Informations copiées', 'success'); });
                 return;
             }
+
+            // BOUTONS RECHERCHE
+            if (t.closest && t.closest('#searchBtn')) { e.preventDefault(); e.stopPropagation(); window.performSearch(''); return; }
+            if (t.closest && t.closest('#searchBtnPro')) { e.preventDefault(); e.stopPropagation(); window.performSearch('Pro'); return; }
+            if (t.closest && t.closest('#clearBtn')) { e.preventDefault(); e.stopPropagation(); clearSearchFields(''); window.showToast('Champs effacés', 'success'); return; }
+            if (t.closest && t.closest('#clearBtnPro')) { e.preventDefault(); e.stopPropagation(); clearSearchFields('Pro'); window.showToast('Champs effacés', 'success'); return; }
+            if (t.closest && t.closest('#lookupBtn')) { e.preventDefault(); e.stopPropagation(); window.performLookup(); return; }
         }, true);
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { hideContextMenu(); closeCustomInput(); closeColorPicker(); closeRolePicker(); cancelLinking(); }
+            if (e.key === 'Escape') {
+                hideContextMenu();
+                closeCustomInput();
+                closeColorPicker();
+                closeRolePicker();
+                cancelLinking();
+                // Sécurité scroll
+                unlockScroll();
+            }
+            // Entrée dans lookup
+            if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'lookupValue') {
+                window.performLookup();
+            }
+        });
+
+        // Sécurité visibilitychange
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                var anyModalOpen = document.querySelector('.crypto-modal.active, .payment-modal.active, .mc-overlay.active, .api-key-modal.active, .custom-modal-overlay.active, .search-loading.active');
+                if (!anyModalOpen) unlockScroll();
+            }
         });
 
         window.openInvestigation = function(personData) {
@@ -2398,6 +2777,7 @@ Fais la recherche et affiche les résultats.
         window.closeKeyModal = function() {
             var modal = document.querySelector('.api-key-modal');
             if (modal) modal.remove();
+            unlockScroll();
         };
 
         /* ============================================
@@ -2478,6 +2858,7 @@ Fais la recherche et affiche les résultats.
         window.closePaymentModal = function() {
             var modal = document.getElementById('paymentModalDash');
             if (modal) modal.classList.remove('active');
+            unlockScroll();
         };
 
         window.payWithCard = function() {
@@ -2566,7 +2947,7 @@ Fais la recherche et affiche les résultats.
         window.closeCryptoModal = function() {
             var modal = document.getElementById('cryptoModal');
             if (modal) modal.classList.remove('active');
-            document.body.style.overflow = '';
+            unlockScroll();
             stopCryptoPolling();
             stopCryptoCountdown();
         };
@@ -2626,7 +3007,6 @@ Fais la recherche et affiche les résultats.
 
                 window.showToast('Commande ' + data.order_number + ' créée ! Envoyez le montant exact.', 'success');
             } catch (err) {
-                // Mode démo
                 var demoOrderNumber = 'ORD-' + Date.now().toString(36).toUpperCase();
                 var demoAddress = 'bc1q' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
                 var demoAmount = (Math.random() * 0.1).toFixed(6);
@@ -2743,6 +3123,7 @@ Fais la recherche et affiche les résultats.
 
         window.finishCryptoModal = function() {
             closeCryptoModal();
+            unlockScroll();
             window.showToast('Paiement confirmé ! Redirection...', 'success');
             setTimeout(function() {
                 loadApiStats();
@@ -2752,6 +3133,9 @@ Fais la recherche et affiche les résultats.
 
         /* INIT */
         document.addEventListener('DOMContentLoaded', function() {
+            // Sécurité : forcer le déblocage du scroll au démarrage
+            unlockScroll();
+
             var token = localStorage.getItem('token');
             if (token) {
                 loadApiKeys();
@@ -2760,9 +3144,9 @@ Fais la recherche et affiche les résultats.
             }
             if (document.getElementById('page-profile').classList.contains('active')) loadProfile();
 
-            // Vérifier un paiement crypto en attente
+            // Vérifier un paiement crypto en attente — uniquement si l'ID semble valide (numérique)
             var pendingId = localStorage.getItem('pending_crypto_order');
-            if (pendingId) {
+            if (pendingId && /^\d+$/.test(pendingId)) {
                 setTimeout(async function() {
                     try {
                         var t = localStorage.getItem('token');
@@ -2770,6 +3154,7 @@ Fais la recherche et affiche les résultats.
                             headers: { 'Authorization': 'Bearer ' + t }
                         });
                         if (res.status === 404) {
+                            // Nettoyer l'ID invalide
                             localStorage.removeItem('pending_crypto_order');
                             localStorage.removeItem('pending_crypto_order_number');
                             return;
@@ -2784,6 +3169,10 @@ Fais la recherche et affiche les résultats.
                         }
                     } catch (e) {}
                 }, 2000);
+            } else if (pendingId) {
+                // ID invalide, on nettoie
+                localStorage.removeItem('pending_crypto_order');
+                localStorage.removeItem('pending_crypto_order_number');
             }
         });
 
