@@ -3199,101 +3199,195 @@ Fais la recherche et affiche les résultats.
             }
         }, true);
 
-        /* ============================================
-           API STATS — Chargement et mise à jour dynamique
-           ============================================ */
-        window.loadApiStats = async function() {
-            var token = localStorage.getItem('token');
-            
-            try {
-                if (!token) throw new Error('no token');
-                var res = await fetch('/api/v1/usage', { 
-                    headers: { 'Authorization': 'Bearer ' + token } 
-                });
-                if (!res.ok) throw new Error('API error');
-                var data = await res.json();
-                if (!data.success) throw new Error('API returned success:false');
-                
-                var usage = data.usage || {};
-                var plan = data.plan || 'free';
-                
-                // Mise à jour des cartes de stats
-                var todayEl = document.querySelector('[data-stat="today"]');
-                var monthEl = document.querySelector('[data-stat="month"]');
-                var limitEl = document.querySelector('[data-stat="limit"]');
-                var remainingEl = document.querySelector('[data-stat="remaining"]');
-                
-                if (todayEl) todayEl.textContent = usage.today != null ? usage.today : 0;
-                if (monthEl) monthEl.textContent = usage.month != null ? usage.month : 0;
-                if (limitEl) limitEl.textContent = usage.limit === Infinity ? '∞' : (usage.limit != null ? usage.limit : 10);
-                if (remainingEl) remainingEl.textContent = usage.remaining === Infinity ? '∞' : (usage.remaining != null ? usage.remaining : 0);
-                
-                // Barre d'utilisation
-                var usageCount = document.getElementById('usageCount');
-                var usageBarFill = document.getElementById('usageBarFill');
-                
-                if (usageCount) {
-                    var limitDisplay = usage.limit === Infinity ? '∞' : usage.limit;
-                    usageCount.textContent = (usage.month || 0) + ' / ' + limitDisplay;
-                }
-                if (usageBarFill) {
-                    var percent = usage.limit === Infinity ? 5 : Math.min(100, ((usage.month || 0) / (usage.limit || 1)) * 100);
-                    usageBarFill.style.width = percent + '%';
-                    if (percent >= 90) usageBarFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
-                    else if (percent >= 70) usageBarFill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
-                    else usageBarFill.style.background = 'linear-gradient(90deg, #10b981, #22c55e)';
-                }
-                
-                // Logs
-                var logsContainer = document.getElementById('logsContainer');
-                if (logsContainer && usage.by_endpoint && usage.by_endpoint.length > 0) {
-                    logsContainer.innerHTML = usage.by_endpoint.map(function(e) {
-                        return '<div class="error-row"><span class="error-code wide" style="color:#fff;">' + e.endpoint + '</span><span class="error-desc">' + e.total + ' requête(s)</span></div>';
-                    }).join('');
-                }
-                
-                window.showToast('Statistiques mises à jour', 'success');
-            } catch (err) {
-                console.warn('Stats API non disponibles, fallback démo', err);
-                // Fallback démo — basé sur le plan actuel
-                var demos = {
-                    free:       { today: 2,   month: 4,     limit: 10,       remaining: 6 },
-                    starter:    { today: 12,  month: 145,   limit: 1000,     remaining: 855 },
-                    pro:        { today: 89,  month: 3247,  limit: 10000,    remaining: 6753 },
-                    enterprise: { today: 250, month: 15000, limit: Infinity, remaining: Infinity }
-                };
-                var plan = (window.apiKeyLimits && window.apiKeyLimits.plan) || 'free';
-                var d = demos[plan] || demos.free;
-                
-                var todayEl = document.querySelector('[data-stat="today"]');
-                var monthEl = document.querySelector('[data-stat="month"]');
-                var limitEl = document.querySelector('[data-stat="limit"]');
-                var remainingEl = document.querySelector('[data-stat="remaining"]');
-                if (todayEl) todayEl.textContent = d.today;
-                if (monthEl) monthEl.textContent = d.month;
-                if (limitEl) limitEl.textContent = d.limit === Infinity ? '∞' : d.limit;
-                if (remainingEl) remainingEl.textContent = d.remaining === Infinity ? '∞' : d.remaining;
-                
-                var usageCount = document.getElementById('usageCount');
-                var usageBarFill = document.getElementById('usageBarFill');
-                if (usageCount) usageCount.textContent = d.month + ' / ' + (d.limit === Infinity ? '∞' : d.limit);
-                if (usageBarFill) {
-                    var pct = d.limit === Infinity ? 5 : Math.min(100, (d.month / d.limit) * 100);
-                    usageBarFill.style.width = pct + '%';
-                    if (pct >= 90) usageBarFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
-                    else if (pct >= 70) usageBarFill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
-                    else usageBarFill.style.background = 'linear-gradient(90deg, #10b981, #22c55e)';
-                }
-                
-                // Logs démo
-                var logsContainer = document.getElementById('logsContainer');
-                if (logsContainer) {
-                    logsContainer.innerHTML = '<div class="error-row"><span class="error-code wide" style="color:#fff;">/api/v1/search</span><span class="error-desc">' + Math.max(1, Math.floor(d.month * 0.7)) + ' requête(s)</span></div>' +
-                        '<div class="error-row"><span class="error-code wide" style="color:#fff;">/api/v1/me</span><span class="error-desc">' + Math.max(1, Math.floor(d.month * 0.2)) + ' requête(s)</span></div>' +
-                        '<div class="error-row"><span class="error-code wide" style="color:#fff;">/api/v1/lookup</span><span class="error-desc">' + Math.max(1, Math.floor(d.month * 0.1)) + ' requête(s)</span></div>';
-                }
-            }
+/* ============================================
+   API STATS — Chargement et mise à jour dynamique
+   ============================================ */
+
+/* --- Compteur local persistant (fallback + cumul) --- */
+window.getLocalUsage = function() {
+    try {
+        var today = new Date().toISOString().slice(0, 10);
+        var data = JSON.parse(localStorage.getItem('marauder_local_usage') || '{}');
+        if (data.date !== today) {
+            data = { date: today, today: 0, month: 0, monthKey: today.slice(0, 7) };
+        }
+        if (data.monthKey !== today.slice(0, 7)) {
+            data.month = 0;
+            data.monthKey = today.slice(0, 7);
+        }
+        return { today: data.today || 0, month: data.month || 0 };
+    } catch (e) { return { today: 0, month: 0 }; }
+};
+
+window.incrementLocalUsage = function() {
+    try {
+        var today = new Date().toISOString().slice(0, 10);
+        var monthKey = today.slice(0, 7);
+        var data = JSON.parse(localStorage.getItem('marauder_local_usage') || '{}');
+        if (data.date !== today) { data.date = today; data.today = 0; }
+        if (data.monthKey !== monthKey) { data.monthKey = monthKey; data.month = 0; }
+        data.today = (data.today || 0) + 1;
+        data.month = (data.month || 0) + 1;
+        localStorage.setItem('marauder_local_usage', JSON.stringify(data));
+        window.updateSidebarStatsBadge();
+    } catch (e) {}
+};
+
+window.resetLocalUsage = function() {
+    try { localStorage.removeItem('marauder_local_usage'); } catch (e) {}
+};
+
+/* --- Badge dans la sidebar --- */
+window.updateSidebarStatsBadge = function() {
+    var apiLi = document.querySelector('.sidebar-nav > li[data-page="api"]');
+    if (!apiLi) return;
+    var existing = apiLi.querySelector('.sidebar-badge');
+    var plans = { free: 10, starter: 1000, pro: 10000, enterprise: Infinity };
+    var plan = (window.apiKeyLimits && window.apiKeyLimits.plan) || 'free';
+    var limit = plans[plan] || 10;
+    var local = window.getLocalUsage();
+    var text = local.month + '/' + (limit === Infinity ? '∞' : limit);
+    if (!existing) {
+        var badge = document.createElement('span');
+        badge.className = 'sidebar-badge';
+        badge.style.cssText = 'margin-left:auto;font-size:10px;padding:2px 8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:100px;color:#a78bfa;font-weight:700;';
+        badge.textContent = text;
+        apiLi.appendChild(badge);
+    } else {
+        existing.textContent = text;
+    }
+};
+
+/* --- Recharger après chaque appel API --- */
+window.refreshStatsAfterCall = function() {
+    window.incrementLocalUsage();
+    var statsTab = document.getElementById('api-tab-stats');
+    if (statsTab && statsTab.classList.contains('active')) {
+        loadApiStats(true); // true = silencieux (pas de toast)
+    } else {
+        window._statsDirty = true;
+    }
+};
+
+/* --- Fonction principale --- */
+window.loadApiStats = async function(silent) {
+    var token = localStorage.getItem('token');
+    var local = window.getLocalUsage();
+    
+    try {
+        if (!token) throw new Error('no token');
+        var res = await fetch('/api/v1/usage', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('API error');
+        var data = await res.json();
+        if (!data.success) throw new Error('API returned success:false');
+        
+        var usage = data.usage || {};
+        var plan = data.plan || 'free';
+        
+        // Combine : max(API, local) pour aujourd'hui, sum pour le mois
+        // (le local compte les appels que le serveur n'a pas encore logués)
+        var apiToday = usage.today || 0;
+        var apiMonth = usage.month || 0;
+        var finalToday = Math.max(apiToday, local.today);
+        var finalMonth = Math.max(apiMonth, local.month);
+        
+        // Met à jour window.apiKeyLimits pour cohérence
+        if (usage.limit != null) {
+            window.apiKeyLimits = window.apiKeyLimits || {};
+            window.apiKeyLimits.plan = plan;
+        }
+        
+        applyStatsToUI({
+            today: finalToday,
+            month: finalMonth,
+            limit: usage.limit,
+            remaining: usage.limit === Infinity ? Infinity : Math.max(0, (usage.limit || 0) - finalMonth),
+            by_endpoint: usage.by_endpoint || []
+        });
+        
+        if (!silent) {
+            window.showToast('Statistiques mises à jour', 'success');
+        }
+        
+        window.updateSidebarStatsBadge();
+    } catch (err) {
+        console.warn('Stats API indisponibles, fallback local + démo', err);
+        
+        // Fallback : démo + local
+        var demos = {
+            free:       { limit: 10,      remaining: 10 },
+            starter:    { limit: 1000,    remaining: 1000 },
+            pro:        { limit: 10000,   remaining: 10000 },
+            enterprise: { limit: Infinity, remaining: Infinity }
         };
+        var plan = (window.apiKeyLimits && window.apiKeyLimits.plan) || 'free';
+        var d = demos[plan] || demos.free;
+        
+        // Cumule local sur la démo
+        var finalToday = local.today;
+        var finalMonth = local.month;
+        var finalRemaining = d.limit === Infinity ? Infinity : Math.max(0, d.limit - finalMonth);
+        
+        // Logs simulés
+        var logs = [];
+        if (finalMonth > 0) {
+            logs.push({ endpoint: '/api/v1/search', total: Math.ceil(finalMonth * 0.7) });
+            logs.push({ endpoint: '/api/v1/me', total: Math.ceil(finalMonth * 0.2) });
+            logs.push({ endpoint: '/api/v1/usage', total: Math.ceil(finalMonth * 0.1) });
+        }
+        
+        applyStatsToUI({
+            today: finalToday,
+            month: finalMonth,
+            limit: d.limit,
+            remaining: finalRemaining,
+            by_endpoint: logs
+        });
+        
+        window.updateSidebarStatsBadge();
+    }
+};
+
+/* --- Applique les stats à l'UI --- */
+function applyStatsToUI(stats) {
+    var todayEl = document.querySelector('[data-stat="today"]');
+    var monthEl = document.querySelector('[data-stat="month"]');
+    var limitEl = document.querySelector('[data-stat="limit"]');
+    var remainingEl = document.querySelector('[data-stat="remaining"]');
+    
+    if (todayEl) todayEl.textContent = stats.today;
+    if (monthEl) monthEl.textContent = stats.month;
+    if (limitEl) limitEl.textContent = stats.limit === Infinity ? '∞' : stats.limit;
+    if (remainingEl) remainingEl.textContent = stats.remaining === Infinity ? '∞' : stats.remaining;
+    
+    var usageCount = document.getElementById('usageCount');
+    var usageBarFill = document.getElementById('usageBarFill');
+    
+    if (usageCount) {
+        var limitDisplay = stats.limit === Infinity ? '∞' : stats.limit;
+        usageCount.textContent = stats.month + ' / ' + limitDisplay;
+    }
+    if (usageBarFill) {
+        var percent = stats.limit === Infinity ? 5 : Math.min(100, (stats.month / (stats.limit || 1)) * 100);
+        usageBarFill.style.width = percent + '%';
+        if (percent >= 90) usageBarFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+        else if (percent >= 70) usageBarFill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+        else usageBarFill.style.background = 'linear-gradient(90deg, #10b981, #22c55e)';
+    }
+    
+    var logsContainer = document.getElementById('logsContainer');
+    if (logsContainer) {
+        if (stats.by_endpoint && stats.by_endpoint.length > 0) {
+            logsContainer.innerHTML = stats.by_endpoint.map(function(e) {
+                return '<div class="error-row"><span class="error-code wide" style="color:#fff;">' + e.endpoint + '</span><span class="error-desc">' + e.total + ' requête(s)</span></div>';
+            }).join('');
+        } else {
+            logsContainer.innerHTML = '<div class="log-empty"><p>Aucune requête ce mois</p><span style="font-size:12px;color:#7a7a7a;">Les requêtes API apparaîtront ici</span></div>';
+        }
+    }
+}
 
         /* ============================================
            RECHERCHE FAMILIALE PAR PIVOT
@@ -3670,7 +3764,63 @@ Fais la recherche et affiche les résultats.
                 else btn = '<button class="sub-plan-btn upgrade" onclick="window.open(\'https://discord.gg/jf6QRZHaTB\',\'_blank\')">Nous contacter</button>';
                 return '<div class="sub-plan-card ' + (isCurrent ? 'current' : '') + '"><div class="sub-plan-name">' + names[planKey] + '</div><div class="sub-plan-price">' + price + (price !== 'Sur devis' ? '<span>/mois</span>' : '') + '</div>' + btn + '</div>';
             }
-            container.innerHTML = '<div class="sub-current"><div class="sub-current-header"><div class="sub-current-plan"><div class="sub-current-plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sub-current-plan-text"><h4>Plan ' + (planLabels[plan] || 'Free') + '</h4><span>' + (planPrices[plan] || '0€') + ' / mois</span></div></div><div class="sub-status-badge ' + statusBadgeClass + '"><span class="sub-status-dot"></span>' + statusText + '</div></div><div class="sub-details"><div class="sub-detail-item"><div class="sub-detail-label">Plan actuel</div><div class="sub-detail-value">' + (planLabels[plan] || 'Free') + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Statut</div><div class="sub-detail-value">' + statusText + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">' + periodEndStr + '</div></div></div><div class="sub-actions">' + (plan === 'free' ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') + '</div></div><div class="sub-plans"><div class="sub-plans-title">Tous les plans</div><div class="sub-plans-grid">' + renderPlanCard('free', plan, '0€', '0') + renderPlanCard('starter', plan, '9,99€', 'starter') + renderPlanCard('pro', plan, '29,99€', 'pro') + renderPlanCard('enterprise', plan, 'Sur devis', null) + '</div></div>';
+container.innerHTML = 
+    '<div class="sub-current">' +
+        '<div class="sub-current-header">' +
+            '<div class="sub-current-plan">' +
+                '<div class="sub-current-plan-icon">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' +
+                '</div>' +
+                '<div class="sub-current-plan-text">' +
+                    '<h4>Plan ' + (planLabels[plan] || 'Free') + '</h4>' +
+                    '<span>' + (planPrices[plan] || '0€') + ' / mois</span>' +
+                '</div>' +
+            '</div>' +
+            '<div class="sub-status-badge ' + statusBadgeClass + '">' +
+                '<span class="sub-status-dot"></span>' + statusText +
+            '</div>' +
+        '</div>' +
+        
+        '<div class="sub-details">' +
+            '<div class="sub-detail-item">' +
+                '<div class="sub-detail-label">Plan actuel</div>' +
+                '<div class="sub-detail-value">' + (planLabels[plan] || 'Free') + '</div>' +
+            '</div>' +
+            '<div class="sub-detail-item">' +
+                '<div class="sub-detail-label">Statut</div>' +
+                '<div class="sub-detail-value">' + statusText + '</div>' +
+            '</div>' +
+            '<div class="sub-detail-item">' +
+                '<div class="sub-detail-label">Prochaine facture</div>' +
+                '<div class="sub-detail-value">' + periodEndStr + '</div>' +
+            '</div>' +
+        '</div>' +
+        
+        '<div class="sub-actions">' +
+            (plan === 'free' 
+                ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' +
+                  '<button class="sub-btn crypto" onclick="openCryptoPlansModal()">' +
+                      '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="margin-right:6px;"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.328-.525 2.1c-.347-.086-.703-.168-1.058-.25l.53-2.11-1.31-.33-.538 2.15c-.284-.065-.562-.13-.834-.198l.004-.014-1.815-.453-.35 1.405s.974.223.953.237c.532.133.628.485.612.764l-.618 2.48c.037.009.085.022.138.042l-.14-.035-.867 3.474c-.066.163-.233.408-.607.315.013.02-.953-.238-.953-.238l-.653 1.507 1.714.427c.32.08.63.164.94.243l-.545 2.176 1.31.328.54-2.15c.36.095.705.185 1.043.27l-.538 2.14 1.315.328.544-2.17c2.243.425 3.927.254 4.636-1.775.57-1.635-.028-2.58-1.21-3.195.86-.198 1.508-.765 1.68-1.936zM16.92 15.31c-.4 1.617-3.15.743-4.04.523l.72-2.888c.888.222 3.738.663 3.32 2.365zm.406-4.288c-.366 1.472-2.66.724-3.404.54l.653-2.62c.744.185 3.138.532 2.75 2.08z"/></svg>' +
+                      'Payer en crypto' +
+                  '</button>'
+                : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>' +
+                  '<button class="sub-btn crypto" onclick="openCryptoPlansModal()">' +
+                      '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="margin-right:6px;"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.328-.525 2.1c-.347-.086-.703-.168-1.058-.25l.53-2.11-1.31-.33-.538 2.15c-.284-.065-.562-.13-.834-.198l.004-.014-1.815-.453-.35 1.405s.974.223.953.237c.532.133.628.485.612.764l-.618 2.48c.037.009.085.022.138.042l-.14-.035-.867 3.474c-.066.163-.233.408-.607.315.013.02-.953-.238-.953-.238l-.653 1.507 1.714.427c.32.08.63.164.94.243l-.545 2.176 1.31.328.54-2.15c.36.095.705.185 1.043.27l-.538 2.14 1.315.328.544-2.17c2.243.425 3.927.254 4.636-1.775.57-1.635-.028-2.58-1.21-3.195.86-.198 1.508-.765 1.68-1.936zM16.92 15.31c-.4 1.617-3.15.743-4.04.523l.72-2.888c.888.222 3.738.663 3.32 2.365zm.406-4.288c-.366 1.472-2.66.724-3.404.54l.653-2.62c.744.185 3.138.532 2.75 2.08z"/></svg>' +
+                      'Renouveler en crypto' +
+                  '</button>'
+            ) +
+        '</div>' +
+    '</div>' +
+    
+    '<div class="sub-plans">' +
+        '<div class="sub-plans-title">Tous les plans</div>' +
+        '<div class="sub-plans-grid">' +
+            renderPlanCard('free', plan, '0€', '0') +
+            renderPlanCard('starter', plan, '9,99€', 'starter') +
+            renderPlanCard('pro', plan, '29,99€', 'pro') +
+            renderPlanCard('enterprise', plan, 'Sur devis', null) +
+        '</div>' +
+    '</div>';>';
         };
 
         window.openTarifs = function() { window.location.href = '/tarifs.html'; };
