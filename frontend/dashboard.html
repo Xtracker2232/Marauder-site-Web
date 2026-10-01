@@ -19,6 +19,7 @@
             --glass-3: rgba(255,255,255,0.09);
             --stroke-1: rgba(255,255,255,0.08);
             --stroke-2: rgba(255,255,255,0.14);
+            --stroke-3: rgba(255,255,255,0.22);
             --text-1: #ffffff;
             --text-2: #b8b8b8;
             --text-3: #7a7a7a;
@@ -100,7 +101,6 @@
         .mc-btn-secondary { background: rgba(255,255,255,0.04); color: var(--text-2); border: 1px solid var(--stroke-1); }
         .mc-btn-secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .mc-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 4px 20px rgba(239,68,68,0.3); }
-        .mc-btn-danger:hover { transform: translateY(-2px); }
 
         /* SIDEBAR */
         .sidebar {
@@ -120,8 +120,7 @@
             border-bottom: 1px solid var(--stroke-1);
             margin-bottom: 16px;
         }
-        .sidebar-header .logo { width: 32px; height: 32px; color: #fff; filter: drop-shadow(0 0 12px rgba(255,255,255,0.4)); transition: transform 0.4s; }
-        .sidebar-header:hover .logo { transform: rotate(180deg) scale(1.1); }
+        .sidebar-header .logo { width: 32px; height: 32px; color: #fff; filter: drop-shadow(0 0 12px rgba(255,255,255,0.4)); }
         .sidebar-header span {
             font-size: 19px; font-weight: 800;
             background: linear-gradient(135deg, #fff, #888);
@@ -225,11 +224,6 @@
         .page-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 36px;
-            animation: fadeUp 0.6s cubic-bezier(0.4,0,0.2,1);
-        }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         .page-header h2 {
             font-size: 32px; font-weight: 800;
@@ -257,7 +251,6 @@
             padding: 5px;
             display: flex; gap: 4px;
             margin-bottom: 24px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .search-tab {
             flex: 1; padding: 12px 18px;
@@ -271,7 +264,6 @@
         .search-tab.active {
             background: linear-gradient(135deg, #fff, #e8e8e8);
             color: #000;
-            box-shadow: 0 4px 16px rgba(255,255,255,0.15);
             transform: translateY(-1px);
         }
         .search-tab-content { display: none; }
@@ -293,7 +285,6 @@
             content: '';
             position: absolute; top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-            opacity: 0.6;
         }
         .section:hover { border-color: var(--stroke-2); }
         .section-header {
@@ -305,10 +296,7 @@
             transition: background 0.3s;
         }
         .section-header:hover { background: rgba(255,255,255,0.015); }
-        .section-header h3 {
-            font-size: 15px; font-weight: 600; color: #fff;
-            pointer-events: none;
-        }
+        .section-header h3 { font-size: 15px; font-weight: 600; color: #fff; pointer-events: none; }
         .section-header .toggle-icon {
             color: var(--text-3);
             transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), color 0.3s;
@@ -377,7 +365,7 @@
             margin-top: 24px; padding-top: 24px;
             border-top: 1px solid var(--stroke-1);
         }
-        .btn-primary, #searchBtn, #searchBtnPro, #lookupBtn, #investigateBtn {
+        .btn-primary, #searchBtn, #searchBtnPro, #lookupBtn {
             background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
             color: #000; border: none;
             padding: 13px 32px;
@@ -389,7 +377,7 @@
             gap: 10px; position: relative; overflow: hidden;
             box-shadow: 0 6px 24px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
         }
-        .btn-primary:hover, #searchBtn:hover, #searchBtnPro:hover, #lookupBtn:hover, #investigateBtn:hover {
+        .btn-primary:hover, #searchBtn:hover, #searchBtnPro:hover, #lookupBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 36px rgba(255,255,255,0.2);
         }
@@ -420,7 +408,6 @@
             padding: 28px;
             display: flex; gap: 16px; align-items: end;
             margin-bottom: 28px; flex-wrap: wrap;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .lookup-form .form-group { flex: 1; min-width: 180px; margin-bottom: 0; }
         .lookup-form .btn-primary { width: auto; }
@@ -621,7 +608,6 @@
             border: 1px solid var(--stroke-1);
             border-radius: 22px;
             padding: 36px; max-width: 520px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .profile-card .profile-row {
             display: flex; justify-content: space-between;
@@ -753,7 +739,6 @@
             border: 1px solid var(--stroke-1);
             border-radius: 22px;
             overflow: hidden; position: relative;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         #grapheCanvas { width: 100%; height: 100%; display: block; }
 
@@ -901,9 +886,7 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            transition: transform 0.2s;
         }
-        .mobile-menu-btn:active { transform: scale(0.92); }
         .sidebar-backdrop {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.6);
@@ -948,7 +931,6 @@
             border: 1px solid var(--stroke-1);
             border-radius: 28px;
             padding: 36px 40px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .api-hero-content { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
         .api-hero-left { display: flex; align-items: center; gap: 22px; }
@@ -1005,7 +987,6 @@
             border: 1px solid var(--stroke-1);
             border-radius: 28px;
             overflow: hidden;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .api-card-header {
             display: flex; align-items: center; justify-content: space-between;
@@ -1033,7 +1014,6 @@
             color: #000; font-size: 13px; font-weight: 700;
             font-family: inherit; cursor: pointer;
             transition: all 0.3s; white-space: nowrap;
-            box-shadow: 0 4px 16px rgba(255,255,255,0.12);
         }
         .api-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,255,255,0.2); }
 
@@ -1090,10 +1070,10 @@
             font-family: inherit; cursor: pointer;
             transition: all 0.3s;
         }
-        .api-key-btn svg { width: 13px; height: 13px; }
         .api-key-btn:hover { background: var(--glass-1); color: #fff; }
         .api-key-btn.danger:hover { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); color: var(--danger); }
 
+        /* DOCS */
         .api-docs { padding: 36px 40px; max-width: 940px; }
         .doc-section {
             margin-bottom: 44px; padding-bottom: 40px;
@@ -1111,6 +1091,7 @@
             background: var(--glass-1);
             border: 1px solid var(--stroke-1);
             border-radius: 10px;
+            flex-shrink: 0;
         }
         .doc-section h4 .doc-icon svg { width: 16px; height: 16px; color: #fff; }
         .doc-section p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 16px; }
@@ -1332,7 +1313,6 @@
             border-radius: 22px;
             padding: 36px; max-width: 540px; width: 100%;
             box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-            animation: modalIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
         }
         .api-key-modal-content h3 {
             display: flex; align-items: center; gap: 12px;
@@ -1363,58 +1343,6 @@
         }
         .api-key-warning svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 
-        /* DEV OVERLAY */
-        .api-dev-overlay {
-            position: fixed;
-            top: 0; left: 240px; right: 0; bottom: 0;
-            background: var(--bg-deep);
-            display: none;
-            align-items: center; justify-content: center;
-            flex-direction: column; gap: 22px;
-            z-index: 9998; padding: 20px; text-align: center;
-        }
-        .api-dev-overlay.active { display: flex; }
-        .api-dev-icon {
-            width: 88px; height: 88px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(245,158,11,0.08);
-            border: 1px solid rgba(245,158,11,0.25);
-            border-radius: 24px;
-        }
-        .api-dev-icon svg { width: 40px; height: 40px; color: var(--warn); }
-        .api-dev-title { font-size: 32px; font-weight: 800; color: #fff; }
-        .api-dev-subtitle { font-size: 15px; color: var(--text-2); line-height: 1.7; max-width: 500px; }
-        .api-dev-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 11px 22px;
-            background: rgba(245,158,11,0.08);
-            border: 1px solid rgba(245,158,11,0.3);
-            border-radius: 100px;
-            color: var(--warn);
-            font-size: 12px; font-weight: 700;
-            text-transform: uppercase;
-        }
-        .api-dev-dot {
-            width: 6px; height: 6px;
-            background: var(--warn); border-radius: 50%;
-            box-shadow: 0 0 12px var(--warn);
-            animation: apiPulse 1.8s infinite;
-        }
-        @keyframes apiPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .api-dev-btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 15px 30px;
-            background: #5865F2; color: #fff;
-            border: none; border-radius: 14px;
-            font-size: 14px; font-weight: 700;
-            font-family: inherit; cursor: pointer;
-            transition: all 0.3s; text-decoration: none;
-            box-shadow: 0 8px 32px rgba(88,101,242,0.3);
-        }
-        .api-dev-btn:hover { background: #4752c4; transform: translateY(-3px); }
-        .api-dev-btn svg { width: 20px; height: 20px; }
-        @media (max-width: 768px) { .api-dev-overlay { left: 0; } }
-
         /* THANKS MODAL */
         .thanks-modal {
             position: fixed; inset: 0;
@@ -1431,7 +1359,6 @@
             padding: 44px 36px;
             max-width: 520px; width: 100%;
             text-align: center; position: relative;
-            box-shadow: 0 30px 100px rgba(0,0,0,0.7);
             animation: modalIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
         }
         .thanks-modal-close {
@@ -1444,7 +1371,6 @@
             color: var(--text-3);
             cursor: pointer;
         }
-        .thanks-modal-close:hover { background: var(--glass-1); color: #fff; }
         .thanks-modal-icon {
             width: 96px; height: 96px;
             margin: 0 auto 26px;
@@ -1476,9 +1402,8 @@
             border-radius: 12px;
             font-size: 14px; font-weight: 700;
             font-family: inherit; cursor: pointer;
-            transition: all 0.3s; width: 100%;
+            width: 100%;
         }
-        .thanks-modal .thanks-modal-btn:hover { transform: translateY(-2px); }
 
         /* SUBSCRIPTION */
         .sub-current {
@@ -1543,7 +1468,6 @@
         .sub-btn svg { width: 15px; height: 15px; }
         .sub-btn.primary { background: linear-gradient(135deg, #fff, #e0e0e0); color: #000; }
         .sub-btn.primary:hover { transform: translateY(-2px); }
-        .sub-btn.secondary { background: var(--glass-1); border: 1px solid var(--stroke-1); color: var(--text-2); }
         .sub-plans { margin-top: 28px; }
         .sub-plans-title {
             font-size: 13px; font-weight: 800; color: #fff;
@@ -1589,180 +1513,6 @@
         .site-footer a { color: var(--text-3); text-decoration: none; font-size: 13px; }
         .site-footer a:hover { color: #fff; }
         .site-footer span { color: var(--text-3); font-size: 13px; }
-
-        /* CRYPTO MODAL */
-        .crypto-modal {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(24px);
-            display: none; align-items: center; justify-content: center;
-            z-index: 99999; padding: 20px;
-        }
-        .crypto-modal.active { display: flex; }
-        .crypto-modal-box {
-            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(15,15,15,0.98));
-            border: 1px solid var(--stroke-2);
-            border-radius: 22px;
-            padding: 36px; max-width: 580px; width: 100%;
-            max-height: 90vh; overflow-y: auto;
-            position: relative;
-            box-shadow: 0 30px 100px rgba(0,0,0,0.7);
-            animation: modalIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        .crypto-modal-close {
-            position: absolute; top: 18px; right: 18px;
-            width: 38px; height: 38px;
-            background: transparent;
-            border: 1px solid var(--stroke-1);
-            border-radius: 10px;
-            color: var(--text-3);
-            cursor: pointer; font-size: 20px;
-            font-family: inherit;
-            transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .crypto-modal-close:hover { background: var(--glass-1); color: #fff; }
-        .crypto-modal-step { display: none; }
-        .crypto-modal-step.active { display: block; animation: pageIn 0.4s; }
-        .crypto-modal-header { text-align: center; margin-bottom: 28px; }
-        .crypto-modal-header h2 { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        .crypto-modal-header p { font-size: 13.5px; color: var(--text-3); }
-        .crypto-modal-coins {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 10px; margin-bottom: 24px;
-        }
-        .crypto-modal-coin {
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
-            padding: 18px 10px;
-            background: var(--glass-1);
-            border: 1px solid var(--stroke-1);
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: #fff; font-family: inherit;
-        }
-        .crypto-modal-coin:hover { border-color: var(--stroke-2); transform: translateY(-3px); }
-        .crypto-modal-coin.selected { border-color: rgba(255,255,255,0.5); background: var(--glass-3); transform: translateY(-3px); }
-        .crypto-modal-coin-logo { width: 42px; height: 42px; }
-        .crypto-modal-coin-logo svg { width: 42px; height: 42px; display: block; }
-        .crypto-modal-coin-name { font-size: 13px; font-weight: 700; color: #fff; }
-        .crypto-modal-coin-network { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
-        .crypto-modal-btn {
-            width: 100%; padding: 16px;
-            background: linear-gradient(135deg, #fff, #e0e0e0);
-            color: #000; border: none;
-            border-radius: 12px;
-            font-size: 14px; font-weight: 700;
-            font-family: inherit; cursor: pointer;
-            transition: all 0.3s;
-        }
-        .crypto-modal-btn:hover:not(:disabled) { transform: translateY(-2px); }
-        .crypto-modal-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .crypto-modal-status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-        .crypto-modal-status-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 8px 16px; border-radius: 100px;
-            font-size: 11px; font-weight: 700;
-            text-transform: uppercase;
-        }
-        .crypto-modal-status-badge.waiting { background: rgba(245,158,11,0.1); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
-        .crypto-modal-status-badge.confirming { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
-        .crypto-modal-status-badge.confirmed { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
-        .crypto-modal-status-badge.expired { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
-        .crypto-modal-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-        .crypto-modal-timer { font-family: 'Courier New', monospace; font-size: 13px; color: var(--text-2); font-weight: 700; }
-        .crypto-modal-amount {
-            background: var(--glass-1);
-            border: 1px solid var(--stroke-1);
-            border-radius: 14px;
-            padding: 22px; text-align: center;
-            margin-bottom: 18px;
-        }
-        .crypto-modal-amount-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; font-weight: 700; }
-        .crypto-modal-amount-value { font-size: 26px; font-weight: 800; color: #fff; font-family: 'Courier New', monospace; word-break: break-all; }
-        .crypto-modal-amount-fiat { font-size: 12px; color: var(--text-3); margin-top: 8px; }
-        .crypto-modal-address {
-            background: var(--glass-1);
-            border: 1px solid var(--stroke-1);
-            border-radius: 14px;
-            padding: 18px; margin-bottom: 18px;
-        }
-        .crypto-modal-address-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; margin-bottom: 12px; font-weight: 700; letter-spacing: 0.8px; }
-        .crypto-modal-address-value {
-            font-family: 'Courier New', monospace;
-            font-size: 12px; color: #fff;
-            word-break: break-all;
-            padding: 14px; background: rgba(0,0,0,0.4);
-            border: 1px solid var(--stroke-1);
-            border-radius: 10px;
-            margin-bottom: 12px;
-            user-select: all;
-            line-height: 1.5;
-        }
-        .crypto-modal-copy {
-            width: 100%; padding: 12px;
-            background: linear-gradient(135deg, #fff, #e0e0e0);
-            color: #000; border: none;
-            border-radius: 10px;
-            font-size: 13px; font-weight: 700;
-            font-family: inherit; cursor: pointer;
-            transition: all 0.3s;
-        }
-        .crypto-modal-copy:hover { transform: translateY(-2px); }
-        .crypto-modal-copy.copied { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
-        .crypto-modal-qr {
-            display: flex; justify-content: center;
-            padding: 18px; background: #fff;
-            border-radius: 14px;
-            margin-bottom: 18px;
-        }
-        .crypto-modal-qr img { width: 170px; height: 170px; display: block; }
-        .crypto-modal-progress { margin-bottom: 18px; }
-        .crypto-modal-progress-bar {
-            height: 6px; background: rgba(255,255,255,0.05);
-            border-radius: 100px; overflow: hidden;
-            margin-bottom: 10px;
-        }
-        .crypto-modal-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #fff, #a0a0a0);
-            border-radius: 100px;
-            transition: width 0.6s; width: 0%;
-        }
-        .crypto-modal-progress-label {
-            display: flex; justify-content: space-between;
-            font-size: 11px; color: var(--text-3); font-weight: 700;
-        }
-        .crypto-modal-info {
-            padding: 16px;
-            background: rgba(16,185,129,0.05);
-            border: 1px solid rgba(16,185,129,0.25);
-            border-radius: 12px;
-            color: var(--text-2);
-            font-size: 12.5px; line-height: 1.6;
-            text-align: center;
-        }
-        .crypto-modal-info strong { color: var(--success); }
-        .crypto-modal-confirmed { text-align: center; padding: 24px 0; }
-        .crypto-modal-confirmed-icon {
-            width: 88px; height: 88px;
-            margin: 0 auto 24px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(16,185,129,0.1);
-            border: 2px solid rgba(16,185,129,0.35);
-            border-radius: 50%;
-            color: var(--success);
-            font-size: 44px; font-weight: 700;
-        }
-        .crypto-modal-confirmed h2 { font-size: 24px; color: #fff; margin-bottom: 10px; }
-        .crypto-modal-confirmed p { font-size: 14px; color: var(--text-2); margin-bottom: 26px; line-height: 1.7; }
-
-        @media (max-width: 600px) {
-            .crypto-modal-box { padding: 26px 20px; }
-            .crypto-modal-coins { grid-template-columns: repeat(2, 1fr); }
-            .crypto-modal-amount-value { font-size: 20px; }
-            .crypto-modal-qr img { width: 140px; height: 140px; }
-        }
     </style>
 </head>
 <body>
@@ -1795,9 +1545,7 @@
                 <path d="M12 6v6l4 2"/>
             </svg>
             Marauder reflechit
-            <span class="dot">.</span>
-            <span class="dot">.</span>
-            <span class="dot">.</span>
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
         </div>
         <div class="neon-bar-container"><div class="neon-bar"></div></div>
         <div class="loading-text">Analyse en cours</div>
@@ -1870,56 +1618,6 @@
         </div>
     </div>
 
-    <!-- CRYPTO MODAL -->
-    <div id="cryptoModal" class="crypto-modal">
-        <div class="crypto-modal-box">
-            <button class="crypto-modal-close" onclick="closeCryptoModal()">×</button>
-            <div id="cryptoModalStep1" class="crypto-modal-step active">
-                <div class="crypto-modal-header"><h2>Paiement Crypto</h2><p>Choisissez votre crypto-monnaie</p></div>
-                <div class="crypto-modal-coins" id="cryptoModalCoins"></div>
-                <div style="margin-bottom:18px;">
-                    <label style="display:block;font-size:12.5px;font-weight:600;color:#7a7a7a;margin-bottom:8px;">Votre email</label>
-                    <input type="email" id="cryptoModalEmail" placeholder="votre@email.com" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" />
-                </div>
-                <button class="crypto-modal-btn" id="cryptoModalContinue" disabled onclick="confirmCryptoModalChoice()">Continuer</button>
-            </div>
-            <div id="cryptoModalStep2" class="crypto-modal-step">
-                <div class="crypto-modal-header"><h2>Envoyez le paiement</h2><p id="cryptoModalSubtitle">—</p></div>
-                <div class="crypto-modal-status">
-                    <span class="crypto-modal-status-badge waiting" id="cryptoModalStatusBadge">
-                        <span class="crypto-modal-status-dot"></span>
-                        <span id="cryptoModalStatusText">En attente</span>
-                    </span>
-                    <span class="crypto-modal-timer" id="cryptoModalTimer">--:--</span>
-                </div>
-                <div class="crypto-modal-amount">
-                    <div class="crypto-modal-amount-label">Montant exact</div>
-                    <div class="crypto-modal-amount-value" id="cryptoModalAmount">0.00</div>
-                    <div class="crypto-modal-amount-fiat" id="cryptoModalAmountFiat">≈ 0.00 €</div>
-                </div>
-                <div class="crypto-modal-address">
-                    <div class="crypto-modal-address-label">Adresse de réception</div>
-                    <div class="crypto-modal-address-value" id="cryptoModalAddress">—</div>
-                    <button class="crypto-modal-copy" id="cryptoModalCopyBtn" onclick="copyCryptoModalAddress()">Copier l'adresse</button>
-                </div>
-                <div class="crypto-modal-qr" id="cryptoModalQrBox" style="display:none;"><img id="cryptoModalQrImg" src="" alt="QR Code"></div>
-                <div class="crypto-modal-progress">
-                    <div class="crypto-modal-progress-bar"><div class="crypto-modal-progress-fill" id="cryptoModalProgressFill"></div></div>
-                    <div class="crypto-modal-progress-label"><span>Progression</span><span id="cryptoModalProgressText">0%</span></div>
-                </div>
-                <div class="crypto-modal-info">✅ <strong>Vous pouvez fermer cette fenêtre.</strong><br>Le paiement sera détecté automatiquement.</div>
-            </div>
-            <div id="cryptoModalStep3" class="crypto-modal-step">
-                <div class="crypto-modal-confirmed">
-                    <div class="crypto-modal-confirmed-icon">✓</div>
-                    <h2>Paiement confirmé !</h2>
-                    <p>Votre abonnement est actif.<br>Merci pour votre confiance.</p>
-                    <button class="crypto-modal-btn" onclick="finishCryptoModal()">Accéder au dashboard</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- BOUTON MENU MOBILE -->
     <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
@@ -1984,7 +1682,6 @@
                 <button class="search-tab" data-tab="pro">Recherche Pro</button>
             </div>
 
-            <!-- TAB FRENCH -->
             <div id="tab-french" class="search-tab-content active">
                 <div class="section">
                     <div class="section-header"><h3>Identite</h3><svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
@@ -2061,7 +1758,6 @@
                 </div>
             </div>
 
-            <!-- TAB PRO -->
             <div id="tab-pro" class="search-tab-content">
                 <div class="section">
                     <div class="section-header"><h3>Identite Pro</h3><svg class="toggle-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg></div>
@@ -2178,12 +1874,25 @@
                 </div>
 
                 <div class="api-tabs">
-                    <button class="api-tab active" data-api-tab="keys">Clés API</button>
-                    <button class="api-tab" data-api-tab="docs">Documentation</button>
-                    <button class="api-tab" data-api-tab="stats">Statistiques</button>
-                    <button class="api-tab" data-api-tab="subscription">Mon abonnement</button>
+                    <button class="api-tab active" data-api-tab="keys">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Clés API
+                    </button>
+                    <button class="api-tab" data-api-tab="docs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Documentation
+                    </button>
+                    <button class="api-tab" data-api-tab="stats">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Statistiques
+                    </button>
+                    <button class="api-tab" data-api-tab="subscription">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Mon abonnement
+                    </button>
                 </div>
 
+                <!-- TAB KEYS -->
                 <div id="api-tab-keys" class="api-tab-content active">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -2191,7 +1900,7 @@
                                 <div class="api-card-header-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 </div>
-                                <div class="api-card-header-text"><h3>Vos clés API</h3><p>Gérez vos clés d'accès</p></div>
+                                <div class="api-card-header-text"><h3>Vos clés API</h3><p>Gérez vos clés d'accès à l'API Marauder</p></div>
                             </div>
                         </div>
                         <div id="apiKeysList" class="api-keys-list">
@@ -2200,44 +1909,173 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 </div>
                                 <p>Aucune clé API</p>
-                                <span>Générez votre première clé</span>
+                                <span>Générez votre première clé pour commencer</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- TAB DOCS — DOCUMENTATION COMPLÈTE -->
                 <div id="api-tab-docs" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
                             <div class="api-card-header-info">
                                 <div class="api-card-header-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
                                 </div>
-                                <div class="api-card-header-text"><h3>Documentation</h3><p>Guide complet de l'API v1</p></div>
+                                <div class="api-card-header-text">
+                                    <h3>Documentation API v1</h3>
+                                    <p>Guide complet — tous les endpoints, exemples et limites</p>
+                                </div>
                             </div>
                         </div>
+
                         <div class="api-docs">
+
+                            <!-- 1. INFORMATIONS GÉNÉRALES -->
                             <div class="doc-section">
-                                <h4>Introduction</h4>
-                                <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique.</p>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>Informations générales</h4>
+                                <p>L'API Marauder vous permet d'accéder aux données d'investigation OSINT de manière programmatique. Automatisez vos recherches, intégrez Marauder dans vos outils existants, ou créez vos propres applications.</p>
                                 <div class="doc-info">
-                                    <span><strong>URL :</strong> <code>https://marauder.host/api/v1</code></span>
+                                    <span><strong>URL de base :</strong> <code>https://marauder.host/api/v1</code></span>
                                     <span><strong>Format :</strong> JSON</span>
-                                    <span><strong>Auth :</strong> Clé API</span>
+                                    <span><strong>Authentification :</strong> Clé API (Bearer)</span>
+                                    <span><strong>Version :</strong> v1</span>
                                 </div>
                             </div>
+
+                            <!-- 2. AUTHENTIFICATION -->
                             <div class="doc-section">
-                                <h4>Authentification</h4>
-                                <p>Toutes les requêtes incluent votre clé dans le header :</p>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Authentification</h4>
+                                <p>Toutes les requêtes doivent inclure votre clé API dans le header <code>Authorization</code> :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>Header</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>Authorization: Bearer marauder_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
                                 </div>
+                                <p style="margin-top:14px;">⚠️ <strong>Ne partagez jamais votre clé API.</strong> Elle donne accès complet à votre compte et à votre quota.</p>
                             </div>
+
+                            <!-- 3. LIMITES PAR PLAN -->
                             <div class="doc-section">
-                                <h4>Recherche multi-critères</h4>
-                                <p>Recherchez des personnes avec plus de 20 critères.</p>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Limites par plan</h4>
+                                <p>Chaque plan définit un quota mensuel de requêtes et un nombre maximum de résultats par recherche.</p>
+                                <div class="limits-grid">
+                                    <div class="limit-card"><div class="limit-name">Free</div><div class="limit-value">10<span>/mois</span></div><div class="limit-price">0€</div><div style="font-size:11px;color:#6b6b6b;margin-top:8px;">10 résultats/recherche</div></div>
+                                    <div class="limit-card"><div class="limit-name">Starter</div><div class="limit-value">1 000<span>/mois</span></div><div class="limit-price">9,99€</div><div style="font-size:11px;color:#6b6b6b;margin-top:8px;">50 résultats/recherche</div></div>
+                                    <div class="limit-card featured"><div class="limit-name">Pro</div><div class="limit-value">10 000<span>/mois</span></div><div class="limit-price">29,99€</div><div style="font-size:11px;color:#6b6b6b;margin-top:8px;">100 résultats/recherche</div></div>
+                                    <div class="limit-card"><div class="limit-name">Enterprise</div><div class="limit-value">Illimité</div><div class="limit-price">Sur devis</div><div style="font-size:11px;color:#6b6b6b;margin-top:8px;">100 résultats/recherche</div></div>
+                                </div>
+                            </div>
+
+                            <!-- 4. GET /me -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Mon profil — <code>GET /me</code></h4>
+                                <p>Récupère les informations de votre compte et l'usage de votre quota ce mois-ci.</p>
+                                <div class="endpoint"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/me</span></div>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Exemple cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>curl https://marauder.host/api/v1/me \
+  -H "Authorization: Bearer marauder_xxx"</code></pre>
+                                </div>
+                                <p style="margin-top:14px;font-size:13px;color:#a0a0a0;">Réponse :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "success": true,
+  "plan": "free",
+  "resultsPerSearch": 10,
+  "usage": {
+    "used": 4,
+    "limit": 10,
+    "remaining": 6
+  }
+}</code></pre>
+                                </div>
+                            </div>
+
+                            <!-- 5. GET /usage -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Statistiques d'utilisation — <code>GET /usage</code></h4>
+                                <p>Récupère les statistiques détaillées de votre consommation d'API (requêtes du jour, du mois, et répartition par endpoint).</p>
+                                <div class="endpoint"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/usage</span></div>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Exemple cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>curl https://marauder.host/api/v1/usage \
+  -H "Authorization: Bearer marauder_xxx"</code></pre>
+                                </div>
+                                <p style="margin-top:14px;font-size:13px;color:#a0a0a0;">Réponse :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "success": true,
+  "plan": "free",
+  "resultsPerSearch": 10,
+  "usage": {
+    "today": 2,
+    "month": 4,
+    "limit": 10,
+    "remaining": 6,
+    "by_endpoint": [
+      { "endpoint": "/api/v1/search", "total": "3" },
+      { "endpoint": "/api/v1/me", "total": "1" }
+    ]
+  }
+}</code></pre>
+                                </div>
+                            </div>
+
+                            <!-- 6. POST /search -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Recherche multi-critères — <code>POST /search</code></h4>
+                                <p>L'endpoint principal. Recherchez une personne avec plus de 20 critères combinables : nom, prénom, email, téléphone, adresse, NIR, IBAN, et bien plus.</p>
                                 <div class="endpoint"><span class="endpoint-method post">POST</span><span class="endpoint-path">/api/v1/search</span></div>
+
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:14px;">Body JSON — Tous les champs acceptés :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Body complet</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "nom_famille": "Dupont",
+  "prenom": "Jean",
+  "nom_naissance": "Martin",
+  "nom_affichage": "Jean Dupont",
+  "email": "jean@example.com",
+  "telephone": "0612345678",
+  "nom_utilisateur": "jean_d",
+  "adresse_ip": "192.168.1.1",
+  "adresse": "10 rue de la Paix",
+  "code_postal": "75001",
+  "ville": "Paris",
+  "ville_naissance": "Lyon",
+  "date_naissance": "1990-06-15",
+  "jour_naissance": 15,
+  "mois_naissance": 6,
+  "annee_naissance": "1990",
+  "genre": "M",
+  "steam_id": "steam:110000...",
+  "fivem_license": "license:abc123...",
+  "discord_id": "834855528869265459",
+  "xbox_live_id": "xbl:2535423154...",
+  "live_id": "live:844425868261",
+  "fivem_license2": "license2:def456...",
+  "nir": "1234567890123",
+  "iban": "FR76...",
+  "bic": "BNPAFRPP",
+  "vin_plaque": "AB-123-CD",
+  "flexible": true,
+  "per_page": 50
+}</code></pre>
+                                </div>
+
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Paramètres spéciaux :</p>
+                                <div class="errors-table">
+                                    <div class="error-row"><span class="error-code" style="width:120px;">flexible</span><span class="error-desc">booléen — <code>true</code> = recherche approximative (tolère les fautes et variations)</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:120px;">per_page</span><span class="error-desc">nombre — Nombre de résultats par page (limité par votre plan)</span></div>
+                                </div>
+
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Exemple cURL :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>Exemple</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>curl -X POST https://marauder.host/api/v1/search \
@@ -2245,11 +2083,139 @@
   -H "Content-Type: application/json" \
   -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
                                 </div>
+
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Réponse :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "success": true,
+  "mock": false,
+  "data": {
+    "results": [
+      {
+        "nom_famille": "Dupont",
+        "prenom": "Jean",
+        "email": "jean@example.com",
+        "telephone": "0612345678",
+        "ville": "Paris",
+        "_confidence": 50,
+        "_sources": ["Zen Mobile", "Facebook"]
+      }
+    ]
+  },
+  "meta": {
+    "total": 946,
+    "returned": 10,
+    "plan_limit": 10,
+    "limited": true,
+    "total_before_limit": 946,
+    "page": 1,
+    "pages": 95,
+    "per_page": 10,
+    "took_ms": 7,
+    "maintenance": false,
+    "warning": null
+  }
+}</code></pre>
+                                </div>
+
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Champs spéciaux de réponse :</p>
+                                <div class="errors-table">
+                                    <div class="error-row"><span class="error-code" style="width:140px;">_confidence</span><span class="error-desc">Score de confiance du résultat (0-100)</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">_sources</span><span class="error-desc">Sources d'où viennent les données</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.total</span><span class="error-desc">Nombre total de résultats trouvés</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.returned</span><span class="error-desc">Nombre de résultats retournés (limité par ton plan)</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.limited</span><span class="error-desc"><code>true</code> si les résultats ont été tronqués</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.pages</span><span class="error-desc">Nombre total de pages disponibles</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.took_ms</span><span class="error-desc">Temps de réponse en millisecondes</span></div>
+                                    <div class="error-row"><span class="error-code" style="width:140px;">meta.maintenance</span><span class="error-desc"><code>true</code> si le fournisseur est en maintenance</span></div>
+                                </div>
                             </div>
+
+                            <!-- 7. GET /lookup -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Lookup rapide — <code>GET /lookup/:type/:value</code> ❌</h4>
+                                <p>⚠️ <strong>Cette route est actuellement INDISPONIBLE</strong> car notre fournisseur de données ne propose pas l'endpoint lookup.</p>
+                                <div class="endpoint" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/lookup/:type/:value</span></div>
+                                <p style="font-size:13px;color:#a0a0a0;">Types disponibles : <code>email</code>, <code>phone</code>, <code>iban</code></p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Réponse quand appelée</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "error": "upstream_unavailable",
+  "message": "Le fournisseur de données est temporairement indisponible."
+}</code></pre>
+                                </div>
+                                <div style="margin-top:14px; padding:14px 18px; background: rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.25); border-radius:12px; color:#f59e0b; font-size:13px; line-height:1.6;">
+                                    ⚠️ <strong>Utilisez <code>/search</code> à la place.</strong><br>
+                                    Exemple : <code>{"email": "jean@example.com"}</code> via <code>POST /search</code>
+                                </div>
+                            </div>
+
+                            <!-- 8. CODES D'ERREUR -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>Codes d'erreur</h4>
+                                <div class="errors-table">
+                                    <div class="error-row"><span class="error-code">200</span><span class="error-desc">Succès</span></div>
+                                    <div class="error-row"><span class="error-code">400</span><span class="error-desc">Requête invalide (body mal formé)</span></div>
+                                    <div class="error-row"><span class="error-code">401</span><span class="error-desc">Clé API manquante ou invalide</span></div>
+                                    <div class="error-row"><span class="error-code">403</span><span class="error-desc">Accès refusé (banni, quota dépassé)</span></div>
+                                    <div class="error-row"><span class="error-code">404</span><span class="error-desc">Route ou ressource introuvable</span></div>
+                                    <div class="error-row"><span class="error-code">429</span><span class="error-desc">Quota mensuel dépassé</span></div>
+                                    <div class="error-row"><span class="error-code">500</span><span class="error-desc">Erreur serveur</span></div>
+                                    <div class="error-row"><span class="error-code">503</span><span class="error-desc">Fournisseur de données indisponible</span></div>
+                                </div>
+                            </div>
+
+                            <!-- 9. EXEMPLES DE CODE -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>Exemples de code</h4>
+                                <div class="code-tabs">
+                                    <button class="code-tab active" data-code="curl">cURL</button>
+                                    <button class="code-tab" data-code="js">JavaScript</button>
+                                    <button class="code-tab" data-code="python">Python</button>
+                                </div>
+                                <div class="code-block">
+                                    <div class="code-header"><span id="codeLangLabel">cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre id="codeExample"><code>curl -X POST https://marauder.host/api/v1/search \
+  -H "Authorization: Bearer marauder_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
+                                </div>
+                            </div>
+
+                            <!-- 10. PROMPT IA -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12.75 11h4.25a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h4.25l-.5-1.07A4.001 4.001 0 0 1 12 2z"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span>Prompt IA prêt à copier</h4>
+                                <p>Copiez-collez ce prompt dans ChatGPT / Claude / une autre IA pour qu'elle utilise votre API :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Prompt</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>---
+Tu es un assistant qui utilise l'API Marauder (OSINT).
+
+URL de base : https://marauder.host/api/v1
+Clé API : marauder_VOTRE_CLE_ICI
+
+Endpoints :
+- POST /search → recherche multi-critères
+- GET /me → infos compte + quota
+- GET /usage → stats détaillées
+
+Pour appeler l'API :
+curl https://marauder.host/api/v1/search \
+  -H "Authorization: Bearer marauder_VOTRE_CLE_ICI" \
+  -H "Content-Type: application/json" \
+  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'
+
+Fais la recherche et affiche les résultats.
+---</code></pre>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
 
+                <!-- TAB STATS -->
                 <div id="api-tab-stats" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -2271,7 +2237,7 @@
                             <div class="usage-bar-bg"><div class="usage-bar-fill" id="usageBarFill" style="width: 0%;"></div></div>
                         </div>
                         <div class="api-logs">
-                            <h4>Derniers logs</h4>
+                            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Derniers logs</h4>
                             <div class="logs-container" id="logsContainer">
                                 <div class="log-empty">
                                     <p>Aucun log pour le moment</p>
@@ -2282,6 +2248,7 @@
                     </div>
                 </div>
 
+                <!-- TAB SUBSCRIPTION -->
                 <div id="api-tab-subscription" class="api-tab-content">
                     <div class="api-card">
                         <div class="api-card-header">
@@ -2327,23 +2294,16 @@
         <a href="/cgu.html">CGU</a> · <span>Created by Index</span>
     </footer>
 
-    <!-- ============================================
-         SCRIPT UNIQUE — Tout inclus, insensible aux overrides
-         ============================================ -->
     <script>
     (function() {
         'use strict';
 
-        // =====================
         // FONCTIONS GLOBALES
-        // =====================
         window.toggleSection = function(el) {
             if (!el) return;
             var body = el.nextElementSibling;
             var icon = el.querySelector('.toggle-icon');
-            if (body && body.classList.contains('section-body')) {
-                body.classList.toggle('open');
-            }
+            if (body && body.classList.contains('section-body')) body.classList.toggle('open');
             if (icon) icon.classList.toggle('open');
         };
 
@@ -2363,9 +2323,6 @@
 
         window.customConfirm = function(title, text, onConfirm, options) {
             options = options || {};
-            var confirmText = options.confirmText || 'Confirmer';
-            var cancelText = options.cancelText || 'Annuler';
-            var danger = options.danger === true;
             var overlay = document.getElementById('confirmModal');
             var titleEl = document.getElementById('mcTitle');
             var textEl = document.getElementById('mcText');
@@ -2373,9 +2330,9 @@
             var confirmBtn = document.getElementById('mcConfirm');
             titleEl.textContent = title || 'Confirmation';
             textEl.textContent = text || 'Êtes-vous sûr ?';
-            cancelBtn.textContent = cancelText;
-            confirmBtn.textContent = confirmText;
-            confirmBtn.className = 'mc-btn ' + (danger ? 'mc-btn-danger' : 'mc-btn-primary');
+            cancelBtn.textContent = options.cancelText || 'Annuler';
+            confirmBtn.textContent = options.confirmText || 'Confirmer';
+            confirmBtn.className = 'mc-btn ' + (options.danger ? 'mc-btn-danger' : 'mc-btn-primary');
             overlay.classList.add('active');
             var cleanup = function() {
                 overlay.classList.remove('active');
@@ -2411,43 +2368,20 @@
             });
         };
 
-        // =====================
-        // DÉLÉGATION D'ÉVÉNEMENTS EN CAPTURE PHASE
-        // Intercepte tout AVANT les autres listeners — impossible à overrider
-        // =====================
+        // DÉLÉGATION CAPTURE
         document.addEventListener('click', function(e) {
-            // Section toggle
             var header = e.target.closest && e.target.closest('.section-header');
-            if (header) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.toggleSection(header);
-                return;
-            }
+            if (header) { e.preventDefault(); e.stopPropagation(); window.toggleSection(header); return; }
 
-            // Menu mobile
             var menuBtn = e.target.closest && e.target.closest('#mobileMenuBtn');
-            if (menuBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.toggleMobileMenu();
-                return;
-            }
+            if (menuBtn) { e.preventDefault(); e.stopPropagation(); window.toggleMobileMenu(); return; }
 
-            // Backdrop
             var backdrop = e.target.closest && e.target.closest('#sidebarBackdrop');
-            if (backdrop) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.closeMobileMenu();
-                return;
-            }
+            if (backdrop) { e.preventDefault(); e.stopPropagation(); window.closeMobileMenu(); return; }
 
-            // Support toggle
             var supportToggle = e.target.closest && e.target.closest('#supportToggle');
             if (supportToggle) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 supportToggle.classList.toggle('open');
                 var arrow = supportToggle.querySelector('.support-arrow');
                 if (arrow) arrow.classList.toggle('open');
@@ -2456,16 +2390,11 @@
                 return;
             }
 
-            // Navigation sidebar
             var navItem = e.target.closest && e.target.closest('.sidebar-nav > li[data-page]');
             if (navItem) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 var page = navItem.dataset.page;
-                if (page === 'discord') {
-                    window.open('https://discord.gg/jf6QRZHaTB', '_blank');
-                    return;
-                }
+                if (page === 'discord') { window.open('https://discord.gg/jf6QRZHaTB', '_blank'); return; }
                 document.querySelectorAll('.sidebar-nav > li').forEach(function(l) { l.classList.remove('active'); });
                 navItem.classList.add('active');
                 document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -2476,11 +2405,9 @@
                 return;
             }
 
-            // Logout
             var logoutBtn = e.target.closest && e.target.closest('#logoutBtn');
             if (logoutBtn) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 window.customConfirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function() {
                     localStorage.removeItem('token');
                     window.location.href = '/login.html';
@@ -2488,11 +2415,9 @@
                 return;
             }
 
-            // Search tabs
             var searchTab = e.target.closest && e.target.closest('.search-tab');
             if (searchTab) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 document.querySelectorAll('.search-tab').forEach(function(t) { t.classList.remove('active'); });
                 searchTab.classList.add('active');
                 document.querySelectorAll('.search-tab-content').forEach(function(c) { c.classList.remove('active'); });
@@ -2501,11 +2426,9 @@
                 return;
             }
 
-            // API tabs
             var apiTab = e.target.closest && e.target.closest('.api-tab');
             if (apiTab) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 document.querySelectorAll('.api-tab').forEach(function(t) { t.classList.remove('active'); });
                 apiTab.classList.add('active');
                 document.querySelectorAll('.api-tab-content').forEach(function(c) { c.classList.remove('active'); });
@@ -2519,104 +2442,27 @@
                 }
                 return;
             }
-        }, true);
 
-        // =====================
-        // INVESTIGATION OVERLAY
-        // =====================
-        window.openInvestigation = function(personData) {
-            var overlay = document.getElementById('investigationOverlay');
-            if (!overlay) return;
-            overlay.classList.add('active');
-
-            var nameEl = document.getElementById('investigationName');
-            var cityEl = document.getElementById('investigationCityLabel');
-            var confEl = document.getElementById('investigationConfidence');
-            var grid = document.getElementById('investigationInfoGrid');
-
-            personData = personData || {};
-            var prenom = personData.prenom || '';
-            var nom = personData.nom_famille || personData.nom || '';
-            var fullName = (prenom + ' ' + nom).trim() || 'Investigation';
-            if (nameEl) nameEl.textContent = fullName;
-
-            var ville = personData.ville || personData.ville_naissance || 'Paris';
-            if (cityEl) cityEl.textContent = ville;
-
-            var confidence = personData._confidence || 75;
-            if (confEl) {
-                confEl.textContent = confidence + '%';
-                confEl.className = 'investigation-confidence ' + (confidence >= 80 ? 'high' : confidence >= 50 ? 'medium' : 'low');
-            }
-
-            if (grid) {
-                var fields = [];
-                var priorityFields = ['nom_famille', 'prenom', 'nom_naissance', 'nom_affichage', 'date_naissance', 'ville_naissance', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'genre', 'nir', 'iban', 'bic', 'steam_id', 'fivem_license', 'discord_id'];
-                var importantFields = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'date_naissance', 'ville'];
-
-                priorityFields.forEach(function(key) {
-                    if (personData[key]) {
-                        var isImportant = importantFields.indexOf(key) !== -1;
-                        fields.push('<div class="investigation-info-item' + (isImportant ? ' important' : '') + '">' +
-                            '<div class="investigation-info-label">' + key.replace(/_/g, ' ') + '</div>' +
-                            '<div class="investigation-info-value">' + personData[key] + '</div>' +
-                            '</div>');
-                    }
-                });
-
-                if (personData._sources && Array.isArray(personData._sources)) {
-                    fields.push('<div class="investigation-info-item important">' +
-                        '<div class="investigation-info-label">Sources</div>' +
-                        '<div class="investigation-info-value">' + personData._sources.join(', ') + '</div>' +
-                        '</div>');
-                }
-
-                if (fields.length === 0) {
-                    fields.push('<div class="investigation-info-item"><div class="investigation-info-label">Info</div><div class="investigation-info-value">Aucune donnée disponible</div></div>');
-                }
-                grid.innerHTML = fields.join('');
-            }
-        };
-
-        window.closeInvestigation = function() {
-            var overlay = document.getElementById('investigationOverlay');
-            if (overlay) overlay.classList.remove('active');
-        };
-
-        // Délégation pour les boutons de l'overlay investigation
-        document.addEventListener('click', function(e) {
-            var invBack = e.target.closest && e.target.closest('#investigationBack');
-            if (invBack) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.closeInvestigation();
-                return;
-            }
-            var invClose = e.target.closest && e.target.closest('#investigationClose');
-            if (invClose) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.closeInvestigation();
-                return;
-            }
-            var invCopy = e.target.closest && e.target.closest('#investigationCopy');
-            if (invCopy) {
-                e.preventDefault();
-                e.stopPropagation();
-                var grid = document.getElementById('investigationInfoGrid');
-                if (grid) {
-                    var text = grid.innerText;
-                    navigator.clipboard.writeText(text).then(function() {
-                        window.showToast('Informations copiées', 'success');
-                    });
-                }
+            var codeTab = e.target.closest && e.target.closest('.code-tab');
+            if (codeTab) {
+                e.preventDefault(); e.stopPropagation();
+                document.querySelectorAll('.code-tab').forEach(function(t) { t.classList.remove('active'); });
+                codeTab.classList.add('active');
+                var lang = codeTab.dataset.code;
+                var label = document.getElementById('codeLangLabel');
+                var code = document.getElementById('codeExample');
+                var examples = {
+                    curl: 'curl -X POST https://marauder.host/api/v1/search \\\n  -H "Authorization: Bearer marauder_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"nom_famille": "Dupont", "prenom": "Jean"}\'',
+                    js: 'const response = await fetch(\'https://marauder.host/api/v1/search\', {\n  method: \'POST\',\n  headers: {\n    \'Authorization\': \'Bearer marauder_xxx\',\n    \'Content-Type\': \'application/json\'\n  },\n  body: JSON.stringify({\n    nom_famille: \'Dupont\',\n    prenom: \'Jean\'\n  })\n});\nconst data = await response.json();\nconsole.log(data);',
+                    python: 'import requests\n\nresponse = requests.post(\n    \'https://marauder.host/api/v1/search\',\n    headers={\n        \'Authorization\': \'Bearer marauder_xxx\',\n        \'Content-Type\': \'application/json\'\n    },\n    json={\'nom_famille\': \'Dupont\', \'prenom\': \'Jean\'}\n)\n\ndata = response.json()\nprint(data)'
+                };
+                if (label) label.textContent = lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python';
+                if (code) code.innerHTML = '<code>' + (examples[lang] || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
                 return;
             }
         }, true);
 
-        // =====================
         // API KEYS
-        // =====================
         var apiKeysCache = [];
         var apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
 
@@ -2720,9 +2566,7 @@
             loadApiKeys();
         };
 
-        // =====================
         // THANKS MODAL
-        // =====================
         window.closeThanksModal = function() {
             var modal = document.getElementById('thanksModal');
             if (modal) modal.classList.remove('active');
@@ -2735,7 +2579,6 @@
             if (modal) modal.classList.add('active');
         };
 
-        // Stripe return
         (function() {
             var params = new URLSearchParams(window.location.search);
             var payment = params.get('payment');
@@ -2748,253 +2591,71 @@
             }
         })();
 
-        // =====================
         // SUBSCRIPTION
-        // =====================
         window.loadSubscription = async function() {
             var container = document.getElementById('subscriptionContent');
             if (!container) return;
             var token = localStorage.getItem('token');
             if (!token) { container.innerHTML = '<div style="text-align:center;padding:40px;color:#7a7a7a;">Connectez-vous</div>'; return; }
-            var planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
-            var planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
-            try {
-                var res = await fetch('/api/stripe/status', { headers: { 'Authorization': 'Bearer ' + token } });
-                var data = await res.json();
-                var plan = data.plan || 'free';
-                var active = data.active === true;
-                var status = data.status || 'inactive';
-                var periodEnd = data.currentPeriodEnd;
-                var cancelAtEnd = data.cancelAtPeriodEnd;
-                var statusBadgeClass = 'inactive', statusText = 'Inactif';
-                if (active) { statusBadgeClass = 'active'; statusText = 'Actif'; }
-                else if (status === 'past_due') { statusBadgeClass = 'past_due'; statusText = 'Paiement en retard'; }
-                else if (status === 'canceled') { statusBadgeClass = 'canceled'; statusText = 'Annulé'; }
-                var periodEndStr = '—';
-                if (periodEnd) { var d = new Date(periodEnd * 1000); periodEndStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); }
-                var cancelWarning = '';
-                if (cancelAtEnd) { cancelWarning = '<div style="padding:16px 20px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.25);border-radius:12px;color:#f59e0b;font-size:13px;margin-bottom:22px;">⚠️ Votre abonnement sera annulé le ' + periodEndStr + '.</div>'; }
-                container.innerHTML = '<div class="sub-current"><div class="sub-current-header"><div class="sub-current-plan"><div class="sub-current-plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sub-current-plan-text"><h4>Plan ' + (planLabels[plan] || 'Free') + '</h4><span>' + (planPrices[plan] || '0€') + ' / mois</span></div></div><div class="sub-status-badge ' + statusBadgeClass + '">' + statusText + '</div></div>' + cancelWarning + '<div class="sub-details"><div class="sub-detail-item"><div class="sub-detail-label">Plan actuel</div><div class="sub-detail-value">' + (planLabels[plan] || 'Free') + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Statut</div><div class="sub-detail-value">' + statusText + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">' + periodEndStr + '</div></div></div><div class="sub-actions">' + (plan === 'free' ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') + '</div></div><div class="sub-plans"><div class="sub-plans-title">Tous les plans</div><div class="sub-plans-grid">' + renderPlanCard('free', plan, '0€', '0') + renderPlanCard('starter', plan, '9,99€', 'starter') + renderPlanCard('pro', plan, '29,99€', 'pro') + renderPlanCard('enterprise', plan, 'Sur devis', null) + '</div></div>';
-            } catch (err) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#7a7a7a;">Erreur de chargement</div>';
-            }
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#7a7a7a;">Chargement...</div>';
         };
 
-        function renderPlanCard(planKey, currentPlan, price, subscribeKey) {
-            var isCurrent = planKey === currentPlan;
-            var names = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
-            var btn = '';
-            if (isCurrent) btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
-            else if (subscribeKey && subscribeKey !== '0') btn = '<button class="sub-plan-btn upgrade" onclick="openPaymentModal(\'' + subscribeKey + '\')">Choisir</button>';
-            else if (subscribeKey === '0') btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
-            else btn = '<button class="sub-plan-btn upgrade" onclick="window.open(\'https://discord.gg/jf6QRZHaTB\',\'_blank\')">Nous contacter</button>';
-            return '<div class="sub-plan-card ' + (isCurrent ? 'current' : '') + '"><div class="sub-plan-name">' + names[planKey] + '</div><div class="sub-plan-price">' + price + (price !== 'Sur devis' ? '<span>/mois</span>' : '') + '</div>' + btn + '</div>';
-        }
-
-        // =====================
-        // PAYMENT MODAL
-        // =====================
-        var selectedPlan = null;
-
-        window.openPaymentModal = function(plan) {
-            selectedPlan = plan;
-            var existing = document.getElementById('paymentModalDash');
-            if (existing) existing.remove();
-            var prices = { starter: '9,99€', pro: '29,99€' };
-            var names = { starter: 'Starter', pro: 'Pro' };
-            var modal = document.createElement('div');
-            modal.id = 'paymentModalDash';
-            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
-            modal.innerHTML = '<div style="background:linear-gradient(135deg,rgba(30,30,30,0.95),rgba(15,15,15,0.98));border:1px solid rgba(255,255,255,0.14);border-radius:22px;padding:36px;max-width:540px;width:100%;position:relative;"><button onclick="closePaymentModal()" style="position:absolute;top:18px;right:18px;width:38px;height:38px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#7a7a7a;cursor:pointer;font-size:20px;">×</button><h2 style="font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">Choisir un moyen de paiement</h2><p style="font-size:14px;color:#b8b8b8;margin-bottom:28px;">Abonnement <strong style="color:#fff;">' + names[plan] + '</strong> — ' + prices[plan] + ' / mois</p><button onclick="payWithCard(\'' + plan + '\')" style="width:100%;padding:20px;background:linear-gradient(135deg,#fff,#e0e0e0);color:#000;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px;">Carte bancaire (Stripe)</button><button onclick="payWithCrypto()" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">Crypto-monnaie</button></div>';
-            document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) { if (e.target === this) closePaymentModal(); });
-        };
-
-        window.closePaymentModal = function() {
-            var m = document.getElementById('paymentModalDash');
-            if (m) m.remove();
-        };
-
-        window.payWithCard = function(plan) {
-            var planToPay = plan || selectedPlan;
-            closePaymentModal();
-            if (typeof window.subscribe === 'function') window.subscribe(planToPay);
-            else window.showToast('Paiement Stripe non configuré', 'warning');
-        };
-
-        window.payWithCrypto = function() {
-            closePaymentModal();
-            window.openCryptoModal();
-        };
-
-        window.openTarifs = function() { window.location.href = '/tarifs.html'; };
-        window.openPortal = async function() {
-            var token = localStorage.getItem('token');
-            try {
-                var res = await fetch('/api/stripe/create-portal', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
-                var data = await res.json();
-                if (data.url) window.location.href = data.url;
-                else alert(data.error || 'Erreur');
-            } catch (err) { alert('Erreur de connexion'); }
-        };
-
-        window.subscribe = async function(plan) {
-            var token = localStorage.getItem('token');
-            try {
-                var res = await fetch('/api/stripe/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ plan: plan }) });
-                var data = await res.json();
-                if (data.url) window.location.href = data.url;
-                else alert(data.error || 'Erreur');
-            } catch (err) { alert('Erreur de connexion'); }
-        };
-
-        // =====================
-        // CRYPTO
-        // =====================
-        var CRYPTO_COINS = [
-            { id: 'btc', name: 'Bitcoin', network: 'BTC', symbol: 'BTC', payCurrency: 'btc', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#f7931a"/><path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/></svg>' },
-            { id: 'eth', name: 'Ethereum', network: 'ERC20', symbol: 'ETH', payCurrency: 'eth', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" d="M16.5 4L9 16.22l7.5-3.35z"/></svg>' },
-            { id: 'usdt_trc20', name: 'USDT', network: 'TRC20', symbol: 'USDT', payCurrency: 'usdttrc20', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26a17b"/><path fill="#fff" d="M17.92 13.86v-2.4h4.86V7.92H9.22v3.54h4.86v2.4c-3.95.18-6.92.96-6.92 1.9 0 .94 2.97 1.72 6.92 1.9v6.8h3.84v-6.8c3.94-.18 6.9-.96 6.9-1.9 0-.94-2.96-1.72-6.9-1.9z"/></svg>' },
-            { id: 'usdc', name: 'USDC', network: 'ERC20', symbol: 'USDC', payCurrency: 'usdc', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#2775ca"/><path fill="#fff" d="M16 8v8l6 3z"/></svg>' },
-            { id: 'ltc', name: 'Litecoin', network: 'LTC', symbol: 'LTC', payCurrency: 'ltc', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#a6a9aa"/><path fill="#fff" d="M16.6 6.6c-4.9 0-8.9 4-8.9 8.9 0 1.1.2 2.2.6 3.2L7 21.5c-.1.3.1.7.4.8l1.6.5 4-6.4 1.5.6-2.3 3.7 1 .4 5.6-3.5c.3-.2.5-.6.5-.9l-.2-1.4c1.9-1.5 3.1-3.9 3.1-6.5 0-4.9-3.9-8.8-8.8-8.8h-6.8z"/></svg>' },
-            { id: 'trx', name: 'Tron', network: 'TRC20', symbol: 'TRX', payCurrency: 'trx', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#ef0027"/><path fill="#fff" d="M8.5 8.5l6.4 15.4L23.6 11.1 8.5 8.5z"/></svg>' },
-            { id: 'bnb', name: 'BNB', network: 'BSC', symbol: 'BNB', payCurrency: 'bnbbsc', svg: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#f3ba2f"/><path fill="#fff" d="M12.1 14.2L16 10.3l3.9 3.9 2.3-2.3L16 5.7 9.8 11.9z"/></svg>' }
-        ];
-
-        var cryptoModalSelected = null;
-        var cryptoModalPaymentId = null;
-        var cryptoModalPolling = null;
-        var cryptoModalCountdown = null;
-        var cryptoModalExpiresAt = null;
-
-        function renderCryptoModalCoins() {
-            var grid = document.getElementById('cryptoModalCoins');
-            if (!grid) return;
-            grid.innerHTML = CRYPTO_COINS.map(function(c) {
-                return '<button class="crypto-modal-coin" data-coin-id="' + c.id + '" onclick="selectCryptoModalCoin(\'' + c.id + '\')"><div class="crypto-modal-coin-logo">' + c.svg + '</div><div class="crypto-modal-coin-name">' + c.name + '</div><div class="crypto-modal-coin-network">' + c.network + '</div></button>';
-            }).join('');
-        }
-
-        window.selectCryptoModalCoin = function(id) {
-            cryptoModalSelected = CRYPTO_COINS.find(function(c) { return c.id === id; }) || null;
-            document.querySelectorAll('.crypto-modal-coin').forEach(function(el) { el.classList.toggle('selected', el.dataset.coinId === id); });
-            var btn = document.getElementById('cryptoModalContinue');
-            if (btn) btn.disabled = !cryptoModalSelected;
-        };
-
-        window.openCryptoModal = function() {
-            if (!selectedPlan) { window.showToast('Aucun plan sélectionné', 'error'); return; }
-            var modal = document.getElementById('cryptoModal');
-            if (modal) modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            cryptoModalSelected = null;
-            cryptoModalPaymentId = null;
-            document.querySelectorAll('.crypto-modal-coin').forEach(function(el) { el.classList.remove('selected'); });
-            var btn = document.getElementById('cryptoModalContinue');
-            if (btn) { btn.disabled = true; btn.textContent = 'Continuer'; }
-            var emailInput = document.getElementById('cryptoModalEmail');
-            if (emailInput) emailInput.value = '';
-            document.getElementById('cryptoModalStep1').classList.add('active');
-            document.getElementById('cryptoModalStep2').classList.remove('active');
-            document.getElementById('cryptoModalStep3').classList.remove('active');
-            renderCryptoModalCoins();
-        };
-
-        window.closeCryptoModal = function() {
-            var modal = document.getElementById('cryptoModal');
-            if (modal) modal.classList.remove('active');
-            document.body.style.overflow = '';
-            if (cryptoModalPolling) { clearInterval(cryptoModalPolling); cryptoModalPolling = null; }
-            if (cryptoModalCountdown) { clearInterval(cryptoModalCountdown); cryptoModalCountdown = null; }
-        };
-
-        window.confirmCryptoModalChoice = async function() {
-            if (!cryptoModalSelected || !selectedPlan) return;
-            var emailInput = document.getElementById('cryptoModalEmail');
-            var email = emailInput ? emailInput.value.trim() : '';
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                window.showToast('Email invalide', 'error');
-                return;
-            }
-            var btn = document.getElementById('cryptoModalContinue');
-            if (btn) { btn.disabled = true; btn.textContent = 'Création...'; }
-            document.getElementById('cryptoModalStep1').classList.remove('active');
-            document.getElementById('cryptoModalStep2').classList.add('active');
-            var demoOrderNumber = 'ORD-' + Date.now().toString(36).toUpperCase();
-            var demoAddress = 'bc1q' + Math.random().toString(36).substring(2, 15);
-            var demoAmount = (Math.random() * 0.1).toFixed(6);
-            document.getElementById('cryptoModalSubtitle').textContent = 'Commande ' + demoOrderNumber + ' · ' + cryptoModalSelected.name;
-            document.getElementById('cryptoModalAmount').textContent = demoAmount + ' ' + cryptoModalSelected.symbol;
-            document.getElementById('cryptoModalAmountFiat').textContent = '≈ ' + (selectedPlan === 'pro' ? '29.99' : '9.99') + ' EUR';
-            document.getElementById('cryptoModalAddress').textContent = demoAddress;
-            var qrBox = document.getElementById('cryptoModalQrBox');
-            var qrImg = document.getElementById('cryptoModalQrImg');
-            if (qrBox && qrImg) { qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(demoAddress); qrBox.style.display = 'flex'; }
-            cryptoModalExpiresAt = Date.now() + (30 * 60 * 1000);
-            cryptoModalCountdown = setInterval(function() {
-                var remaining = cryptoModalExpiresAt - Date.now();
-                if (remaining <= 0) { document.getElementById('cryptoModalTimer').textContent = '00:00'; clearInterval(cryptoModalCountdown); return; }
-                var m = Math.floor(remaining / 60000);
-                var s = Math.floor((remaining % 60000) / 1000);
-                document.getElementById('cryptoModalTimer').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-            }, 1000);
-        };
-
-        window.copyCryptoModalAddress = function() {
-            var addr = document.getElementById('cryptoModalAddress').textContent;
-            navigator.clipboard.writeText(addr).then(function() {
-                var btn = document.getElementById('cryptoModalCopyBtn');
-                if (btn) { btn.classList.add('copied'); btn.textContent = 'Copié !'; setTimeout(function() { btn.classList.remove('copied'); btn.textContent = 'Copier l\'adresse'; }, 2000); }
-                window.showToast('Adresse copiée', 'success');
-            });
-        };
-
-        window.finishCryptoModal = function() {
-            window.closeCryptoModal();
-            window.openThanksModal(selectedPlan || 'pro');
-        };
-
-        // =====================
         // USAGE / LOGS
-        // =====================
-        window.loadUsage = async function() {
-            var token = localStorage.getItem('token');
-            if (!token) return;
-            try {
-                var res = await fetch('/api/my-api-usage', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) throw new Error();
-                var data = await res.json();
-                var setStat = function(key, value) { var el = document.querySelector('.api-stat-value[data-stat="' + key + '"]'); if (el) el.textContent = value; };
-                setStat('today', data.today);
-                setStat('month', data.month);
-                setStat('limit', data.limit);
-                setStat('remaining', data.remaining);
-                var usageCount = document.getElementById('usageCount');
-                if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
-            } catch (err) {}
+        window.loadUsage = async function() { /* hook backend */ };
+        window.loadLogs = async function() { /* hook backend */ };
+
+        // INVESTIGATION
+        window.openInvestigation = function(personData) {
+            var overlay = document.getElementById('investigationOverlay');
+            if (!overlay) return;
+            overlay.classList.add('active');
+            personData = personData || {};
+            var fullName = ((personData.prenom || '') + ' ' + (personData.nom_famille || personData.nom || '')).trim() || 'Investigation';
+            var nameEl = document.getElementById('investigationName');
+            var cityEl = document.getElementById('investigationCityLabel');
+            var confEl = document.getElementById('investigationConfidence');
+            var grid = document.getElementById('investigationInfoGrid');
+            if (nameEl) nameEl.textContent = fullName;
+            if (cityEl) cityEl.textContent = personData.ville || 'Paris';
+            var confidence = personData._confidence || 75;
+            if (confEl) { confEl.textContent = confidence + '%'; confEl.className = 'investigation-confidence ' + (confidence >= 80 ? 'high' : confidence >= 50 ? 'medium' : 'low'); }
+            if (grid) {
+                var fields = [];
+                var priority = ['nom_famille', 'prenom', 'nom_naissance', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'date_naissance', 'ville_naissance', 'nir', 'iban', 'bic', 'steam_id', 'fivem_license', 'discord_id'];
+                priority.forEach(function(key) {
+                    if (personData[key]) {
+                        fields.push('<div class="investigation-info-item"><div class="investigation-info-label">' + key.replace(/_/g, ' ') + '</div><div class="investigation-info-value">' + personData[key] + '</div></div>');
+                    }
+                });
+                if (personData._sources && Array.isArray(personData._sources)) {
+                    fields.push('<div class="investigation-info-item important"><div class="investigation-info-label">Sources</div><div class="investigation-info-value">' + personData._sources.join(', ') + '</div></div>');
+                }
+                grid.innerHTML = fields.length ? fields.join('') : '<div style="color:#7a7a7a;padding:20px;">Aucune donnée</div>';
+            }
         };
 
-        window.loadLogs = async function() {
-            var token = localStorage.getItem('token');
-            if (!token) return;
-            var container = document.getElementById('logsContainer');
-            if (!container) return;
-            container.innerHTML = '<div class="log-empty"><p>Aucun log pour le moment</p><span style="font-size:12px;color:#7a7a7a;">Les requêtes API apparaîtront ici</span></div>';
+        window.closeInvestigation = function() {
+            var overlay = document.getElementById('investigationOverlay');
+            if (overlay) overlay.classList.remove('active');
         };
 
-        // =====================
+        document.addEventListener('click', function(e) {
+            if (e.target.closest && e.target.closest('#investigationBack, #investigationClose')) {
+                e.preventDefault(); e.stopPropagation();
+                window.closeInvestigation();
+            }
+        }, true);
+
+        console.log('Marauder Dashboard chargé ✓');
+
         // INIT
-        // =====================
         document.addEventListener('DOMContentLoaded', function() {
             var token = localStorage.getItem('token');
             if (token && typeof loadApiKeys === 'function') loadApiKeys();
         });
-
-        console.log('Marauder Dashboard chargé ✓');
     })();
     </script>
     <script src="js/graphe.js" defer></script>
     <script src="js/dashboard.js" defer></script>
-    <script async src="https://atlos.io/packages/app/atlos.js"></script>
 </body>
 </html>
