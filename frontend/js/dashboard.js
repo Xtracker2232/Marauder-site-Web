@@ -10,7 +10,7 @@ const token = localStorage.getItem('token');
         if (typeof window.customConfirm === 'function') {
             window._pendingConfirmMessage = message;
             window.customConfirm('Confirmation', message, function() {
-                console.log('✅ Confirmé par utilisateur');
+                console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ConfirmÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© par utilisateur');
             });
             return false;
         }
@@ -28,7 +28,7 @@ function showToast(message, type = 'info', duration = 3000) {
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
-    toast.innerHTML = message + ' <button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+    toast.innerHTML = message + ' <button class="toast-close" onclick="this.parentElement.remove()">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button>';
     container.appendChild(toast);
     setTimeout(() => {
         if (toast.parentElement) {
@@ -139,7 +139,7 @@ document.querySelectorAll('.sidebar-nav li[data-page]').forEach(item => {
                 if (typeof window.initGrapheModule === 'function') {
                     window.initGrapheModule();
                 } else {
-                    console.error('Module graphe non chargé');
+                    console.error('Module graphe non chargÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©');
                 }
             }, 100);
         }
@@ -182,14 +182,14 @@ document.querySelectorAll('.search-tab').forEach(tab => {
 document.getElementById('logoutBtn').addEventListener('click', function() {
     if (typeof window.customConfirm === 'function') {
         window.customConfirm(
-            'Déconnexion',
-            'Voulez-vous vraiment vous déconnecter ?',
+            'DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©connexion',
+            'Voulez-vous vraiment vous dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©connecter ?',
             function() {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 window.location.href = '/';
             },
-            { confirmText: 'Se déconnecter', danger: true }
+            { confirmText: 'Se dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©connecter', danger: true }
         );
     }
 });
@@ -224,8 +224,8 @@ function displayResults(container, results) {
                 `;
             });
 
-        // La famille est chargée À LA DEMANDE via le bouton "Approfondir"
-        // (calculée dans toggleDeep, pas ici)
+        // La famille est chargÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ LA DEMANDE via le bouton "Approfondir"
+        // (calculÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e dans toggleDeep, pas ici)
 
         return `
             <div class="result-card-full" data-index="${index}">
@@ -269,10 +269,10 @@ function toggleFiche(index) {
 }
 
 // ============================================
-// TOGGLE DEEP — Charge la famille À LA DEMANDE
+// TOGGLE DEEP ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Charge la famille ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ LA DEMANDE
 // ============================================
-const _familyCache = {}; // Cache : évite de recalculer 2x
-const _familyLoading = {}; // Empêche les appels multiples
+const _familyCache = {}; // Cache : ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vite de recalculer 2x
+const _familyLoading = {}; // EmpÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªche les appels multiples
 
 async function toggleDeep(index) {
     const panel = document.getElementById('deep-' + index);
@@ -281,16 +281,16 @@ async function toggleDeep(index) {
     const wasOpen = panel.classList.contains('open');
     panel.classList.toggle('open');
 
-    // Si on ferme, on s'arrête là
+    // Si on ferme, on s'arrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â 
     if (wasOpen) return;
 
-    // Si déjà chargé → rien à faire
+    // Si dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  chargÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ rien ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  faire
     if (_familyCache[index] !== undefined) {
         renderFamilyInPanel(panel, _familyCache[index], index);
         return;
     }
 
-    // Si en cours de chargement → on attend
+    // Si en cours de chargement ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ on attend
     if (_familyLoading[index]) return;
 
     const person = window._resultsData?.[index];
@@ -315,7 +315,7 @@ async function toggleDeep(index) {
     _familyLoading[index] = true;
 
     try {
-        // Vérifier qu'on a bien quelque chose à pivoter
+        // VÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rifier qu'on a bien quelque chose ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  pivoter
         if (!person.adresse && !person.telephone) {
             _familyCache[index] = [];
             renderFamilyInPanel(panel, [], index);
@@ -323,7 +323,7 @@ async function toggleDeep(index) {
             return;
         }
 
-        // Recherche familiale (adresse + téléphone)
+        // Recherche familiale (adresse + tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone)
         const famille = await findFamily(person);
 
         // Sauvegarder dans le cache
@@ -351,20 +351,20 @@ function renderFamilyInPanel(panel, famille, index) {
         panel.innerHTML = `
             <h4>Approfondir</h4>
             <div style="color:#6b6b6b;font-size:13px;padding:12px 0;">
-                Aucun lien familial trouvé (adresse et téléphone uniques)
+                Aucun lien familial trouvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© (adresse et tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone uniques)
             </div>
         `;
         return;
     }
 
-    // Séparer par force du lien
-    const forts = famille.filter(m => m.lien === 'Adresse + Téléphone');
-    const parAdresse = famille.filter(m => m.lien === 'Même adresse');
-    const parTel = famille.filter(m => m.lien === 'Même téléphone');
+    // SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©parer par force du lien
+    const forts = famille.filter(m => m.lien === 'Adresse + TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone');
+    const parAdresse = famille.filter(m => m.lien === 'MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme adresse');
+    const parTel = famille.filter(m => m.lien === 'MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone');
 
     let html = `
         <h4 style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <span>Famille associée</span>
+            <span>Famille associÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e</span>
             <span style="font-size:11px;font-weight:600;color:#7a7a7a;background:rgba(255,255,255,0.05);padding:2px 10px;border-radius:100px;">
                 ${famille.length}
             </span>
@@ -372,9 +372,9 @@ function renderFamilyInPanel(panel, famille, index) {
         <div class="family-tree">
     `;
 
-    // Lien fort (adresse ET téléphone)
+    // Lien fort (adresse ET tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone)
     if (forts.length > 0) {
-        html += `<div class="tree-title" style="color:#10b981;">● Lien fort — Adresse + Téléphone (${forts.length})</div>`;
+        html += `<div class="tree-title" style="color:#10b981;">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â Lien fort ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Adresse + TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone (${forts.length})</div>`;
         forts.forEach(m => {
             html += renderFamilyItem(m, '#10b981');
         });
@@ -382,15 +382,15 @@ function renderFamilyInPanel(panel, famille, index) {
 
     // Lien adresse
     if (parAdresse.length > 0) {
-        html += `<div class="tree-title" style="color:#3b82f6;margin-top:12px;">● Même adresse (${parAdresse.length})</div>`;
+        html += `<div class="tree-title" style="color:#3b82f6;margin-top:12px;">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme adresse (${parAdresse.length})</div>`;
         parAdresse.forEach(m => {
             html += renderFamilyItem(m, '#3b82f6');
         });
     }
 
-    // Lien téléphone
+    // Lien tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone
     if (parTel.length > 0) {
-        html += `<div class="tree-title" style="color:#f59e0b;margin-top:12px;">● Même téléphone (${parTel.length})</div>`;
+        html += `<div class="tree-title" style="color:#f59e0b;margin-top:12px;">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone (${parTel.length})</div>`;
         parTel.forEach(m => {
             html += renderFamilyItem(m, '#f59e0b');
         });
@@ -411,22 +411,22 @@ function renderFamilyItem(m, color) {
         <div class="tree-item">
             <div style="display:flex;flex-direction:column;gap:2px;">
                 <span style="color:#fff;font-weight:500;">${name}</span>
-                ${extras.length > 0 ? `<span style="font-size:11px;color:#7a7a7a;">${extras.join(' · ')}</span>` : ''}
+                ${extras.length > 0 ? `<span style="font-size:11px;color:#7a7a7a;">${extras.join(' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ')}</span>` : ''}
             </div>
             <span class="relation" style="color:${color};border-color:${color}33;background:${color}11;">
-                ${m.lien || 'Lié'}
+                ${m.lien || 'LiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©'}
             </span>
         </div>
     `;
 }
 
 // ============================================
-// PIVOT FAMILLE — RECHERCHE FAMILIALE (ADRESSE + TÉLÉPHONE)
+// PIVOT FAMILLE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â RECHERCHE FAMILIALE (ADRESSE + TÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°LÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°PHONE)
 // ============================================
 let searchInProgress = false;
 
 /**
- * Extrait la clé "adresse normalisée" pour comparer deux personnes
+ * Extrait la clÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© "adresse normalisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e" pour comparer deux personnes
  */
 function normalizeAdresse(adresse) {
     if (!adresse) return '';
@@ -438,7 +438,7 @@ function normalizeAdresse(adresse) {
 }
 
 /**
- * Extrait le numéro de téléphone normalisé (10 chiffres)
+ * Extrait le numÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ro de tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone normalisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© (10 chiffres)
  */
 function normalizePhone(phone) {
     if (!phone) return '';
@@ -449,8 +449,8 @@ function normalizePhone(phone) {
 }
 
 /**
- * Recherche une seule catégorie de pivot (adresse OU téléphone)
- * Retourne les résultats Brix bruts
+ * Recherche une seule catÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©gorie de pivot (adresse OU tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone)
+ * Retourne les rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©sultats Brix bruts
  */
 async function searchPivot(payload) {
     try {
@@ -471,14 +471,14 @@ async function searchPivot(payload) {
 }
 
 /**
- * Détecte et récupère la famille d'une personne
- * Utilise l'adresse ET le téléphone comme pivots
+ * DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tecte et rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cupÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨re la famille d'une personne
+ * Utilise l'adresse ET le tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone comme pivots
  */
 async function findFamily(person) {
     const famille = [];
     const seen = new Set();
 
-    // Clé de la personne de référence (pour l'exclure de sa propre famille)
+    // ClÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© de la personne de rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©fÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rence (pour l'exclure de sa propre famille)
     const refKey = (person.nom_famille || '') + '|' + (person.prenom || '') + '|' +
                    (person.telephone || '') + '|' + (person.adresse || '');
 
@@ -500,14 +500,14 @@ async function findFamily(person) {
             for (const p of resultsAddress) {
                 if (!p || !p.nom_famille) continue;
 
-                // Vérifier que c'est bien la même adresse (comparaison normalisée)
+                // VÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rifier que c'est bien la mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme adresse (comparaison normalisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e)
                 const pAdresseNorm = normalizeAdresse(p.adresse);
                 if (pAdresseNorm !== adresseNorm) continue;
 
                 const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' +
                             (p.telephone || '') + '|' + (p.adresse || '');
 
-                // Ne pas s'ajouter soi-même
+                // Ne pas s'ajouter soi-mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme
                 if (key === refKey) continue;
                 if (seen.has(key)) continue;
 
@@ -520,13 +520,13 @@ async function findFamily(person) {
                     telephone: p.telephone || '',
                     adresse: p.adresse || '',
                     ville: p.ville || '',
-                    lien: 'Même adresse'
+                    lien: 'MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme adresse'
                 });
             }
         }
     }
 
-    // ---------- PIVOT 2 : TÉLÉPHONE ----------
+    // ---------- PIVOT 2 : TÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°LÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°PHONE ----------
     if (person.telephone) {
         const phoneNorm = normalizePhone(person.telephone);
         if (phoneNorm && phoneNorm.length === 10) {
@@ -541,7 +541,7 @@ async function findFamily(person) {
             for (const p of resultsPhone) {
                 if (!p || !p.nom_famille) continue;
 
-                // Vérifier que c'est bien le même téléphone
+                // VÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rifier que c'est bien le mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone
                 const pPhoneNorm = normalizePhone(p.telephone);
                 if (pPhoneNorm !== phoneNorm) continue;
 
@@ -551,13 +551,13 @@ async function findFamily(person) {
                 if (key === refKey) continue;
                 if (seen.has(key)) continue;
 
-                // Si déjà vu via adresse, mettre à jour le lien
+                // Si dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  vu via adresse, mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour le lien
                 const existing = famille.find(f =>
                     f.nom_famille === p.nom_famille &&
                     f.prenom === p.prenom
                 );
                 if (existing) {
-                    existing.lien = 'Adresse + Téléphone';
+                    existing.lien = 'Adresse + TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone';
                     continue;
                 }
 
@@ -570,7 +570,7 @@ async function findFamily(person) {
                     telephone: p.telephone || '',
                     adresse: p.adresse || '',
                     ville: p.ville || '',
-                    lien: 'Même téléphone'
+                    lien: 'MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªme tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©phone'
                 });
             }
         }
@@ -580,7 +580,7 @@ async function findFamily(person) {
 }
 
 /**
- * Recherche principale : recherche + pivot famille sur TOUS les résultats
+ * Recherche principale : recherche + pivot famille sur TOUS les rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©sultats
  */
 async function performSearch(query, container) {
     // ---------- 1. Recherche principale ----------
@@ -596,7 +596,7 @@ async function performSearch(query, container) {
     const data = await response.json();
     let results = data.data?.results || [];
 
-    // ---------- 2. Déduplication ----------
+    // ---------- 2. DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©duplication ----------
     const uniqueResults = [];
     const seen = new Set();
     results.forEach(p => {
@@ -610,9 +610,9 @@ async function performSearch(query, container) {
     results = uniqueResults;
 
     // ---------- 3. Pivot famille ----------
-    // La famille n'est PAS calculée ici.
-    // Elle sera calculée À LA DEMANDE quand l'utilisateur clique sur "Approfondir"
-    // → économise le quota Brix + recherche instantanée
+    // La famille n'est PAS calculÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e ici.
+    // Elle sera calculÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ LA DEMANDE quand l'utilisateur clique sur "Approfondir"
+    // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©conomise le quota Brix + recherche instantanÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e
 
     return results;
 }
@@ -812,7 +812,7 @@ document.getElementById('lookupBtn').addEventListener('click', async function() 
         const data = await response.json();
         let results = data.data?.results || [];
 
-        // Déduplication
+        // DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©duplication
         const uniqueResults = [];
         const seen = new Set();
         results.forEach(p => {
@@ -825,7 +825,7 @@ document.getElementById('lookupBtn').addEventListener('click', async function() 
         });
         results = uniqueResults;
 
-        // Le pivot famille est fait à la demande (bouton "Approfondir")
+        // Le pivot famille est fait ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  la demande (bouton "Approfondir")
 
         setTimeout(() => {
             hideSearchLoading();
@@ -881,7 +881,7 @@ async function loadHistory() {
             return `
                 <div class="history-item">
                     <div class="history-header">
-                        <div class="history-date">${dateStr} ${timeStr} · ${displayName}</div>
+                        <div class="history-date">${dateStr} ${timeStr} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${displayName}</div>
                         <span class="history-result-count ${resultCount === 0 ? 'empty' : ''}">${resultText}</span>
                     </div>
                     <div class="history-footer">
@@ -1008,8 +1008,8 @@ function viewFiche(index) {
     const personsHtml = fiche.persons?.map(p => `
         <div style="padding:4px 0;border-bottom:1px solid #2a2a2a;font-size:13px;color:#a0a0a0;">
             ${p.prenom || ''} ${p.nom_famille || 'Inconnu'}
-            ${p.email ? ' · ' + p.email : ''}
-            ${p.telephone ? ' · ' + formatPhone(p.telephone) : ''}
+            ${p.email ? ' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ' + p.email : ''}
+            ${p.telephone ? ' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ' + formatPhone(p.telephone) : ''}
         </div>
     `).join('') || 'Aucune personne';
     showModal('Fiche: ' + fiche.name, `
@@ -1207,7 +1207,7 @@ function addToGraphe(index) {
     }
 }
 
-// ============ API NOMINATIM (géocodage) ============
+// ============ API NOMINATIM (gÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ocodage) ============
 async function getCityCoordinates(ville) {
     if (!ville) return null;
     try {
@@ -1222,7 +1222,7 @@ async function getCityCoordinates(ville) {
         }
         return null;
     } catch (error) {
-        console.error('Erreur de géocodage:', error);
+        console.error('Erreur de gÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ocodage:', error);
         return null;
     }
 }
@@ -1314,7 +1314,7 @@ function openInvestigation(index) {
             <div class="investigation-info-item" style="grid-column:1/-1;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
                 <span class="investigation-info-label" style="color:#6b6b6b;font-weight:600;">Famille (${person.famille.length})</span>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
-                    ${person.famille.map(m => `<span style="background:rgba(255,255,255,0.04);border:1px solid #2a2a2a;border-radius:6px;padding:4px 12px;font-size:13px;color:#a0a0a0;">${m.prenom || ''} ${m.nom_famille || ''} ${m.lien ? ' · ' + m.lien : ''}</span>`).join('')}
+                    ${person.famille.map(m => `<span style="background:rgba(255,255,255,0.04);border:1px solid #2a2a2a;border-radius:6px;padding:4px 12px;font-size:13px;color:#a0a0a0;">${m.prenom || ''} ${m.nom_famille || ''} ${m.lien ? ' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ' + m.lien : ''}</span>`).join('')}
                 </div>
             </div>
         `;
@@ -1438,7 +1438,7 @@ async function loadTickets() {
             <div class="ticket-item" onclick="viewTicket(${ticket.id})">
                 <div class="ticket-header">
                     <span class="ticket-subject">${ticket.subject}</span>
-                    <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} · ${ticket.status}</span>
+                    <span class="ticket-meta">${new Date(ticket.created_at).toLocaleString()} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${ticket.status}</span>
                 </div>
                 <div style="font-size:13px;color:#a0a0a0;margin-top:4px;">${ticket.message?.substring(0, 100) || ''}${ticket.message?.length > 100 ? '...' : ''}</div>
             </div>
@@ -1491,13 +1491,13 @@ async function viewTicket(ticketId) {
 
         let messagesHtml = messages.map(m => `
             <div style="padding:10px 14px;margin-bottom:8px;background:${m.is_admin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'};border-radius:8px;border-left:${m.is_admin ? '2px solid #3b82f6' : '2px solid #2a2a2a'};">
-                <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' · Admin' : ''} · ${new Date(m.created_at).toLocaleString()}</div>
+                <div style="font-size:11px;color:#6b6b6b;margin-bottom:4px;">${m.username || 'Inconnu'}${m.is_admin ? ' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Admin' : ''} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${new Date(m.created_at).toLocaleString()}</div>
                 <div style="font-size:13px;color:#a0a0a0;">${m.message}</div>
             </div>
         `).join('');
 
         showModal(ticket.subject, `
-            <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} · ${new Date(ticket.created_at).toLocaleString()}</div>
+            <div style="margin-bottom:12px;font-size:13px;color:#6b6b6b;">Statut: ${ticket.status} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${new Date(ticket.created_at).toLocaleString()}</div>
             <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">${messagesHtml || 'Aucun message'}</div>
             ${ticket.status !== 'closed' ? `
                 <div style="display:flex;gap:10px;border-top:1px solid #2a2a2a;padding-top:12px;">
@@ -1611,7 +1611,7 @@ document.getElementById('grapheAddPersonne').addEventListener('click', function(
     }
 });
 
-document.getElementById('grapheAttacher').addEventListener('click', function() {
+var _grapheAttacher = document.getElementById('grapheAttacher'); if (_grapheAttacher) _grapheAttacher.addEventListener('click', function() {
     const nodes = window.grapheNodes || [];
     if (window.grapheLinkMode) {
         window.grapheLinkMode = false;
@@ -1630,7 +1630,6 @@ document.getElementById('grapheAttacher').addEventListener('click', function() {
     this.style.color = '#ffffff';
     showToast('Cliquez sur une personne pour l attacher', 'info');
 });
-
 document.getElementById('grapheSauvegarder').addEventListener('click', function() {
     const nodes = window.grapheNodes || [];
     const edges = window.grapheEdges || [];
@@ -1680,8 +1679,8 @@ async function showGraphesModal() {
         list.innerHTML = graphes.map((g, i) => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#111;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;">
                 <div>
-                    <div style="font-weight:600;color:#fff;">${g.name || 'Sans nom'} ${g.isLocal ? '📁' : ''}</div>
-                    <div style="font-size:12px;color:#6b6b6b;">${g.nodes?.length || 0} personnes · ${new Date(g.created_at).toLocaleDateString()}</div>
+                    <div style="font-weight:600;color:#fff;">${g.name || 'Sans nom'} ${g.isLocal ? 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â' : ''}</div>
+                    <div style="font-size:12px;color:#6b6b6b;">${g.nodes?.length || 0} personnes ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${new Date(g.created_at).toLocaleDateString()}</div>
                 </div>
                 <div style="display:flex;gap:6px;">
                     <button onclick="loadGrapheFromList(${i}, ${!!g.isLocal})" style="padding:4px 12px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#a0a0a0;cursor:pointer;">Charger</button>
@@ -1768,15 +1767,15 @@ window.loadUsage = async function() {
         const usageBar = document.getElementById('usageBarFill');
         if (usageCount) usageCount.textContent = data.month + ' / ' + data.limit;
         if (usageBar) {
-            if (data.limit === '∞' || data.limit === Infinity) usageBar.style.width = '0%';
+            if (data.limit === 'ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾' || data.limit === Infinity) usageBar.style.width = '0%';
             else usageBar.style.width = Math.min(100, (data.month / data.limit) * 100) + '%';
         }
     } catch (err) { console.error('Erreur loadUsage:', err); }
 };
 
-// ============ USAGE API (appelé par l'onglet Statistiques) ============
+// ============ USAGE API (appelÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© par l'onglet Statistiques) ============
 window.loadSubscription = window.loadSubscription || function() {
-    // déjà géré dans dashboard.html si présent
+    // dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  gÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© dans dashboard.html si prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©sent
 };
 
 console.log('Dashboard charge');
