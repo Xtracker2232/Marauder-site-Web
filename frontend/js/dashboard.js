@@ -285,10 +285,170 @@ function toggleDeep(index) {
     if (el) el.classList.toggle('open');
 }
 
-// ============ FONCTION DE RECHERCHE (corrigée : 1-2 requêtes au lieu de 20) ============
+// ============================================
+// PIVOT FAMILLE — RECHERCHE FAMILIALE (ADRESSE + TÉLÉPHONE)
+// ============================================
 let searchInProgress = false;
 
+/**
+ * Extrait la clé "adresse normalisée" pour comparer deux personnes
+ */
+function normalizeAdresse(adresse) {
+    if (!adresse) return '';
+    return String(adresse)
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/[^\w\s]/g, '');
+}
+
+/**
+ * Extrait le numéro de téléphone normalisé (10 chiffres)
+ */
+function normalizePhone(phone) {
+    if (!phone) return '';
+    const cleaned = String(phone).replace(/\D/g, '');
+    if (cleaned.length === 10) return cleaned;
+    if (cleaned.length === 11 && cleaned.startsWith('33')) return '0' + cleaned.substring(2);
+    return cleaned;
+}
+
+/**
+ * Recherche une seule catégorie de pivot (adresse OU téléphone)
+ * Retourne les résultats Brix bruts
+ */
+async function searchPivot(payload) {
+    try {
+        const response = await fetch(API_URL + '/api/brix/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        return data.data?.results || [];
+    } catch (e) {
+        console.error('Erreur pivot:', e);
+        return [];
+    }
+}
+
+/**
+ * Détecte et récupère la famille d'une personne
+ * Utilise l'adresse ET le téléphone comme pivots
+ */
+async function findFamily(person) {
+    const famille = [];
+    const seen = new Set();
+
+    // Clé de la personne de référence (pour l'exclure de sa propre famille)
+    const refKey = (person.nom_famille || '') + '|' + (person.prenom || '') + '|' +
+                   (person.telephone || '') + '|' + (person.adresse || '');
+
+    // ---------- PIVOT 1 : ADRESSE ----------
+    if (person.adresse) {
+        const adresseNorm = normalizeAdresse(person.adresse);
+        if (adresseNorm) {
+            const pivotAddress = {
+                adresse: person.adresse,
+                code_postal: person.code_postal || undefined,
+                ville: person.ville || undefined,
+                flexible: false,
+                per_page: 20
+            };
+            Object.keys(pivotAddress).forEach(k => pivotAddress[k] === undefined && delete pivotAddress[k]);
+
+            const resultsAddress = await searchPivot(pivotAddress);
+
+            for (const p of resultsAddress) {
+                if (!p || !p.nom_famille) continue;
+
+                // Vérifier que c'est bien la même adresse (comparaison normalisée)
+                const pAdresseNorm = normalizeAdresse(p.adresse);
+                if (pAdresseNorm !== adresseNorm) continue;
+
+                const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' +
+                            (p.telephone || '') + '|' + (p.adresse || '');
+
+                // Ne pas s'ajouter soi-même
+                if (key === refKey) continue;
+                if (seen.has(key)) continue;
+
+                seen.add(key);
+                famille.push({
+                    prenom: p.prenom || '',
+                    nom_famille: p.nom_famille || '',
+                    date_naissance: p.date_naissance || '',
+                    email: p.email || '',
+                    telephone: p.telephone || '',
+                    adresse: p.adresse || '',
+                    ville: p.ville || '',
+                    lien: 'Même adresse'
+                });
+            }
+        }
+    }
+
+    // ---------- PIVOT 2 : TÉLÉPHONE ----------
+    if (person.telephone) {
+        const phoneNorm = normalizePhone(person.telephone);
+        if (phoneNorm && phoneNorm.length === 10) {
+            const pivotPhone = {
+                telephone: person.telephone,
+                flexible: false,
+                per_page: 20
+            };
+
+            const resultsPhone = await searchPivot(pivotPhone);
+
+            for (const p of resultsPhone) {
+                if (!p || !p.nom_famille) continue;
+
+                // Vérifier que c'est bien le même téléphone
+                const pPhoneNorm = normalizePhone(p.telephone);
+                if (pPhoneNorm !== phoneNorm) continue;
+
+                const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' +
+                            (p.telephone || '') + '|' + (p.adresse || '');
+
+                if (key === refKey) continue;
+                if (seen.has(key)) continue;
+
+                // Si déjà vu via adresse, mettre à jour le lien
+                const existing = famille.find(f =>
+                    f.nom_famille === p.nom_famille &&
+                    f.prenom === p.prenom
+                );
+                if (existing) {
+                    existing.lien = 'Adresse + Téléphone';
+                    continue;
+                }
+
+                seen.add(key);
+                famille.push({
+                    prenom: p.prenom || '',
+                    nom_famille: p.nom_famille || '',
+                    date_naissance: p.date_naissance || '',
+                    email: p.email || '',
+                    telephone: p.telephone || '',
+                    adresse: p.adresse || '',
+                    ville: p.ville || '',
+                    lien: 'Même téléphone'
+                });
+            }
+        }
+    }
+
+    return famille;
+}
+
+/**
+ * Recherche principale : recherche + pivot famille sur TOUS les résultats
+ */
 async function performSearch(query, container) {
+    // ---------- 1. Recherche principale ----------
     const response = await fetch(API_URL + '/api/brix/search', {
         method: 'POST',
         headers: {
@@ -301,11 +461,12 @@ async function performSearch(query, container) {
     const data = await response.json();
     let results = data.data?.results || [];
 
-    // Déduplication
+    // ---------- 2. Déduplication ----------
     const uniqueResults = [];
     const seen = new Set();
     results.forEach(p => {
-        const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' + (p.email || '') + '|' + (p.telephone || '');
+        const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' +
+                    (p.email || '') + '|' + (p.telephone || '') + '|' + (p.adresse || '');
         if (!seen.has(key)) {
             seen.add(key);
             uniqueResults.push(p);
@@ -313,36 +474,22 @@ async function performSearch(query, container) {
     });
     results = uniqueResults;
 
-    // Pivot famille : UNIQUEMENT sur le 1er résultat, 1 seul pivot (email)
-    if (results.length > 0 && results[0].email) {
-        const p = results[0];
-        try {
-            const pivotPayload = { email: p.email, flexible: false, per_page: 5 };
-            const pivotResponse = await fetch(API_URL + '/api/brix/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify(pivotPayload)
-            });
-            const pivotData = await pivotResponse.json();
-            const pivotResults = pivotData.data?.results || [];
-            const famille = [];
-            for (let pr of pivotResults) {
-                if (pr.nom_famille === p.nom_famille && pr.prenom === p.prenom) continue;
-                famille.push({
-                    prenom: pr.prenom || '',
-                    nom_famille: pr.nom_famille || '',
-                    date_naissance: pr.date_naissance || '',
-                    email: pr.email || '',
-                    telephone: pr.telephone || '',
-                    lien: 'Email partage'
-                });
-                if (famille.length >= 5) break;
+    // ---------- 3. Pivot famille sur CHAQUE résultat ----------
+    // (limité aux 5 premiers pour éviter trop de requêtes)
+    const maxResults = Math.min(results.length, 5);
+    for (let i = 0; i < maxResults; i++) {
+        const p = results[i];
+        // Ne faire le pivot que si on a au moins une adresse ou un téléphone
+        if (p.adresse || p.telephone) {
+            try {
+                const famille = await findFamily(p);
+                if (famille.length > 0) {
+                    p.famille = famille;
+                }
+            } catch (e) {
+                console.error('Erreur pivot sur résultat', i, e);
             }
-            if (famille.length > 0) p.famille = famille;
-        } catch (e) { /* Silence */ }
+        }
     }
 
     return results;
@@ -541,7 +688,32 @@ document.getElementById('lookupBtn').addEventListener('click', async function() 
         });
 
         const data = await response.json();
-        const results = data.data?.results || [];
+        let results = data.data?.results || [];
+
+        // Déduplication
+        const uniqueResults = [];
+        const seen = new Set();
+        results.forEach(p => {
+            const key = (p.nom_famille || '') + '|' + (p.prenom || '') + '|' +
+                        (p.email || '') + '|' + (p.telephone || '') + '|' + (p.adresse || '');
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueResults.push(p);
+            }
+        });
+        results = uniqueResults;
+
+        // Pivot famille sur les 5 premiers
+        const maxResults = Math.min(results.length, 5);
+        for (let i = 0; i < maxResults; i++) {
+            const p = results[i];
+            if (p.adresse || p.telephone) {
+                try {
+                    const famille = await findFamily(p);
+                    if (famille.length > 0) p.famille = famille;
+                } catch (e) { /* Silence */ }
+            }
+        }
 
         setTimeout(() => {
             hideSearchLoading();
