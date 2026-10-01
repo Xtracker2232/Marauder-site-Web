@@ -224,20 +224,8 @@ function displayResults(container, results) {
                 `;
             });
 
-        let familleHtml = '';
-        if (person.famille && person.famille.length > 0) {
-            familleHtml = `
-                <div class="family-tree">
-                    <div class="tree-title">Famille associee (${person.famille.length})</div>
-                    ${person.famille.map(m => `
-                        <div class="tree-item">
-                            <span>${m.prenom || ''} ${m.nom_famille || ''}${m.date_naissance ? ' · ' + m.date_naissance : ''}</span>
-                            <span class="relation">${m.lien || 'Lie'}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
+        // La famille est chargée À LA DEMANDE via le bouton "Approfondir"
+        // (calculée dans toggleDeep, pas ici)
 
         return `
             <div class="result-card-full" data-index="${index}">
@@ -257,9 +245,9 @@ function displayResults(container, results) {
                     <button class="btn-deep" onclick="addToGraphe(${index})">Graphe</button>
                     <button class="btn-deep" onclick="openInvestigation(${index})" style="border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">Investiguer</button>
                 </div>
-                <div class="deep-panel" id="deep-${index}">
+                               <div class="deep-panel" id="deep-${index}">
                     <h4>Approfondir</h4>
-                    ${familleHtml || '<div style="color:#6b6b6b;font-size:13px;">Aucun lien familial trouve</div>'}
+                    <div class="family-loading" style="color:#6b6b6b;font-size:13px;">Cliquez sur "Approfondir" pour lancer l'analyse familiale</div>
                 </div>
             </div>
         `;
@@ -280,9 +268,156 @@ function toggleFiche(index) {
     if (el) el.classList.toggle('open');
 }
 
-function toggleDeep(index) {
-    const el = document.getElementById('deep-' + index);
-    if (el) el.classList.toggle('open');
+// ============================================
+// TOGGLE DEEP — Charge la famille À LA DEMANDE
+// ============================================
+const _familyCache = {}; // Cache : évite de recalculer 2x
+const _familyLoading = {}; // Empêche les appels multiples
+
+async function toggleDeep(index) {
+    const panel = document.getElementById('deep-' + index);
+    if (!panel) return;
+
+    const wasOpen = panel.classList.contains('open');
+    panel.classList.toggle('open');
+
+    // Si on ferme, on s'arrête là
+    if (wasOpen) return;
+
+    // Si déjà chargé → rien à faire
+    if (_familyCache[index] !== undefined) {
+        renderFamilyInPanel(panel, _familyCache[index], index);
+        return;
+    }
+
+    // Si en cours de chargement → on attend
+    if (_familyLoading[index]) return;
+
+    const person = window._resultsData?.[index];
+    if (!person) {
+        panel.innerHTML = '<h4>Approfondir</h4><div style="color:#ef4444;font-size:13px;">Erreur : personne introuvable</div>';
+        return;
+    }
+
+    // Afficher le loader
+    panel.innerHTML = `
+        <h4>Approfondir</h4>
+        <div class="family-loading" style="display:flex;align-items:center;gap:10px;color:#7a7a7a;font-size:13px;padding:12px 0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;">
+                <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                <path d="M12 2a10 10 0 0 1 10 10" />
+            </svg>
+            <span>Recherche des liens familiaux en cours...</span>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    `;
+
+    _familyLoading[index] = true;
+
+    try {
+        // Vérifier qu'on a bien quelque chose à pivoter
+        if (!person.adresse && !person.telephone) {
+            _familyCache[index] = [];
+            renderFamilyInPanel(panel, [], index);
+            _familyLoading[index] = false;
+            return;
+        }
+
+        // Recherche familiale (adresse + téléphone)
+        const famille = await findFamily(person);
+
+        // Sauvegarder dans le cache
+        _familyCache[index] = famille;
+
+        // Stocker sur la personne (pour Copier / Graphe / Investigation)
+        person.famille = famille;
+
+        // Afficher
+        renderFamilyInPanel(panel, famille, index);
+
+    } catch (e) {
+        console.error('Erreur pivot famille:', e);
+        panel.innerHTML = '<h4>Approfondir</h4><div style="color:#ef4444;font-size:13px;">Erreur lors de l\'analyse familiale</div>';
+    } finally {
+        _familyLoading[index] = false;
+    }
+}
+
+/**
+ * Affiche la famille dans le panel "Approfondir"
+ */
+function renderFamilyInPanel(panel, famille, index) {
+    if (!famille || famille.length === 0) {
+        panel.innerHTML = `
+            <h4>Approfondir</h4>
+            <div style="color:#6b6b6b;font-size:13px;padding:12px 0;">
+                Aucun lien familial trouvé (adresse et téléphone uniques)
+            </div>
+        `;
+        return;
+    }
+
+    // Séparer par force du lien
+    const forts = famille.filter(m => m.lien === 'Adresse + Téléphone');
+    const parAdresse = famille.filter(m => m.lien === 'Même adresse');
+    const parTel = famille.filter(m => m.lien === 'Même téléphone');
+
+    let html = `
+        <h4 style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <span>Famille associée</span>
+            <span style="font-size:11px;font-weight:600;color:#7a7a7a;background:rgba(255,255,255,0.05);padding:2px 10px;border-radius:100px;">
+                ${famille.length}
+            </span>
+        </h4>
+        <div class="family-tree">
+    `;
+
+    // Lien fort (adresse ET téléphone)
+    if (forts.length > 0) {
+        html += `<div class="tree-title" style="color:#10b981;">● Lien fort — Adresse + Téléphone (${forts.length})</div>`;
+        forts.forEach(m => {
+            html += renderFamilyItem(m, '#10b981');
+        });
+    }
+
+    // Lien adresse
+    if (parAdresse.length > 0) {
+        html += `<div class="tree-title" style="color:#3b82f6;margin-top:12px;">● Même adresse (${parAdresse.length})</div>`;
+        parAdresse.forEach(m => {
+            html += renderFamilyItem(m, '#3b82f6');
+        });
+    }
+
+    // Lien téléphone
+    if (parTel.length > 0) {
+        html += `<div class="tree-title" style="color:#f59e0b;margin-top:12px;">● Même téléphone (${parTel.length})</div>`;
+        parTel.forEach(m => {
+            html += renderFamilyItem(m, '#f59e0b');
+        });
+    }
+
+    html += `</div>`;
+    panel.innerHTML = html;
+}
+
+function renderFamilyItem(m, color) {
+    const name = ((m.prenom || '') + ' ' + (m.nom_famille || '')).trim() || 'Inconnu';
+    const extras = [];
+    if (m.date_naissance) extras.push(m.date_naissance);
+    if (m.email) extras.push(m.email);
+    if (m.telephone) extras.push(formatPhone(m.telephone));
+
+    return `
+        <div class="tree-item">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="color:#fff;font-weight:500;">${name}</span>
+                ${extras.length > 0 ? `<span style="font-size:11px;color:#7a7a7a;">${extras.join(' · ')}</span>` : ''}
+            </div>
+            <span class="relation" style="color:${color};border-color:${color}33;background:${color}11;">
+                ${m.lien || 'Lié'}
+            </span>
+        </div>
+    `;
 }
 
 // ============================================
@@ -474,23 +609,10 @@ async function performSearch(query, container) {
     });
     results = uniqueResults;
 
-    // ---------- 3. Pivot famille sur CHAQUE résultat ----------
-    // (limité aux 5 premiers pour éviter trop de requêtes)
-    const maxResults = Math.min(results.length, 5);
-    for (let i = 0; i < maxResults; i++) {
-        const p = results[i];
-        // Ne faire le pivot que si on a au moins une adresse ou un téléphone
-        if (p.adresse || p.telephone) {
-            try {
-                const famille = await findFamily(p);
-                if (famille.length > 0) {
-                    p.famille = famille;
-                }
-            } catch (e) {
-                console.error('Erreur pivot sur résultat', i, e);
-            }
-        }
-    }
+    // ---------- 3. Pivot famille ----------
+    // La famille n'est PAS calculée ici.
+    // Elle sera calculée À LA DEMANDE quand l'utilisateur clique sur "Approfondir"
+    // → économise le quota Brix + recherche instantanée
 
     return results;
 }
@@ -703,17 +825,7 @@ document.getElementById('lookupBtn').addEventListener('click', async function() 
         });
         results = uniqueResults;
 
-        // Pivot famille sur les 5 premiers
-        const maxResults = Math.min(results.length, 5);
-        for (let i = 0; i < maxResults; i++) {
-            const p = results[i];
-            if (p.adresse || p.telephone) {
-                try {
-                    const famille = await findFamily(p);
-                    if (famille.length > 0) p.famille = famille;
-                } catch (e) { /* Silence */ }
-            }
-        }
+        // Le pivot famille est fait à la demande (bouton "Approfondir")
 
         setTimeout(() => {
             hideSearchLoading();
