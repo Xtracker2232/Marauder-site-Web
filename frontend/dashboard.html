@@ -1847,10 +1847,10 @@ Fais la recherche et affiche les résultats.
             return fields;
         }
 
-        window.performSearch = async function(prefix) {
+        window.performSearch = async function(prefix, resultsContainer) {
             prefix = prefix || '';
             var overlay = document.getElementById('searchOverlay');
-            var resultsDiv = document.getElementById('searchResults');
+            var resultsDiv = resultsContainer || document.getElementById('searchResults');
 
             var fields = getSearchFields(prefix);
 
@@ -1859,10 +1859,8 @@ Fais la recherche et affiche les résultats.
                 return;
             }
 
-            // Afficher le loading
             if (overlay) overlay.classList.add('active');
 
-            // Construire le body
             var body = Object.assign({}, fields, { flexible: true, per_page: currentUser.resultsPerSearch || 10 });
 
             try {
@@ -1883,17 +1881,14 @@ Fais la recherche et affiche les résultats.
 
                 if (overlay) overlay.classList.remove('active');
 
-                // Afficher les résultats
                 renderSearchResults(data, resultsDiv);
 
-                // Défiler vers les résultats (après un petit délai pour laisser le DOM se mettre à jour)
                 setTimeout(function() {
                     if (resultsDiv) {
                         resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }, 150);
 
-                // Stats
                 if (data.meta) {
                     var count = data.meta.total || (data.data && data.data.results ? data.data.results.length : 0);
                     window.showToast(count + ' résultat' + (count > 1 ? 's' : '') + ' trouvé' + (count > 1 ? 's' : ''), 'success');
@@ -1901,7 +1896,6 @@ Fais la recherche et affiche les résultats.
             } catch (err) {
                 if (overlay) overlay.classList.remove('active');
 
-                // Mode démo : afficher des résultats fictifs
                 var demoResults = generateDemoResults(fields, prefix);
                 renderSearchResults({
                     success: true,
@@ -2000,7 +1994,6 @@ Fais la recherche et affiche les résultats.
 
             container.innerHTML = counterHTML + cardsHTML;
 
-            // Sauvegarder les résultats pour utilisation ultérieure
             window._currentResults = results;
         }
 
@@ -2550,6 +2543,92 @@ Fais la recherche et affiche les résultats.
             if (!e.target.closest || (!e.target.closest('#grapheContextMenu') && !e.target.closest('.custom-modal') && !e.target.closest('.mc-box'))) hideContextMenu();
         }, true);
 
+        /* ============================================
+           ÉVÉNEMENTS DIRECTS POUR LA RECHERCHE
+           ============================================ */
+        function bindSearchEvents() {
+            // Bouton recherche français
+            var searchBtn = document.getElementById('searchBtn');
+            if (searchBtn && !searchBtn.dataset.bound) {
+                searchBtn.dataset.bound = '1';
+                searchBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var fields = getSearchFields('');
+                    if (Object.keys(fields).length === 0) {
+                        window.showToast('Renseignez au moins un champ', 'warning');
+                        return;
+                    }
+                    window.performSearch('', document.getElementById('searchResults'));
+                });
+            }
+
+            // Bouton recherche pro
+            var searchBtnPro = document.getElementById('searchBtnPro');
+            if (searchBtnPro && !searchBtnPro.dataset.bound) {
+                searchBtnPro.dataset.bound = '1';
+                searchBtnPro.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var fields = getSearchFields('Pro');
+                    if (Object.keys(fields).length === 0) {
+                        window.showToast('Renseignez au moins un champ', 'warning');
+                        return;
+                    }
+                    window.performSearch('Pro', document.getElementById('searchResults'));
+                });
+            }
+
+            // Bouton effacer français
+            var clearBtn = document.getElementById('clearBtn');
+            if (clearBtn && !clearBtn.dataset.bound) {
+                clearBtn.dataset.bound = '1';
+                clearBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearSearchFields('');
+                    var container = document.getElementById('searchResults');
+                    if (container) container.innerHTML = '';
+                });
+            }
+
+            // Bouton effacer pro
+            var clearBtnPro = document.getElementById('clearBtnPro');
+            if (clearBtnPro && !clearBtnPro.dataset.bound) {
+                clearBtnPro.dataset.bound = '1';
+                clearBtnPro.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearSearchFields('Pro');
+                    var container = document.getElementById('searchResults');
+                    if (container) container.innerHTML = '';
+                });
+            }
+
+            // Bouton lookup
+            var lookupBtn = document.getElementById('lookupBtn');
+            if (lookupBtn && !lookupBtn.dataset.bound) {
+                lookupBtn.dataset.bound = '1';
+                lookupBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.performLookup();
+                });
+            }
+
+            // Entrée dans le champ lookup
+            var lookupValue = document.getElementById('lookupValue');
+            if (lookupValue && !lookupValue.dataset.bound) {
+                lookupValue.dataset.bound = '1';
+                lookupValue.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        window.performLookup();
+                    }
+                });
+            }
+        }
+
         /* DÉLÉGATION GLOBALE */
         document.addEventListener('click', function(e) {
             var t = e.target;
@@ -2571,7 +2650,6 @@ Fais la recherche et affiche les résultats.
                 var li = t.closest('.sidebar-nav > li[data-page]');
                 var page = li.dataset.page;
                 if (page === 'discord') { window.open('https://discord.gg/jf6QRZHaTB', '_blank'); return; }
-                // Débloquer le scroll au changement de page
                 unlockScroll();
                 document.querySelectorAll('.sidebar-nav > li').forEach(function(l) { l.classList.remove('active'); });
                 li.classList.add('active');
@@ -2581,8 +2659,10 @@ Fais la recherche et affiche les résultats.
                 if (page === 'api') { loadApiKeys(); loadApiStats(); }
                 if (page === 'graphe') setTimeout(initGraphe, 60);
                 if (page === 'profile') loadProfile();
+                if (page === 'history') loadHistory();
+                if (page === 'fiches') loadFiches();
+                if (page === 'tickets') loadTickets();
                 if (window.innerWidth <= 768) window.closeMobileMenu();
-                // Remonter en haut de page
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
@@ -2638,30 +2718,6 @@ Fais la recherche et affiche les résultats.
                 if (grid) navigator.clipboard.writeText(grid.innerText).then(function() { window.showToast('Informations copiées', 'success'); });
                 return;
             }
-
-// BOUTONS RECHERCHE
-if (t.closest && t.closest('#searchBtn')) {
-    e.preventDefault(); e.stopPropagation();
-    var fields = getSearchFields('');
-    if (Object.keys(fields).length === 0) {
-        window.showToast('Renseignez au moins un champ', 'warning');
-        return;
-    }
-    var query = Object.assign({}, fields, { flexible: true, per_page: 10 });
-    window.performSearch(query, document.getElementById('searchResults'));
-    return;
-}
-if (t.closest && t.closest('#searchBtnPro')) {
-    e.preventDefault(); e.stopPropagation();
-    var fieldsPro = getSearchFields('Pro');
-    if (Object.keys(fieldsPro).length === 0) {
-        window.showToast('Renseignez au moins un champ', 'warning');
-        return;
-    }
-    var queryPro = Object.assign({}, fieldsPro, { flexible: true, per_page: 10 });
-    window.performSearch(queryPro, document.getElementById('searchResults'));
-    return;
-}
         }, true);
 
         document.addEventListener('keydown', function(e) {
@@ -2671,16 +2727,10 @@ if (t.closest && t.closest('#searchBtnPro')) {
                 closeColorPicker();
                 closeRolePicker();
                 cancelLinking();
-                // Sécurité scroll
                 unlockScroll();
-            }
-            // Entrée dans lookup
-            if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'lookupValue') {
-                window.performLookup();
             }
         });
 
-        // Sécurité visibilitychange
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 var anyModalOpen = document.querySelector('.crypto-modal.active, .payment-modal.active, .mc-overlay.active, .api-key-modal.active, .custom-modal-overlay.active, .search-loading.active');
@@ -3148,11 +3198,66 @@ if (t.closest && t.closest('#searchBtnPro')) {
             }, 500);
         };
 
+        /* ============================================
+           FONCTIONS MANQUANTES (historique, fiches, tickets)
+           ============================================ */
+        window.loadHistory = function() {
+            var container = document.getElementById('historyList');
+            if (!container) return;
+            try {
+                var history = JSON.parse(localStorage.getItem('marauder_history') || '[]');
+                if (history.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucun historique pour le moment</div>';
+                    return;
+                }
+                container.innerHTML = history.map(function(h) {
+                    return '<div class="history-item"><div class="history-header"><span>' + (h.query || 'Recherche') + '</span><span style="color:#7a7a7a;font-size:12px;">' + (h.date || '') + '</span></div><div class="history-footer"><button class="history-replay" onclick="window.showToast(\'Fonction à venir\', \'warning\')">Rejouer</button></div></div>';
+                }).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Aucun historique</div>';
+            }
+        };
+
+        window.loadFiches = function() {
+            var container = document.getElementById('fichesList');
+            if (!container) return;
+            try {
+                var fiches = JSON.parse(localStorage.getItem('marauder_fiches') || '[]');
+                if (fiches.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucune fiche créée</div>';
+                    return;
+                }
+                container.innerHTML = fiches.map(function(f) {
+                    return '<div class="fiche-item"><div class="fiche-header"><span class="fiche-name">' + (f.name || 'Fiche') + '</span><span class="fiche-count">' + (f.items || 0) + ' éléments</span></div><div class="fiche-actions"><button class="fiche-btn" onclick="window.showToast(\'Fonction à venir\', \'warning\')">Ouvrir</button><button class="fiche-btn danger" onclick="window.showToast(\'Fonction à venir\', \'warning\')">Supprimer</button></div></div>';
+                }).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Aucune fiche</div>';
+            }
+        };
+
+        window.loadTickets = function() {
+            var container = document.getElementById('ticketsList');
+            if (!container) return;
+            try {
+                var tickets = JSON.parse(localStorage.getItem('marauder_tickets') || '[]');
+                if (tickets.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
+                    return;
+                }
+                container.innerHTML = tickets.map(function(t) {
+                    return '<div class="ticket-item"><div class="ticket-header"><span class="ticket-subject">' + (t.subject || 'Ticket') + '</span><span class="ticket-meta">' + (t.status || 'ouvert') + '</span></div></div>';
+                }).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Aucun ticket</div>';
+            }
+        };
+
         /* INIT */
         document.addEventListener('DOMContentLoaded', function() {
-            // Sécurité : forcer le déblocage du scroll au démarrage
             unlockScroll();
+            bindSearchEvents();
 
+            // Vérifier si on est sur la page recherche pour lier les boutons
             var token = localStorage.getItem('token');
             if (token) {
                 loadApiKeys();
@@ -3161,7 +3266,6 @@ if (t.closest && t.closest('#searchBtnPro')) {
             }
             if (document.getElementById('page-profile').classList.contains('active')) loadProfile();
 
-            // Vérifier un paiement crypto en attente — uniquement si l'ID semble valide (numérique)
             var pendingId = localStorage.getItem('pending_crypto_order');
             if (pendingId && /^\d+$/.test(pendingId)) {
                 setTimeout(async function() {
@@ -3171,7 +3275,6 @@ if (t.closest && t.closest('#searchBtnPro')) {
                             headers: { 'Authorization': 'Bearer ' + t }
                         });
                         if (res.status === 404) {
-                            // Nettoyer l'ID invalide
                             localStorage.removeItem('pending_crypto_order');
                             localStorage.removeItem('pending_crypto_order_number');
                             return;
@@ -3187,7 +3290,6 @@ if (t.closest && t.closest('#searchBtnPro')) {
                     } catch (e) {}
                 }, 2000);
             } else if (pendingId) {
-                // ID invalide, on nettoie
                 localStorage.removeItem('pending_crypto_order');
                 localStorage.removeItem('pending_crypto_order_number');
             }
