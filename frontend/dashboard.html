@@ -72,7 +72,7 @@
         }
         .mc-overlay.active { display: flex; }
         .mc-box {
-            background: linear-gradient(135deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95));
+            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(15,15,15,0.98));
             border: 1px solid var(--stroke-2);
             border-radius: 22px;
             padding: 32px;
@@ -98,6 +98,132 @@
         .mc-btn-secondary { background: rgba(255,255,255,0.04); color: var(--text-2); border: 1px solid var(--stroke-1); }
         .mc-btn-secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .mc-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+
+        /* MODALE CUSTOM (input / color / role picker) */
+        .custom-modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(20px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 999999; padding: 20px;
+        }
+        .custom-modal-overlay.active { display: flex; }
+        .custom-modal {
+            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(15,15,15,0.98));
+            border: 1px solid var(--stroke-2);
+            border-radius: 22px;
+            padding: 32px;
+            max-width: 480px; width: 100%;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+            animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .custom-modal h3 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .custom-modal h3 svg { width: 20px; height: 20px; color: #fff; }
+        .custom-modal-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--stroke-1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            margin-bottom: 22px;
+            transition: all 0.3s;
+        }
+        .custom-modal-input:focus {
+            border-color: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.05);
+        }
+        .custom-modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Color picker */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .color-swatch {
+            aspect-ratio: 1;
+            border-radius: 14px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .color-swatch:hover {
+            transform: scale(1.08);
+            border-color: rgba(255,255,255,0.4);
+        }
+        .color-swatch.selected {
+            border-color: #fff;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.3);
+            transform: scale(1.08);
+        }
+        .color-swatch.selected::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/40% no-repeat;
+            filter: drop-shadow(0 1px 2px rgba(255,255,255,0.5));
+        }
+
+        /* Role grid */
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .role-option {
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--stroke-1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .role-option:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--stroke-2);
+            transform: translateY(-2px);
+        }
+        .role-option.selected {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+        }
+        .role-option-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
 
         /* SIDEBAR */
         .sidebar {
@@ -515,14 +641,8 @@
             color: #fff;
             letter-spacing: -1px;
         }
-        .profile-header-info h3 {
-            font-size: 22px; font-weight: 800; color: #fff;
-            margin-bottom: 4px;
-        }
-        .profile-header-info p {
-            font-size: 13px; color: var(--text-3);
-        }
-
+        .profile-header-info h3 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .profile-header-info p { font-size: 13px; color: var(--text-3); }
         .profile-actions {
             display: flex;
             gap: 10px;
@@ -562,7 +682,7 @@
             font-size: 18px; line-height: 1; padding: 0 4px;
         }
 
-        /* MODAL */
+        /* MODAL GENERIQUE */
         .modal-overlay {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.6);
@@ -641,10 +761,43 @@
         }
         #grapheCanvas { width: 100%; height: 100%; display: block; cursor: grab; }
         #grapheCanvas:active { cursor: grabbing; }
+        #grapheCanvas.linking { cursor: crosshair; }
         .graphe-toolbar {
             display: flex; gap: 12px; margin-bottom: 24px;
             flex-wrap: wrap;
+            align-items: center;
         }
+        .linking-banner {
+            display: none;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05));
+            border: 1px solid rgba(16,185,129,0.35);
+            border-radius: 12px;
+            color: var(--success);
+            font-size: 13.5px;
+            font-weight: 600;
+            align-items: center;
+            gap: 10px;
+            animation: pageIn 0.3s;
+            flex: 1;
+            min-width: 200px;
+        }
+        .linking-banner.active { display: flex; }
+        .linking-banner svg { width: 16px; height: 16px; }
+        .linking-banner button {
+            margin-left: auto;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .linking-banner button:hover { background: rgba(255,255,255,0.15); }
 
         /* MENU CONTEXTUEL GRAPHE */
         #grapheContextMenu {
@@ -844,6 +997,8 @@
             .site-footer { margin-left: 0 !important; }
             .toast-container { top: auto; bottom: 20px; right: 12px; left: 12px; max-width: none; }
             .profile-header { flex-direction: column; align-items: flex-start; }
+            .color-grid { grid-template-columns: repeat(4, 1fr); }
+            .role-grid { grid-template-columns: 1fr; }
         }
 
         /* API PAGE */
@@ -1370,6 +1525,49 @@
         </div>
     </div>
 
+    <!-- MODAL CUSTOM (input) -->
+    <div id="customInputModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <h3 id="customInputTitle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Modifier
+            </h3>
+            <input type="text" id="customInputField" class="custom-modal-input" placeholder="Entrez une valeur...">
+            <div class="custom-modal-actions">
+                <button class="mc-btn mc-btn-secondary" onclick="closeCustomInput()">Annuler</button>
+                <button class="mc-btn mc-btn-primary" onclick="confirmCustomInput()">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COULEUR -->
+    <div id="colorPickerModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                Choisir une couleur
+            </h3>
+            <div class="color-grid" id="colorGrid"></div>
+            <div class="custom-modal-actions">
+                <button class="mc-btn mc-btn-secondary" onclick="closeColorPicker()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RÔLE -->
+    <div id="rolePickerModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Choisir un rôle
+            </h3>
+            <div class="role-grid" id="roleGrid"></div>
+            <div class="custom-modal-actions">
+                <button class="mc-btn mc-btn-secondary" onclick="closeRolePicker()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LOADING -->
     <div id="searchOverlay" class="search-loading">
         <div class="loading-logo">
@@ -1698,6 +1896,11 @@
                 <button id="grapheSauvegarder" class="btn-secondary">Sauvegarder</button>
                 <button id="grapheMesGraphes" class="btn-secondary">Recharger</button>
                 <button id="grapheEffacer" class="btn-secondary" style="color:#ef4444;">Effacer</button>
+                <div id="linkingBanner" class="linking-banner">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <span id="linkingBannerText">Cliquez sur une personne pour la lier</span>
+                    <button onclick="cancelLinking()">Annuler</button>
+                </div>
             </div>
             <div id="grapheContainer"><canvas id="grapheCanvas"></canvas></div>
         </section>
@@ -1790,7 +1993,6 @@
 
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Authentification</h4>
-                                <p>Toutes les requêtes doivent inclure votre clé API dans le header <code>Authorization</code> :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>Header</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>Authorization: Bearer marauder_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
@@ -1811,61 +2013,15 @@
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Mon profil — GET /me</h4>
                                 <div class="endpoint"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/me</span></div>
                                 <div class="code-block">
-                                    <div class="code-header"><span>Exemple cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <div class="code-header"><span>Exemple</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>curl https://marauder.host/api/v1/me \
   -H "Authorization: Bearer marauder_xxx"</code></pre>
                                 </div>
                             </div>
 
                             <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Statistiques — GET /usage</h4>
-                                <div class="endpoint"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/usage</span></div>
-                                <div class="code-block">
-                                    <div class="code-header"><span>Exemple cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>curl https://marauder.host/api/v1/usage \
-  -H "Authorization: Bearer marauder_xxx"</code></pre>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Recherche multi-critères — POST /search</h4>
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Recherche — POST /search</h4>
                                 <div class="endpoint"><span class="endpoint-method post">POST</span><span class="endpoint-path">/api/v1/search</span></div>
-                                <p style="font-size:13px;color:#a0a0a0;margin-top:14px;">Body JSON — Tous les champs acceptés :</p>
-                                <div class="code-block">
-                                    <div class="code-header"><span>Body complet</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>{
-  "nom_famille": "Dupont",
-  "prenom": "Jean",
-  "nom_naissance": "Martin",
-  "nom_affichage": "Jean Dupont",
-  "email": "jean@example.com",
-  "telephone": "0612345678",
-  "nom_utilisateur": "jean_d",
-  "adresse_ip": "192.168.1.1",
-  "adresse": "10 rue de la Paix",
-  "code_postal": "75001",
-  "ville": "Paris",
-  "ville_naissance": "Lyon",
-  "date_naissance": "1990-06-15",
-  "jour_naissance": 15,
-  "mois_naissance": 6,
-  "annee_naissance": "1990",
-  "genre": "M",
-  "steam_id": "steam:110000...",
-  "fivem_license": "license:abc123...",
-  "discord_id": "834855528869265459",
-  "xbox_live_id": "xbl:2535423154...",
-  "live_id": "live:844425868261",
-  "fivem_license2": "license2:def456...",
-  "nir": "1234567890123",
-  "iban": "FR76...",
-  "bic": "BNPAFRPP",
-  "vin_plaque": "AB-123-CD",
-  "flexible": true,
-  "per_page": 50
-}</code></pre>
-                                </div>
-                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Exemple cURL :</p>
                                 <div class="code-block">
                                     <div class="code-header"><span>Exemple</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
                                     <pre><code>curl -X POST https://marauder.host/api/v1/search \
@@ -1873,73 +2029,15 @@
   -H "Content-Type: application/json" \
   -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
                                 </div>
-                                <p style="font-size:13px;color:#a0a0a0;margin-top:18px;">Réponse :</p>
-                                <div class="code-block">
-                                    <div class="code-header"><span>JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre><code>{
-  "success": true,
-  "mock": false,
-  "data": {
-    "results": [
-      {
-        "nom_famille": "Dupont",
-        "prenom": "Jean",
-        "email": "jean@example.com",
-        "telephone": "0612345678",
-        "ville": "Paris",
-        "_confidence": 50,
-        "_sources": ["Zen Mobile", "Facebook"]
-      }
-    ]
-  },
-  "meta": {
-    "total": 946,
-    "returned": 10,
-    "plan_limit": 10,
-    "limited": true,
-    "page": 1,
-    "pages": 95,
-    "per_page": 10,
-    "took_ms": 7,
-    "maintenance": false
-  }
-}</code></pre>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Lookup rapide ❌</h4>
-                                <p>⚠️ <strong>Route INDISPONIBLE</strong> — utilisez <code>/search</code> à la place.</p>
-                                <div class="endpoint" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);"><span class="endpoint-method get">GET</span><span class="endpoint-path">/api/v1/lookup/:type/:value</span></div>
                             </div>
 
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>Codes d'erreur</h4>
                                 <div class="errors-table">
                                     <div class="error-row"><span class="error-code">200</span><span class="error-desc">Succès</span></div>
-                                    <div class="error-row"><span class="error-code">400</span><span class="error-desc">Requête invalide</span></div>
                                     <div class="error-row"><span class="error-code">401</span><span class="error-desc">Clé API manquante ou invalide</span></div>
-                                    <div class="error-row"><span class="error-code">403</span><span class="error-desc">Accès refusé</span></div>
-                                    <div class="error-row"><span class="error-code">404</span><span class="error-desc">Introuvable</span></div>
                                     <div class="error-row"><span class="error-code">429</span><span class="error-desc">Quota dépassé</span></div>
                                     <div class="error-row"><span class="error-code">500</span><span class="error-desc">Erreur serveur</span></div>
-                                    <div class="error-row"><span class="error-code">503</span><span class="error-desc">Fournisseur indisponible</span></div>
-                                </div>
-                            </div>
-
-                            <div class="doc-section">
-                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>Exemples de code</h4>
-                                <div class="code-tabs">
-                                    <button class="code-tab active" data-code="curl">cURL</button>
-                                    <button class="code-tab" data-code="js">JavaScript</button>
-                                    <button class="code-tab" data-code="python">Python</button>
-                                </div>
-                                <div class="code-block">
-                                    <div class="code-header"><span id="codeLangLabel">cURL</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
-                                    <pre id="codeExample"><code>curl -X POST https://marauder.host/api/v1/search \
-  -H "Authorization: Bearer marauder_xxx" \
-  -H "Content-Type: application/json" \
-  -d '{"nom_famille": "Dupont", "prenom": "Jean"}'</code></pre>
                                 </div>
                             </div>
                         </div>
@@ -2080,428 +2178,42 @@
         };
 
         /* ============================================
-           DÉLÉGATION GLOBALE
+           MODALES CUSTOM
            ============================================ */
-        document.addEventListener('click', function(e) {
-            var t = e.target;
+        var customInputCallback = null;
 
-            if (t.closest && t.closest('.section-header')) {
-                e.preventDefault(); e.stopPropagation();
-                window.toggleSection(t.closest('.section-header'));
-                return;
-            }
+        window.openCustomInput = function(title, currentValue, callback) {
+            var modal = document.getElementById('customInputModal');
+            var titleEl = document.getElementById('customInputTitle');
+            var field = document.getElementById('customInputField');
+            titleEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' + (title || 'Modifier');
+            field.value = currentValue || '';
+            customInputCallback = callback;
+            modal.classList.add('active');
+            setTimeout(function() { field.focus(); field.select(); }, 100);
+        };
 
-            if (t.closest && t.closest('#mobileMenuBtn')) {
-                e.preventDefault(); e.stopPropagation();
-                window.toggleMobileMenu();
-                return;
-            }
+        window.closeCustomInput = function() {
+            document.getElementById('customInputModal').classList.remove('active');
+            customInputCallback = null;
+        };
 
-            if (t.closest && t.closest('#sidebarBackdrop')) {
-                e.preventDefault(); e.stopPropagation();
-                window.closeMobileMenu();
-                return;
+        window.confirmCustomInput = function() {
+            var field = document.getElementById('customInputField');
+            var value = field.value.trim();
+            if (value && customInputCallback) {
+                customInputCallback(value);
             }
+            closeCustomInput();
+        };
 
-            if (t.closest && t.closest('#supportToggle')) {
-                e.preventDefault(); e.stopPropagation();
-                var st = t.closest('#supportToggle');
-                st.classList.toggle('open');
-                var arrow = st.querySelector('.support-arrow');
-                if (arrow) arrow.classList.toggle('open');
-                var submenu = document.getElementById('supportSubmenu');
-                if (submenu) submenu.classList.toggle('open');
-                return;
-            }
-
-            if (t.closest && t.closest('.sidebar-nav > li[data-page]')) {
-                e.preventDefault(); e.stopPropagation();
-                var li = t.closest('.sidebar-nav > li[data-page]');
-                var page = li.dataset.page;
-                if (page === 'discord') { window.open('https://discord.gg/jf6QRZHaTB', '_blank'); return; }
-                document.querySelectorAll('.sidebar-nav > li').forEach(function(l) { l.classList.remove('active'); });
-                li.classList.add('active');
-                document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-                var target = document.getElementById('page-' + page);
-                if (target) target.classList.add('active');
-                if (page === 'api') loadApiKeys();
-                if (page === 'graphe') setTimeout(initGraphe, 60);
-                if (page === 'profile') loadProfile();
-                if (window.innerWidth <= 768) window.closeMobileMenu();
-                return;
-            }
-
-            if (t.closest && t.closest('#logoutBtn')) {
-                e.preventDefault(); e.stopPropagation();
-                window.customConfirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function() {
-                    localStorage.removeItem('token');
-                    window.location.href = '/login.html';
-                }, { confirmText: 'Déconnexion', danger: true });
-                return;
-            }
-
-            if (t.closest && t.closest('.search-tab')) {
-                e.preventDefault(); e.stopPropagation();
-                var tab = t.closest('.search-tab');
-                document.querySelectorAll('.search-tab').forEach(function(x) { x.classList.remove('active'); });
-                tab.classList.add('active');
-                document.querySelectorAll('.search-tab-content').forEach(function(c) { c.classList.remove('active'); });
-                var targetTab = document.getElementById('tab-' + tab.dataset.tab);
-                if (targetTab) targetTab.classList.add('active');
-                return;
-            }
-
-            if (t.closest && t.closest('.api-tab')) {
-                e.preventDefault(); e.stopPropagation();
-                var at = t.closest('.api-tab');
-                document.querySelectorAll('.api-tab').forEach(function(x) { x.classList.remove('active'); });
-                at.classList.add('active');
-                document.querySelectorAll('.api-tab-content').forEach(function(c) { c.classList.remove('active'); });
-                var apiTarget = document.getElementById('api-tab-' + at.dataset.apiTab);
-                if (apiTarget) apiTarget.classList.add('active');
-                if (at.dataset.apiTab === 'subscription') loadSubscription();
-                if (at.dataset.apiTab === 'keys') loadApiKeys();
-                if (at.dataset.apiTab === 'stats') { loadUsage(); loadLogs(); }
-                return;
-            }
-
-            if (t.closest && t.closest('.code-tab')) {
-                e.preventDefault(); e.stopPropagation();
-                var ct = t.closest('.code-tab');
-                document.querySelectorAll('.code-tab').forEach(function(x) { x.classList.remove('active'); });
-                ct.classList.add('active');
-                var lang = ct.dataset.code;
-                var label = document.getElementById('codeLangLabel');
-                var code = document.getElementById('codeExample');
-                var examples = {
-                    curl: 'curl -X POST https://marauder.host/api/v1/search \\\n  -H "Authorization: Bearer marauder_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"nom_famille": "Dupont", "prenom": "Jean"}\'',
-                    js: 'const response = await fetch(\'https://marauder.host/api/v1/search\', {\n  method: \'POST\',\n  headers: {\n    \'Authorization\': \'Bearer marauder_xxx\',\n    \'Content-Type\': \'application/json\'\n  },\n  body: JSON.stringify({ nom_famille: \'Dupont\', prenom: \'Jean\' })\n});',
-                    python: 'import requests\n\nresponse = requests.post(\n    \'https://marauder.host/api/v1/search\',\n    headers={\n        \'Authorization\': \'Bearer marauder_xxx\',\n        \'Content-Type\': \'application/json\'\n    },\n    json={\'nom_famille\': \'Dupont\', \'prenom\': \'Jean\'}\n)'
-                };
-                if (label) label.textContent = lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python';
-                if (code) code.innerHTML = '<code>' + (examples[lang] || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>';
-                return;
-            }
-
-            if (t.closest && t.closest('#investigationBack, #investigationClose')) {
-                e.preventDefault(); e.stopPropagation();
-                window.closeInvestigation();
-                return;
-            }
-
-            if (t.closest && t.closest('#investigationCopy')) {
-                e.preventDefault(); e.stopPropagation();
-                var grid = document.getElementById('investigationInfoGrid');
-                if (grid) navigator.clipboard.writeText(grid.innerText).then(function() {
-                    window.showToast('Informations copiées', 'success');
-                });
-                return;
-            }
-        }, true);
+        document.getElementById('customInputField').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') confirmCustomInput();
+            if (e.key === 'Escape') closeCustomInput();
+        });
 
         /* ============================================
-           INVESTIGATION
-           ============================================ */
-        window.openInvestigation = function(personData) {
-            var overlay = document.getElementById('investigationOverlay');
-            if (!overlay) return;
-            overlay.classList.add('active');
-            personData = personData || {};
-            var fullName = ((personData.prenom || '') + ' ' + (personData.nom_famille || personData.nom || '')).trim() || 'Investigation';
-            var nameEl = document.getElementById('investigationName');
-            var cityEl = document.getElementById('investigationCityLabel');
-            var confEl = document.getElementById('investigationConfidence');
-            var grid = document.getElementById('investigationInfoGrid');
-            if (nameEl) nameEl.textContent = fullName;
-            if (cityEl) cityEl.textContent = personData.ville || 'Paris';
-            var confidence = personData._confidence || 75;
-            if (confEl) {
-                confEl.textContent = confidence + '%';
-                confEl.className = 'investigation-confidence ' + (confidence >= 80 ? 'high' : confidence >= 50 ? 'medium' : 'low');
-            }
-            if (grid) {
-                var fields = [];
-                var priority = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'date_naissance', 'nir', 'iban', 'bic', 'steam_id', 'discord_id'];
-                priority.forEach(function(key) {
-                    if (personData[key]) {
-                        fields.push('<div class="investigation-info-item important"><div class="investigation-info-label">' + key.replace(/_/g, ' ') + '</div><div class="investigation-info-value">' + personData[key] + '</div></div>');
-                    }
-                });
-                if (personData._sources && Array.isArray(personData._sources)) {
-                    fields.push('<div class="investigation-info-item important"><div class="investigation-info-label">Sources</div><div class="investigation-info-value">' + personData._sources.join(', ') + '</div></div>');
-                }
-                grid.innerHTML = fields.length ? fields.join('') : '<div style="color:#7a7a7a;padding:20px;">Aucune donnée disponible</div>';
-            }
-        };
-
-        window.closeInvestigation = function() {
-            var overlay = document.getElementById('investigationOverlay');
-            if (overlay) overlay.classList.remove('active');
-        };
-
-        /* ============================================
-           PROFIL — Chargement avec fallback
-           ============================================ */
-        window.loadProfile = async function() {
-            var container = document.getElementById('profileInfo');
-            if (!container) return;
-
-            var defaultData = {
-                username: localStorage.getItem('username') || 'Admin',
-                role: 'user',
-                plan: 'free',
-                created_at: null,
-                last_login: null,
-                searches_count: 0
-            };
-
-            var data = Object.assign({}, defaultData);
-            var token = localStorage.getItem('token');
-
-            if (token) {
-                try {
-                    var res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
-                    if (res.ok) {
-                        var apiData = await res.json();
-                        data = Object.assign(data, apiData);
-                    }
-                } catch (err) {
-                    // Silencieux : on utilise les données par défaut
-                }
-            }
-
-            var initial = (data.username || 'A').charAt(0).toUpperCase();
-            var createdStr = data.created_at ? new Date(data.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
-            var lastLoginStr = data.last_login ? new Date(data.last_login).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Maintenant';
-            var roleLabel = data.role === 'admin' ? 'Administrateur' : data.role === 'owner' ? 'Propriétaire' : 'Utilisateur';
-            var planLabel = (data.plan || 'free').toUpperCase();
-
-            container.innerHTML =
-                '<div class="profile-header">' +
-                    '<div class="profile-avatar">' + initial + '</div>' +
-                    '<div class="profile-header-info">' +
-                        '<h3>' + (data.username || 'Admin') + '</h3>' +
-                        '<p>Compte Marauder · Plan ' + planLabel + '</p>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="profile-row"><span class="label">Nom d\'utilisateur</span><span class="value">' + (data.username || 'Admin') + '</span></div>' +
-                '<div class="profile-row"><span class="label">Rôle</span><span class="value">' + roleLabel + '</span></div>' +
-                '<div class="profile-row"><span class="label">Plan actuel</span><span class="value">' + planLabel + '</span></div>' +
-                '<div class="profile-row"><span class="label">Membre depuis</span><span class="value">' + createdStr + '</span></div>' +
-                '<div class="profile-row"><span class="label">Dernière connexion</span><span class="value">' + lastLoginStr + '</span></div>' +
-                '<div class="profile-row"><span class="label">Recherches effectuées</span><span class="value">' + (data.searches_count || 0) + '</span></div>' +
-                '<div class="profile-actions">' +
-                    '<button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="window.showToast(\'Fonction bientôt disponible\', \'warning\')">Modifier le profil</button>' +
-                    '<button class="btn-secondary" onclick="window.location.href=\'/cgu.html\'">Voir les CGU</button>' +
-                '</div>';
-        };
-
-        /* ============================================
-           API KEYS
-           ============================================ */
-        var apiKeysCache = [];
-        var apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
-
-        window.loadApiKeys = async function() {
-            var token = localStorage.getItem('token');
-            if (!token) return;
-            var container = document.getElementById('apiKeysList');
-            if (!container) return;
-            try {
-                var results = await Promise.all([
-                    fetch('/api/keys', { headers: { 'Authorization': 'Bearer ' + token } }),
-                    fetch('/api/keys/limits', { headers: { 'Authorization': 'Bearer ' + token } })
-                ]);
-                var keysData = await results[0].json();
-                var limitsData = await results[1].json();
-                apiKeysCache = keysData.keys || [];
-                apiKeyLimits = limitsData || { plan: 'free', currentCount: 0, maxKeys: 1 };
-                renderApiKeys();
-            } catch (err) {
-                apiKeysCache = [];
-                apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
-                renderApiKeys();
-            }
-        };
-
-        function renderApiKeys() {
-            var container = document.getElementById('apiKeysList');
-            if (!container) return;
-            var plan = apiKeyLimits.plan, currentCount = apiKeyLimits.currentCount, maxKeys = apiKeyLimits.maxKeys;
-            var maxDisplay = maxKeys === Infinity ? '∞' : maxKeys;
-            if (apiKeysCache.length === 0) {
-                container.innerHTML = '<div class="api-empty-state"><div class="api-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><p>Aucune clé API</p><span>Plan ' + plan.toUpperCase() + ' · ' + maxDisplay + ' clé disponible</span><button class="api-btn-primary" onclick="generateApiKey()" style="margin-top:20px;">Générer une clé</button></div>';
-                return;
-            }
-            var canAdd = currentCount < maxKeys || maxKeys === Infinity;
-            var counterHTML = '<div style="padding:18px 32px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;"><div style="font-size:13px;color:#b8b8b8;"><strong style="color:#fff;">' + currentCount + '</strong> / ' + maxDisplay + ' clé <span style="color:#7a7a7a;"> · Plan ' + plan.toUpperCase() + '</span></div>' + (canAdd ? '<button class="api-btn-primary" onclick="generateApiKey()">Générer</button>' : '<span style="font-size:12px;color:#f59e0b;">Limite atteinte</span>') + '</div>';
-            var keysHTML = apiKeysCache.map(function(k) {
-                var createdDate = new Date(k.created_at).toLocaleDateString('fr-FR');
-                return '<div class="api-key-item"><div class="api-key-info"><div class="api-key-name">' + k.name + '</div><div class="api-key-value">' + k.key_preview + '</div><div class="api-key-date">Créée le ' + createdDate + '</div></div><div class="api-key-actions"><button class="api-key-btn danger" onclick="revokeApiKey(' + k.id + ')">Révoquer</button></div></div>';
-            }).join('');
-            container.innerHTML = counterHTML + keysHTML;
-        }
-
-        window.generateApiKey = async function() {
-            var token = localStorage.getItem('token');
-            try {
-                var res = await fetch('/api/keys', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: '{}' });
-                var data = await res.json();
-                if (!res.ok) { window.showToast(data.error || 'Erreur', 'error'); return; }
-                showNewKeyModal(data.key.key);
-                window.showToast('Clé générée', 'success');
-                await loadApiKeys();
-            } catch (err) {
-                var demoKey = 'marauder_' + Math.random().toString(36).substring(2, 15);
-                showNewKeyModal(demoKey, true);
-            }
-        };
-
-        function showNewKeyModal(key, isDemo) {
-            var modal = document.createElement('div');
-            modal.className = 'api-key-modal active';
-            modal.innerHTML = '<div class="api-key-modal-content"><h3>Nouvelle clé API' + (isDemo ? ' (démo)' : '') + '</h3><p>Copiez-la maintenant, elle ne sera plus jamais affichée.</p><div class="api-key-new-value"><input type="text" value="' + key + '" readonly id="newKeyInput"><button class="api-btn-primary" onclick="copyNewKey()">Copier</button></div><div class="api-key-warning">Ne partagez jamais cette clé.</div><button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">J\'ai copié ma clé</button></div>';
-            document.body.appendChild(modal);
-        }
-
-        window.revokeApiKey = async function(id) {
-            window.customConfirm('Révoquer la clé', 'Cette action est irréversible.', async function() {
-                var token = localStorage.getItem('token');
-                try {
-                    var res = await fetch('/api/keys/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
-                    if (res.ok) { window.showToast('Clé révoquée', 'success'); await loadApiKeys(); }
-                    else { window.showToast('Erreur', 'error'); }
-                } catch (err) { window.showToast('Erreur de connexion', 'error'); }
-            }, { confirmText: 'Révoquer', danger: true });
-        };
-
-        window.copyNewKey = function() {
-            var input = document.getElementById('newKeyInput');
-            if (input) { input.select(); navigator.clipboard.writeText(input.value); window.showToast('Clé copiée', 'success'); }
-        };
-
-        window.closeKeyModal = function() {
-            var modal = document.querySelector('.api-key-modal');
-            if (modal) modal.remove();
-        };
-
-        /* ============================================
-           SUBSCRIPTION
-           ============================================ */
-        window.loadSubscription = async function() {
-            var container = document.getElementById('subscriptionContent');
-            if (!container) return;
-
-            var planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
-            var planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
-            var plan = 'free', active = false, status = 'inactive', periodEnd = null;
-
-            var token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    var res = await fetch('/api/stripe/status', { headers: { 'Authorization': 'Bearer ' + token } });
-                    if (res.ok) {
-                        var data = await res.json();
-                        plan = data.plan || 'free';
-                        active = data.active === true;
-                        status = data.status || 'inactive';
-                        periodEnd = data.currentPeriodEnd;
-                    }
-                } catch (err) {}
-            }
-
-            var statusBadgeClass = 'inactive', statusText = 'Inactif';
-            if (active) { statusBadgeClass = 'active'; statusText = 'Actif'; }
-
-            var periodEndStr = '—';
-            if (periodEnd) {
-                var d = new Date(periodEnd * 1000);
-                periodEndStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-            }
-
-            function renderPlanCard(planKey, currentPlan, price, subscribeKey) {
-                var isCurrent = planKey === currentPlan;
-                var names = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
-                var btn = '';
-                if (isCurrent) btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
-                else if (subscribeKey && subscribeKey !== '0') btn = '<button class="sub-plan-btn upgrade" onclick="openPaymentModal(\'' + subscribeKey + '\')">Choisir</button>';
-                else if (subscribeKey === '0') btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
-                else btn = '<button class="sub-plan-btn upgrade" onclick="window.open(\'https://discord.gg/jf6QRZHaTB\',\'_blank\')">Nous contacter</button>';
-                return '<div class="sub-plan-card ' + (isCurrent ? 'current' : '') + '"><div class="sub-plan-name">' + names[planKey] + '</div><div class="sub-plan-price">' + price + (price !== 'Sur devis' ? '<span>/mois</span>' : '') + '</div>' + btn + '</div>';
-            }
-
-            container.innerHTML = '<div class="sub-current">' +
-                '<div class="sub-current-header">' +
-                    '<div class="sub-current-plan">' +
-                        '<div class="sub-current-plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>' +
-                        '<div class="sub-current-plan-text"><h4>Plan ' + (planLabels[plan] || 'Free') + '</h4><span>' + (planPrices[plan] || '0€') + ' / mois</span></div>' +
-                    '</div>' +
-                    '<div class="sub-status-badge ' + statusBadgeClass + '"><span class="sub-status-dot"></span>' + statusText + '</div>' +
-                '</div>' +
-                '<div class="sub-details">' +
-                    '<div class="sub-detail-item"><div class="sub-detail-label">Plan actuel</div><div class="sub-detail-value">' + (planLabels[plan] || 'Free') + '</div></div>' +
-                    '<div class="sub-detail-item"><div class="sub-detail-label">Statut</div><div class="sub-detail-value">' + statusText + '</div></div>' +
-                    '<div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">' + periodEndStr + '</div></div>' +
-                '</div>' +
-                '<div class="sub-actions">' +
-                    (plan === 'free' ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') +
-                '</div>' +
-            '</div>' +
-            '<div class="sub-plans">' +
-                '<div class="sub-plans-title">Tous les plans</div>' +
-                '<div class="sub-plans-grid">' +
-                    renderPlanCard('free', plan, '0€', '0') +
-                    renderPlanCard('starter', plan, '9,99€', 'starter') +
-                    renderPlanCard('pro', plan, '29,99€', 'pro') +
-                    renderPlanCard('enterprise', plan, 'Sur devis', null) +
-                '</div>' +
-            '</div>';
-        };
-
-        window.openTarifs = function() { window.location.href = '/tarifs.html'; };
-
-        window.openPortal = async function() {
-            var token = localStorage.getItem('token');
-            try {
-                var res = await fetch('/api/stripe/create-portal', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
-                var data = await res.json();
-                if (data.url) window.location.href = data.url;
-                else window.showToast(data.error || 'Erreur', 'error');
-            } catch (err) { window.showToast('Erreur de connexion', 'error'); }
-        };
-
-        window.openPaymentModal = function(plan) {
-            var prices = { starter: '9,99€', pro: '29,99€' };
-            var names = { starter: 'Starter', pro: 'Pro' };
-            var modal = document.createElement('div');
-            modal.id = 'paymentModalDash';
-            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
-            modal.innerHTML = '<div style="background:linear-gradient(135deg,rgba(30,30,30,0.95),rgba(15,15,15,0.98));border:1px solid rgba(255,255,255,0.14);border-radius:22px;padding:36px;max-width:540px;width:100%;position:relative;">' +
-                '<button onclick="this.closest(\'#paymentModalDash\').remove()" style="position:absolute;top:18px;right:18px;width:38px;height:38px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#7a7a7a;cursor:pointer;font-size:20px;">×</button>' +
-                '<h2 style="font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">Choisir un moyen de paiement</h2>' +
-                '<p style="font-size:14px;color:#b8b8b8;margin-bottom:28px;">Abonnement <strong style="color:#fff;">' + names[plan] + '</strong> — ' + prices[plan] + ' / mois</p>' +
-                '<button onclick="window.subscribe(\'' + plan + '\')" style="width:100%;padding:20px;background:linear-gradient(135deg,#fff,#e0e0e0);color:#000;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px;">Carte bancaire (Stripe)</button>' +
-                '<button onclick="window.showToast(\'Crypto bientôt disponible\', \'warning\');this.closest(\'#paymentModalDash\').remove()" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">Crypto-monnaie</button>' +
-            '</div>';
-            document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
-        };
-
-        window.subscribe = async function(plan) {
-            var token = localStorage.getItem('token');
-            try {
-                var res = await fetch('/api/stripe/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ plan: plan }) });
-                var data = await res.json();
-                if (data.url) window.location.href = data.url;
-                else window.showToast(data.error || 'Erreur', 'error');
-            } catch (err) { window.showToast('Erreur de connexion', 'error'); }
-        };
-
-        window.loadUsage = async function() { /* hook */ };
-        window.loadLogs = async function() { /* hook */ };
-
-        /* ============================================
-           GRAPHE INTERACTIF + MENU CONTEXTUEL
+           GRAPHE STATE
            ============================================ */
         var grapheState = {
             nodes: [],
@@ -2515,9 +2227,34 @@
             selectedNode: null,
             initialized: false,
             animationId: null,
-            contextNode: null
+            contextNode: null,
+            linkingMode: false,
+            linkingSource: null
         };
 
+        var COLORS = [
+            { hex: '#ffffff', name: 'Blanc' },
+            { hex: '#3b82f6', name: 'Bleu' },
+            { hex: '#10b981', name: 'Vert' },
+            { hex: '#f59e0b', name: 'Orange' },
+            { hex: '#ef4444', name: 'Rouge' },
+            { hex: '#8b5cf6', name: 'Violet' },
+            { hex: '#ec4899', name: 'Rose' },
+            { hex: '#06b6d4', name: 'Cyan' }
+        ];
+
+        var ROLES = [
+            { name: 'Cible', color: '#ef4444' },
+            { name: 'Famille', color: '#3b82f6' },
+            { name: 'Contact', color: '#f59e0b' },
+            { name: 'Associé', color: '#8b5cf6' },
+            { name: 'Employeur', color: '#10b981' },
+            { name: 'Ami', color: '#ec4899' }
+        ];
+
+        /* ============================================
+           GRAPHE INIT
+           ============================================ */
         function initGraphe() {
             var canvas = document.getElementById('grapheCanvas');
             if (!canvas) return;
@@ -2536,9 +2273,10 @@
             }
 
             resizeCanvas();
-            window.addEventListener('resize', function() {
-                resizeCanvas();
-            });
+            if (!canvas.dataset.resizeBound) {
+                canvas.dataset.resizeBound = '1';
+                window.addEventListener('resize', resizeCanvas);
+            }
 
             if (!grapheState.initialized) {
                 grapheState.initialized = true;
@@ -2569,12 +2307,12 @@
                 ctx.scale(grapheState.scale, grapheState.scale);
 
                 // Edges
-                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-                ctx.lineWidth = 1.5;
                 grapheState.edges.forEach(function(edge) {
                     var from = grapheState.nodes.find(function(n) { return n.id === edge.from; });
                     var to = grapheState.nodes.find(function(n) { return n.id === edge.to; });
                     if (from && to) {
+                        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+                        ctx.lineWidth = 1.5;
                         ctx.beginPath();
                         ctx.moveTo(from.x, from.y);
                         ctx.lineTo(to.x, to.y);
@@ -2585,12 +2323,17 @@
                 // Nodes
                 grapheState.nodes.forEach(function(node) {
                     var isSelected = grapheState.selectedNode && grapheState.selectedNode.id === node.id;
-                    if (isSelected) {
+                    var isLinkingSource = grapheState.linkingMode && grapheState.linkingSource && grapheState.linkingSource.id === node.id;
+
+                    // Halo sélection
+                    if (isSelected || isLinkingSource) {
                         ctx.beginPath();
                         ctx.arc(node.x, node.y, 38, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                        ctx.fillStyle = isLinkingSource ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.08)';
                         ctx.fill();
                     }
+
+                    // Cercle principal
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, 24, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(30,30,30,0.95)';
@@ -2598,14 +2341,20 @@
                     ctx.strokeStyle = node.color || '#fff';
                     ctx.lineWidth = 2;
                     ctx.stroke();
+
+                    // Point central
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, 4, 0, Math.PI * 2);
                     ctx.fillStyle = node.color || '#fff';
                     ctx.fill();
+
+                    // Label
                     ctx.fillStyle = '#fff';
                     ctx.font = '12px -apple-system, Arial, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.fillText(node.label, node.x, node.y + 44);
+
+                    // Rôle
                     ctx.fillStyle = 'rgba(255,255,255,0.5)';
                     ctx.font = '10px -apple-system, Arial, sans-serif';
                     ctx.fillText(node.role || '', node.x, node.y + 58);
@@ -2632,15 +2381,32 @@
                 return null;
             }
 
-            // Renommer les listeners pour éviter doublons
             if (!canvas.dataset.bound) {
                 canvas.dataset.bound = '1';
 
                 canvas.addEventListener('mousedown', function(e) {
+                    if (e.button !== 0) return;
                     var rect = canvas.getBoundingClientRect();
                     var mx = e.clientX - rect.left;
                     var my = e.clientY - rect.top;
                     var node = getNodeAt(mx, my);
+
+                    // MODE LIEN : clic sur un autre nœud
+                    if (grapheState.linkingMode && node && node.id !== grapheState.linkingSource.id) {
+                        var exists = grapheState.edges.some(function(ed) {
+                            return (ed.from === grapheState.linkingSource.id && ed.to === node.id) ||
+                                   (ed.from === node.id && ed.to === grapheState.linkingSource.id);
+                        });
+                        if (exists) {
+                            window.showToast('Lien déjà existant', 'warning');
+                        } else {
+                            grapheState.edges.push({ from: grapheState.linkingSource.id, to: node.id });
+                            window.showToast('Lien créé', 'success');
+                        }
+                        cancelLinking();
+                        return;
+                    }
+
                     if (node) {
                         grapheState.dragging = node;
                         grapheState.selectedNode = node;
@@ -2663,7 +2429,7 @@
                         grapheState.offsetX = e.clientX - grapheState.panStart.x;
                         grapheState.offsetY = e.clientY - grapheState.panStart.y;
                     } else {
-                        canvas.style.cursor = getNodeAt(mx, my) ? 'pointer' : 'grab';
+                        canvas.style.cursor = getNodeAt(mx, my) ? 'pointer' : (grapheState.linkingMode ? 'crosshair' : 'grab');
                     }
                 });
 
@@ -2677,7 +2443,6 @@
                     grapheState.panning = false;
                 });
 
-                // CLIC DROIT = MENU CONTEXTUEL
                 canvas.addEventListener('contextmenu', function(e) {
                     e.preventDefault();
                     var rect = canvas.getBoundingClientRect();
@@ -2693,7 +2458,6 @@
                     }
                 });
 
-                // Zoom
                 canvas.addEventListener('wheel', function(e) {
                     e.preventDefault();
                     var rect = canvas.getBoundingClientRect();
@@ -2707,7 +2471,7 @@
                     grapheState.offsetY = my - (my - grapheState.offsetY) * (grapheState.scale / oldScale);
                 }, { passive: false });
 
-                // Touch : click droit simulé par appui long
+                // Touch
                 var longPressTimer = null;
                 canvas.addEventListener('touchstart', function(e) {
                     if (e.touches.length === 1) {
@@ -2716,6 +2480,22 @@
                         var mx = t.clientX - rect.left;
                         var my = t.clientY - rect.top;
                         var node = getNodeAt(mx, my);
+
+                        if (grapheState.linkingMode && node && node.id !== grapheState.linkingSource.id) {
+                            var exists = grapheState.edges.some(function(ed) {
+                                return (ed.from === grapheState.linkingSource.id && ed.to === node.id) ||
+                                       (ed.from === node.id && ed.to === grapheState.linkingSource.id);
+                            });
+                            if (!exists) {
+                                grapheState.edges.push({ from: grapheState.linkingSource.id, to: node.id });
+                                window.showToast('Lien créé', 'success');
+                            } else {
+                                window.showToast('Lien déjà existant', 'warning');
+                            }
+                            cancelLinking();
+                            return;
+                        }
+
                         if (node) {
                             longPressTimer = setTimeout(function() {
                                 grapheState.selectedNode = node;
@@ -2830,7 +2610,7 @@
             if (!menu) return;
             menu.classList.add('active');
             menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
-            menu.style.top = Math.min(y, window.innerHeight - 300) + 'px';
+            menu.style.top = Math.min(y, window.innerHeight - 320) + 'px';
         }
 
         function hideContextMenu() {
@@ -2840,7 +2620,93 @@
 
         window.hideContextMenu = hideContextMenu;
 
-        // Actions du menu contextuel
+        /* ============================================
+           MODE LIEN
+           ============================================ */
+        window.cancelLinking = function() {
+            grapheState.linkingMode = false;
+            grapheState.linkingSource = null;
+            var banner = document.getElementById('linkingBanner');
+            if (banner) banner.classList.remove('active');
+            var canvas = document.getElementById('grapheCanvas');
+            if (canvas) canvas.classList.remove('linking');
+        };
+
+        function startLinking(sourceNode) {
+            grapheState.linkingMode = true;
+            grapheState.linkingSource = sourceNode;
+            var banner = document.getElementById('linkingBanner');
+            var text = document.getElementById('linkingBannerText');
+            if (banner && text) {
+                text.textContent = 'Cliquez sur une personne pour la lier à "' + sourceNode.label + '"';
+                banner.classList.add('active');
+            }
+            var canvas = document.getElementById('grapheCanvas');
+            if (canvas) canvas.classList.add('linking');
+        }
+
+        /* ============================================
+           COLOR PICKER
+           ============================================ */
+        function showColorPicker(node) {
+            var modal = document.getElementById('colorPickerModal');
+            var grid = document.getElementById('colorGrid');
+            if (!modal || !grid) return;
+            grid.innerHTML = COLORS.map(function(c) {
+                var sel = node.color === c.hex ? ' selected' : '';
+                return '<div class="color-swatch' + sel + '" style="background:' + c.hex + '" data-color="' + c.hex + '" title="' + c.name + '"></div>';
+            }).join('');
+            modal.classList.add('active');
+        }
+
+        window.closeColorPicker = function() {
+            document.getElementById('colorPickerModal').classList.remove('active');
+        };
+
+        // Clic sur une couleur
+        document.addEventListener('click', function(e) {
+            var swatch = e.target.closest && e.target.closest('.color-swatch');
+            if (swatch && grapheState.contextNode) {
+                e.preventDefault(); e.stopPropagation();
+                grapheState.contextNode.color = swatch.dataset.color;
+                window.showToast('Couleur modifiée', 'success');
+                closeColorPicker();
+                hideContextMenu();
+            }
+        }, true);
+
+        /* ============================================
+           ROLE PICKER
+           ============================================ */
+        function showRolePicker(node) {
+            var modal = document.getElementById('rolePickerModal');
+            var grid = document.getElementById('roleGrid');
+            if (!modal || !grid) return;
+            grid.innerHTML = ROLES.map(function(r) {
+                var sel = node.role === r.name ? ' selected' : '';
+                return '<button class="role-option' + sel + '" data-role="' + r.name + '"><span class="role-option-dot" style="background:' + r.color + '"></span>' + r.name + '</button>';
+            }).join('');
+            modal.classList.add('active');
+        }
+
+        window.closeRolePicker = function() {
+            document.getElementById('rolePickerModal').classList.remove('active');
+        };
+
+        document.addEventListener('click', function(e) {
+            var roleBtn = e.target.closest && e.target.closest('.role-option');
+            if (roleBtn && grapheState.contextNode) {
+                e.preventDefault(); e.stopPropagation();
+                grapheState.contextNode.role = roleBtn.dataset.role;
+                window.showToast('Rôle modifié', 'success');
+                closeRolePicker();
+                hideContextMenu();
+            }
+        }, true);
+
+        /* ============================================
+           ACTIONS DU MENU CONTEXTUEL
+           ============================================ */
         document.addEventListener('click', function(e) {
             var menuItem = e.target.closest && e.target.closest('#grapheContextMenu .menu-item');
             if (menuItem) {
@@ -2850,61 +2716,402 @@
                 if (!node) { hideContextMenu(); return; }
 
                 if (action === 'edit') {
-                    var newName = prompt('Nouveau nom :', node.label);
-                    if (newName && newName.trim()) node.label = newName.trim();
+                    openCustomInput('Modifier le nom', node.label, function(newName) {
+                        node.label = newName;
+                        window.showToast('Nom modifié', 'success');
+                    });
                 } else if (action === 'color') {
-                    var colors = ['#ffffff', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-                    var choice = prompt('Couleur (1-7) :\n1. Blanc\n2. Bleu\n3. Vert\n4. Orange\n5. Rouge\n6. Violet\n7. Rose', '1');
-                    var idx = parseInt(choice, 10);
-                    if (idx >= 1 && idx <= 7) node.color = colors[idx - 1];
+                    showColorPicker(node);
                 } else if (action === 'role') {
-                    var roles = ['Cible', 'Famille', 'Contact', 'Associé', 'Employeur', 'Ami', 'Inconnu'];
-                    var choice2 = prompt('Rôle :\n1. Cible\n2. Famille\n3. Contact\n4. Associé\n5. Employeur\n6. Ami\n7. Inconnu', '1');
-                    var idx2 = parseInt(choice2, 10);
-                    if (idx2 >= 1 && idx2 <= 7) node.role = roles[idx2 - 1];
+                    showRolePicker(node);
                 } else if (action === 'link') {
-                    var otherNodes = grapheState.nodes.filter(function(n) { return n.id !== node.id; });
-                    if (otherNodes.length === 0) {
-                        window.showToast('Aucun autre nœud à lier', 'warning');
-                    } else {
-                        var list = otherNodes.map(function(n, i) { return (i + 1) + '. ' + n.label; }).join('\n');
-                        var choice3 = prompt('Lier à quel nœud ?\n' + list, '1');
-                        var idx3 = parseInt(choice3, 10) - 1;
-                        if (idx3 >= 0 && idx3 < otherNodes.length) {
-                            var target = otherNodes[idx3];
-                            var exists = grapheState.edges.some(function(ed) {
-                                return (ed.from === node.id && ed.to === target.id) || (ed.from === target.id && ed.to === node.id);
-                            });
-                            if (!exists) {
-                                grapheState.edges.push({ from: node.id, to: target.id });
-                                window.showToast('Lien créé', 'success');
-                            } else {
-                                window.showToast('Lien déjà existant', 'warning');
-                            }
-                        }
-                    }
+                    startLinking(node);
                 } else if (action === 'detach') {
                     grapheState.edges = grapheState.edges.filter(function(ed) {
                         return ed.from !== node.id && ed.to !== node.id;
                     });
                     window.showToast('Liens détachés', 'success');
                 } else if (action === 'delete') {
-                    grapheState.nodes = grapheState.nodes.filter(function(n) { return n.id !== node.id; });
-                    grapheState.edges = grapheState.edges.filter(function(ed) {
-                        return ed.from !== node.id && ed.to !== node.id;
-                    });
-                    grapheState.selectedNode = null;
-                    window.showToast('Nœud supprimé', 'success');
+                    window.customConfirm('Supprimer', 'Supprimer ce nœud et tous ses liens ?', function() {
+                        grapheState.nodes = grapheState.nodes.filter(function(n) { return n.id !== node.id; });
+                        grapheState.edges = grapheState.edges.filter(function(ed) {
+                            return ed.from !== node.id && ed.to !== node.id;
+                        });
+                        grapheState.selectedNode = null;
+                        window.showToast('Nœud supprimé', 'success');
+                    }, { confirmText: 'Supprimer', danger: true });
                 }
                 hideContextMenu();
                 return;
             }
 
-            // Clic ailleurs = fermer
-            if (!e.target.closest || !e.target.closest('#grapheContextMenu')) {
+            // Fermer le menu si clic ailleurs (sauf dans une modale custom)
+            if (!e.target.closest || (!e.target.closest('#grapheContextMenu') && !e.target.closest('.custom-modal') && !e.target.closest('.mc-box'))) {
                 hideContextMenu();
             }
         }, true);
+
+        /* ============================================
+           DÉLÉGATION GLOBALE NAV/SECTIONS
+           ============================================ */
+        document.addEventListener('click', function(e) {
+            var t = e.target;
+
+            if (t.closest && t.closest('.section-header')) {
+                e.preventDefault(); e.stopPropagation();
+                window.toggleSection(t.closest('.section-header'));
+                return;
+            }
+
+            if (t.closest && t.closest('#mobileMenuBtn')) {
+                e.preventDefault(); e.stopPropagation();
+                window.toggleMobileMenu();
+                return;
+            }
+
+            if (t.closest && t.closest('#sidebarBackdrop')) {
+                e.preventDefault(); e.stopPropagation();
+                window.closeMobileMenu();
+                return;
+            }
+
+            if (t.closest && t.closest('#supportToggle')) {
+                e.preventDefault(); e.stopPropagation();
+                var st = t.closest('#supportToggle');
+                st.classList.toggle('open');
+                var arrow = st.querySelector('.support-arrow');
+                if (arrow) arrow.classList.toggle('open');
+                var submenu = document.getElementById('supportSubmenu');
+                if (submenu) submenu.classList.toggle('open');
+                return;
+            }
+
+            if (t.closest && t.closest('.sidebar-nav > li[data-page]')) {
+                e.preventDefault(); e.stopPropagation();
+                var li = t.closest('.sidebar-nav > li[data-page]');
+                var page = li.dataset.page;
+                if (page === 'discord') { window.open('https://discord.gg/jf6QRZHaTB', '_blank'); return; }
+                document.querySelectorAll('.sidebar-nav > li').forEach(function(l) { l.classList.remove('active'); });
+                li.classList.add('active');
+                document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+                var target = document.getElementById('page-' + page);
+                if (target) target.classList.add('active');
+                if (page === 'api') loadApiKeys();
+                if (page === 'graphe') setTimeout(initGraphe, 60);
+                if (page === 'profile') loadProfile();
+                if (window.innerWidth <= 768) window.closeMobileMenu();
+                return;
+            }
+
+            if (t.closest && t.closest('#logoutBtn')) {
+                e.preventDefault(); e.stopPropagation();
+                window.customConfirm('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', function() {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login.html';
+                }, { confirmText: 'Déconnexion', danger: true });
+                return;
+            }
+
+            if (t.closest && t.closest('.search-tab')) {
+                e.preventDefault(); e.stopPropagation();
+                var tab = t.closest('.search-tab');
+                document.querySelectorAll('.search-tab').forEach(function(x) { x.classList.remove('active'); });
+                tab.classList.add('active');
+                document.querySelectorAll('.search-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                var targetTab = document.getElementById('tab-' + tab.dataset.tab);
+                if (targetTab) targetTab.classList.add('active');
+                return;
+            }
+
+            if (t.closest && t.closest('.api-tab')) {
+                e.preventDefault(); e.stopPropagation();
+                var at = t.closest('.api-tab');
+                document.querySelectorAll('.api-tab').forEach(function(x) { x.classList.remove('active'); });
+                at.classList.add('active');
+                document.querySelectorAll('.api-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                var apiTarget = document.getElementById('api-tab-' + at.dataset.apiTab);
+                if (apiTarget) apiTarget.classList.add('active');
+                if (at.dataset.apiTab === 'subscription') loadSubscription();
+                if (at.dataset.apiTab === 'keys') loadApiKeys();
+                return;
+            }
+
+            if (t.closest && t.closest('#investigationBack, #investigationClose')) {
+                e.preventDefault(); e.stopPropagation();
+                window.closeInvestigation();
+                return;
+            }
+
+            if (t.closest && t.closest('#investigationCopy')) {
+                e.preventDefault(); e.stopPropagation();
+                var grid = document.getElementById('investigationInfoGrid');
+                if (grid) navigator.clipboard.writeText(grid.innerText).then(function() {
+                    window.showToast('Informations copiées', 'success');
+                });
+                return;
+            }
+        }, true);
+
+        // ESC pour fermer modales
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideContextMenu();
+                closeCustomInput();
+                closeColorPicker();
+                closeRolePicker();
+                cancelLinking();
+            }
+        });
+
+        /* ============================================
+           INVESTIGATION
+           ============================================ */
+        window.openInvestigation = function(personData) {
+            var overlay = document.getElementById('investigationOverlay');
+            if (!overlay) return;
+            overlay.classList.add('active');
+            personData = personData || {};
+            var fullName = ((personData.prenom || '') + ' ' + (personData.nom_famille || personData.nom || '')).trim() || 'Investigation';
+            var nameEl = document.getElementById('investigationName');
+            var cityEl = document.getElementById('investigationCityLabel');
+            var confEl = document.getElementById('investigationConfidence');
+            var grid = document.getElementById('investigationInfoGrid');
+            if (nameEl) nameEl.textContent = fullName;
+            if (cityEl) cityEl.textContent = personData.ville || 'Paris';
+            var confidence = personData._confidence || 75;
+            if (confEl) {
+                confEl.textContent = confidence + '%';
+                confEl.className = 'investigation-confidence ' + (confidence >= 80 ? 'high' : confidence >= 50 ? 'medium' : 'low');
+            }
+            if (grid) {
+                var fields = [];
+                var priority = ['nom_famille', 'prenom', 'email', 'telephone', 'adresse', 'code_postal', 'ville', 'date_naissance', 'nir', 'iban', 'bic', 'steam_id', 'discord_id'];
+                priority.forEach(function(key) {
+                    if (personData[key]) {
+                        fields.push('<div class="investigation-info-item important"><div class="investigation-info-label">' + key.replace(/_/g, ' ') + '</div><div class="investigation-info-value">' + personData[key] + '</div></div>');
+                    }
+                });
+                grid.innerHTML = fields.length ? fields.join('') : '<div style="color:#7a7a7a;padding:20px;">Aucune donnée disponible</div>';
+            }
+        };
+
+        window.closeInvestigation = function() {
+            var overlay = document.getElementById('investigationOverlay');
+            if (overlay) overlay.classList.remove('active');
+        };
+
+        /* ============================================
+           PROFIL
+           ============================================ */
+        window.loadProfile = async function() {
+            var container = document.getElementById('profileInfo');
+            if (!container) return;
+            var defaultData = {
+                username: localStorage.getItem('username') || 'Admin',
+                role: 'user',
+                plan: 'free',
+                created_at: null,
+                last_login: null,
+                searches_count: 0
+            };
+            var data = Object.assign({}, defaultData);
+            var token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    var res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                    if (res.ok) {
+                        var apiData = await res.json();
+                        data = Object.assign(data, apiData);
+                    }
+                } catch (err) {}
+            }
+            var initial = (data.username || 'A').charAt(0).toUpperCase();
+            var createdStr = data.created_at ? new Date(data.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+            var lastLoginStr = data.last_login ? new Date(data.last_login).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Maintenant';
+            var roleLabel = data.role === 'admin' ? 'Administrateur' : data.role === 'owner' ? 'Propriétaire' : 'Utilisateur';
+            var planLabel = (data.plan || 'free').toUpperCase();
+
+            container.innerHTML =
+                '<div class="profile-header">' +
+                    '<div class="profile-avatar">' + initial + '</div>' +
+                    '<div class="profile-header-info">' +
+                        '<h3>' + (data.username || 'Admin') + '</h3>' +
+                        '<p>Compte Marauder · Plan ' + planLabel + '</p>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="profile-row"><span class="label">Nom d\'utilisateur</span><span class="value">' + (data.username || 'Admin') + '</span></div>' +
+                '<div class="profile-row"><span class="label">Rôle</span><span class="value">' + roleLabel + '</span></div>' +
+                '<div class="profile-row"><span class="label">Plan actuel</span><span class="value">' + planLabel + '</span></div>' +
+                '<div class="profile-row"><span class="label">Membre depuis</span><span class="value">' + createdStr + '</span></div>' +
+                '<div class="profile-row"><span class="label">Dernière connexion</span><span class="value">' + lastLoginStr + '</span></div>' +
+                '<div class="profile-actions">' +
+                    '<button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="window.showToast(\'Bientôt disponible\', \'warning\')">Modifier le profil</button>' +
+                    '<button class="btn-secondary" onclick="window.location.href=\'/cgu.html\'">Voir les CGU</button>' +
+                '</div>';
+        };
+
+        /* ============================================
+           API KEYS
+           ============================================ */
+        var apiKeysCache = [];
+        var apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
+
+        window.loadApiKeys = async function() {
+            var token = localStorage.getItem('token');
+            if (!token) return;
+            var container = document.getElementById('apiKeysList');
+            if (!container) return;
+            try {
+                var results = await Promise.all([
+                    fetch('/api/keys', { headers: { 'Authorization': 'Bearer ' + token } }),
+                    fetch('/api/keys/limits', { headers: { 'Authorization': 'Bearer ' + token } })
+                ]);
+                var keysData = await results[0].json();
+                var limitsData = await results[1].json();
+                apiKeysCache = keysData.keys || [];
+                apiKeyLimits = limitsData || { plan: 'free', currentCount: 0, maxKeys: 1 };
+                renderApiKeys();
+            } catch (err) {
+                apiKeysCache = [];
+                apiKeyLimits = { plan: 'free', currentCount: 0, maxKeys: 1 };
+                renderApiKeys();
+            }
+        };
+
+        function renderApiKeys() {
+            var container = document.getElementById('apiKeysList');
+            if (!container) return;
+            var plan = apiKeyLimits.plan, currentCount = apiKeyLimits.currentCount, maxKeys = apiKeyLimits.maxKeys;
+            var maxDisplay = maxKeys === Infinity ? '∞' : maxKeys;
+            if (apiKeysCache.length === 0) {
+                container.innerHTML = '<div class="api-empty-state"><div class="api-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><p>Aucune clé API</p><span>Plan ' + plan.toUpperCase() + ' · ' + maxDisplay + ' clé disponible</span><button class="api-btn-primary" onclick="generateApiKey()" style="margin-top:20px;">Générer une clé</button></div>';
+                return;
+            }
+            var canAdd = currentCount < maxKeys || maxKeys === Infinity;
+            var counterHTML = '<div style="padding:18px 32px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;"><div style="font-size:13px;color:#b8b8b8;"><strong style="color:#fff;">' + currentCount + '</strong> / ' + maxDisplay + ' clé <span style="color:#7a7a7a;"> · Plan ' + plan.toUpperCase() + '</span></div>' + (canAdd ? '<button class="api-btn-primary" onclick="generateApiKey()">Générer</button>' : '<span style="font-size:12px;color:#f59e0b;">Limite atteinte</span>') + '</div>';
+            var keysHTML = apiKeysCache.map(function(k) {
+                var createdDate = new Date(k.created_at).toLocaleDateString('fr-FR');
+                return '<div class="api-key-item"><div class="api-key-info"><div class="api-key-name">' + k.name + '</div><div class="api-key-value">' + k.key_preview + '</div><div class="api-key-date">Créée le ' + createdDate + '</div></div><div class="api-key-actions"><button class="api-key-btn danger" onclick="revokeApiKey(' + k.id + ')">Révoquer</button></div></div>';
+            }).join('');
+            container.innerHTML = counterHTML + keysHTML;
+        }
+
+        window.generateApiKey = async function() {
+            var token = localStorage.getItem('token');
+            try {
+                var res = await fetch('/api/keys', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: '{}' });
+                var data = await res.json();
+                if (!res.ok) { window.showToast(data.error || 'Erreur', 'error'); return; }
+                showNewKeyModal(data.key.key);
+                window.showToast('Clé générée', 'success');
+                await loadApiKeys();
+            } catch (err) {
+                var demoKey = 'marauder_' + Math.random().toString(36).substring(2, 15);
+                showNewKeyModal(demoKey, true);
+            }
+        };
+
+        function showNewKeyModal(key, isDemo) {
+            var modal = document.createElement('div');
+            modal.className = 'api-key-modal active';
+            modal.innerHTML = '<div class="api-key-modal-content"><h3>Nouvelle clé API' + (isDemo ? ' (démo)' : '') + '</h3><p>Copiez-la maintenant, elle ne sera plus jamais affichée.</p><div class="api-key-new-value"><input type="text" value="' + key + '" readonly id="newKeyInput"><button class="api-btn-primary" onclick="copyNewKey()">Copier</button></div><div class="api-key-warning">Ne partagez jamais cette clé.</div><button class="api-btn-primary" onclick="closeKeyModal()" style="width:100%;justify-content:center;">Fermé</button></div>';
+            document.body.appendChild(modal);
+        }
+
+        window.revokeApiKey = async function(id) {
+            window.customConfirm('Révoquer la clé', 'Cette action est irréversible.', async function() {
+                var token = localStorage.getItem('token');
+                try {
+                    var res = await fetch('/api/keys/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+                    if (res.ok) { window.showToast('Clé révoquée', 'success'); await loadApiKeys(); }
+                    else { window.showToast('Erreur', 'error'); }
+                } catch (err) { window.showToast('Erreur', 'error'); }
+            }, { confirmText: 'Révoquer', danger: true });
+        };
+
+        window.copyNewKey = function() {
+            var input = document.getElementById('newKeyInput');
+            if (input) { input.select(); navigator.clipboard.writeText(input.value); window.showToast('Clé copiée', 'success'); }
+        };
+
+        window.closeKeyModal = function() {
+            var modal = document.querySelector('.api-key-modal');
+            if (modal) modal.remove();
+        };
+
+        /* ============================================
+           SUBSCRIPTION
+           ============================================ */
+        window.loadSubscription = async function() {
+            var container = document.getElementById('subscriptionContent');
+            if (!container) return;
+            var planLabels = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
+            var planPrices = { free: '0€', starter: '9,99€', pro: '29,99€', enterprise: 'Sur devis' };
+            var plan = 'free', active = false, status = 'inactive', periodEnd = null;
+            var token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    var res = await fetch('/api/stripe/status', { headers: { 'Authorization': 'Bearer ' + token } });
+                    if (res.ok) {
+                        var data = await res.json();
+                        plan = data.plan || 'free';
+                        active = data.active === true;
+                        status = data.status || 'inactive';
+                        periodEnd = data.currentPeriodEnd;
+                    }
+                } catch (err) {}
+            }
+            var statusBadgeClass = 'inactive', statusText = 'Inactif';
+            if (active) { statusBadgeClass = 'active'; statusText = 'Actif'; }
+            var periodEndStr = '—';
+            if (periodEnd) {
+                var d = new Date(periodEnd * 1000);
+                periodEndStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+            }
+            function renderPlanCard(planKey, currentPlan, price, subscribeKey) {
+                var isCurrent = planKey === currentPlan;
+                var names = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
+                var btn = '';
+                if (isCurrent) btn = '<button class="sub-plan-btn current-btn" disabled>Plan actuel</button>';
+                else if (subscribeKey && subscribeKey !== '0') btn = '<button class="sub-plan-btn upgrade" onclick="openPaymentModal(\'' + subscribeKey + '\')">Choisir</button>';
+                else if (subscribeKey === '0') btn = '<button class="sub-plan-btn current-btn" disabled>Inclus</button>';
+                else btn = '<button class="sub-plan-btn upgrade" onclick="window.open(\'https://discord.gg/jf6QRZHaTB\',\'_blank\')">Nous contacter</button>';
+                return '<div class="sub-plan-card ' + (isCurrent ? 'current' : '') + '"><div class="sub-plan-name">' + names[planKey] + '</div><div class="sub-plan-price">' + price + (price !== 'Sur devis' ? '<span>/mois</span>' : '') + '</div>' + btn + '</div>';
+            }
+            container.innerHTML = '<div class="sub-current"><div class="sub-current-header"><div class="sub-current-plan"><div class="sub-current-plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sub-current-plan-text"><h4>Plan ' + (planLabels[plan] || 'Free') + '</h4><span>' + (planPrices[plan] || '0€') + ' / mois</span></div></div><div class="sub-status-badge ' + statusBadgeClass + '"><span class="sub-status-dot"></span>' + statusText + '</div></div><div class="sub-details"><div class="sub-detail-item"><div class="sub-detail-label">Plan actuel</div><div class="sub-detail-value">' + (planLabels[plan] || 'Free') + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Statut</div><div class="sub-detail-value">' + statusText + '</div></div><div class="sub-detail-item"><div class="sub-detail-label">Prochaine facture</div><div class="sub-detail-value">' + periodEndStr + '</div></div></div><div class="sub-actions">' + (plan === 'free' ? '<button class="sub-btn primary" onclick="openTarifs()">Choisir un plan</button>' : '<button class="sub-btn primary" onclick="openPortal()">Gérer mon abonnement</button>') + '</div></div><div class="sub-plans"><div class="sub-plans-title">Tous les plans</div><div class="sub-plans-grid">' + renderPlanCard('free', plan, '0€', '0') + renderPlanCard('starter', plan, '9,99€', 'starter') + renderPlanCard('pro', plan, '29,99€', 'pro') + renderPlanCard('enterprise', plan, 'Sur devis', null) + '</div></div>';
+        };
+
+        window.openTarifs = function() { window.location.href = '/tarifs.html'; };
+        window.openPortal = async function() {
+            var token = localStorage.getItem('token');
+            try {
+                var res = await fetch('/api/stripe/create-portal', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+                var data = await res.json();
+                if (data.url) window.location.href = data.url;
+                else window.showToast(data.error || 'Erreur', 'error');
+            } catch (err) { window.showToast('Erreur', 'error'); }
+        };
+
+        window.openPaymentModal = function(plan) {
+            var prices = { starter: '9,99€', pro: '29,99€' };
+            var names = { starter: 'Starter', pro: 'Pro' };
+            var modal = document.createElement('div');
+            modal.id = 'paymentModalDash';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+            modal.innerHTML = '<div style="background:linear-gradient(135deg,rgba(30,30,30,0.95),rgba(15,15,15,0.98));border:1px solid rgba(255,255,255,0.14);border-radius:22px;padding:36px;max-width:540px;width:100%;position:relative;"><button onclick="this.closest(\'#paymentModalDash\').remove()" style="position:absolute;top:18px;right:18px;width:38px;height:38px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#7a7a7a;cursor:pointer;font-size:20px;">×</button><h2 style="font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">Choisir un moyen de paiement</h2><p style="font-size:14px;color:#b8b8b8;margin-bottom:28px;">Abonnement <strong style="color:#fff;">' + names[plan] + '</strong> — ' + prices[plan] + ' / mois</p><button onclick="window.subscribe(\'' + plan + '\')" style="width:100%;padding:20px;background:linear-gradient(135deg,#fff,#e0e0e0);color:#000;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">Carte bancaire (Stripe)</button></div>';
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
+        };
+
+        window.subscribe = async function(plan) {
+            var token = localStorage.getItem('token');
+            try {
+                var res = await fetch('/api/stripe/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ plan: plan }) });
+                var data = await res.json();
+                if (data.url) window.location.href = data.url;
+                else window.showToast(data.error || 'Erreur', 'error');
+            } catch (err) { window.showToast('Erreur', 'error'); }
+        };
 
         /* ============================================
            INIT
@@ -2912,11 +3119,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             var token = localStorage.getItem('token');
             if (token && typeof loadApiKeys === 'function') loadApiKeys();
-
-            // Si on est sur la page profil au chargement
-            if (document.getElementById('page-profile').classList.contains('active')) {
-                loadProfile();
-            }
+            if (document.getElementById('page-profile').classList.contains('active')) loadProfile();
         });
 
         console.log('Marauder Dashboard chargé ✓');
