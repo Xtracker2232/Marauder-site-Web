@@ -4009,6 +4009,54 @@ container.innerHTML =
             if (document.getElementById('page-profile').classList.contains('active')) loadProfile();
         });
 
+        /* ============================================
+   🔥 FIX ONGLETS API — Handler dédié
+   ============================================ */
+(function() {
+    function activateApiTab(key) {
+        console.log('🔥 Activation onglet API :', key);
+        
+        document.querySelectorAll('.api-tab').forEach(function(x) {
+            x.classList.remove('active');
+        });
+        var btn = document.querySelector('.api-tab[data-api-tab="' + key + '"]');
+        if (btn) btn.classList.add('active');
+        
+        document.querySelectorAll('.api-tab-content').forEach(function(c) {
+            c.classList.remove('active');
+        });
+        var content = document.getElementById('api-tab-' + key);
+        if (content) {
+            content.classList.add('active');
+            console.log('✅ Contenu affiché :', content.id);
+        } else {
+            console.error('❌ Introuvable : #api-tab-' + key);
+        }
+        
+        // Charge les données de l'onglet
+        setTimeout(function() {
+            try {
+                if (key === 'subscription' && typeof window.loadSubscription === 'function') window.loadSubscription();
+                if (key === 'keys' && typeof window.loadApiKeys === 'function') window.loadApiKeys();
+                if (key === 'stats' && typeof window.loadApiStats === 'function') window.loadApiStats();
+            } catch (err) {
+                console.error('Erreur chargement onglet', key, err);
+            }
+        }, 0);
+    }
+    
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest && e.target.closest('.api-tab');
+        if (!btn) return;
+        var key = btn.dataset.apiTab;
+        if (!key) return;
+        activateApiTab(key);
+    }, true);
+    
+    window.activateApiTab = activateApiTab;
+    console.log('✅ Handler onglets API installé');
+})();
+
         console.log('Marauder Dashboard chargé ✓');
     })();
     </script>
