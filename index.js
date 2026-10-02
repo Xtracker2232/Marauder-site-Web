@@ -20,6 +20,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // ============================================
+// 2. FIX ENCODAGE UTF-8
+// ============================================
+app.use(function(req, res, next) {
+    if (req.path.endsWith('.html') || !req.path.includes('.')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+    next();
+});
+
+// ============================================
 // 2. VÉRIFICATION DES VARIABLES D'ENV
 // ============================================
 const REQUIRED_ENV = [
