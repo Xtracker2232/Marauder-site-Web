@@ -20,16 +20,6 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // ============================================
-// 2. FIX ENCODAGE UTF-8
-// ============================================
-app.use(function(req, res, next) {
-    if (req.path.endsWith('.html') || !req.path.includes('.')) {
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    }
-    next();
-});
-
-// ============================================
 // 2. VÉRIFICATION DES VARIABLES D'ENV
 // ============================================
 const REQUIRED_ENV = [
@@ -417,19 +407,7 @@ app.get('/maintenance', (req, res) => {
 // ============================================
 // 10. FICHIERS STATIQUES
 // ============================================
-app.use(express.static('frontend', {
-    setHeaders: function(res, filePath) {
-        if (filePath.endsWith('.html')) {
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        } else if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        } else if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (filePath.endsWith('.json')) {
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        }
-    }
-}));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ============================================
 // 11. FORCER HTTPS
