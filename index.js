@@ -407,7 +407,19 @@ app.get('/maintenance', (req, res) => {
 // ============================================
 // 10. FICHIERS STATIQUES
 // ============================================
-app.use(express.static(path.join(__dirname, 'frontend')));
+app.use(express.static('frontend', {
+    setHeaders: function(res, filePath) {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        } else if (filePath.endsWith('.json')) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+    }
+}));
 
 // ============================================
 // 11. FORCER HTTPS
