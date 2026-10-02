@@ -438,17 +438,31 @@ async function searchPivot(payload) {
 }
 
 function familyIdentity(person) {
-    if (person.id !== undefined && person.id !== null) return 'id:' + person.id;
-    const phone = normalizePhone(person.telephone || person.mobile || '');
-    if (phone) return 'phone:' + phone;
-    const email = String(person.email || '').toLowerCase();
-    if (email) return 'email:' + email;
-    return getPersonName(person).toLowerCase() + '|' + normalizeAdresse(person.adresse || '');
+    if (person.id !== undefined && person.id !== null && person.id !== '') {
+        return 'id:' + person.id;
+    }
+    const prenom = String(person.prenom || '').toLowerCase().trim();
+    const nom = String(person.nom_famille || person.nom || '').toLowerCase().trim();
+    const email = String(person.email || '').toLowerCase().trim();
+    return prenom + '|' + nom + '|' + email;
 }
 
 function samePerson(a, b) {
     if (!a || !b) return false;
-    return familyIdentity(a) === familyIdentity(b);
+    if (a.id !== undefined && a.id !== null && b.id !== undefined && b.id !== null) {
+        return String(a.id) === String(b.id);
+    }
+    const aPrenom = String(a.prenom || '').toLowerCase().trim();
+    const aNom = String(a.nom_famille || a.nom || '').toLowerCase().trim();
+    const aEmail = String(a.email || '').toLowerCase().trim();
+    const bPrenom = String(b.prenom || '').toLowerCase().trim();
+    const bNom = String(b.nom_famille || b.nom || '').toLowerCase().trim();
+    const bEmail = String(b.email || '').toLowerCase().trim();
+    if (aPrenom && bPrenom && aNom && bNom && aPrenom === bPrenom && aNom === bNom) {
+        if (aEmail && bEmail) return aEmail === bEmail;
+        return true;
+    }
+    return false;
 }
 
 async function findFamily(person) {
@@ -464,10 +478,10 @@ async function findFamily(person) {
         const searches = [];
 
         if (address) {
-            searches.push(searchPivot({ adresse: address, flexible: true, per_page: 50 }));
+            searches.push(searchPivot({ adresse: address, flexible: false, per_page: 50 }));
         }
         if (phone) {
-            searches.push(searchPivot({ telephone: phone, flexible: true, per_page: 50 }));
+            searches.push(searchPivot({ telephone: phone, flexible: false, per_page: 50 }));
         }
 
         if (!searches.length) {
