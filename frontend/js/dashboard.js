@@ -228,7 +228,7 @@ function buildSearchPayload() {
         annee_naissance: getValue('searchAnnee'),
         genre: getValue('searchGenre'),
         flexible: true,
-        per_page: 50
+        per_page: 200
     };
 }
 
@@ -250,7 +250,7 @@ function buildProSearchPayload() {
         bic: getValue('searchBicPro'),
         vin_plaque: getValue('searchVinPro'),
         flexible: true,
-        per_page: 50
+        per_page: 200
     };
 }
 
@@ -478,10 +478,10 @@ async function findFamily(person) {
         const searches = [];
 
         if (address) {
-            searches.push(searchPivot({ adresse: address, flexible: false, per_page: 50 }));
+            searches.push(searchPivot({ adresse: address, flexible: false, per_page: 200 }));
         }
         if (phone) {
-            searches.push(searchPivot({ telephone: phone, flexible: false, per_page: 50 }));
+            searches.push(searchPivot({ telephone: phone, flexible: false, per_page: 200 }));
         }
 
         if (!searches.length) {
