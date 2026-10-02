@@ -1603,6 +1603,90 @@ app.post('/api/admin/users/:id/role', authenticateToken, requireAdmin, async (re
     }
 });
 
+// ============================================
+// Changer le plan d'un utilisateur
+// ============================================
+app.post('/api/admin/users/:id/plan', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { plan, days } = req.body;
+
+        const allowedPlans = ['free', 'starter', 'pro', 'enterprise'];
+        if (!allowedPlans.includes(plan)) {
+            return res.status(400).json({ error: 'Plan invalide. Valeurs acceptées : free, starter, pro, enterprise' });
+        }
+
+        const adminCheck = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
+        if (adminCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Utilisateur introuvable' });
+        }
+
+        let expiresAt = null;
+        if (plan !== 'free') {
+            const durationDays = parseInt(days) || 30;
+            expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+        }
+
+        await pool.query(
+            'UPDATE users SET plan = $1, plan_expires_at = $2, subscription_status = $3 WHERE id = $4',
+            [plan, expiresAt, plan === 'free' ? null : 'active', id]
+        );
+
+        // Log
+        console.log('Admin ' + req.user.username + ' a changé le plan de ' + adminCheck.rows[0].username + ' en ' + plan);
+
+        res.json({
+            success: true,
+            user_id: id,
+            username: adminCheck.rows[0].username,
+            plan: plan,
+            expires_at: expiresAt,
+            status: plan === 'free' ? null : 'active'
+        });
+    } catch (error) {
+        console.error('Erreur changement plan:', error);
+        res.status(500).json({ error: 'server_error' });
+    }
+});
+
+// ============================================
+// Changer le plan d'un utilisateur
+// ============================================
+app.post('/api/admin/users/:id/plan', authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { plan, days } = req.body;
+    try {
+        const allowedPlans = ['free', 'starter', 'pro', 'enterprise'];
+        if (!allowedPlans.includes(plan)) {
+            return res.status(400).json({ error: 'Plan invalide. Valeurs acceptees : free, starter, pro, enterprise' });
+        }
+
+        let expiresAt = null;
+        if (plan !== 'free') {
+            const durationDays = parseInt(days) || 30;
+            expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+        }
+
+        await pool.query(
+            'UPDATE users SET plan = $1, plan_expires_at = $2, subscription_status = $3 WHERE id = $4',
+            [plan, expiresAt, plan === 'free' ? null : 'active', id]
+        );
+
+        res.json({
+            success: true,
+            user_id: id,
+            plan: plan,
+            expires_at: expiresAt
+        });
+    } catch (error) {
+        console.error('Erreur changement plan:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+
 app.post('/api/admin/users/:id/quota', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { custom_quota } = req.body;

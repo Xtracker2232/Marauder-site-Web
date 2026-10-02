@@ -254,23 +254,24 @@ async function loadUsers(page, search) {
                 var statusText = u.banned ? 'Banni' : 'Actif';
                 var usernameEscaped = u.username.replace(/'/g, "\\'");
                 html += '<tr>' +
-                    '<td><span class="clickable" onclick="viewUser(' + u.id + ')">' + u.username + '</span></td>' +
-                    '<td>' + getPlanBadge(u.plan, u.custom_quota) + '</td>' +
-                    '<td><span class="badge-status ' + statusClass + '">' + statusText + '</span></td>' +
-                    '<td style="font-size:12px;">' + getUserLimitText(u) + '</td>' +
-                    '<td>' + (u.search_count || 0) + '</td>' +
-                    '<td>' + (u.fiche_count || 0) + '</td>' +
-                    '<td style="font-size:11px;color:var(--text-muted);">' + (u.reg_ip || '-') + '</td>' +
-                    '<td><div class="admin-actions">';
-                if (!isAdmin) {
-                    html += '<button class="primary" onclick="viewUser(' + u.id + ')">Voir</button>';
-                    html += '<button class="primary" onclick="openQuotaModal(' + u.id + ', \'' + usernameEscaped + '\', ' + (u.custom_quota || 0) + ', \'' + (u.plan || 'free') + '\')">Requêtes</button>';
-                    html += '<button class="' + (u.banned ? 'success' : 'danger') + '" onclick="toggleBan(' + u.id + ', ' + (!u.banned) + ')">' + (u.banned ? 'Debannir' : 'Bannir') + '</button>';
-                    html += '<button class="danger" onclick="deleteUser(' + u.id + ')">Sup.</button>';
-                } else {
-                    html += '<span style="color:var(--text-muted);font-size:11px;">Protege</span>';
-                }
-                html += '</div></td></tr>';
+    '<td><span class="clickable" onclick="viewUser(' + u.id + ')">' + u.username + '</span></td>' +
+    '<td>' + getPlanBadge(u.plan, u.custom_quota) + '</td>' +
+    '<td><span class="badge-status ' + statusClass + '">' + statusText + '</span></td>' +
+    '<td style="font-size:12px;">' + getUserLimitText(u) + '</td>' +
+    '<td>' + (u.search_count || 0) + '</td>' +
+    '<td>' + (u.fiche_count || 0) + '</td>' +
+    '<td style="font-size:11px;color:var(--text-muted);">' + (u.reg_ip || '-') + '</td>' +
+    '<td><div class="admin-actions">';
+if (!isAdmin) {
+    html += '<button class="primary" onclick="viewUser(' + u.id + ')">Voir</button>';
+    html += '<button class="primary" onclick="openPlanModal(' + u.id + ', \'' + usernameEscaped + '\', \'' + (u.plan || 'free') + '\')">Plan</button>';
+    html += '<button class="primary" onclick="openQuotaModal(' + u.id + ', \'' + usernameEscaped + '\', ' + (u.custom_quota || 0) + ', \'' + (u.plan || 'free') + '\')">Requetes</button>';
+    html += '<button class="' + (u.banned ? 'success' : 'danger') + '" onclick="toggleBan(' + u.id + ', ' + (!u.banned) + ')">' + (u.banned ? 'Debannir' : 'Bannir') + '</button>';
+    html += '<button class="danger" onclick="deleteUser(' + u.id + ')">Sup.</button>';
+} else {
+    html += '<span style="color:var(--text-muted);font-size:11px;">Protege</span>';
+}
+html += '</div></td></tr>';
             });
             tbody.innerHTML = html;
         } else {
@@ -311,6 +312,64 @@ function updatePagination(type, page, total) {
     if (prev) prev.disabled = page <= 1;
     if (next) next.disabled = page >= totalPages;
 }
+
+// ============================================
+// Ouvrir la modale de changement de plan
+// ============================================
+function openPlanModal(userId, username, currentPlan) {
+    var plans = ['free', 'starter', 'pro', 'enterprise'];
+    var options = plans.map(function(p) {
+        var label = p.charAt(0).toUpperCase() + p.slice(1);
+        return '<option value="' + p + '"' + (p === currentPlan ? ' selected' : '') + '>' + label + '</option>';
+    }).join('');
+
+    var html = '<div style="padding:8px 0;">';
+    html += '<div style="margin-bottom:16px;color:var(--text-secondary);font-size:14px;">Utilisateur : <strong style="color:#fff;">' + username + '</strong></div>';
+    html += '<div style="margin-bottom:12px;"><label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Nouveau plan</label>';
+    html += '<select id="planSelect" style="width:100%;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;">' + options + '</select></div>';
+    html += '<div style="margin-bottom:16px;"><label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Duree en jours (pour les plans payants)</label>';
+    html += '<input type="number" id="planDays" value="30" min="1" max="3650" style="width:100%;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;"></div>';
+    html += '<div style="padding:10px 14px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.5;">';
+    html += 'Le plan <strong>free</strong> n\'a pas de date d\'expiration. Les autres plans expirent apres le nombre de jours indique.';
+    html += '</div>';
+    html += '</div>';
+
+    showModal('Changer le plan de ' + username, html, 'Valider', async function() {
+        var newPlan = document.getElementById('planSelect').value;
+        var days = parseInt(document.getElementById('planDays').value) || 30;
+        await changePlan(userId, newPlan, days);
+    });
+}
+
+// ============================================
+// Changer le plan (appel API)
+// ============================================
+async function changePlan(userId, plan, days) {
+    try {
+        var response = await fetch(API_URL + '/api/admin/users/' + userId + '/plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ plan: plan, days: days })
+        });
+        var data = await response.json();
+        if (response.ok) {
+            showToast('Plan change en ' + plan.toUpperCase() + (plan !== 'free' ? ' pour ' + days + ' jours' : ''), 'success');
+            closeModal();
+            loadUsers(usersPage, usersSearch);
+        } else {
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur reseau', 'error');
+    }
+}
+
+// Exposer globalement
+window.openPlanModal = openPlanModal;
+window.changePlan = changePlan;
 
 // ============================================
 // QUOTA CUSTOM
