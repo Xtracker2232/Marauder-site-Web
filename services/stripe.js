@@ -44,6 +44,7 @@ async function createCheckoutSession(userId, plan, successUrl, cancelUrl) {
             success_url: successUrl,
             cancel_url: cancelUrl,
             client_reference_id: userId,
+                        allow_promotion_codes: true,
             metadata: {
                 userId: userId,
                 plan: plan
