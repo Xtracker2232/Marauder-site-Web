@@ -1454,6 +1454,83 @@
 }</code></pre>
                                 </div>
                             </div>
+                            <!-- PAGINATION ET LIMITES -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>Pagination et limites de résultats</h4>
+                                <p>Chaque plan définit un nombre maximum de résultats renvoyés par recherche. Le paramètre <code>per_page</code> permet de demander un nombre spécifique, mais <strong>la limite de votre plan s'applique toujours en priorité</strong>.</p>
+                                <div class="errors-table">
+                                    <div class="error-row"><span class="error-code wide">Plan FREE</span><span class="error-desc">10 résultats par recherche maximum</span></div>
+                                    <div class="error-row"><span class="error-code wide">Plan STARTER</span><span class="error-desc">50 résultats par recherche maximum</span></div>
+                                    <div class="error-row"><span class="error-code wide">Plan PRO</span><span class="error-desc">100 résultats par recherche maximum</span></div>
+                                    <div class="error-row"><span class="error-code wide">Plan ENTERPRISE</span><span class="error-desc">100 résultats par recherche (plafond BrixHub)</span></div>
+                                </div>
+                                <p style="margin-top:16px;font-size:13px;color:#a0a0a0;">Exemple de requête demandant 100 résultats :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Body JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "nom_famille": "DUPONT",
+  "per_page": 100
+}</code></pre>
+                                </div>
+                                <div style="margin-top:14px;padding:14px 18px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.25);border-radius:12px;color:#f59e0b;font-size:13px;line-height:1.6;">
+                                    <strong>Important :</strong> Si vous demandez <code>per_page: 500</code> mais que votre plan est <strong>STARTER</strong>, vous recevrez seulement <strong>50 résultats</strong>. Le maximum de votre plan s'applique toujours.
+                                </div>
+                            </div>
+
+                            <!-- PAGINATION MULTI-PAGES -->
+                            <div class="doc-section">
+                                <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>Pagination multi-pages</h4>
+                                <p>Pour récupérer plus de résultats que la limite d'une seule requête, utilisez le paramètre <code>page</code> en combinaison avec <code>per_page</code>.</p>
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:14px;">Exemple - Page 1 :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Body JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "nom_famille": "DUPONT",
+  "per_page": 100,
+  "page": 1
+}</code></pre>
+                                </div>
+                                <p style="font-size:13px;color:#a0a0a0;margin-top:14px;">Exemple - Page 2 :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Body JSON</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "nom_famille": "DUPONT",
+  "per_page": 100,
+  "page": 2
+}</code></pre>
+                                </div>
+                                <p style="margin-top:16px;">La réponse contient les métadonnées de pagination :</p>
+                                <div class="code-block">
+                                    <div class="code-header"><span>Réponse</span><button class="code-copy" onclick="copyCode(this)">Copier</button></div>
+                                    <pre><code>{
+  "success": true,
+  "data": {
+    "results": [ /* 100 résultats */ ]
+  },
+  "meta": {
+    "total": 96000,
+    "returned": 100,
+    "plan_limit": 100,
+    "page": 1,
+    "pages": 960,
+    "per_page": 100,
+    "limited": false,
+    "total_before_limit": 100
+  }
+}</code></pre>
+                                </div>
+                                <p style="margin-top:14px;font-size:13px;color:#a0a0a0;">Champs de pagination :</p>
+                                <div class="errors-table">
+                                    <div class="error-row"><span class="error-code wide">meta.total</span><span class="error-desc">Nombre total de résultats disponibles chez BrixHub</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.returned</span><span class="error-desc">Nombre de résultats dans cette réponse</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.page</span><span class="error-desc">Page actuelle</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.pages</span><span class="error-desc">Nombre total de pages disponibles</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.per_page</span><span class="error-desc">Nombre de résultats par page</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.plan_limit</span><span class="error-desc">Limite de votre plan actuel</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.limited</span><span class="error-desc">true si les résultats ont été tronqués par votre plan</span></div>
+                                    <div class="error-row"><span class="error-code wide">meta.total_before_limit</span><span class="error-desc">Nombre de résultats reçus AVANT la limite du plan</span></div>
+                                </div>
+                            </div>
 
                             <div class="doc-section">
                                 <h4><span class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Recherche multi-critères — <code>POST /search</code></h4>
