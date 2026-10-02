@@ -313,9 +313,6 @@ function updatePagination(type, page, total) {
     if (next) next.disabled = page >= totalPages;
 }
 
-// ============================================
-// Ouvrir la modale de changement de plan
-// ============================================
 function openPlanModal(userId, username, currentPlan) {
     var plans = ['free', 'starter', 'pro', 'enterprise'];
     var options = plans.map(function(p) {
@@ -323,23 +320,64 @@ function openPlanModal(userId, username, currentPlan) {
         return '<option value="' + p + '"' + (p === currentPlan ? ' selected' : '') + '>' + label + '</option>';
     }).join('');
 
-    var html = '<div style="padding:8px 0;">';
-    html += '<div style="margin-bottom:16px;color:var(--text-secondary);font-size:14px;">Utilisateur : <strong style="color:#fff;">' + username + '</strong></div>';
-    html += '<div style="margin-bottom:12px;"><label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Nouveau plan</label>';
-    html += '<select id="planSelect" style="width:100%;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;">' + options + '</select></div>';
-    html += '<div style="margin-bottom:16px;"><label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Duree en jours (pour les plans payants)</label>';
-    html += '<input type="number" id="planDays" value="30" min="1" max="3650" style="width:100%;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;"></div>';
-    html += '<div style="padding:10px 14px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.5;">';
-    html += 'Le plan <strong>free</strong> n\'a pas de date d\'expiration. Les autres plans expirent apres le nombre de jours indique.';
+    var html = '';
+    html += '<div style="margin-bottom:16px;color:#a0a0a0;font-size:14px;">Utilisateur : <strong style="color:#fff;">' + username + '</strong></div>';
+    
+    html += '<div style="margin-bottom:12px;">';
+    html += '<label style="display:block;font-size:13px;color:#7a7a7a;margin-bottom:6px;">Nouveau plan</label>';
+    html += '<select id="planSelect" style="width:100%;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;">' + options + '</select>';
     html += '</div>';
+    
+    html += '<div style="margin-bottom:16px;">';
+    html += '<label style="display:block;font-size:13px;color:#7a7a7a;margin-bottom:6px;">Duree en jours (plans payants)</label>';
+    html += '<input type="number" id="planDays" value="30" min="1" max="3650" style="width:100%;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;">';
+    html += '</div>';
+    
+    html += '<div style="padding:10px 14px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;font-size:12px;color:#a0a0a0;line-height:1.5;margin-bottom:20px;">';
+    html += 'Le plan FREE n\'a pas de date d\'expiration. Les autres plans expirent apres le nombre de jours indique.';
+    html += '</div>';
+    
+    // Boutons
+    html += '<div class="modal-actions">';
+    html += '<button class="btn-primary" onclick="confirmPlanChange(' + userId + ')">Valider</button>';
+    html += '<button class="btn-secondary" onclick="closeModal()">Annuler</button>';
     html += '</div>';
 
-    showModal('Changer le plan de ' + username, html, 'Valider', async function() {
-        var newPlan = document.getElementById('planSelect').value;
-        var days = parseInt(document.getElementById('planDays').value) || 30;
-        await changePlan(userId, newPlan, days);
-    });
+    showModal('Changer le plan', html);
 }
+
+function confirmPlanChange(userId) {
+    var newPlan = document.getElementById('planSelect').value;
+    var days = parseInt(document.getElementById('planDays').value) || 30;
+    changePlan(userId, newPlan, days);
+}
+
+async function changePlan(userId, plan, days) {
+    try {
+        var response = await fetch(API_URL + '/api/admin/users/' + userId + '/plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ plan: plan, days: days })
+        });
+        var data = await response.json();
+        if (response.ok) {
+            showToast('Plan change en ' + plan.toUpperCase() + (plan !== 'free' ? ' pour ' + days + ' jours' : ''), 'success');
+            closeModal();
+            loadUsers(usersPage, usersSearch);
+        } else {
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (error) {
+        showToast('Erreur reseau', 'error');
+    }
+}
+
+window.openPlanModal = openPlanModal;
+window.confirmPlanChange = confirmPlanChange;
+window.changePlan = changePlan;
 
 // ============================================
 // Changer le plan (appel API)
