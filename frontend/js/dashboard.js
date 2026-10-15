@@ -939,34 +939,13 @@ function addToGraphe(index) {
         showToast('Personne introuvable', 'error');
         return;
     }
-
-    const id = familyIdentity(person);
-    if (state.graphNodes.some(function (n) { return n.sourceIdentity === id; })) {
-        showToast('Déjà dans le graphe', 'info');
-        switchPage('graphe');
-        return;
+    
+    // Appeler la fonction du HTML qui gère le graphe proprement
+    if (typeof window.addPersonToGrapheFromSearch === 'function') {
+        window.addPersonToGrapheFromSearch(person);
+    } else {
+        showToast('Graphe non disponible', 'error');
     }
-
-    const container = $('grapheContainer');
-    const w = container ? Math.max(container.clientWidth, 600) : 900;
-    const h = container ? Math.max(container.clientHeight, 500) : 600;
-
-    state.graphNodes.push({
-        id: 'node-' + Date.now() + '-' + Math.random().toString(36).slice(2),
-        label: getPersonName(person),
-        prenom: person.prenom || '',
-        nom_famille: person.nom_famille || person.nom || '',
-        role: person.role || 'Personne',
-        sourceIdentity: id,
-        person: person,
-        x: w / 2 + (Math.random() - 0.5) * 200,
-        y: h / 2 + (Math.random() - 0.5) * 150
-    });
-
-    window.grapheNodes = state.graphNodes;
-    switchPage('graphe');
-    setTimeout(renderGraphe, 100);
-    showToast('Ajouté au graphe', 'success');
 }
 
 // ============================================
