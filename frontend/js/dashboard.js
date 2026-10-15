@@ -1,6 +1,7 @@
 /* ============================================
    MARAUDER - DASHBOARD.JS
-   Version propre UTF-8, style original conservé
+   Version propre UTF-8
+   Le graphe est géré dans dashboard.html
    ============================================ */
 
 const API_URL = window.location.origin;
@@ -21,16 +22,10 @@ const state = {
     familyCache: {},
     familyLoading: {},
     investigationData: null,
-    graphNodes: [],
-    graphEdges: [],
-    graphLinkMode: false,
-    graphLinkFrom: null,
     searchInProgress: false
 };
 
 window._resultsData = state.results;
-window.grapheNodes = state.graphNodes;
-window.grapheEdges = state.graphEdges;
 
 // ============================================
 // UTILITAIRES
@@ -228,7 +223,7 @@ function buildSearchPayload() {
         annee_naissance: getValue('searchAnnee'),
         genre: getValue('searchGenre'),
         flexible: true,
-        per_page: 200
+        per_page: 100
     };
 }
 
@@ -250,7 +245,7 @@ function buildProSearchPayload() {
         bic: getValue('searchBicPro'),
         vin_plaque: getValue('searchVinPro'),
         flexible: true,
-        per_page: 200
+        per_page: 100
     };
 }
 
@@ -279,7 +274,6 @@ async function performSearch(customPayload) {
         ? buildProSearchPayload()
         : buildSearchPayload());
 
-    // Nettoyage : retirer les champs vides
     Object.keys(payload).forEach(function (k) {
         if (k !== 'flexible' && k !== 'per_page' && !payload[k]) delete payload[k];
     });
@@ -478,10 +472,10 @@ async function findFamily(person) {
         const searches = [];
 
         if (address) {
-            searches.push(searchPivot({ adresse: address, flexible: false, per_page: 200 }));
+            searches.push(searchPivot({ adresse: address, flexible: false, per_page: 100 }));
         }
         if (phone) {
-            searches.push(searchPivot({ telephone: phone, flexible: false, per_page: 200 }));
+            searches.push(searchPivot({ telephone: phone, flexible: false, per_page: 100 }));
         }
 
         if (!searches.length) {
@@ -911,7 +905,7 @@ async function addPersonToFiche(ficheId, person) {
 }
 
 // ============================================
-// COPIER / GRAPHE
+// COPIER
 // ============================================
 function copyFullCard(index) {
     const person = state.results[index];
@@ -933,14 +927,15 @@ function copyFullCard(index) {
     });
 }
 
+// ============================================
+// AJOUT AU GRAPHE — passe par le HTML
+// ============================================
 function addToGraphe(index) {
     const person = state.results[index];
     if (!person) {
         showToast('Personne introuvable', 'error');
         return;
     }
-    
-    // Appeler la fonction du HTML qui gère le graphe proprement
     if (typeof window.addPersonToGrapheFromSearch === 'function') {
         window.addPersonToGrapheFromSearch(person);
     } else {
@@ -1226,228 +1221,6 @@ async function loadUsage() {
 }
 
 // ============================================
-// GRAPHE
-// ============================================
-function renderGraphNode(node) {
-    const el = document.createElement('div');
-    el.className = 'graph-node';
-    el.dataset.nodeId = node.id;
-    el.style.cssText = 'position:absolute;left:' + (node.x || 100) + 'px;top:' + (node.y || 100) + 'px;' +
-        'width:150px;min-height:65px;padding:10px;box-sizing:border-box;' +
-        'background:#111;border:1px solid #333;border-radius:10px;color:#fff;' +
-        'cursor:pointer;transform:translate(-50%,-50%);user-select:none;';
-
-    el.innerHTML = '<div style="font-size:13px;font-weight:600;">' + escapeHtml(node.label || 'Personne') + '</div>' +
-        '<div style="font-size:11px;color:#777;margin-top:4px;">' + escapeHtml(node.role || 'Personne') + '</div>';
-
-    el.addEventListener('click', function (e) {
-        e.stopPropagation();
-        if (!state.graphLinkMode) return;
-        handleGraphLinkClick(node.id);
-    });
-
-    return el;
-}
-
-function handleGraphLinkClick(nodeId) {
-    if (!state.graphLinkMode) return;
-    if (!state.graphLinkFrom) {
-        state.graphLinkFrom = nodeId;
-        showToast('Sélectionnez la 2ème personne', 'info');
-        return;
-    }
-    if (state.graphLinkFrom === nodeId) {
-        showToast('Sélectionnez une autre personne', 'warning');
-        return;
-    }
-    const exists = state.graphEdges.some(function (e) {
-        return (e.from === state.graphLinkFrom && e.to === nodeId) ||
-            (e.from === nodeId && e.to === state.graphLinkFrom);
-    });
-    if (!exists) {
-        state.graphEdges.push({
-            id: 'edge-' + Date.now(),
-            from: state.graphLinkFrom,
-            to: nodeId
-        });
-    }
-    state.graphLinkFrom = null;
-    state.graphLinkMode = false;
-    window.grapheEdges = state.graphEdges;
-    renderGraphe();
-    showToast('Personnes attachées', 'success');
-}
-
-function renderGraphe() {
-    const container = $('grapheContainer');
-    if (!container) return;
-
-    container.innerHTML = '';
-    container.style.position = 'relative';
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;';
-
-    state.graphEdges.forEach(function (edge) {
-        const from = state.graphNodes.find(function (n) { return n.id === edge.from; });
-        const to = state.graphNodes.find(function (n) { return n.id === edge.to; });
-        if (!from || !to) return;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', String(from.x || 0));
-        line.setAttribute('y1', String(from.y || 0));
-        line.setAttribute('x2', String(to.x || 0));
-        line.setAttribute('y2', String(to.y || 0));
-        line.setAttribute('stroke', '#444');
-        line.setAttribute('stroke-width', '2');
-        svg.appendChild(line);
-    });
-
-    container.appendChild(svg);
-    state.graphNodes.forEach(function (node) {
-        container.appendChild(renderGraphNode(node));
-    });
-}
-
-function grapheAddPersonne() {
-    showModal('Ajouter une personne',
-        '<div class="form-group"><label>Prénom</label>' +
-        '<input id="newNodePrenom" type="text" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>' +
-        '<div class="form-group" style="margin-top:10px;"><label>Nom</label>' +
-        '<input id="newNodeNom" type="text" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>' +
-        '<div class="form-group" style="margin-top:10px;"><label>Rôle</label>' +
-        '<input id="newNodeRole" type="text" style="width:100%;padding:10px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;"></div>',
-        'Ajouter',
-        function () {
-            const prenom = ($('newNodePrenom') || {}).value || '';
-            const nom = ($('newNodeNom') || {}).value || '';
-            const role = ($('newNodeRole') || {}).value || 'Personne';
-            const container = $('grapheContainer');
-            const w = container ? container.clientWidth : 900;
-            const h = container ? container.clientHeight : 600;
-
-            state.graphNodes.push({
-                id: 'node-' + Date.now() + '-' + Math.random().toString(36).slice(2),
-                label: (prenom + ' ' + nom).trim() || 'Personne',
-                prenom: prenom.trim(),
-                nom_famille: nom.trim(),
-                role: role.trim(),
-                x: w / 2 + (Math.random() - 0.5) * 200,
-                y: h / 2 + (Math.random() - 0.5) * 150
-            });
-            window.grapheNodes = state.graphNodes;
-            renderGraphe();
-            showToast('Personne ajoutée', 'success');
-        });
-}
-
-function grapheAttacher() {
-    if (state.graphNodes.length < 2) {
-        showToast('Ajoutez au moins 2 personnes', 'warning');
-        return;
-    }
-    state.graphLinkMode = !state.graphLinkMode;
-    state.graphLinkFrom = null;
-    showToast(state.graphLinkMode ? 'Cliquez sur 2 personnes' : 'Mode attacher désactivé', 'info');
-}
-
-function grapheSauvegarder() {
-    const data = { name: 'Graphe Marauder', nodes: state.graphNodes, edges: state.graphEdges };
-    localStorage.setItem('marauder_graphe', JSON.stringify(data));
-    fetch(API_URL + '/api/graphes', {
-        method: 'POST',
-        headers: authHeaders(true),
-        body: JSON.stringify(data)
-    }).then(function (r) {
-        showToast(r.ok ? 'Graphe sauvegardé sur le serveur' : 'Sauvegardé localement', r.ok ? 'success' : 'info');
-    }).catch(function () {
-        showToast('Sauvegardé localement', 'info');
-    });
-}
-
-async function grapheMesGraphes() {
-    const modal = $('graphesModal');
-    const list = $('graphesList');
-    if (!modal || !list) return;
-    modal.style.display = 'flex';
-    list.innerHTML = '<div style="padding:20px;color:#777;text-align:center;">Chargement...</div>';
-
-    try {
-        const r = await fetch(API_URL + '/api/graphes/all', { headers: authHeaders(false) });
-        const d = await readJson(r);
-        const graphes = d.graphes || d.results || [];
-
-        const local = localStorage.getItem('marauder_graphe');
-        if (local) {
-            try {
-                const lg = JSON.parse(local);
-                graphes.unshift({ id: 'local', name: 'Graphe local', nodes: lg.nodes || [], edges: lg.edges || [], created_at: new Date().toISOString(), local: true });
-            } catch (e) {}
-        }
-
-        if (!graphes.length) {
-            list.innerHTML = '<div style="padding:20px;color:#777;text-align:center;">Aucun graphe sauvegardé</div>';
-            return;
-        }
-
-        list.innerHTML = graphes.map(function (g, i) {
-            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#101010;border:1px solid #222;border-radius:9px;margin-bottom:8px;">' +
-                '<div><div style="font-weight:600;color:#fff;">' + escapeHtml(g.name || 'Sans nom') + '</div>' +
-                '<div style="font-size:12px;color:#777;margin-top:3px;">' + (g.nodes || []).length + ' personnes - ' + (g.edges || []).length + ' liens</div></div>' +
-                '<div style="display:flex;gap:6px;">' +
-                '<button class="btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="loadGraph(' + i + ')">Charger</button>' +
-                (g.local ? '' : '<button class="btn-secondary" style="padding:6px 14px;font-size:12px;color:#ef4444;" onclick="grapheEffacerServeur(' + g.id + ')">Supprimer</button>') +
-                '</div></div>';
-        }).join('');
-
-        window._graphesCache = graphes;
-    } catch (e) {
-        list.innerHTML = '<div style="padding:20px;color:#ef4444;text-align:center;">Erreur de chargement</div>';
-    }
-}
-
-window.loadGraph = function (index) {
-    const graph = (window._graphesCache || [])[index];
-    if (!graph) return;
-    state.graphNodes = Array.isArray(graph.nodes) ? graph.nodes : [];
-    state.graphEdges = Array.isArray(graph.edges) ? graph.edges : [];
-    window.grapheNodes = state.graphNodes;
-    window.grapheEdges = state.graphEdges;
-    const m = $('graphesModal');
-    if (m) m.style.display = 'none';
-    renderGraphe();
-    showToast('Graphe chargé', 'success');
-};
-
-async function grapheEffacerServeur(id) {
-    if (!confirm('Supprimer ce graphe ?')) return;
-    try {
-        const r = await fetch(API_URL + '/api/graphes/' + id, { method: 'DELETE', headers: authHeaders(false) });
-        if (r.ok) {
-            showToast('Graphe supprimé', 'success');
-            await grapheMesGraphes();
-        }
-    } catch (e) {
-        showToast('Erreur', 'error');
-    }
-}
-
-function grapheEffacer() {
-    showModal('Effacer le graphe',
-        '<p style="color:#a0a0a0;">Effacer toutes les personnes et liens ?</p>',
-        'Effacer',
-        function () {
-            state.graphNodes = [];
-            state.graphEdges = [];
-            state.graphLinkMode = false;
-            window.grapheNodes = state.graphNodes;
-            window.grapheEdges = state.graphEdges;
-            localStorage.removeItem('marauder_graphe');
-            renderGraphe();
-            showToast('Graphe effacé', 'success');
-        });
-}
-
-// ============================================
 // NAVIGATION
 // ============================================
 function switchPage(page) {
@@ -1465,7 +1238,9 @@ function switchPage(page) {
     if (page === 'fiches') loadFiches();
     if (page === 'tickets') loadTickets();
     if (page === 'profile') loadProfile();
-    if (page === 'graphe') setTimeout(renderGraphe, 100);
+    if (page === 'graphe' && typeof window.initGraphe === 'function') {
+        setTimeout(window.initGraphe, 100);
+    }
 
     const sidebar = $('sidebar');
     const backdrop = $('sidebarBackdrop');
@@ -1709,39 +1484,6 @@ function initInvestigation() {
 }
 
 // ============================================
-// GRAPHE - BOUTONS
-// ============================================
-function initGraph() {
-    const add = $('grapheAddPersonne');
-    const attach = $('grapheAttacher');
-    const save = $('grapheSauvegarder');
-    const list = $('grapheMesGraphes');
-    const clear = $('grapheEffacer');
-    const closeModalBtn = $('closeGraphesModal');
-
-    if (add) add.addEventListener('click', grapheAddPersonne);
-    if (attach) attach.addEventListener('click', grapheAttacher);
-    if (save) save.addEventListener('click', grapheSauvegarder);
-    if (list) list.addEventListener('click', grapheMesGraphes);
-    if (clear) clear.addEventListener('click', grapheEffacer);
-    if (closeModalBtn) closeModalBtn.addEventListener('click', function () {
-        const m = $('graphesModal');
-        if (m) m.style.display = 'none';
-    });
-
-    const saved = localStorage.getItem('marauder_graphe');
-    if (saved) {
-        try {
-            const d = JSON.parse(saved);
-            state.graphNodes = Array.isArray(d.nodes) ? d.nodes : [];
-            state.graphEdges = Array.isArray(d.edges) ? d.edges : [];
-            window.grapheNodes = state.graphNodes;
-            window.grapheEdges = state.graphEdges;
-        } catch (e) {}
-    }
-}
-
-// ============================================
 // INIT
 // ============================================
 function init() {
@@ -1750,7 +1492,6 @@ function init() {
     initLogout();
     initSearch();
     initTickets();
-    initGraph();
     initInvestigation();
 
     const overlay = $('modalOverlay');
@@ -1775,11 +1516,11 @@ function init() {
     loadProfile();
     loadUsage();
 
-    console.log('Marauder dashboard chargé.');
+    console.log('Marauder dashboard.js chargé.');
 }
 
 // ============================================
-// EXPORTS GLOBAUX (pour onclick dans le HTML)
+// EXPORTS GLOBAUX
 // ============================================
 window.showToast = showToast;
 window.showModal = showModal;
@@ -1807,13 +1548,6 @@ window.loadTickets = loadTickets;
 window.viewTicket = viewTicket;
 window.loadProfile = loadProfile;
 window.loadUsage = loadUsage;
-window.grapheAddPersonne = grapheAddPersonne;
-window.grapheAttacher = grapheAttacher;
-window.grapheSauvegarder = grapheSauvegarder;
-window.grapheMesGraphes = grapheMesGraphes;
-window.grapheEffacer = grapheEffacer;
-window.grapheEffacerServeur = grapheEffacerServeur;
-window.renderGraphe = renderGraphe;
 window.switchPage = switchPage;
 
 // ============================================

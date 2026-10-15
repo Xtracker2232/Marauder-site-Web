@@ -2214,6 +2214,54 @@ function drawGraphe() {
         }
         window.initGraphe = initGraphe;
 
+        window.grapheState = grapheState;
+
+window.addPersonToGrapheFromSearch = function(person) {
+    if (!person) return;
+    var container = document.getElementById('grapheContainer');
+    if (!container) {
+        window.showToast('Ouvre d\'abord la page Graphe', 'warning');
+        return;
+    }
+    
+    var id = (person.prenom || '') + '|' + (person.nom_famille || '') + '|' + (person.email || '');
+    
+    if (grapheState.nodes.some(function(n) { return n.sourceIdentity === id; })) {
+        window.showToast('Déjà dans le graphe', 'info');
+        return;
+    }
+    
+    var rect = container.getBoundingClientRect();
+    var cx = rect.width / 2;
+    var cy = rect.height / 2;
+    
+    var colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+    var newColor = colors[grapheState.nodes.length % colors.length];
+    
+    grapheState.nodes.push({
+        id: 'node-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        x: cx + (Math.random() - 0.5) * 300,
+        y: cy + (Math.random() - 0.5) * 200,
+        label: ((person.prenom || '') + ' ' + (person.nom_famille || '')).trim() || 'Personne',
+        role: person.role || 'Personne',
+        color: newColor,
+        sourceIdentity: id,
+        person: person
+    });
+    
+    window.grapheNodes = grapheState.nodes;
+    window.showToast('Ajouté au graphe', 'success');
+    
+    // Aller sur la page graphe
+    document.querySelectorAll('.sidebar-nav li[data-page]').forEach(function(l) { l.classList.remove('active'); });
+    var li = document.querySelector('.sidebar-nav li[data-page="graphe"]');
+    if (li) li.classList.add('active');
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    var target = document.getElementById('page-graphe');
+    if (target) target.classList.add('active');
+    setTimeout(initGraphe, 100);
+};
+
         window.addPersonToGrapheFromSearch = function(person) {
     if (!person) return;
     var container = document.getElementById('grapheContainer');
