@@ -56,7 +56,7 @@ Réponds en 2-3 phrases MAX, en français naturel.
 async function extractCriteria(userQuery) {
     const client = getGroq();
     const chat = await client.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         temperature: 0.1,
         max_tokens: 500,
         response_format: { type: 'json_object' },
@@ -75,7 +75,7 @@ async function extractCriteria(userQuery) {
 async function formulateResponse(query, interpretation, results) {
     const client = getGroq();
     const chat = await client.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
+        model: 'openai/gpt-oss-20b',
         temperature: 0.6,
         max_tokens: 250,
         messages: [

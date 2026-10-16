@@ -3206,13 +3206,7 @@ window.addPersonToGrapheFromSearch = function(person) {
                 nom_naissance: 'Nom naissance', bic: 'BIC'
             };
 
-            var SUGGESTIONS = [
-                "Trouve un Jean Dupont à Paris",
-                "Cherche les emails @gmail.com",
-                "Qui habite à Lyon né en 1990 ?",
-                "Trouve par IBAN FR76",
-                "Discord ID 834855528869265459"
-            ];
+            var SUGGESTIONS = [];
 
             var _currentResults = [];
             var _isLoading = false;
@@ -3388,21 +3382,6 @@ window.addPersonToGrapheFromSearch = function(person) {
                 'Ex : <em>« trouve un Jean Dupont qui habite à Paris »</em>' +
                 '</span>'
             );
-
-            var sugg = document.createElement('div');
-            sugg.className = 'ai-chat-suggestions';
-            sugg.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;';
-            sugg.innerHTML = SUGGESTIONS.map(function(s) {
-                return '<button type="button" class="ai-chat-suggestion" data-q="' + escapeHtml(s) + '">' + escapeHtml(s) + '</button>';
-            }).join('');
-            chatBox.appendChild(sugg);
-
-            sugg.addEventListener('click', function(e) {
-                var btn = e.target.closest('.ai-chat-suggestion');
-                if (!btn) return;
-                input.value = btn.dataset.q;
-                sendMessage();
-            });
 
             scrollBottom();
         };
