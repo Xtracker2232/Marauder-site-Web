@@ -211,6 +211,39 @@
             box-shadow: 0 0 12px var(--success);
             animation: dotPulse 1.5s ease-in-out infinite;
         }
+                .hero-badges-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 28px;
+            animation: fadeUp 0.8s ease-out 0.1s both;
+        }
+        .hero-badges-row .hero-badge {
+            margin-bottom: 0;
+            animation: none;
+        }
+        .hero-badge-ia {
+            background: rgba(220,38,38,0.08);
+            border-color: rgba(220,38,38,0.3);
+            color: var(--red-light);
+        }
+        .hero-badge-dot-ia {
+            width: 6px;
+            height: 6px;
+            background: var(--red);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--red);
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+
+        @media screen and (max-width: 768px) {
+            .hero-badges-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
         @keyframes dotPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(0.7); }
@@ -858,9 +891,15 @@
     <!-- ============ HERO ============ -->
     <section class="hero-section">
         <div class="hero-container">
-            <div class="hero-badge">
-                <span class="hero-badge-dot"></span>
-                <span>Voir · Savoir · Agir</span>
+            <div class="hero-badges-row">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    <span>Voir · Savoir · Agir</span>
+                </div>
+                <div class="hero-badge hero-badge-ia">
+                    <span class="hero-badge-dot-ia"></span>
+                    <span>IA disponible</span>
+                </div>
             </div>
             <div class="hero-logo-wrap">
                 <div class="hero-logo-glow"></div>
