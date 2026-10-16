@@ -3297,8 +3297,18 @@ window.addPersonToGrapheFromSearch = function(person) {
                 var card = e.target.closest('.ai-result-card');
                 if (!card) return;
                 var idx = parseInt(card.dataset.idx, 10);
-                if (!isNaN(idx) && _currentResults[idx] && typeof window.openInvestigation === 'function') {
-                    window.openInvestigation(_currentResults[idx]);
+                if (isNaN(idx)) return;
+
+                var person = _currentResults[idx];
+                if (!person) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Fiche non disponible', 'warning');
+                    }
+                    return;
+                }
+
+                if (typeof window.openInvestigation === 'function') {
+                    window.openInvestigation(person);
                 }
             });
 
