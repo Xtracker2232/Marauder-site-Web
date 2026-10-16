@@ -384,6 +384,7 @@ app.set('trust proxy', 1);
 // 8. STRIPE ROUTES
 // ============================================
 const stripeRoutes = require('./routes/stripe');
+const aiService = require('./services/aiService');
 const emailService = require('./services/email');
 app.use('/api/stripe', stripeRoutes);
 
@@ -1259,6 +1260,78 @@ app.get('/api/usage', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Usage error:', error);
         res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ============================================
+// 20ter. RECHERCHE IA
+// ============================================
+app.post('/api/ai/chat', authenticateToken, async (req, res) => {
+    try {
+        const { query } = req.body;
+        if (!query || query.trim().length < 3) {
+            return res.status(400).json({ error: 'Question trop courte' });
+        }
+
+        const parsed = await aiService.extractCriteria(query);
+        const criteria = parsed.criteria || {};
+        const interpretation = parsed.interpretation || '';
+
+        let results = [];
+        if (Object.keys(criteria).length > 0) {
+            const limits = await getUserLimits(req.user.id);
+            const queryBody = {
+                ...criteria,
+                flexible: true,
+                per_page: Math.min(limits.resultsPerSearch, 50)
+            };
+
+            const blocklist = await getBlocklist();
+
+            try {
+                const response = await axios.post(
+                    'https://api.brixhub.to/api/v1/search',
+                    queryBody,
+                    {
+                        headers: {
+                            'X-API-Key': process.env.BRIX_API_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 30000
+                    }
+                );
+
+                results = extractBrixResults(response);
+
+                if (blocklist.length > 0 && results.length > 0) {
+                    results = results.filter(p => !isBlocked(p, blocklist));
+                }
+
+                try {
+                    await pool.query(
+                        'INSERT INTO search_history (user_id, query, results_count) VALUES ($1, $2, $3)',
+                        [req.user.id, queryBody, results.length]
+                    );
+                } catch (e) {}
+            } catch (brixError) {
+                console.error('Brix error (IA):', brixError.response?.data || brixError.message);
+            }
+        }
+
+        const message = await aiService.formulateResponse(query, interpretation, results);
+
+        res.json({
+            success: true,
+            message,
+            criteria,
+            interpretation,
+            results,
+            count: results.length
+        });
+
+    } catch (error) {
+        console.error('AI chat error:', error);
+        res.status(500).json({ error: 'Erreur IA', details: error.message });
     }
 });
 
