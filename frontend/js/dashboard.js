@@ -949,13 +949,18 @@ function addToGraphe(index) {
 async function getCoordinates(query) {
     if (!query) return null;
     try {
-        const url = 'https://nominatim.openstreetmap.org/search?' +
-            new URLSearchParams({ q: query + ', France', format: 'json', limit: '1', countrycodes: 'fr' });
+        const url = 'https://api-adresse.data.gouv.fr/search/?q=' + 
+            encodeURIComponent(query) + '&limit=1';
         const response = await fetch(url);
         if (!response.ok) return null;
         const data = await response.json();
-        if (!data || !data.length) return null;
-        return { lat: Number(data[0].lat), lng: Number(data[0].lon), display: data[0].display_name };
+        if (!data.features || !data.features.length) return null;
+        const coords = data.features[0].geometry.coordinates;
+        return {
+            lat: coords[1],
+            lng: coords[0],
+            display: data.features[0].properties.label
+        };
     } catch (e) {
         return null;
     }
