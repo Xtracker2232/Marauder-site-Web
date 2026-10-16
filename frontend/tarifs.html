@@ -22,6 +22,7 @@
             --stroke-1: rgba(220,38,38,0.12);
             --stroke-2: rgba(220,38,38,0.25);
             --success: #10b981;
+            --warn: #f59e0b;
         }
 
         body {
@@ -47,7 +48,6 @@
             z-index: -2;
             pointer-events: none;
         }
-
         body::after {
             content: '';
             position: fixed;
@@ -176,6 +176,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 24px;
+            padding-top: 20px;
         }
 
         .plan {
@@ -186,7 +187,6 @@
             text-align: center;
             transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            overflow: hidden;
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
         .plan::before {
@@ -197,6 +197,7 @@
             background: linear-gradient(90deg, transparent, rgba(220,38,38,0.5), transparent);
             opacity: 0;
             transition: opacity 0.3s;
+            border-radius: 20px 20px 0 0;
         }
         .plan:hover {
             border-color: var(--stroke-2);
@@ -205,46 +206,44 @@
         }
         .plan:hover::before { opacity: 1; }
 
+        /* Featured (Populaire) */
         .plan.featured {
             border-color: rgba(220,38,38,0.4);
             background: linear-gradient(135deg, rgba(220,38,38,0.1), rgba(127,29,29,0.05));
             box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 60px rgba(220,38,38,0.2);
         }
         .plan.featured::before { opacity: 1; }
-        .plan.featured::after {
-            content: 'POPULAIRE';
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--red), var(--red-dark));
-            color: #fff;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 5px 16px;
-            border-radius: 100px;
-            letter-spacing: 1.2px;
-            box-shadow: 0 6px 20px rgba(220,38,38,0.5);
-        }
 
+        /* Current plan */
         .plan.current {
             border-color: rgba(16,185,129,0.5);
-            background: rgba(16,185,129,0.04);
+            background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(5,46,22,0.04));
             box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(16,185,129,0.15);
         }
-        .plan.current::after {
-            content: 'PLAN ACTUEL';
+
+        /* Badge container (position absolue en haut du plan) */
+        .plan-badge {
             position: absolute;
-            top: -12px;
+            top: -13px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: #fff;
             font-size: 10px;
             font-weight: 800;
             padding: 5px 16px;
             border-radius: 100px;
             letter-spacing: 1.2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .plan-badge.popular {
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(220,38,38,0.5);
+        }
+        .plan-badge.current-badge {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: #fff;
             box-shadow: 0 6px 20px rgba(16,185,129,0.4);
         }
 
@@ -280,6 +279,7 @@
             color: var(--text-3);
             margin-bottom: 32px;
             min-height: 40px;
+            line-height: 1.5;
         }
 
         .plan-features {
@@ -392,6 +392,7 @@
             animation: slideIn 0.3s ease;
             box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(220,38,38,0.15);
             backdrop-filter: blur(20px);
+            max-width: 400px;
         }
         .toast.error { border-color: rgba(220,38,38,0.5); }
         .toast.success { border-color: rgba(16,185,129,0.4); }
@@ -414,6 +415,126 @@
         }
         .footer a { color: var(--text-3); text-decoration: none; transition: color 0.2s; }
         .footer a:hover { color: var(--red-light); }
+
+        /* ============================================
+           PAYMENT MODAL
+           ============================================ */
+        .payment-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(24px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .payment-modal.active { display: flex; }
+        .payment-modal-box {
+            background: linear-gradient(135deg, rgba(30,10,10,0.95), rgba(10,3,3,0.98));
+            border: 1px solid var(--stroke-2);
+            border-radius: 22px;
+            padding: 36px 32px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.8), 0 0 80px rgba(220,38,38,0.15);
+            position: relative;
+            animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .payment-modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            width: 36px; height: 36px;
+            background: transparent;
+            border: 1px solid var(--stroke-1);
+            border-radius: 10px;
+            color: var(--text-3);
+            cursor: pointer;
+            font-size: 18px;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .payment-modal-close:hover {
+            background: rgba(220,38,38,0.12);
+            color: #fff;
+            border-color: var(--stroke-2);
+        }
+        .payment-modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.4px;
+        }
+        .payment-modal-subtitle {
+            font-size: 14px;
+            color: var(--text-2);
+            margin: 0 0 28px 0;
+        }
+
+        .payment-method-card,
+        .payment-method-crypto,
+        .payment-method-disabled {
+            width: 100%;
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+            text-align: left;
+            transition: all 0.3s;
+        }
+        .payment-method-card {
+            background: linear-gradient(135deg, #fff, #e0e0e0);
+            color: #000;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(255,255,255,0.12);
+        }
+        .payment-method-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(220,38,38,0.4);
+        }
+        .payment-method-crypto {
+            background: rgba(220,38,38,0.06);
+            color: #fff;
+            border: 1px solid var(--stroke-1);
+            cursor: pointer;
+        }
+        .payment-method-crypto:hover {
+            background: rgba(220,38,38,0.15);
+            border-color: var(--stroke-2);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(220,38,38,0.2);
+        }
+        .payment-method-disabled {
+            background: transparent;
+            color: var(--text-3);
+            border: 1px solid var(--stroke-1);
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+        .payment-method-title { font-weight: 700; font-size: 15px; }
+        .payment-method-sub {
+            font-size: 12px;
+            font-weight: 400;
+            margin-top: 2px;
+            color: #6b6b6b;
+        }
+        .payment-method-crypto .payment-method-sub { color: var(--text-3); }
+        .payment-method-arrow { margin-left: auto; font-size: 22px; }
 
         /* ============================================
            CRYPTO MODAL
@@ -442,10 +563,6 @@
             position: relative;
             box-shadow: 0 30px 100px rgba(0,0,0,0.8), 0 0 80px rgba(220,38,38,0.15);
             animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes modalIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .crypto-modal-close {
             position: absolute;
@@ -553,6 +670,24 @@
         }
         .crypto-modal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        .crypto-modal-email-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--stroke-1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .crypto-modal-email-input:focus {
+            border-color: rgba(220,38,38,0.5);
+            background: rgba(220,38,38,0.05);
+            box-shadow: 0 0 0 4px rgba(220,38,38,0.08);
+        }
+
         .crypto-modal-status {
             display: flex;
             justify-content: space-between;
@@ -570,7 +705,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .crypto-modal-status-badge.waiting { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .crypto-modal-status-badge.waiting { background: rgba(245,158,11,0.1); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
         .crypto-modal-status-badge.confirming { background: rgba(220,38,38,0.1); color: var(--red-light); border: 1px solid var(--stroke-2); }
         .crypto-modal-status-badge.confirmed { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
         .crypto-modal-status-badge.expired { background: rgba(220,38,38,0.1); color: var(--red-light); border: 1px solid var(--stroke-2); }
@@ -589,7 +724,7 @@
             color: var(--text-2);
             font-weight: 700;
         }
-        .crypto-modal-timer.warning { color: #f59e0b; }
+        .crypto-modal-timer.warning { color: var(--warn); }
         .crypto-modal-timer.danger { color: var(--red-light); }
 
         .crypto-modal-amount {
@@ -730,50 +865,6 @@
         .crypto-modal-confirmed p { font-size: 14px; color: var(--text-2); margin-bottom: 24px; line-height: 1.6; }
 
         /* ============================================
-           PAYMENT MODAL
-           ============================================ */
-        .payment-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(24px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            padding: 20px;
-        }
-        .payment-modal.active { display: flex; }
-        .payment-modal-box {
-            background: linear-gradient(135deg, rgba(30,10,10,0.95), rgba(10,3,3,0.98));
-            border: 1px solid var(--stroke-2);
-            border-radius: 22px;
-            padding: 36px 32px;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 30px 100px rgba(0,0,0,0.8), 0 0 80px rgba(220,38,38,0.15);
-            position: relative;
-            animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .payment-modal-close {
-            position: absolute;
-            top: 16px; right: 16px;
-            width: 36px; height: 36px;
-            background: transparent;
-            border: 1px solid var(--stroke-1);
-            border-radius: 10px;
-            color: var(--text-3);
-            cursor: pointer;
-            font-size: 18px;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-        .payment-modal-close:hover {
-            background: rgba(220,38,38,0.12);
-            color: #fff;
-        }
-
-        /* ============================================
            MOBILE
            ============================================ */
         @media (max-width: 768px) {
@@ -792,6 +883,7 @@
             .crypto-modal-coins { grid-template-columns: repeat(2, 1fr); }
             .crypto-modal-amount-value { font-size: 18px; }
             .crypto-modal-qr img { width: 130px; height: 130px; }
+            .payment-modal-box { padding: 28px 20px; }
         }
     </style>
 </head>
@@ -848,8 +940,9 @@
                 <button class="plan-btn primary" id="btnStarter" onclick="openPaymentModal('starter')">Choisir Starter</button>
             </div>
 
-            <!-- PRO -->
+            <!-- PRO (Featured) -->
             <div class="plan featured" data-plan="pro">
+                <div class="plan-badge popular">Populaire</div>
                 <div class="plan-name">Pro</div>
                 <div class="plan-price">29,99€<span>/mois</span></div>
                 <div class="plan-desc">Pour les professionnels de l'investigation</div>
@@ -900,8 +993,8 @@
         <div class="payment-modal-box">
             <button class="payment-modal-close" onclick="closePaymentModal()">×</button>
 
-            <h2 style="font-size:24px;font-weight:800;color:#fff;margin:0 0 8px 0;letter-spacing:-0.4px;">Choisir un moyen de paiement</h2>
-            <p style="font-size:14px;color:var(--text-2);margin:0 0 28px 0;" id="paymentModalPlan">
+            <h2 class="payment-modal-title">Choisir un moyen de paiement</h2>
+            <p class="payment-modal-subtitle" id="paymentModalPlan">
                 Abonnement <strong style="color:#fff;">Starter</strong> — 9,99€ / mois
             </p>
 
@@ -911,10 +1004,10 @@
                     <line x1="2" y1="10" x2="22" y2="10"/>
                 </svg>
                 <div>
-                    <div style="font-weight:700;">Carte bancaire</div>
-                    <div style="font-size:12px;color:#6b6b6b;font-weight:400;margin-top:2px;">Paiement sécurisé via Stripe</div>
+                    <div class="payment-method-title">Carte bancaire</div>
+                    <div class="payment-method-sub">Paiement sécurisé via Stripe</div>
                 </div>
-                <span style="margin-left:auto;font-size:22px;">→</span>
+                <span class="payment-method-arrow">→</span>
             </button>
 
             <button onclick="payWithCrypto()" class="payment-method-crypto">
@@ -923,10 +1016,10 @@
                     <path fill="#fff" d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.8-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.7c-.3-.1-.6-.2-.9-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.6.2.8.6.7 1l-.7 2.9c0 0 .1 0 .2.1l-.2-.1-1 4.1c-.1.2-.3.4-.7.3 0 0-1.2-.3-1.2-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.04-3.2-1.5-4 .9-.2 1.6-.8 1.8-2z"/>
                 </svg>
                 <div>
-                    <div style="font-weight:700;">Crypto-monnaie</div>
-                    <div style="font-size:12px;color:var(--text-3);font-weight:400;margin-top:2px;">BTC, ETH, USDT, USDC, LTC, TRX, BNB</div>
+                    <div class="payment-method-title">Crypto-monnaie</div>
+                    <div class="payment-method-sub">BTC, ETH, USDT, USDC, LTC, TRX, BNB</div>
                 </div>
-                <span style="margin-left:auto;font-size:22px;">→</span>
+                <span class="payment-method-arrow">→</span>
             </button>
 
             <button disabled class="payment-method-disabled">
@@ -934,8 +1027,8 @@
                     <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
                 </svg>
                 <div>
-                    <div style="font-weight:700;">PayPal</div>
-                    <div style="font-size:12px;color:var(--text-3);font-weight:400;margin-top:2px;">Pas encore disponible</div>
+                    <div class="payment-method-title">PayPal</div>
+                    <div class="payment-method-sub">Pas encore disponible</div>
                 </div>
             </button>
 
@@ -946,78 +1039,12 @@
         </div>
     </div>
 
-    <style>
-        .payment-method-card {
-            width: 100%;
-            padding: 18px 20px;
-            background: linear-gradient(135deg, #fff, #e0e0e0);
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 12px;
-            transition: all 0.3s;
-            text-align: left;
-            box-shadow: 0 6px 24px rgba(255,255,255,0.12);
-        }
-        .payment-method-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 36px rgba(220,38,38,0.4);
-        }
-        .payment-method-crypto {
-            width: 100%;
-            padding: 18px 20px;
-            background: rgba(220,38,38,0.06);
-            color: #fff;
-            border: 1px solid var(--stroke-1);
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 12px;
-            transition: all 0.3s;
-            text-align: left;
-        }
-        .payment-method-crypto:hover {
-            background: rgba(220,38,38,0.15);
-            border-color: var(--stroke-2);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(220,38,38,0.2);
-        }
-        .payment-method-disabled {
-            width: 100%;
-            padding: 18px 20px;
-            background: transparent;
-            color: var(--text-3);
-            border: 1px solid var(--stroke-1);
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: not-allowed;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            opacity: 0.4;
-            text-align: left;
-        }
-    </style>
-
     <!-- CRYPTO MODAL -->
     <div id="cryptoModal" class="crypto-modal">
         <div class="crypto-modal-box">
             <button class="crypto-modal-close" onclick="closeCryptoModal()">×</button>
 
+            <!-- ÉTAPE 1 -->
             <div id="cryptoModalStep1" class="crypto-modal-step active">
                 <div class="crypto-modal-header">
                     <h2>Paiement Crypto</h2>
@@ -1026,7 +1053,7 @@
                 <div class="crypto-modal-coins" id="cryptoModalCoins"></div>
                 <div style="margin-bottom:16px;">
                     <label style="display:block;font-size:13px;font-weight:600;color:var(--text-3);margin-bottom:8px;">Votre email</label>
-                    <input type="email" id="cryptoModalEmail" placeholder="votre@email.com" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--stroke-1);border-radius:12px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;transition:all 0.3s;" onfocus="this.style.borderColor='rgba(220,38,38,0.5)';this.style.background='rgba(220,38,38,0.05)';" onblur="this.style.borderColor='var(--stroke-1)';this.style.background='rgba(255,255,255,0.03)';" />
+                    <input type="email" id="cryptoModalEmail" class="crypto-modal-email-input" placeholder="votre@email.com">
                     <div style="font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.6;">
                         📧 Utilisé <strong style="color:var(--text-2);">uniquement</strong> pour vous envoyer la preuve d'achat. Jamais partagé.
                     </div>
@@ -1034,6 +1061,7 @@
                 <button class="crypto-modal-btn" id="cryptoModalContinue" disabled onclick="confirmCryptoModalChoice()">Continuer</button>
             </div>
 
+            <!-- ÉTAPE 2 -->
             <div id="cryptoModalStep2" class="crypto-modal-step">
                 <div class="crypto-modal-header">
                     <h2>Envoyez le paiement</h2>
@@ -1072,6 +1100,7 @@
                 </div>
             </div>
 
+            <!-- ÉTAPE 3 -->
             <div id="cryptoModalStep3" class="crypto-modal-step">
                 <div class="crypto-modal-confirmed">
                     <div class="crypto-modal-confirmed-icon">✓</div>
@@ -1117,11 +1146,27 @@
                 document.querySelectorAll('.plan').forEach(plan => {
                     const planName = plan.dataset.plan;
                     if (planName === currentPlan) {
+                        // Retire le badge "Populaire" si présent
+                        const popularBadge = plan.querySelector('.plan-badge.popular');
+                        if (popularBadge) popularBadge.remove();
+
+                        // Ajoute le badge "Plan actuel"
+                        if (!plan.querySelector('.plan-badge.current-badge')) {
+                            const badge = document.createElement('div');
+                            badge.className = 'plan-badge current-badge';
+                            badge.textContent = 'Plan actuel';
+                            plan.insertBefore(badge, plan.firstChild);
+                        }
+
+                        plan.classList.remove('featured');
                         plan.classList.add('current');
+
                         const btn = plan.querySelector('.plan-btn');
                         if (btn) {
                             btn.disabled = true;
                             btn.textContent = 'Plan actuel';
+                            btn.classList.remove('primary');
+                            btn.classList.add('secondary');
                         }
                     }
                 });
@@ -1446,6 +1491,10 @@
             if (e.target === this) closePaymentModal();
         });
 
+        document.getElementById('cryptoModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeCryptoModal();
+        });
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closePaymentModal();
@@ -1453,6 +1502,7 @@
             }
         });
 
+        // Exposer au global
         window.openPaymentModal = openPaymentModal;
         window.closePaymentModal = closePaymentModal;
         window.payWithCard = payWithCard;
@@ -1464,5 +1514,6 @@
         window.copyCryptoModalAddress = copyCryptoModalAddress;
         window.finishCryptoModal = finishCryptoModal;
     </script>
+
 </body>
 </html>
