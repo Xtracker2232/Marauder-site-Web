@@ -968,8 +968,15 @@ function getMapPosition(lat, lng) {
     return { left: Math.max(2, Math.min(98, left)), top: Math.max(2, Math.min(98, top)) };
 }
 
-async function openInvestigation(index) {
-    const person = state.results[index];
+async function openInvestigation(indexOrPerson) {
+    // Accepter soit un index (number/string), soit un objet personne
+    let person;
+    if (typeof indexOrPerson === 'object' && indexOrPerson !== null) {
+        person = indexOrPerson;
+    } else {
+        person = state.results[indexOrPerson];
+    }
+
     if (!person) {
         showToast('Personne introuvable', 'error');
         return;
