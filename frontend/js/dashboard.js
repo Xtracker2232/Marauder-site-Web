@@ -967,10 +967,22 @@ async function getCoordinates(query) {
 }
 
 function getMapPosition(lat, lng) {
-    const minLat = 41, maxLat = 51.5, minLng = -5.5, maxLng = 9.5;
+    // Bornes calibrées pour l'image france-map.webp (carrée avec marges)
+    // France métropolitaine + Corse
+    const minLat = 41.0;   // Sud Corse
+    const maxLat = 51.3;   // Nord Dunkerque
+    const minLng = -5.5;   // Ouest Bretagne
+    const maxLng = 9.8;    // Est Corse
+
+    // L'image est carrée, donc on ajuste les proportions
+    // La France sur l'image n'occupe pas toute la largeur/hauteur
     const left = ((lng - minLng) / (maxLng - minLng)) * 100;
     const top = (1 - (lat - minLat) / (maxLat - minLat)) * 100;
-    return { left: Math.max(2, Math.min(98, left)), top: Math.max(2, Math.min(98, top)) };
+
+    return {
+        left: Math.max(0, Math.min(100, left)),
+        top: Math.max(0, Math.min(100, top))
+    };
 }
 
 async function openInvestigation(indexOrPerson) {
