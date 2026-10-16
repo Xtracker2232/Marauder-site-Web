@@ -602,17 +602,18 @@ app.post('/api/brix/search', authenticateToken, async (req, res) => {
     try {
         const limits = await getUserLimits(req.user.id);
 
-        if (limits.searchesPerMonth !== Infinity) {
-            const used = await getMonthlySearchCount(req.user.id);
-            if (used >= limits.searchesPerMonth) {
-                return res.status(429).json({
-                    error: 'quota_exceeded',
-                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois pour le plan ${(req.user.plan || 'free').toUpperCase()})`,
-                    used,
-                    limit: limits.searchesPerMonth
-                });
-            }
-        }
+        // ⚠️ PAS DE LIMITE POUR LE DASHBOARD
+        // if (limits.searchesPerMonth !== Infinity) {
+        //     const used = await getMonthlySearchCount(req.user.id);
+        //     if (used >= limits.searchesPerMonth) {
+        //         return res.status(429).json({
+        //             error: 'quota_exceeded',
+        //             message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois pour le plan ${(req.user.plan || 'free').toUpperCase()})`,
+        //             used,
+        //             limit: limits.searchesPerMonth
+        //         });
+        //     }
+        // }
 
         const query = { ...req.body };
         query.per_page = Math.min(query.per_page || limits.resultsPerSearch, limits.resultsPerSearch);
@@ -678,17 +679,18 @@ app.get('/api/brix/lookup/:type/:value', authenticateToken, async (req, res) => 
     try {
         const limits = await getUserLimits(req.user.id);
 
-        if (limits.searchesPerMonth !== Infinity) {
-            const used = await getMonthlySearchCount(req.user.id);
-            if (used >= limits.searchesPerMonth) {
-                return res.status(429).json({
-                    error: 'quota_exceeded',
-                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
-                    used,
-                    limit: limits.searchesPerMonth
-                });
-            }
-        }
+        // ⚠️ PAS DE LIMITE POUR LE DASHBOARD
+        // if (limits.searchesPerMonth !== Infinity) {
+        //     const used = await getMonthlySearchCount(req.user.id);
+        //     if (used >= limits.searchesPerMonth) {
+        //         return res.status(429).json({
+        //             error: 'quota_exceeded',
+        //             message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
+        //             used,
+        //             limit: limits.searchesPerMonth
+        //         });
+        //     }
+        // }
 
         const blocklist = await getBlocklist();
         const response = await axios.get(
@@ -750,20 +752,22 @@ app.post('/api/history/:id/replay', authenticateToken, async (req, res) => {
             'SELECT query FROM search_history WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
         );
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Recherche non trouvée' });
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Recherche non trouvÃ©e' });
 
         const limits = await getUserLimits(req.user.id);
-        if (limits.searchesPerMonth !== Infinity) {
-            const used = await getMonthlySearchCount(req.user.id);
-            if (used >= limits.searchesPerMonth) {
-                return res.status(429).json({
-                    error: 'quota_exceeded',
-                    message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
-                    used,
-                    limit: limits.searchesPerMonth
-                });
-            }
-        }
+
+        // ⚠️ PAS DE LIMITE POUR LE DASHBOARD
+        // if (limits.searchesPerMonth !== Infinity) {
+        //     const used = await getMonthlySearchCount(req.user.id);
+        //     if (used >= limits.searchesPerMonth) {
+        //         return res.status(429).json({
+        //             error: 'quota_exceeded',
+        //             message: `Limite mensuelle atteinte (${limits.searchesPerMonth} recherches/mois)`,
+        //             used,
+        //             limit: limits.searchesPerMonth
+        //         });
+        //     }
+        // }
 
         let query = result.rows[0].query;
         if (typeof query === 'string') query = JSON.parse(query);
