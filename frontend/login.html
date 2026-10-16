@@ -4,35 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Marauder - Connexion | Plateforme CSINT</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
-    <link rel="shortcut icon" type="image/png" href="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
+    <link rel="icon" type="image/png" href="hydra.png">
+    <link rel="shortcut icon" type="image/png" href="hydra.png">
     <meta property="og:title" content="Marauder - Connexion | Plateforme CSINT">
     <meta property="og:description" content="Connectez-vous à la plateforme d'investigation Marauder.">
-    <meta property="og:image" content="https://cdn.discordapp.com/attachments/1477415267452719208/1543881553220997240/favicon-32x32.png">
+    <meta property="og:image" content="hydra.png">
     <meta property="og:url" content="https://marauder.host/login">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Marauder">
     <style>
         /* ============================================
-        RESET & BASE — LIQUID GLASS
+        RESET & BASE — STYLE LANDING ROUGE
         ============================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg-deep: #050505;
-            --glass-1: rgba(255,255,255,0.04);
-            --glass-2: rgba(255,255,255,0.06);
-            --glass-3: rgba(255,255,255,0.09);
-            --stroke-1: rgba(255,255,255,0.08);
-            --stroke-2: rgba(255,255,255,0.14);
-            --stroke-3: rgba(255,255,255,0.22);
+            --bg-deep: #050202;
+            --glass-1: rgba(255,255,255,0.035);
+            --glass-2: rgba(255,255,255,0.055);
+            --glass-3: rgba(255,255,255,0.08);
+            --stroke-1: rgba(220,38,38,0.12);
+            --stroke-2: rgba(220,38,38,0.25);
+            --stroke-3: rgba(220,38,38,0.4);
             --text-1: #ffffff;
-            --text-2: #b8b8b8;
-            --text-3: #7a7a7a;
-            --text-4: #4a4a4a;
+            --text-2: #a8a8a8;
+            --text-3: #6a6a6a;
+            --text-4: #3a3a3a;
             --success: #10b981;
             --danger: #ef4444;
             --warn: #f59e0b;
+            --red: #dc2626;
+            --red-dark: #7f1d1d;
+            --red-light: #f87171;
         }
 
         html { scroll-behavior: smooth; }
@@ -52,45 +55,54 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Aura de fond animée */
+        /* AURA ROUGE — style landing */
         body::before {
             content: '';
             position: fixed;
-            inset: -20%;
+            inset: 0;
             background:
-                radial-gradient(ellipse 40% 30% at 20% 15%, rgba(120,140,255,0.10), transparent 60%),
-                radial-gradient(ellipse 35% 25% at 85% 60%, rgba(255,140,200,0.07), transparent 60%),
-                radial-gradient(ellipse 45% 35% at 50% 100%, rgba(100,220,255,0.08), transparent 60%);
-            filter: blur(80px);
-            z-index: -1;
-            animation: auraMove 25s ease-in-out infinite;
+                radial-gradient(ellipse 70% 50% at 50% 0%, rgba(220,38,38,0.14), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 50% 100%, rgba(127,29,29,0.1), transparent 60%),
+                radial-gradient(ellipse 40% 30% at 15% 50%, rgba(220,38,38,0.05), transparent 70%),
+                radial-gradient(ellipse 40% 30% at 85% 50%, rgba(127,29,29,0.05), transparent 70%);
+            z-index: -3;
             pointer-events: none;
         }
-        @keyframes auraMove {
-            0%, 100% { transform: translate(0,0) scale(1); }
-            33%      { transform: translate(3%, -2%) scale(1.05); }
-            66%      { transform: translate(-3%, 2%) scale(0.98); }
-        }
 
-        /* Grain subtil */
+        /* Halo central pulsant */
         body::after {
             content: '';
             position: fixed;
+            top: -30%; left: 50%;
+            transform: translateX(-50%);
+            width: 1000px; height: 1000px;
+            background: radial-gradient(circle, rgba(220,38,38,0.12), transparent 60%);
+            filter: blur(80px);
+            z-index: -2;
+            pointer-events: none;
+            animation: auraMove 12s ease-in-out infinite;
+        }
+        @keyframes auraMove {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.6; }
+            50% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+        }
+
+        /* Grain subtil */
+        .grain-overlay {
+            position: fixed;
             inset: 0;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
-            opacity: 0.035;
+            opacity: 0.03;
             pointer-events: none;
             z-index: 1;
             mix-blend-mode: overlay;
         }
 
-        /* ============================================
-        SCROLLBAR
-        ============================================ */
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 100px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+        ::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.25); border-radius: 100px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,0.5); }
 
         /* ============================================
         CONTAINER
@@ -103,19 +115,20 @@
         }
 
         /* ============================================
-        LOGIN BOX — GLASS CARD
+        LOGIN BOX — GLASS CARD ROUGE
         ============================================ */
         .login-box {
-            background: linear-gradient(135deg, rgba(28,28,28,0.55), rgba(14,14,14,0.75));
+            background: linear-gradient(135deg, rgba(30,10,10,0.55), rgba(10,3,3,0.8));
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
             border: 1px solid var(--stroke-1);
             border-radius: 24px;
             padding: 44px 36px;
             box-shadow:
-                0 30px 80px rgba(0,0,0,0.6),
+                0 30px 80px rgba(0,0,0,0.7),
                 0 8px 24px rgba(0,0,0,0.4),
-                inset 0 1px 0 rgba(255,255,255,0.08);
+                0 0 80px rgba(220,38,38,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.06);
             position: relative;
             overflow: hidden;
             animation: boxIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -125,22 +138,22 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Ligne lumineuse en haut */
+        /* Ligne lumineuse ROUGE en haut */
         .login-box::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background: linear-gradient(90deg, transparent, rgba(220,38,38,0.7), transparent);
         }
 
-        /* Halo lumineux animé */
+        /* Halo rouge animé dans le coin */
         .login-box::after {
             content: '';
             position: absolute;
             top: -50%; right: -30%;
             width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 60%);
             pointer-events: none;
             animation: auraMove 18s ease-in-out infinite;
         }
@@ -155,19 +168,45 @@
             z-index: 1;
         }
 
-        .login-header .logo {
-            width: 64px;
-            height: 64px;
-            color: #ffffff;
+        .login-header .logo-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-bottom: 18px;
-            filter: drop-shadow(0 0 24px rgba(255,255,255,0.35));
+            position: relative;
+        }
+
+        .login-header .logo-glow {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(220,38,38,0.5), transparent 70%);
+            border-radius: 50%;
+            filter: blur(30px);
+            animation: logoPulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.15); opacity: 0.9; }
+        }
+
+        .login-header .logo {
+            position: relative;
+            z-index: 1;
+            width: 72px;
+            height: 72px;
+            display: block;
+            filter:
+                drop-shadow(0 0 24px rgba(220,38,38,0.8))
+                drop-shadow(0 10px 30px rgba(0,0,0,0.8));
         }
 
         .login-header h1 {
             font-size: 30px;
             font-weight: 800;
             letter-spacing: -0.8px;
-            background: linear-gradient(135deg, #fff 0%, #999 100%);
+            background: linear-gradient(135deg, #fff 0%, #f87171 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -211,7 +250,7 @@
         }
 
         .form-group:focus-within label {
-            color: #fff;
+            color: var(--red-light);
         }
 
         .input-wrapper {
@@ -231,7 +270,7 @@
         }
 
         .form-group:focus-within .input-icon {
-            color: #fff;
+            color: var(--red-light);
             transform: translateY(-50%) scale(1.08);
         }
 
@@ -255,14 +294,14 @@
         }
 
         input:hover {
-            background: rgba(255,255,255,0.05);
+            background: rgba(220,38,38,0.04);
             border-color: var(--stroke-2);
         }
 
         input:focus {
-            border-color: rgba(255,255,255,0.4);
-            background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 4px rgba(255,255,255,0.05), 0 0 30px rgba(255,255,255,0.03);
+            border-color: rgba(220,38,38,0.5);
+            background: rgba(220,38,38,0.05);
+            box-shadow: 0 0 0 4px rgba(220,38,38,0.08), 0 0 30px rgba(220,38,38,0.15);
             transform: translateY(-1px);
         }
 
@@ -298,13 +337,13 @@
             position: absolute;
             top: 0; left: -100%;
             width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            background: linear-gradient(90deg, transparent, rgba(220,38,38,0.4), transparent);
             transition: left 0.6s;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 36px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.9);
+            box-shadow: 0 12px 36px rgba(220,38,38,0.4), inset 0 1px 0 rgba(255,255,255,0.9);
         }
 
         .btn-primary:hover::before {
@@ -338,7 +377,7 @@
         }
 
         .register-link a {
-            color: #ffffff;
+            color: var(--red-light);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.25s;
@@ -350,12 +389,14 @@
             position: absolute;
             bottom: -2px; left: 0;
             width: 0; height: 1px;
-            background: #fff;
+            background: var(--red-light);
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--red-light);
         }
 
         .register-link a:hover {
-            opacity: 0.9;
+            color: #fff;
+            text-shadow: 0 0 12px rgba(220,38,38,0.6);
         }
 
         .register-link a:hover::after {
@@ -368,8 +409,8 @@
         .error-message {
             margin-top: 18px;
             padding: 14px 18px;
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.25);
+            background: rgba(220,38,38,0.08);
+            border: 1px solid rgba(220,38,38,0.3);
             border-radius: 12px;
             color: #fca5a5;
             font-size: 13.5px;
@@ -385,9 +426,9 @@
             position: absolute;
             left: 0; top: 0; bottom: 0;
             width: 3px;
-            background: var(--danger);
+            background: var(--red);
             border-radius: 12px 0 0 12px;
-            box-shadow: 0 0 20px var(--danger);
+            box-shadow: 0 0 20px var(--red);
         }
 
         @keyframes errorIn {
@@ -425,14 +466,14 @@
         }
 
         .login-footer .cgu-link {
-            color: #ff8c00 !important;
+            color: var(--red-light) !important;
             font-weight: 600;
             transition: all 0.25s;
         }
 
         .login-footer .cgu-link:hover {
-            color: #ffa733 !important;
-            text-shadow: 0 0 12px rgba(255,140,0,0.5);
+            color: #fca5a5 !important;
+            text-shadow: 0 0 12px rgba(220,38,38,0.6);
         }
 
         .login-footer .footer-links {
@@ -453,7 +494,7 @@
         }
 
         .login-footer .footer-links a:hover {
-            color: #ffffff;
+            color: var(--red-light);
         }
 
         .login-footer .footer-links span {
@@ -461,7 +502,7 @@
         }
 
         /* ============================================
-        SHAKE ANIMATION (erreur)
+        SHAKE ANIMATION
         ============================================ */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -491,9 +532,13 @@
             }
 
             .login-header .logo {
-                width: 52px;
-                height: 52px;
-                margin-bottom: 14px;
+                width: 56px;
+                height: 56px;
+            }
+
+            .login-header .logo-glow {
+                width: 100px;
+                height: 100px;
             }
 
             .login-header h1 {
@@ -570,9 +615,8 @@
             }
 
             .login-header .logo {
-                width: 44px;
-                height: 44px;
-                margin-bottom: 12px;
+                width: 48px;
+                height: 48px;
             }
 
             .login-header h1 {
@@ -618,14 +662,15 @@
 </head>
 <body>
 
+    <div class="grain-overlay"></div>
+
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
-                </svg>
+                <div class="logo-wrap">
+                    <div class="logo-glow"></div>
+                    <img class="logo" src="hydra.png" alt="Marauder">
+                </div>
                 <h1>Marauder</h1>
                 <p>Plateforme d'investigation avancée</p>
             </div>
