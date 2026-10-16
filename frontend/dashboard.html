@@ -1425,7 +1425,7 @@
                  <section id="page-ia" class="page">
             <header class="page-header">
                 <h2>Marauder IA</h2>
-                <div class="user-info">Propulsé par Groq</div>
+                <div class="user-info">Intelligence artificielle</div>
             </header>
 
             <div class="ai-chat-box">
@@ -1438,7 +1438,7 @@
                         <h3>Marauder IA</h3>
                         <p>Interrogez la base en langage naturel</p>
                     </div>
-                    <span class="ai-chat-badge">GROQ</span>
+                    <span class="ai-chat-badge">IA</span>
                 </div>
 
                 <div class="ai-chat-messages" id="aiChatMessages"></div>
@@ -3211,6 +3211,95 @@ window.addPersonToGrapheFromSearch = function(person) {
             var _currentResults = [];
             var _isLoading = false;
 
+                        function normalizeBrixPerson(raw) {
+                if (!raw || typeof raw !== 'object') return raw;
+                var r = raw;
+
+                // Si déjà au bon format, on renvoie tel quel
+                if (r.nom_famille || r.prenom || r.email || r.telephone) {
+                    return r;
+                }
+
+                var result = {};
+                // Copier les meta
+                ['_confidence', '_sources', '_source_files', '_dedup_key', '_es_ids'].forEach(function(k) {
+                    if (r[k] !== undefined) result[k] = r[k];
+                });
+
+                var text = r._all_text || '';
+                if (text) {
+                    var remaining = text;
+
+                    // Email
+                    var emailMatch = remaining.match(/[\w.+-]+@[\w.-]+\.\w+/);
+                    if (emailMatch) {
+                        result.email = emailMatch[0];
+                        remaining = remaining.replace(emailMatch[0], ' ');
+                    }
+
+                    // Téléphone FR (10 chiffres commençant par 0)
+                    var phoneMatch = remaining.match(/\b0[1-9]\d{8}\b/);
+                    if (phoneMatch) {
+                        result.telephone = phoneMatch[0];
+                        remaining = remaining.replace(phoneMatch[0], ' ');
+                    }
+
+                    // Date (YYYY-MM-DD)
+                    var dateMatch = remaining.match(/\b\d{4}-\d{2}-\d{2}\b/);
+                    if (dateMatch) {
+                        result.date_naissance = dateMatch[0];
+                        remaining = remaining.replace(dateMatch[0], ' ');
+                    }
+
+                    // Adresse IP
+                    var ipMatch = remaining.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
+                    if (ipMatch) {
+                        result.adresse_ip = ipMatch[0];
+                        remaining = remaining.replace(ipMatch[0], ' ');
+                    }
+
+                    // Le reste = mots. Les majuscules = NOM/PRENOM
+                    var words = remaining.split(/\s+/).filter(function(w) { return w.length > 1; });
+                    var upperWords = [];
+                    var lowerWords = [];
+
+                    words.forEach(function(w) {
+                        var clean = w.replace(/[^A-Za-zÀ-ÿ'-]/g, '');
+                        if (!clean) return;
+                        if (clean === clean.toUpperCase() && /^[A-ZÀ-Ÿ]/.test(clean)) {
+                            upperWords.push(clean);
+                        } else {
+                            lowerWords.push(clean);
+                        }
+                    });
+
+                    // Assigner nom / prénom
+                    if (upperWords.length >= 2) {
+                        result.nom_famille = upperWords[0];
+                        result.prenom = upperWords.slice(1).join(' ');
+                    } else if (upperWords.length === 1) {
+                        result.nom_famille = upperWords[0];
+                    }
+
+                    // Villes / adresses (mots avec majuscule puis minuscule, ex: "Paris", "Le Tignet")
+                    var villeMatch = text.match(/\b(?:Le |La |Les |L')?[A-ZÀ-Ÿ][a-zà-ÿ]+(?:[ -][A-ZÀ-Ÿ][a-zà-ÿ]+)*\b/);
+                    if (villeMatch) {
+                        var v = villeMatch[0].trim();
+                        // Éviter de prendre un nom déjà identifié
+                        if (v !== result.nom_famille && v !== result.prenom) {
+                            result.ville = v;
+                        }
+                    }
+                }
+
+                // Fallback : si toujours rien, on garde le texte brut
+                if (!result.nom_famille && !result.prenom && !result.email) {
+                    result.nom_famille = text || 'Inconnu';
+                }
+
+                return result;
+            }
+
             function escapeHtml(s) {
                 return String(s || '').replace(/[&<>"']/g, function(c) {
                     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
@@ -3308,7 +3397,7 @@ window.addPersonToGrapheFromSearch = function(person) {
                 }
 
                 if (typeof window.openInvestigation === 'function') {
-                    window.openInvestigation(person);
+                    window.openInvestigation(normalizeBrixPerson(person));
                 }
             });
 

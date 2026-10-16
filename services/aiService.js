@@ -7,7 +7,7 @@ let groq = null;
 
 function getGroq() {
     if (!process.env.GROQ_API_KEY) {
-        throw new Error('GROQ_API_KEY non configurée');
+        throw new Error('Assistant IA non configuré');
     }
     if (!groq) {
         groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
