@@ -964,11 +964,104 @@
         }
 
         /* FOOTER */
-        .site-footer { border-top: 1px solid var(--stroke-1); padding: 22px 48px; margin-top: 60px; text-align: center; background: rgba(5,2,2,0.6); backdrop-filter: blur(20px); margin-left: 240px; }
-        .site-footer a { color: var(--text-3); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .site-footer {
+            border-top: 1px solid var(--stroke-1);
+            padding: 22px 48px 18px;
+            margin-top: 60px;
+            background: rgba(5,2,2,0.6);
+            backdrop-filter: blur(20px);
+            margin-left: 240px;
+        }
+        .footer-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(220,38,38,0.06);
+        }
+        .footer-links-left,
+        .footer-links-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 180px;
+        }
+        .footer-links-right {
+            justify-content: flex-end;
+        }
+        .footer-center {
+            flex: 1;
+            text-align: center;
+            min-width: 200px;
+        }
+        .site-footer a {
+            color: var(--text-3);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
         .site-footer a:hover { color: var(--red-light); }
-        .site-footer span { color: var(--text-3); font-size: 13px; }
-    </style>
+        .footer-center span {
+            color: var(--text-3);
+            font-size: 12.5px;
+        }
+        .footer-links-right span {
+            color: var(--text-4);
+            font-size: 11.5px;
+            font-style: italic;
+        }
+        .footer-sep {
+            color: var(--text-4);
+            font-size: 11px;
+            user-select: none;
+        }
+        .footer-sub {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            font-size: 10.5px;
+            color: var(--text-4);
+            line-height: 1.5;
+            opacity: 0.7;
+        }
+        .footer-sub strong {
+            color: var(--text-3);
+            font-weight: 600;
+        }
+        @media screen and (max-width: 768px) {
+            .site-footer {
+                margin-left: 0;
+                padding: 18px 16px 14px;
+            }
+            .footer-main {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 10px;
+            }
+            .footer-links-left,
+            .footer-links-right {
+                justify-content: center;
+                min-width: 0;
+                flex: none;
+            }
+            .footer-sub {
+                gap: 6px;
+                font-size: 10px;
+            }
+            .footer-sep {
+                display: none;
+            }
+            .footer-sub span {
+                display: block;
+            }
+        }
 </head>
 <body>
     <!-- ⬇️⬇️⬇️ LE HTML RESTE EXACTEMENT IDENTIQUE À TON FICHIER ORIGINAL ⬇️⬇️⬇️ -->
@@ -1946,7 +2039,30 @@ Fais la recherche et affiche les résultats.
     </main>
 
     <footer class="site-footer">
-        <a href="/cgu.html">CGU</a> · <span>Created by Index</span>
+        <div class="footer-main">
+            <div class="footer-links-left">
+                <a href="/cgu.html">CGU</a>
+                <span class="footer-sep">·</span>
+                <a href="/cga.html">CGA</a>
+            </div>
+            <div class="footer-center">
+                <span>© 2026 Marauder — Tous droits réservés</span>
+            </div>
+            <div class="footer-links-right">
+                <span>Tous droits réservés</span>
+            </div>
+        </div>
+        <div class="footer-sub">
+            <span>Created by <strong>Index</strong></span>
+            <span class="footer-sep">·</span>
+            <span>Marauder est une plateforme d'investigation OSINT / CSINT</span>
+            <span class="footer-sep">·</span>
+            <span>Hébergement offshore</span>
+            <span class="footer-sep">·</span>
+            <span>Conforme RGPD</span>
+            <span class="footer-sep">·</span>
+            <span>Version 1.0.12</span>
+        </div>
     </footer>
 
     <script>

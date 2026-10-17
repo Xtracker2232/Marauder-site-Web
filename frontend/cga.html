@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Marauder - Conditions Générales d'Achat | Plateforme CSINT</title>
+    <link rel="icon" type="image/png" href="hydra.png">
+    <link rel="shortcut icon" type="image/png" href="hydra.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-deep: #050202;
+            --text-1: #ffffff;
+            --text-2: #a8a8a8;
+            --text-3: #6a6a6a;
+            --text-4: #3a3a3a;
+            --red: #dc2626;
+            --red-dark: #7f1d1d;
+            --red-light: #f87171;
+            --stroke-1: rgba(220,38,38,0.12);
+            --stroke-2: rgba(220,38,38,0.25);
+        }
+
+        body {
+            background: var(--bg-deep);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% 0%, rgba(220,38,38,0.14), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 50% 100%, rgba(127,29,29,0.1), transparent 60%),
+                radial-gradient(ellipse 40% 30% at 15% 50%, rgba(220,38,38,0.05), transparent 70%),
+                radial-gradient(ellipse 40% 30% at 85% 50%, rgba(127,29,29,0.05), transparent 70%);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.25); border-radius: 100px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,0.5); }
+
+        .cga-page {
+            min-height: 100vh;
+            padding: 100px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+        .cga-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(30,10,10,0.55), rgba(10,3,3,0.8));
+            border: 1px solid var(--stroke-1);
+            border-radius: 24px;
+            padding: 50px 60px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 60px rgba(220,38,38,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .cga-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(220,38,38,0.6), transparent);
+        }
+        .cga-container h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff, #f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cga-subtitle {
+            text-align: center;
+            color: var(--text-3);
+            font-size: 13px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--stroke-1);
+            padding-bottom: 20px;
+        }
+        .cga-subtitle span {
+            color: var(--red-light);
+            font-weight: 600;
+        }
+        .cga-section {
+            margin-bottom: 28px;
+        }
+        .cga-section .section-number {
+            color: var(--red-light);
+            font-weight: 700;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .cga-section h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .cga-section p {
+            font-size: 14px;
+            color: var(--text-2);
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+        .cga-section p strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        .cga-section p em {
+            color: var(--red-light);
+            font-style: normal;
+            font-weight: 500;
+        }
+        .cga-section ul {
+            margin: 8px 0 12px 20px;
+            color: var(--text-2);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .cga-section ul li {
+            margin-bottom: 4px;
+        }
+        .cga-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(220,38,38,0.08);
+            border: 1px solid var(--stroke-2);
+            border-radius: 12px;
+            color: var(--red-light);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.25s;
+            margin-top: 20px;
+        }
+        .cga-back:hover {
+            background: rgba(220,38,38,0.15);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .cga-back svg {
+            width: 18px;
+            height: 18px;
+        }
+        .cga-footer-text {
+            text-align: center;
+            font-size: 11.5px;
+            color: var(--text-4);
+            opacity: 0.6;
+            margin-top: 30px;
+            border-top: 1px solid var(--stroke-1);
+            padding-top: 20px;
+            line-height: 1.6;
+        }
+        @media (max-width: 768px) {
+            .cga-page { padding: 80px 16px 40px; }
+            .cga-container { padding: 32px 24px; }
+            .cga-container h1 { font-size: 24px; }
+        }
+    </style>
+</head>
+<body class="cga-page">
+    <div class="cga-container">
+        <h1>Conditions Générales d'Achat</h1>
+        <div class="cga-subtitle">
+            CGA — Dernière mise à jour : <span>17 octobre 2026</span>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§1.</span>
+            <h2>Objet</h2>
+            <p>Les présentes Conditions Générales d'Achat (ci-après « CGA ») régissent les modalités de souscription, de paiement et de facturation des abonnements proposés par <strong>Marauder</strong> sur sa plateforme accessible à l'adresse <em>marauder.host</em>.</p>
+            <p>Elles complètent les Conditions Générales d'Utilisation (CGU) auxquelles tout utilisateur doit se conformer. En cas de contradiction, les présentes CGA prévalent pour tout ce qui concerne les aspects commerciaux et financiers.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§2.</span>
+            <h2>Plans et tarifs</h2>
+            <p>Marauder propose plusieurs plans d'abonnement dont les tarifs en vigueur sont affichés sur la page <em>/tarifs</em>. Les prix sont exprimés en euros, toutes taxes comprises (TTC), hors éventuelles taxes locales applicables au pays de résidence du client.</p>
+            <p>Les plans actuellement proposés sont :</p>
+            <ul>
+                <li><strong>Free</strong> — 0 € / mois, fonctionnalités limitées</li>
+                <li><strong>Starter</strong> — 9,99 € / mois, pour les investigations régulières</li>
+                <li><strong>Pro</strong> — 29,99 € / mois, pour les professionnels</li>
+                <li><strong>Enterprise</strong> — sur devis, pour les équipes et grands comptes</li>
+            </ul>
+            <p>Marauder se réserve le droit de modifier ses tarifs à tout moment, avec un préavis de trente (30) jours calendaires notifié par email avant application aux abonnements en cours.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§3.</span>
+            <h2>Souscription et activation</h2>
+            <p>La souscription à un abonnement payant s'effectue via la page <em>/tarifs</em>, après authentification. Le client choisit son plan, sélectionne son mode de paiement, puis valide la transaction.</p>
+            <p>L'activation de l'abonnement est immédiate après confirmation du paiement. Un email récapitulatif est envoyé au client avec les détails de la transaction et les informations de facturation.</p>
+            <p>Le client reconnaît que la souscription implique l'acceptation pleine et entière des présentes CGA et des CGU.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§4.</span>
+            <h2>Moyens de paiement</h2>
+            <p>Marauder accepte les moyens de paiement suivants :</p>
+            <ul>
+                <li><strong>Carte bancaire</strong> — paiement sécurisé via Stripe</li>
+                <li><strong>Cryptomonnaies</strong> — Bitcoin, Ethereum, USDT (TRC20/ERC20), USDC, Litecoin, Tron, BNB</li>
+            </ul>
+            <p>Tout paiement en cryptomonnaie est traité via notre partenaire <em>NOWPayments</em>. Le montant est converti au taux de change en vigueur au moment de la transaction. Marauder n'est pas responsable des variations de change ou des frais de réseau appliqués par la blockchain.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§5.</span>
+            <h2>Facturation</h2>
+            <p>Les abonnements mensuels sont facturés d'avance, au début de chaque période de facturation. La facture est disponible dans l'espace client et envoyée par email après chaque prélèvement.</p>
+            <p>En cas d'échec de paiement, Marauder se réserve le droit de suspendre l'accès aux fonctionnalités payantes jusqu'à régularisation. Un rappel est envoyé par email avant toute suspension.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§6.</span>
+            <h2>Renouvellement et résiliation</h2>
+            <p>Les abonnements sont <strong>reconduits tacitement</strong> à chaque échéance mensuelle, sauf résiliation par le client avant la date de renouvellement.</p>
+            <p>Le client peut résilier à tout moment depuis son espace client (portail de gestion Stripe) ou en contactant le support. La résiliation prend effet à la fin de la période en cours ; aucun remboursement au prorata n'est effectué.</p>
+            <p>En cas de résiliation, le client conserve l'accès aux fonctionnalités jusqu'à la fin de la période payée, puis bascule automatiquement sur le plan Free.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§7.</span>
+            <h2>Droit de rétractation</h2>
+            <p>Conformément à la réglementation applicable aux services numériques, le client est informé qu'en souscrivant à un abonnement payant, il renonce expressément à son droit de rétractation de quatorze (14) jours, dès lors que le service est immédiatement accessible après paiement.</p>
+            <p>Toutefois, à titre commercial, Marauder s'engage à traiter toute demande de remboursement formulée dans les sept (7) jours suivant la souscription, sous réserve que le client n'ait pas consommé plus de <em>10 %</em> de son quota mensuel.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§8.</span>
+            <h2>Remboursements</h2>
+            <p>Les demandes de remboursement doivent être adressées au support avec le numéro de commande. Elles sont étudiées au cas par cas dans un délai de cinq (5) jours ouvrés.</p>
+            <p>En cas de remboursement accepté, le montant est restitué sur le moyen de paiement d'origine dans un délai de 7 à 14 jours ouvrés. Les frais de transaction éventuels ne sont pas remboursés.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§9.</span>
+            <h2>Modification des plans</h2>
+            <p>Le client peut à tout moment changer de plan depuis son espace client. En cas de passage à un plan supérieur, le différentiel est facturé immédiatement au prorata. En cas de passage à un plan inférieur, la modification prend effet à la prochaine échéance de facturation.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§10.</span>
+            <h2>Litiges et droit applicable</h2>
+            <p>Les présentes CGA sont régies par le droit de la République du Panama. En cas de litige, les parties s'engagent à rechercher une solution amiable dans un délai de trente (30) jours avant toute action judiciaire.</p>
+            <p>À défaut d'accord, les tribunaux compétents de la République du Panama sont seuls compétents, le consommateur conservant toutefois le droit de saisir les juridictions de son lieu de résidence et de se prévaloir des dispositions impératives de sa loi nationale.</p>
+        </div>
+
+        <div class="cga-section">
+            <span class="section-number">§11.</span>
+            <h2>Contact</h2>
+            <p>Pour toute question relative à une commande, une facturation ou un remboursement, le client peut contacter le support via :</p>
+            <ul>
+                <li>Le système de tickets intégré à la plateforme</li>
+                <li>Le serveur Discord officiel de Marauder</li>
+                <li>L'adresse email <em>support@marauder.host</em></li>
+            </ul>
+        </div>
+
+        <div class="cga-footer-text">
+            <strong>Marauder</strong> — Plateforme d'investigation OSINT / CSINT.<br>
+            Ces Conditions Générales d'Achat sont fournies à titre informatif et peuvent être modifiées à tout moment.<br>
+            Dernière révision : 17 octobre 2026.
+        </div>
+
+        <a href="/tarifs.html" class="cga-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Retour aux tarifs
+        </a>
+    </div>
+</body>
+</html>
